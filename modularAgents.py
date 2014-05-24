@@ -15,13 +15,6 @@ class ModularAgent(ApproximateQAgent):
 			Get Q value by consulting each module
 			If idx indicated, then only return qvalue for that qFunc
 		"""
-		"""
-		qValues = []
-		for qFunc in self.qFuncs:
-			qValues.append(qFunc(state, action))
-
-		return 0.6 * qValues[0] + 0.4 * qValues[1]
-		"""
 		return self.qTable[(state, action)]
 	
 	def setQFuncs(self, qFuncs):

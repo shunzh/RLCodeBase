@@ -41,6 +41,9 @@ ModularAgent is derived from ApproximateQAgent - which is a useful base class fo
 Define new gridworld environment
 --------------
 
+There are many examples in gridworld.py, such as `getMazeGrid`, `getBookGrid`, `getBridgeGrid`, etc.
+You may add you own by looking at their definitions. Concretely,
+
 - define a get$GridlWorldName$ function in gridworld.py. In which,
 - create a two-dimensional list, usually called `grid`, specified as follows.
 
