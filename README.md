@@ -1,4 +1,4 @@
-Maze and Pacman environment for Modular MDP
+Maze and Pacman environments for Modular MDP
 ==============
 
 **Licensing Information: Please do not distribute or publish solutions to this
@@ -20,9 +20,12 @@ See all possible arguments:
 
 Example:
 
-``python gridworld.py -a Modular -g ObstacleGrid -k 10``
+``python gridworld.py -a Modular -g ObstacleGrid -k 10 -q``
 
-The runs Modular agent in ObstacleGrid domain, with 10 iterations.
+- `-a Modular`: use modular agent
+- `-g ObstacleGrid`: in ObstacleGrid domain.
+- `-k 10`: run 10 iterations.
+- `-q`: quite running, not showing the learning process.
 
 Define new agent
 --------------
