@@ -262,9 +262,8 @@ def makeGrid(gridString):
       grid[x][y] = el
   return grid    
              
-# TODO test this!
 def terminateIfInt(grid):
-	return lambda state : type(grid[state[0]][state[1]]) == int
+	return lambda state : type(grid[state[1]][state[0]]) == int
 
 def getCliffGrid():
   grid = [[' ',' ',' ',' ',' '],
