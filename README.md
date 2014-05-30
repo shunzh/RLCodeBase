@@ -30,11 +30,11 @@ Example:
 Define new agent
 --------------
 
-Q learning agent is defined in qlearningAgents.py.
+For existing agents:
 
-VI learning agent is defined in valueIterationAgents.py.
-
-Modular MDP agent is defined in modularAgents.py.
+- Q learning agent is defined in qlearningAgents.py.
+- VI learning agent is defined in valueIterationAgents.py.
+- Modular MDP agent is defined in modularAgents.py.
 
 ModularAgent is derived from ApproximateQAgent - which is a useful base class for creating new types of agent.
 
@@ -53,3 +53,9 @@ You may add you own by looking at their definitions. Concretely,
 
 - create a lambda expression, usually called `isFinal`, to decide whether a state is a terminal state. If you want the task terminates upon receiving any reward, use `terminateIfInt`
 - return `Gridworld(grid, isFinal)`
+
+TODO
+--------------
+
+- Create a hyper level MDP. The states are the features extracted from sub-MDPs.
+	* features: std of the sub MDP, max-Q value.
