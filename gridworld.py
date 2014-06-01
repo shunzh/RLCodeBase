@@ -102,11 +102,8 @@ class Gridworld(mdp.MarkovDecisionProcess):
     a single action "exit" which leads to the true terminal state.
     This convention is to make the grids line up with the examples
     in the R+N textbook.
-
-	Asume there the task is continous, not episodic! -Shun
     """
-    # return state == self.grid.terminalState
-    return False
+    return self.isFinal(state)
                    
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -257,7 +254,8 @@ def makeGrid(gridString):
   width, height = len(gridString[0]), len(gridString)
   grid = Grid(width, height)
   for ybar, line in enumerate(gridString):
-    y = height - ybar - 1
+    #y = height - ybar - 1
+    y = ybar
     for x, el in enumerate(line):
       grid[x][y] = el
   return grid    
@@ -311,13 +309,7 @@ def getObstacleGrid():
           [' ','S', -1,'S',' '],
           [' ','S','S','S',' '],
           [' ',' ',' ',' ',' ']]
-  #isFinal = lambda state : state[0] == 2 and state[1] == 2 
   isFinal = lambda state : False
-
-#   grid = [['S','S','S'],
-#           ['S', -1,'S'],
-#           ['S','S','S']]
-#   isFinal = lambda state : state[0] == 1 and state[1] == 1
   return Gridworld(grid, isFinal)
 
 def getSidewalkGrid():
