@@ -5,6 +5,15 @@ import util
 import math
 
 class ModularAgent(ApproximateQAgent):
+	"""
+		State: location of the agent.
+		Action: weights on the sub-MDPs.
+		Transition: transition of the agent.
+		Reward: reward from the environment.
+
+		Assume:
+		Weights are independent from the location of the agent.
+	"""
 	def __init__(self, **args):
 		ApproximateQAgent.__init__(self, **args)
 
@@ -19,7 +28,7 @@ class ModularAgent(ApproximateQAgent):
 	
 	def setQFuncs(self, qFuncs):
 		"""
-			Must set QFuncs here. getQValue will use this.
+			Set QFuncs from the environment. getQValue will use this.
 		"""
 		self.qFuncs = qFuncs
 	
