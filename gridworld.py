@@ -558,6 +558,7 @@ if __name__ == '__main__':
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ModularAgent(**qLearnOpts)
+    # here, set the Q tables of the trained modules
     a.setQFuncs(modularAgents.getObsAvoidFuncs(mdp))
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
