@@ -1,10 +1,18 @@
 import ModularAgents from modularAgents
+import numpy as np
+from scipy.optimize import fsolve
 
 class InverseModularRL:
   """
     Inverse Reinforcement Learning. From a trained modular agent, find the weights given
     - Q tables of modules
     - Policy function
+
+    This is implemented as
+    C. A. Rothkopf and Ballard, D. H.(2013), Modular inverse reinforcement
+    learning for visuomotor behavior, Biological Cybernetics,
+    107(4),477-490
+    http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
   def __init__(self, agent, mdp, qFuncs):
@@ -12,13 +20,14 @@ class InverseModularRL:
       Args:
         agent: the modular agent object
         mdp: the hybird environment
-        qFuncs: 
+        qFuncs: a list of Q functions for all the modules
     """
     self.agent = agent
     self.mdp = mdp
     self.qFuncs = qFuncs
 
-    self.maxSweepTimes = 10
+    # confidence on 
+    self.eta = 1 
 
   def findWeights(self):
     """
@@ -26,11 +35,48 @@ class InverseModularRL:
     """
     states = self.mdp.getStates()
 
-    for _ in xrange(self.maxSweepTimes):
+    def obj(w, lmd):
+      """
+        The objective function to be minimized.
+
+        Args:
+          w: weight vector
+          lmd: lambda
+      """
+      ret = 0
+
       # Walk through each state
       for state in states:
         optAction = self.agent.getPolicy(state)
+
         # Update the weights for each module accordingly.
-        for qFunc in self.qFuncs:
-          qValues = 
-          maxQValue = 
+        for moduleIdx in xrange(len(self.qFuncs)):
+          ret += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
+
+          # denominator
+          denom = 0
+          actionSet = self.mdp.getPossibleActions(state)
+          for action in actionSet:
+            denom += np.exp(self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, action))
+          ret -= np.log(denom)
+
+        ret += lmd * (sum(w) - 1)
+
+      return ret
+
+    def dObj(X):
+      """
+        Derivative of function obj using numerical method.
+      """
+      dLambda = np.zeros(len(X))
+      h = 1e-3 # this is the step size used in the finite difference.
+      for i in range(len(X)):
+        # create a vector with a step size in i-th dimension
+        dX = np.zeros(len(X))
+        dX[i] = h
+
+        dLambda[i] = (obj(X+dX)-obj(X-dX))/(2*h);
+      return dLambda
+
+    w = fsolve(dObj, [0] * (len(self.qFuncs) + 1))
+    return w

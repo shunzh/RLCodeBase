@@ -1,0 +1,4 @@
+Create a hyper level MDP. The states are the features extracted from sub-MDPs.
+
+Planning approach:
+	W_i = strength of a module i
