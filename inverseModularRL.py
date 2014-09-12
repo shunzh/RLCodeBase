@@ -1,4 +1,6 @@
-import ModularAgents from modularAgents
+import gridworld as gw
+import modularAgents
+
 import numpy as np
 from scipy.optimize import fsolve
 
@@ -80,3 +82,26 @@ class InverseModularRL:
 
     w = fsolve(dObj, [0] * (len(self.qFuncs) + 1))
     return w
+
+
+def main():
+    """
+      Can be called to run pre-specified agent and domain.
+    """
+    m = gw.getWalkAvoidGrid()
+
+    gridWorldEnv = gw.GridworldEnvironment(m)
+    actionFn = lambda state: m.getPossibleActions(state)
+    qLearnOpts = {'gamma': 0.9,
+                  'alpha': 0.5,
+                  'epsilon': 0.3,
+                  'actionFn': actionFn}
+    a = modularAgents.ModularAgent(**qLearnOpts)
+    a.setQFuncs(modularAgents.getObsAvoidFuncs(m))
+
+    sln = InverseModularRL(a, m, qFuncs)
+    print sln.findWeights()
+
+
+if __name__ == '__main__':
+    main()
