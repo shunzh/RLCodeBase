@@ -72,7 +72,7 @@ class ModularAgent(ApproximateQAgent):
         sumExps = sum(exps)
         vMat.append([exp / sumExps for exp in exps])
 
-      values = [(vMat[0][j] + vMat[1][j]) for j in range(len(actions))]
+      values = [(vMat[0][j] * self.weights[0] + vMat[1][j] * self.weights[1]) for j in range(len(actions))]
       for i in range(len(actions)):
         self.qTable[(state, actions[i])] = values[i]
 
