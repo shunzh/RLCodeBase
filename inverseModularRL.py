@@ -48,7 +48,6 @@ class InverseModularRL:
       """
       w = X[:-1]
       lmd1 = X[-1]
-      #lmd2 = X[-1]
       ret = 0
 
       # Walk through each state
@@ -68,7 +67,8 @@ class InverseModularRL:
 
       ret += lmd1 * (sum(w) - 1)
 
-      #ret += lmd2 * sum([np.absolute(wi) for wi in w])
+      # doesn't converge while adding this constraint o_o
+      #ret += - lmd2 * sum([np.absolute(wi) for wi in w])
 
       return ret
 
@@ -94,7 +94,8 @@ def main():
     """
       Can be called to run pre-specified agent and domain.
     """
-    m = gw.getWalkAvoidGrid()
+    # environment, an mdp object
+    m = gw.getLargeWalkAvoidGrid()
 
     gridWorldEnv = gw.GridworldEnvironment(m)
     actionFn = lambda state: m.getPossibleActions(state)
@@ -102,11 +103,13 @@ def main():
                   'alpha': 0.5,
                   'epsilon': 0.3,
                   'actionFn': actionFn}
+    # modular agent
     a = modularAgents.ModularAgent(**qLearnOpts)
 
     qFuncs = modularAgents.getObsAvoidFuncs(m)
+    # set the weights and corresponding q-functions for its sub-mdps
+    # note that the modular agent is able to determine the optimal policy based on these
     a.setQFuncs(qFuncs)
-
     a.setWeights([0, 1])
 
     sln = InverseModularRL(a, m, qFuncs)
