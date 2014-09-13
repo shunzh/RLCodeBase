@@ -46,9 +46,9 @@ class InverseModularRL:
              The first len(qFuncs) elements are the weights for corresponding module.
              The last two elements are Lagrange multipiers.
       """
-      w = X[:-2]
-      lmd1 = X[-2]
-      lmd2 = X[-1]
+      w = X[:-1]
+      lmd1 = X[-1]
+      #lmd2 = X[-1]
       ret = 0
 
       # Walk through each state
@@ -68,7 +68,7 @@ class InverseModularRL:
 
       ret += lmd1 * (sum(w) - 1)
 
-      ret += lmd2 * sum([np.absolute(wi) for wi in w])
+      #ret += lmd2 * sum([np.absolute(wi) for wi in w])
 
       return ret
 
@@ -107,7 +107,7 @@ def main():
     qFuncs = modularAgents.getObsAvoidFuncs(m)
     a.setQFuncs(qFuncs)
 
-    a.setWeights([0.5, 0.5])
+    a.setWeights([0, 1])
 
     sln = InverseModularRL(a, m, qFuncs)
     print sln.findWeights()
