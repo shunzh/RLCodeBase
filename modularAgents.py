@@ -19,8 +19,9 @@ class ModularAgent(ApproximateQAgent):
 
     self.qTable = util.Counter()
 
-    self.weights = None
-    self.learningWeights = True
+    # assume the weights are not dynamically learned, intialize them here.
+    self.weights = [0, 0, 1]
+    self.learningWeights = False
  
   def getQValue(self, state, action):
     """
@@ -41,18 +42,21 @@ class ModularAgent(ApproximateQAgent):
     self.learningWeights = False
     self.weights = weights
   
+  def update(self, state, action, nextState, reward):
+    if not self.learningWeights:
+      pass
+    else:
+      # TODO
+      raise Exception("calling unimplemented method: update for learning weight.")
+
   def getPolicy(self, state):
     """
       If self.weights
       Can toggle between using QValue directly (traditional way)
       or by proportion of exp(QValue)
     """
-    if not self.learningWeights:
-      #return self.getLinearPolicy(state)
-      return self.getGibbsPolicy(state)
-    else:
-      #TODO
-      pass
+    #return self.getLinearPolicy(state) # TODO
+    return self.getGibbsPolicy(state)
   
   def getGibbsPolicy(self, state):
     """
@@ -138,11 +142,10 @@ def getObsAvoidFuncs(mdp):
 
   def qObstacle(state, action):
     cond = lambda s : (type(s) == int or type(s) == float) and s == -1
-    return lambda state, action: radiusBias(state, action, cond, obstacle)
+    return radiusBias(state, action, cond, obstacle)
 
   def qTarget(state, action):
     cond = lambda s : (type(s) == int or type(s) == float) and s == +1
-    return lambda state, action: radiusBias(state, action, cond, target)
+    return radiusBias(state, action, cond, target)
 
-  #return [qWalk, qObstacle, qTarget]
-  return [qWalk, qObstacle]
+  return [qWalk, qObstacle, qTarget]

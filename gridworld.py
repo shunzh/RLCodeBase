@@ -331,8 +331,9 @@ def getLargeWalkAvoidGrid():
     Randomly generate a large grid
   """
   width = 25
-  height = 3
-  proportion = 1.0/5
+  height = 10
+  obstacleProportion = 1.0 / 10
+  targetProportion = 1.0 / 10
 
   # init grid world
   grid = [[' ' for i in range(width)] for j in range(height)]
@@ -340,13 +341,25 @@ def getLargeWalkAvoidGrid():
   # add start and end states
   for j in range(height):
     grid[j][0] = 'S'
-    grid[j][width - 1] = +1
+    grid[j][width - 1] = +2
 
   # randomly set obstacles
-  for _ in xrange(int(width * height * proportion)):
-    y = random.choice(range(height))
-    x = random.choice(range(1, width - 1))
-    grid[y][x] = -1
+  for _ in xrange(int(width * height * obstacleProportion)):
+    while True:
+      y = random.choice(range(height))
+      x = random.choice(range(1, width - 1))
+      if grid[y][x] == ' ':
+        grid[y][x] = -1
+        break
+
+  # randomly set targets
+  for _ in xrange(int(width * height * targetProportion)):
+    while True:
+      y = random.choice(range(height))
+      x = random.choice(range(1, width - 1))
+      if grid[y][x] == ' ':
+        grid[y][x] = +1
+        break
 
   isFinal = lambda state : state[0] == width - 1
   return Gridworld(grid, isFinal)

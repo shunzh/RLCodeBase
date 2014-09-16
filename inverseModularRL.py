@@ -96,7 +96,7 @@ def main():
       Can be called to run pre-specified agent and domain.
     """
     # environment, an mdp object
-    m = gw.getWalkAvoidGrid()
+    m = gw.getLargeWalkAvoidGrid()
 
     gridWorldEnv = gw.GridworldEnvironment(m)
     actionFn = lambda state: m.getPossibleActions(state)
@@ -111,7 +111,7 @@ def main():
     # set the weights and corresponding q-functions for its sub-mdps
     # note that the modular agent is able to determine the optimal policy based on these
     a.setQFuncs(qFuncs)
-    a.setWeights([0, 0.5, 0.5])
+    a.setWeights([1, 0, 0])
 
     sln = InverseModularRL(a, m, qFuncs)
     print sln.findWeights()
