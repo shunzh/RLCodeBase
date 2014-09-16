@@ -331,7 +331,7 @@ def getLargeWalkAvoidGrid():
     Randomly generate a large grid
   """
   width = 25
-  height = 10
+  height = 3
   obstacleProportion = 1.0 / 10
   targetProportion = 1.0 / 10
 
@@ -360,6 +360,8 @@ def getLargeWalkAvoidGrid():
       if grid[y][x] == ' ':
         grid[y][x] = +1
         break
+
+  print "Large Walk Avoid grid set up ready."
 
   isFinal = lambda state : state[0] == width - 1
   return Gridworld(grid, isFinal)

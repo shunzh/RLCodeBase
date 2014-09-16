@@ -17,18 +17,38 @@ class ModularAgent(ApproximateQAgent):
   def __init__(self, **args):
     ApproximateQAgent.__init__(self, **args)
 
-    self.qTable = util.Counter()
-
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0, 0, 1]
+    self.weights = [1, 0, 0]
     self.learningWeights = False
  
   def getQValue(self, state, action):
     """
       Get Q value by consulting each module
     """
-    return self.qTable[(state, action)]
-  
+    return sum([qFunc(state, action) * self.weights[i] for qFunc in self.qFuncs])
+
+  def getSoftmaxQValue(self, state, action):
+    actions = self.getLegalActions(state)
+    j = actions.index(action)
+
+    if actions: 
+      vMat = []
+      # iterate through all the modules
+      for idx in range(len(self.qFuncs)):
+        qFunc = lambda action: self.qFuncs[idx](state, action)
+
+        # list of exp^q
+        exps = [math.exp(qFunc(action)) for action in actions]
+
+        # Normalize
+        sumExps = sum(exps)
+        vMat.append([exp / sumExps for exp in exps])
+
+      # add weight or not?
+      return sum([vMat[i][j] * self.weights[i] for i in range(len(self.qFuncs))])
+    else:
+      raise Exception("Returning None action here.")
+ 
   def setQFuncs(self, qFuncs):
     """
       Set QFuncs from the environment. getQValue will use this.
@@ -55,37 +75,19 @@ class ModularAgent(ApproximateQAgent):
       Can toggle between using QValue directly (traditional way)
       or by proportion of exp(QValue)
     """
-    #return self.getLinearPolicy(state) # TODO
-    return self.getGibbsPolicy(state)
-  
+    actions = self.getLegalActions(state)
+    if actions: 
+      # add weight or not?
+      values = [self.getQValue(state, action) for action in actions]
+
+      return actions[values.index(max(values))]
+    else:
+      raise Exception("Returning None action here.")
+
   def getGibbsPolicy(self, state):
     """
       Rather than using QValue, use proportion of exp(QValue)
     """
-    actions = self.getLegalActions(state)
-    if actions: 
-      vMat = []
-      # iterate through all the modules
-      for idx in range(len(self.qFuncs)):
-        qFunc = lambda action: self.qFuncs[idx](state, action)
-
-        # list of exp^q
-        exps = [math.exp(qFunc(action)) for action in actions]
-
-        # Normalize
-        sumExps = sum(exps)
-        vMat.append([exp / sumExps for exp in exps])
-
-      # add weight or not?
-      values = [sum([vMat[i][j] for i in range(len(self.qFuncs))]) for j in range(len(actions))]
-
-      for i in range(len(actions)):
-        self.qTable[(state, actions[i])] = values[i]
-
-      return actions[values.index(max(values))]
-    else:
-      print "returning none here"
-      return None
 
 
 def getObsAvoidFuncs(mdp):
