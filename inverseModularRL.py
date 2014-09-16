@@ -46,8 +46,9 @@ class InverseModularRL:
              The first len(qFuncs) elements are the weights for corresponding module.
              The last two elements are Lagrange multipiers.
       """
-      w = X[:-1]
-      lmd1 = X[-1]
+      w = X[:-2]
+      lmd1 = X[-2]
+      lmd2 = X[-1]
       ret = 0
 
       # Walk through each state
@@ -68,7 +69,7 @@ class InverseModularRL:
       ret += lmd1 * (sum(w) - 1)
 
       # doesn't converge while adding this constraint o_o
-      #ret += - lmd2 * sum([np.absolute(wi) for wi in w])
+      ret += - lmd2 * sum([np.absolute(wi) for wi in w])
 
       return ret
 
@@ -86,7 +87,7 @@ class InverseModularRL:
         dLambda[i] = (obj(X+dX)-obj(X-dX))/(2*h);
       return dLambda
 
-    w = fsolve(dObj, [0] * (len(self.qFuncs) + 1))
+    w = fsolve(dObj, [0] * (len(self.qFuncs) + 2))
     return w
 
 
@@ -95,7 +96,7 @@ def main():
       Can be called to run pre-specified agent and domain.
     """
     # environment, an mdp object
-    m = gw.getLargeWalkAvoidGrid()
+    m = gw.getWalkAvoidGrid()
 
     gridWorldEnv = gw.GridworldEnvironment(m)
     actionFn = lambda state: m.getPossibleActions(state)
@@ -110,7 +111,7 @@ def main():
     # set the weights and corresponding q-functions for its sub-mdps
     # note that the modular agent is able to determine the optimal policy based on these
     a.setQFuncs(qFuncs)
-    a.setWeights([0, 1])
+    a.setWeights([0, 0.5, 0.5])
 
     sln = InverseModularRL(a, m, qFuncs)
     print sln.findWeights()

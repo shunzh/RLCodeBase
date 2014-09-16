@@ -20,7 +20,7 @@ See all possible arguments:
 
 Example:
 
-``python gridworld.py -a Modular -g ObstacleGrid -k 10 -q``
+``python gridworld.py -a Modular -g WalkAvoidGrid -k 10 -q``
 
 - `-a Modular`: use modular agent
 - `-g ObstacleGrid`: in ObstacleGrid domain.

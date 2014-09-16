@@ -48,7 +48,7 @@ class ModularAgent(ApproximateQAgent):
       or by proportion of exp(QValue)
     """
     if not self.learningWeights:
-      #return ApproximateQAgent.getPolicy(self, state)
+      #return self.getLinearPolicy(state)
       return self.getGibbsPolicy(state)
     else:
       #TODO
@@ -72,12 +72,15 @@ class ModularAgent(ApproximateQAgent):
         sumExps = sum(exps)
         vMat.append([exp / sumExps for exp in exps])
 
-      values = [(vMat[0][j] * self.weights[0] + vMat[1][j] * self.weights[1]) for j in range(len(actions))]
+      # add weight or not?
+      values = [sum([vMat[i][j] for i in range(len(self.qFuncs))]) for j in range(len(actions))]
+
       for i in range(len(actions)):
         self.qTable[(state, actions[i])] = values[i]
 
       return actions[values.index(max(values))]
     else:
+      print "returning none here"
       return None
 
 
@@ -135,11 +138,11 @@ def getObsAvoidFuncs(mdp):
 
   def qObstacle(state, action):
     cond = lambda s : (type(s) == int or type(s) == float) and s == -1
-    return radiusBias(state, action, cond, obstacle)
+    return lambda state, action: radiusBias(state, action, cond, obstacle)
 
   def qTarget(state, action):
     cond = lambda s : (type(s) == int or type(s) == float) and s == +1
-    return radiusBias(state, action, cond, target)
+    return lambda state, action: radiusBias(state, action, cond, target)
 
-  return [qWalk, qObstacle]
   #return [qWalk, qObstacle, qTarget]
+  return [qWalk, qObstacle]
