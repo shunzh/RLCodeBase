@@ -99,7 +99,7 @@ def main():
     # set the weights and corresponding q-functions for its sub-mdps
     # note that the modular agent is able to determine the optimal policy based on these
     a.setQFuncs(qFuncs)
-    a.setWeights([0, 1, 0])
+    a.setWeights([0, 0.1, 0.9])
 
     sln = InverseModularRL(a, m, qFuncs)
     print sln.findWeights()

@@ -25,30 +25,29 @@ class ModularAgent(ApproximateQAgent):
     """
       Get Q value by consulting each module
     """
-    return sum([qFunc(state, action) * self.weights[i] for qFunc in self.qFuncs])
+    # sum over q values from each sub mdp
+    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
 
   def getSoftmaxQValue(self, state, action):
     actions = self.getLegalActions(state)
     j = actions.index(action)
 
-    if actions: 
-      vMat = []
-      # iterate through all the modules
-      for idx in range(len(self.qFuncs)):
-        qFunc = lambda action: self.qFuncs[idx](state, action)
+    # q value matrix
+    # vMat(i, j) is for i-th module and j-th action
+    vMat = []
 
-        # list of exp^q
-        exps = [math.exp(qFunc(action)) for action in actions]
+    # iterate through all the modules
+    for qFunc in self.qFuncs:
+      # list of exp^q
+      exps = [math.exp(qFunc(state, action)) for action in actions]
 
-        # Normalize
-        sumExps = sum(exps)
-        vMat.append([exp / sumExps for exp in exps])
+      # Normalize
+      sumExps = sum(exps)
+      vMat.append([exp / sumExps for exp in exps])
 
-      # add weight or not?
-      return sum([vMat[i][j] * self.weights[i] for i in range(len(self.qFuncs))])
-    else:
-      raise Exception("Returning None action here.")
- 
+    # sum over j-th column (j-th action)
+    return sum([vMat[i][j] for i in range(len(self.qFuncs))])
+
   def setQFuncs(self, qFuncs):
     """
       Set QFuncs from the environment. getQValue will use this.
@@ -83,11 +82,6 @@ class ModularAgent(ApproximateQAgent):
       return actions[values.index(max(values))]
     else:
       raise Exception("Returning None action here.")
-
-  def getGibbsPolicy(self, state):
-    """
-      Rather than using QValue, use proportion of exp(QValue)
-    """
 
 
 def getObsAvoidFuncs(mdp):
