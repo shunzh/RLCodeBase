@@ -320,7 +320,7 @@ def getSidewalkGrid():
   return Gridworld(grid, isFinal)
 
 def getWalkAvoidGrid():
-  grid = [[ 'S',' ', ' ',  +1,  -1,  +1, +2],
+  grid = [[ 'S',' ', ' ',  +1, ' ',  +1, +2],
           [ 'S',' ', ' ', ' ', ' ', ' ', +2],
           [ 'S',' ',  -1, ' ',  -1, ' ', +2]]
   isFinal = lambda state : state[0] == 6
@@ -331,7 +331,7 @@ def getLargeWalkAvoidGrid():
     Randomly generate a large grid
   """
   width = 25
-  height = 3
+  height = 10
   obstacleProportion = 1.0 / 10
   targetProportion = 1.0 / 10
 
