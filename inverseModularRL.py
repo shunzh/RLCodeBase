@@ -29,16 +29,14 @@ class InverseModularRL:
     self.qFuncs = qFuncs
 
     # confidence on 
-    self.eta = 1
+    self.eta = 20
 
   def obj(self, X):
     """
       The objective function to be minimized.
 
       Args:
-        X: a vector of length len(qFuncs) + 2.
-           The first len(qFuncs) elements are the weights for corresponding module.
-           The last two elements are Lagrange multipiers.
+        X: parameter vector.
     """
     states = self.mdp.getStates()
     w = X
@@ -83,7 +81,6 @@ def main():
       Can be called to run pre-specified agent and domain.
     """
     # environment, an mdp object
-    #m = gw.getLargeWalkAvoidGrid()
     m = gw.getWalkAvoidGrid()
 
     gridWorldEnv = gw.GridworldEnvironment(m)
@@ -104,6 +101,7 @@ def main():
     print sln.findWeights()
 
     # test
+    print "Some obj function values for other weights:"
     print sln.obj([1, 0, 0])
     print sln.obj([0.25, 0.75, 0])
     print sln.obj([0.5, 0.5, 0])

@@ -325,6 +325,12 @@ def getWalkAvoidGrid():
           [ 'S',' ',  -1, ' ',  -1, ' ', +2]]
   isFinal = lambda state : state[0] == 6
   return Gridworld(grid, isFinal)
+
+def getToyWalkAvoidGrid():
+  grid = [[ 'S',  -1],
+          [ ' ', ' ']]
+  isFinal = lambda state : state[0] == 1 and state[1] == 1
+  return Gridworld(grid, isFinal)
  
 def getLargeWalkAvoidGrid():
   """

@@ -54,6 +54,10 @@ You may add you own by looking at their definitions. Concretely,
 - create a lambda expression, usually called `isFinal`, to decide whether a state is a terminal state. If you want the task terminates upon receiving any reward, use `terminateIfInt`
 - return `Gridworld(grid, isFinal)`
 
+Modular IRL
+--------------
+Please look at the main function of inverseModularRL.py. `scipy.optimize.minimize` is used.
+
 TODO
 --------------
 
