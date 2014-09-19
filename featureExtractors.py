@@ -10,7 +10,6 @@
 
 from game import Directions, Actions
 import util
-import math
 
 class FeatureExtractor:  
   def getFeatures(self, state, action):    
@@ -27,30 +26,65 @@ class IdentityExtractor(FeatureExtractor):
     feats[(state,action)] = 1.0
     return feats
 
-class ObstacleExtractor(FeatureExtractor):
+class GridExtractor(FeatureExtractor):
+  """
+  Extract the row number and column number
+  """
   def getFeatures(self, state, action):
-	feats = util.Counter()
-	feats['bias'] = 1
+    feats = util.Counter()
+    feats[0] = 1 # biase
 
-  	x, y = state
-	dx, dy = Actions.directionToVector(action)
-	# distance to obstacle, on x and y
-	disx = x + dx - 2
-	disy = y + dy - 2
+    # position feature
+    feats[1] = state[0]
+    feats[2] = state[1]
+    
+    # offset to represent actions
+    if action == 'north':
+      feats[2] += 0.25
+    elif action == 'south':
+      feats[2] -= 0.25
+    elif action == 'west':
+      feats[1] -= 0.25
+    elif action == 'east':
+      feats[1] += 0.25
+    
+    return feats
 
-	feats['dis'] = math.sqrt(disx*disx + disy*disy)
-	
-	return feats
-	
-class SidewalkExtractor(FeatureExtractor):
+class HorizontalExtractor(FeatureExtractor):
+  """
+  Extract the column number of a world
+  """
   def getFeatures(self, state, action):
-	feats = util.Counter()
+    feats = util.Counter()
+    feats[0] = 1 # biase
 
-  	x, y = state
-	dx, dy = Actions.directionToVector(action)
-	feats['x'] = x + dx
-	
-	return feats
+    feats[1] = state[0]
+
+    if action == 'west':
+      feats[1] -= 0.25
+    elif action == 'east':
+      feats[1] += 0.25
+
+    return feats
+
+class BairdsExtractor(FeatureExtractor):
+  """
+    This class is for features extraction.
+    THIS IS FOR BAIRD'S CONTEREXAMPLE GRID.
+  """
+  def getFeatures(self, state, action):
+    feats = util.Counter()
+    if state[1] == 1:
+      # the first row states
+      # Theta(6) + 2 * Theta(i)
+      feats[6] = 1
+      feats[state[0]] = 2
+    else:
+      # the state which can transit to terminal state
+      # 2 * Theta(6) + Theta(i)
+      feats[6] = 2
+      feats[5] = 1
+    return feats
 
 def closestFood(pos, food, walls):
   """

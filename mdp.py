@@ -28,22 +28,7 @@ class MarkovDecisionProcess:
     Return list of possible actions from 'state'.
     """
     abstract
-
-  def getStateActionPairs(self):
-    """
-    Return a list of (state, action) by checking with getStartState and
-    get PossibleActions.
-    """
-    pairs = []
-
-    states = self.getStates()
-    for state in states:
-      actions = self.getPossibleActions(state)
-      for action in actions:
-        pairs.append((state, action))
         
-    return pairs
-
   def getTransitionStatesAndProbs(self, state, action):
     """
     Returns list of (nextState, prob) pairs

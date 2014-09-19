@@ -9,7 +9,8 @@
 import sys
 import inspect
 import heapq, random
-
+import math
+from sets import Set
 
 """
  Data structures useful for implementing SearchAgents
@@ -207,6 +208,17 @@ class Counter(dict):
     for key in self.keys():
       self[key] = self[key] / total
       
+  def rms(self, counter):
+    """
+    return sqrt(squared-sum(counter1, counter2))
+    """
+    result = 0
+
+    for state, value in self.iteritems():
+      result += (self[state] - counter[state]) ** 2
+
+    return math.sqrt(result)
+
   def divideAll(self, divisor):
     """
     Divides all counts by divisor
@@ -221,6 +233,25 @@ class Counter(dict):
     """
     return Counter(dict.copy(self))
   
+  def __str__(self):
+    """
+    format this counter to JSON
+    """
+    string = '{'
+    first = True
+
+    for state, value in self.iteritems():
+      if first:
+        first = False
+      else:
+        string += ', '
+
+      string += '"' + str(state) + '":' + str(value)
+
+    string += '}'
+
+    return string
+
   def __mul__(self, y ):
     """
     Multiplying two counters gives the dot product of their vectors where
@@ -391,10 +422,12 @@ def flipCoin( p ):
 
 def chooseFromDistribution( distribution ):
   "Takes either a counter or a list of (prob, key) pairs and samples"
+  "Indicate (prob, key) or (key, prob) by probFirst flag"
   if type(distribution) == dict or type(distribution) == Counter:
     return sample(distribution)
   r = random.random()
   base = 0.0
+
   for prob, element in distribution:
     base += prob
     if r <= base: return element
@@ -493,3 +526,14 @@ class TimeoutFunction:
             signal.signal(signal.SIGALRM, old)
         signal.alarm(0)
         return result
+
+# get an element from a set
+def setGet(s):
+  if isinstance(s, Set):
+    for elem in s:
+      return elem
+
+    # reach here if set is empty
+    return None
+  else:
+    raise "setGet: argument is not Set object."

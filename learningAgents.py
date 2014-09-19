@@ -58,6 +58,18 @@ class ValueEstimationAgent(Agent):
     """
     util.raiseNotDefined()  
     
+  def getValues(self, states):
+    """
+    The set of states given, return their values.
+    Called for testing
+    """
+    values = util.Counter()
+
+    for state in states:
+      values[state] = self.getValue(state)
+
+    return values
+
   def getPolicy(self, state):
     """
     What is the best action to take in the state. Note that because
@@ -81,16 +93,16 @@ class ValueEstimationAgent(Agent):
 class ReinforcementAgent(ValueEstimationAgent):
   """
     Abstract Reinforcemnt Agent: A ValueEstimationAgent
-	  which estimates Q-Values (as well as policies) from experience
-	  rather than a model
+    which estimates Q-Values (as well as policies) from experience
+    rather than a model
       
       What you need to know:
-		  - The environment will call 
-		    observeTransition(state,action,nextState,deltaReward),
-		    which will call update(state, action, nextState, deltaReward)
-		    which you should override. 
+      - The environment will call 
+        observeTransition(state,action,nextState,deltaReward),
+        which will call update(state, action, nextState, deltaReward)
+        which you should override. 
       - Use self.getLegalActions(state) to know which actions
-		    are available in a state
+        are available in a state
   """
   ####################################
   #    Override These Functions      #  
@@ -98,8 +110,8 @@ class ReinforcementAgent(ValueEstimationAgent):
   
   def update(self, state, action, nextState, reward):
     """
-	    This class will call this function, which you write, after
-	    observing a transition and reward
+      This class will call this function, which you write, after
+      observing a transition and reward
     """
     util.raiseNotDefined()
         
@@ -117,15 +129,15 @@ class ReinforcementAgent(ValueEstimationAgent):
   
   def observeTransition(self, state,action,nextState,deltaReward):
     """
-    	Called by environment to inform agent that a transition has
-    	been observed. This will result in a call to self.update
-    	on the same arguments
-    	
-    	NOTE: Do *not* override or call this function
-    """  	
+      Called by environment to inform agent that a transition has
+      been observed. This will result in a call to self.update
+      on the same arguments
+      
+      NOTE: Do *not* override or call this function
+    """    
     self.episodeRewards += deltaReward
     self.update(state,action,nextState,deltaReward)
-		    
+        
   def startEpisode(self):
     """
       Called by environment when new episode is starting
@@ -139,9 +151,9 @@ class ReinforcementAgent(ValueEstimationAgent):
       Called by environment when episode is done
     """ 
     if self.episodesSoFar < self.numTraining:
-		  self.accumTrainRewards += self.episodeRewards
+      self.accumTrainRewards += self.episodeRewards
     else:
-		  self.accumTestRewards += self.episodeRewards
+      self.accumTestRewards += self.episodeRewards
     self.episodesSoFar += 1    
     if self.episodesSoFar >= self.numTraining:
       # Take off the training wheels
@@ -154,7 +166,7 @@ class ReinforcementAgent(ValueEstimationAgent):
   def isInTesting(self):
       return not self.isInTraining()
       
-  def __init__(self, actionFn = None, numTraining=100, epsilon=0.5, alpha=0.5, gamma=1):
+  def __init__(self, actionFn = None, numTraining=100, epsilon=0.5, alpha=0.5, gamma=1, lambdaValue=0.9, mdp = None, replace=False, k1 = 0):
     """
     actionFn: Function which takes a state and returns the list of legal actions
     
@@ -173,6 +185,10 @@ class ReinforcementAgent(ValueEstimationAgent):
     self.epsilon = float(epsilon)
     self.alpha = float(alpha)
     self.gamma = float(gamma)
+    self.lambdaValue = float(lambdaValue)
+    self.replace = replace
+    self.mdp = mdp
+    self.k1 = k1
     
   ################################
   # Controls needed for Crawler  #

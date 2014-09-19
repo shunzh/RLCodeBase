@@ -1,0 +1,8 @@
+set xlabel "Trials"
+set ylabel "Average Return"
+
+set term postscript color
+set style line 1
+set key right bottom
+
+plot 'q_result.out' title "q" with linespoints, 'tg_result.out' title "tg" with linespoints

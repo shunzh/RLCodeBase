@@ -1,0 +1,8 @@
+set xlabel "Episodes"
+set ylabel "Average Return"
+
+set term postscript color
+set style line 1
+set key right bottom
+
+plot 'q_4_3_0_result.out' title "Q-learning" with linespoints, 'q_4_3_5.0_result.out' title "Rmax-Q" with linespoints, 'tg_4_3_0_result.out' title "RRL-TG" with linespoints, 'tg_4_3_5.0_result.out' title "Rmax-RRL-TG" with linespoints

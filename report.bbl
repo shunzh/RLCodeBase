@@ -1,0 +1,39 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Brafman and Tennenholtz}{2003}]{Brafman:2003}
+Ronen~I. Brafman and Moshe Tennenholtz.
+\newblock R-max - a general polynomial time algorithm for near-optimal
+  reinforcement learning.
+\newblock {\em J. Mach. Learn. Res.}, 3:213--231, March 2003.
+
+\bibitem[\protect\citeauthoryear{Driessens and
+  Ramon}{2003}]{Driessens03relationalinstance}
+Kurt Driessens and Jan Ramon.
+\newblock Relational instance based regression for relational reinforcement
+  learning.
+\newblock In {\em In Proceedings of the 20th International Conference on
+  Machine Learning}, pages 123--130. AAAI Press, 2003.
+
+\bibitem[\protect\citeauthoryear{Jong and Stone}{2008}]{ICML08-jong}
+Nicholas~K.\ Jong and Peter Stone.
+\newblock Hierarchical model-based reinforcement learning: {Rmax} + {MAXQ}.
+\newblock In {\em Proceedings of the Twenty-Fifth International Conference on
+  Machine Learning}, July 2008.
+
+\bibitem[\protect\citeauthoryear{Morales}{2003}]{Morales03scalingup}
+Eduardo~F. Morales.
+\newblock Scaling up reinforcement learning with a relational representation.
+\newblock In {\em In Proc. of the Workshop on Adaptability in Multi-agent
+  Systems}, pages 15--26, 2003.
+
+\bibitem[\protect\citeauthoryear{Otterlo}{2005}]{Otterlo05asurvey}
+Martijn~Van Otterlo.
+\newblock A survey of reinforcement learning in relational domains.
+\newblock Technical report, CTIT Technical Report Series, 2005.
+
+\bibitem[\protect\citeauthoryear{Sutton and Barto}{1998}]{sutton98a}
+Richard~S. Sutton and Andrew~G. Barto.
+\newblock {\em Reinforcement Learning: An Introduction}.
+\newblock {MIT} Press, 1998.
+
+\end{thebibliography}

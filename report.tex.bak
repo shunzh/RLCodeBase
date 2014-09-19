@@ -1,209 +1,241 @@
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 \usepackage{latexsym}
+\usepackage{qtree}
+\usepackage{algpseudocode}
 \usepackage{natbib}
 \usepackage{graphicx}
-\usepackage{caption}
-\usepackage{subcaption}
-\usepackage{listings}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-
-\title{Homework 5: Reinforcement Learning}
-\author{Shun Zhang}
+\usepackage{subfigure}
+\title{Structured Exploration For Relational Reinforcement Learning}
+\author{Shun Zhang \thanks{Final Project. Thanks Dr. Stone for instructing this
+course! Thanks Samuel for TAing!}}
 \date{}
 
 \begin{document}
 \maketitle
 
-\section{Q-Learning}
+\begin{abstract}
+First order representation of states is more expressive than the atomic ones.
+This project can be described from two perspectives. First, it applies
+structured exploration to Relational Reinforcement Learning. This makes it more
+data-efficient and have a better performance in exploring. Second, it changes
+the mechanism of states representation in Rmax-Q to first order representation.
+By combining these two learning methods, the algorithm can learn on states with
+relational representation more efficiently. This is tested in Blocksworld.
+\end{abstract}
 
-Q-Learning is an off-policy temporal difference learning algorithm. It
-keeps a Q-table which evaluates each state, action pair. The idea is
-to update Q-values with the observed sample, with the learning rate of
-$\alpha$, shown in the equation below.
+\sloppy
+\section{Markov Decision Process}
 
-$$Q(s, a) = (1 - \alpha) Q(s, a) + \alpha (r + \gamma Q(s', a'))$$
+Markov Decision Process is defined in \cite{sutton98a}.  In the example of
+blocksworld, a state is simply a snapshot of the blocks positions on the tiles.
+We can punish the agent every time when the goal state is not reached.  Based
+on this, the blocksworld can be framed as follows.
 
-In this assignment, I need to extract features in the domains. For
-example, I represent the states by the distance to the nearest
-obstacle in the obstacle domain (will be described in the experiment
-section). Let $f_i$ be the i-th feature, and $w_i$ be the weight of
-the i-th feature, the Q function can be represented as
+\begin{itemize}
 
-$$Q(s, a) = \sum w_i f_i(s, a)$$
+\item States: A list of stacks.
 
-To update $Q(s, a)$, $w_i$ needs to be updated. As $\frac{\partial
-Q(s, a)}{\partial w_i} = f_i(s, a)$, the update mechanism can be
-changed to be as follows.
+\item Actions: (Source, Target) where stack(Source) is not empty and Source
+$\neq$ Target.
 
-$$correction = r + \gamma Q(s', a') - Q(s, a)$$
-$$w_i = w_i + \alpha [correction] f_i(s, a)$$
+\item Transitions: Move the top block in the source stack to the target stack.
 
-\section{Modular RL}
+\item Reward: 0 on the terminal state, -1 otherwise.
 
-The task is to combine some sub-MDPs, each of which has some perticular
-behavior, to a hybrid MDP.
+\end{itemize}
 
-\subsection{Linear Combination}
+Q-learning can be guaranteed to find the optimal solution of this problem. But
+it converges asympototically. Rmax (\cite{Brafman:2003}) is designed to solve
+this problem.  It can find $\epsilon$-optimal solution in polynomial time.
 
-One easy way to mix sub-MPDs is representing the Q-value of the hybrid
-MDP as linear combination as sub-MDPs. That is,
-$$Q(s, a) = \sum{\beta_i Q_i(s, a)}$$
-where $\beta_i$ is the weight on the i-th sub-MDP. $Q_i$ is the
-Q-value of the i-th sub-MDP.
+An inherent problem of this setting, regardless of the learning algorithms, is
+that the agent doesn't look into the configuration of each state. For example,
+if we have blocks of A, B, C, the states that B on C are good starts, but the
+agent is unable to assign values directly to this observation, but a state as a
+whole. The agent can also have problems in exploration. The agent can hardly
+express its interests in "what would happen if not on(B,C)". Feature abstraction
+can forces the agent to do so (\cite{sutton98a}). Intuitively, we can map a
+state to the following binary values.
 
-We need to hand-tune the parameter $\beta$ to make $Q$ weight the
-sub-MDPs reasonably.
+\begin{itemize}
 
-\subsection{Gibbs Softmax}
-\label{sec:gibbs}
+\item States: {A is on B, B is on A, A is on C, B is on C, ...}
 
-The motivation of using Gibbs softmax function is to normalize the Q-values over the actions given a state.
+\end{itemize}
 
-There could be a bias in the Q-values in one sub-MDP. When such
-bias increase, the Q-values increase so that such sub-MDP will
-unnecessarily dominates. So I normalize the Q-values by Gibbs softmax
-function, defined as below.
+Feature abstraction has good performance in many domains, generally for the
+purpose of reducing the dimentions and making the learning more data-efficient.
+Here, this would be equivalent to \textit{Relational Q-learning}
+(\cite{Morales03scalingup}), a naive learning algorithm in RRL.
 
-$$Q'_i(s, a) = \frac{e^{Q_i(s, a)}}{\sum\limits_{a \in A(s)}e^{Q_i(s, a)}}$$
-$$Q(s, a) = \sum{\beta_i Q'_i(s, a)}$$
-where $A(s)$ is the set of available actions in the state $s$.
-$Q'_i$ is the normalized Q-value.
+Relational Reinforcement learning is defined in \cite{Otterlo05asurvey}. It
+represents the states in first-order logic. In RRL, the problem can be framed as
+follows.
 
-\section{Experiments}
+\begin{itemize}
 
-Modular RL is evaluated in a grid world domain, in which the agent
-needs to reach the targets while avoiding the obstacles. First, I
-train two MDPs for walking towards the goal and obstacle avoiding,
-respectively. Then, I combine these two MDPs for the desired
-performance.
+\item State: on(c, b), on(b, a), on(a, floor), clear(a).
 
-\subsection{Approaching-the-Goal Module}
+\item Action: move(X, Y), where clear(Y) and X $\neq$ floor.
 
-\begin{figure}[h!]
-\centering
-\begin{subfigure}{0.7\textwidth}
-	\includegraphics[width=\textwidth]{figure/sidewalk}
-\end{subfigure}
-\begin{subfigure}{0.7\textwidth}
-	\includegraphics[width=\textwidth]{figure/sidewalk_v}
-\end{subfigure}
-\caption{Approaching-the-goal module.}
-\label{fig:sidewalk}
+\item Transitions: retract: on(X, Z), clear(Y). assert: clear(Z), on(X, Y).
+(These are changes of predicts)
+
+\item Reward: 0 on reaching the state of on(a, b), on(b, c), on(c, floor),
+clear(a). -1 otherwise. 
+
+\end{itemize}
+
+The problem of Relational Q-learning is that it only changes the state
+representation, but not actually making use of it.  Additionally, this does not
+actually reduce the number of states.  There is a more advanced learning
+algorithm, which is discussed in the following section.
+
+%=============================================================================
+\section{RRL-TG and Rmax-Q}
+
+We examine two advanced learning algrithms, in their own domains, that can
+possibly improve the performance of solving blocks world problem.
+
+\begin{figure}
+\Tree [.on(A,B) [.on(B,C) Q=-0.1 Q=-0.5 ] Q=-0.9 ]
+\caption{A possible Q-tree in learning process}
+\label{fig:q-tree}
 \end{figure}
 
-Figure~\ref{fig:sidewalk} shows the learned Q-values (the upper graph),
-values and policy (the lower graph) for approaching the goal. There is
-reward of +1 of reaching the goals, which are the right-most column.
-$\epsilon = 0.3, \gamma = 0.5$. I keep an exploration rate larger than
-0.1, so that it can explore the whole space. The discount factor
-$\gamma$ is small here, so the agent will aim at the shortest path,
-instead of wasting time in the grids. I used one feature $x$ to
-represent each state, which is the horizontal coordinate of the
-position of the agent. The learned parameter is
+RRL-TG learning (\cite{Driessens03relationalinstance}) builds a Q-tree during
+learning. It consults the Q-tree for Q value of a state, action pair, instead of
+looking up a table. A possible Q-tree can be look like Figure~\ref{fig:q-tree}.
+Every leaf keeps statistics of the samples that reaching there. They appear as
+(predicates, QValue) pairs. When some predicate is significantly enough to split
+a node, it will do so. It will create a left child for this predicate is true and
+a right child for this predicate is false. Concretely, the following two variance
+will be compared: $\frac{n_p}{n} \sigma^2_p + \frac{n_n}{n} \sigma^2_n$ and
+$\sigma^2_{total}$.  $n$ is the number of samples. $n_p$ is the number of
+positive samples and $n_n$ is the number of negative samples, in terms of a
+specific test or predicate.  $\sigma_p$ is the variance for positive samples and
+$\sigma_n$ is for nagetive ones.
 
-\texttt{{'x': 0.06250000371801567}}
+Rm ax-Q (\cite{ICML08-jong}) marks a state, action pair as known or unknown. It
+gives it a optimistic value $R_{max}$ to unknown ones. It makes exploration more
+efficient.
 
-\subsection{Obstacle-Avoiding Module}
+%=============================================================================
+\section{Proposed Learning Algorithm}
 
-\begin{figure}[h!]
-\centering
-\begin{subfigure}{0.49\textwidth}
-	\includegraphics[width=\textwidth]{figure/obstacle}
-\end{subfigure}
-\begin{subfigure}{0.49\textwidth}
-	\includegraphics[width=\textwidth]{figure/obstacle_policy}
-\end{subfigure}
-\caption{Obstacle-avoiding module.}
-\label{fig:obstacle}
+\begin{figure}
+\begin{algorithmic}
+\Function{get\_policy}{state}
+  \For {action in possible\_actions}
+    \State \textit{//We translate the state and action to predicates}
+    \State predicates $\gets$ tranlateToPredicates(state, action) 
+    \If {predicates is known \textbf{or} unseen(predicates)==0}
+      \State value(action) $\gets$ getQValue(state, action)
+    \Else
+      \State value(action) $\gets$ $R_{max} \times $ unseen(predicates)
+    \EndIf
+  \EndFor
+  \State return the action with maximum value
+\EndFunction
+
+\hfill
+
+\Function{unseen}{predicates}
+  \State return the number of predicates that not appeared in the Q-tree.
+\EndFunction
+\end{algorithmic}
+\caption{Rmax-TG-RRL}
+\label{fig:rmax-tg-rrl}
 \end{figure}
 
-In Figure~\ref{fig:obstacle}, similarly, I trained an
-obstacle-avoiding agent. There is a -1 reward in the center of the
-grid world. $\epsilon = 0.3, \gamma = 0.9$. There are two features,
-$bias$, which is always 1, and $dis$ which is the distance to the
-obstacle. The learned parameters are
+The modified TG-RRL is shown in Figure~\ref{fig:rmax-tg-rrl}. I only show the
+difference when it return the policy based on state, action pair.
 
-\texttt{{'bias': -0.20931133310480204, 'dis': 0.06742681562641269}}
+The key factor in this algorithm is how it is encouraged to explore efficiently.
+For example, let the state be $on(a,b),on(b,c)$. If \textit{predicates is
+known}, it means that we have seen enough number of Q-values of the state
+$on(a,b),on(b,c)$.  If \textit{unseen(predicates)==0}, it means that $on(a,b)$
+and $on(b,c)$ are aready appear on the Q-tree. In this case, the agent has good
+knowledge of these two predicates, even though it might have not seen the exact
+state of $on(a,b),on(b,c)$ for enough times. Otherwise, we encourage the agent
+to explore, based on the number of predicates that not included in Q-tree (it
+doesn't know what it means if a predicate is true or false). The agent selects
+the action which leads to a state with most unknown predicates. When the agent
+has tried enough episodes, the agent would stop exploring. It not necessary to
+include all the predicates to Q-tree. Actually it's harmful - some predicates
+are indifferent in terms of returns.
 
-Note that I only put one obstacle (the grid in the center). As the
-agent only consider the closest obstacle, so there should be no
-difference between using one and multiple obstacles.
+Model approximation and value approximation are also involved here. In fitted
+RmaxQ (\cite{ICML08-jong}), the agent can use a state, action pair that most
+proximate the one queried. Here, when it arrvies on a leaf node and get the Q
+value, it's actually shared by many concrete states. Unlike Q-learning, it's not
+start with nothing. It starts with the assumption that all the states are the
+same, and then divide a node with a predicate when necessary.
 
-\subsection{Hybrid MDP: Linear Combination}
+%=============================================================================
+\section{Empirical Results}
 
-For the Hybrid domain, I keep the goals at the right-most column. I
-randomly set some obstacles in the domain.
+For parameter setting, discounter $\gamma = 0.9$, learning rate $\alpha = 0.3$,
+exploration rate $\epsilon = 0.3$. These are kept constant for all the
+experiments.
 
-\begin{figure}[h!]
+For RRL-TG part, the significance $\epsilon = 0.1$. The agent split a node when 
+$\frac{n_p}{n} \sigma^2_p + \frac{n_n}{n} \sigma^2_n \leq \sigma^2_{total} -
+\epsilon$. Intuitively, when this equation holds, the Q values of positive tests
+cluster together and so does negative ones. It's the time to split this node
+with this test.
+
+For Rmax part, $R_max = 100$ (actually it can arbitrary positive number -
+rewards are all nonpositive in our environment), $K_1 = 5$. This is simplified,
+but it still shows its advantage over Q-learning.
+
+\begin{figure}
 \centering
-\begin{subfigure}{0.7\textwidth}
-	\includegraphics[width=\textwidth]{figure/hybird_walk}
-	\caption{0.9 approaching + 0.1 avoiding}
-\end{subfigure}
-\begin{subfigure}{0.7\textwidth}
-	\includegraphics[width=\textwidth]{figure/hybird_obstacle}
-	\caption{0.1 approaching + 0.9 avoiding}
-\end{subfigure}
-\caption{Overweighting one module makes the behavior of that module
-dominate.}
-\label{fig:lin_test}
+\includegraphics[width=1\columnwidth]{figure1.png}
+\caption{The environment is 4 blocks on 3 stacks. The target is putting all the
+blocks on the same stack and ordered. Each data point is run for 10 times.}
+\label{fig:exp1}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}
 \centering
-\includegraphics[width=0.7\textwidth]{figure/hybird_6_4}
-\caption{0.4 approaching + 0.6 avoiding}
-\label{fig:lin_opt}
+\includegraphics[width=1\columnwidth]{figure2.png}
+\caption{The environment is 3 blocks on 3 stacks. The target is putting all the
+blocks on the same stack and ordered. Each data point is run for 10 times.}
+\label{fig:exp2}
 \end{figure}
 
-I tried some linear combination of sub-MDPs. If I overweight one
-module, then the behavior of that module would dominate
-(Figure~\ref{fig:lin_test}). Setting the weights to be 0.4 for
-approaching module and 0.6 for avoiding module achieves the best
-solution in my trials (Figure~\ref{fig:lin_opt}). Now I observe the
-problem described in the instruction -- the agent will walk over the
-obstacle near the goal, because the Q-value of approaching the goal is
-much higher. So I normalize them in the next section.
+The results are shown in Figure~\ref{fig:exp1} and Figure~\ref{fig:exp2}.
+The environment of Figure~\ref{fig:exp2} has a smaller state space. Rmax-TG-RRL
+does not have as good performance as TG-RRL.
 
-\subsection{Hybird MDP: Gibbs Softmax Function}
+%=============================================================================
+\section{Discussion}
 
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.7\textwidth]{figure/hybird_gibbs}
-\caption{Using Gibbs softmax function.}
-\label{fig:gibbs}
-\end{figure}
+The improvement of Rmax-RRL-TG can also be related with hierarchical learning.
+When it finds the predicate at the root, it transfers the learning tasks into
+its children. This speeds up the learning process.
 
-Using the method described in Section~\ref{sec:gibbs}, I find the
-results in Figure~\ref{fig:gibbs}. For the grid (3, 0), the Q-values
-of going up and down are the same, so the agent should randomly choose
-one. Therefore this solution is correct.
+In Figure~\ref{fig:exp1}, Rm ax-RRL-TG shows worse performance than RRL-TG at the
+very beginning, because it's not acting optimally. It catches up after
+exploration. It also has a similar performance with Q-learning at the beginning.
+This is because when the Q-tree is being built, its control is inconsistent with
+its knowledge. If a state $s$ has legal actions $a_1$ and $a_2$. $Q(s, a_1) >
+Q(s, a_2)$ is known. Q-learning will select $a_1$, if not exploring (with
+probability of $\epsilon$). Rmax-RRL-TG might not be able to make this action,
+as its Q-tree is not expressive enough to distinguish $a_1$ and $a_2$. However,
+considering the advantage of value approximation, model approximation and the
+features of hierachical learning, this sacrifice at the beginning is worthy.
 
-\subsection{On Larger Grid}
+This combines algorithms from two domains, but it just applies into relational
+REL problems. Blocksworld is widely used to show the performance of RRL
+algorithms, as it inherently can be expressed as predicates. Many practical
+problems might not even be represented in tranditioanl states in RL. It's not
+clear wether they can be represented in predicates.
 
-\begin{figure}[h!]
-\centering
-\begin{subfigure}{\textwidth}
-	\includegraphics[width=\textwidth]{figure/long_1}
-\end{subfigure}
-\begin{subfigure}{\textwidth}
-	\includegraphics[width=\textwidth]{figure/long_2}
-\end{subfigure}
-\caption{Overweighting one module makes the behavior of that module
-dominate.}
-\label{fig:long}
-\end{figure}
+%=============================================================================
+\bibliographystyle{named}
 
-I further tested this Modular MDP using Gibbs Softmax Function in a 3
-x 25 grid world (Figure~\ref{fig:long}). It is a long graph so I broke
-it into two parts. The policy are mostly correct.
-
-\section{Discussion and Conclusion}
-
-In my view, modular RL is one type of transfer learning. It apply the
-results in some predefined source tasks to the target task. Also, some
-learning could be allowed after combining the source tasks, rather
-than our hand-tuning.
+\bibliography{report}
 
 \end{document}

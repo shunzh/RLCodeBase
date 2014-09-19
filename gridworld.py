@@ -12,20 +12,27 @@ import mdp
 import environment
 import util
 import optparse
+import pickle
 
 class Gridworld(mdp.MarkovDecisionProcess):
   """
     Gridworld
   """
-  def __init__(self, grid, isFinal):
+  def __init__(self, grid, transition = None):
+    """
+    A gridworld might have biased transition function.
+    If so, idicate that by transition argument.
+    Otherwise, that argument is None, and the agent follows uniform distribution.
+    """
     # layout
     if type(grid) == type([]): grid = makeGrid(grid)
     self.grid = grid
+
+    self.transition = transition
     
     # parameters
     self.livingReward = 0.0
-    self.noise = 0.0
-    self.isFinal = isFinal
+    self.noise = 0.2
         
   def setLivingReward(self, reward):
     """
@@ -52,6 +59,11 @@ class Gridworld(mdp.MarkovDecisionProcess):
     that "exit" states transition to the terminal
     state under the special action "done".
     """
+    if state == self.grid.terminalState:
+      return ()
+    x,y = state
+    if type(self.grid[x][y]) == int:
+      return ('exit',)
     return ('north','west','south','east')
     
   def getStates(self):
@@ -59,7 +71,7 @@ class Gridworld(mdp.MarkovDecisionProcess):
     Return list of all states.
     """
     # The true terminal state.
-    states = []
+    states = [self.grid.terminalState]
     for x in range(self.grid.width):
       for y in range(self.grid.height):
         if self.grid[x][y] != '#':
@@ -75,25 +87,29 @@ class Gridworld(mdp.MarkovDecisionProcess):
     departed (as in the R+N book examples, which more or
     less use this convention).
     """
-    if nextState == self.grid.terminalState:
+    if state == self.grid.terminalState:
       return 0.0
-    x, y = nextState
+    x, y = state
     cell = self.grid[x][y]
     if type(cell) == int or type(cell) == float:
       return cell
     return self.livingReward
         
   def getStartState(self):
-    startStates = []
+    """
+    Start state should be marked as 'S'
+    If there are mutliple start states, choose randomly
+    """
+    startStateSet = []
     for x in range(self.grid.width):
       for y in range(self.grid.height):
         if self.grid[x][y] == 'S':
-          startStates.append((x, y))
+          startStateSet.append((x, y))
 
-    if len(startStates) == 0:
+    if startStateSet == []:
       raise 'Grid has no start state'
     else:
-      return random.choice(startStates)  
+      return random.choice(startStateSet)
     
   def isTerminal(self, state):
     """
@@ -103,7 +119,8 @@ class Gridworld(mdp.MarkovDecisionProcess):
     This convention is to make the grids line up with the examples
     in the R+N textbook.
     """
-    return self.isFinal(state)
+    return state == self.grid.terminalState
+        
                    
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -116,14 +133,20 @@ class Gridworld(mdp.MarkovDecisionProcess):
     if action not in self.getPossibleActions(state):
       raise "Illegal action!"
       
-    if action == 'exit':
-      return [(self.grid.terminalState, 1)]
-
     if self.isTerminal(state):
       return []
+
+    if self.transition != None and type(self.transition[state, action]) == type([]):
+      # when this transition mapping is initialized
+      # the transition is in util.Counter type. 0 for uninitialized entries.
+      return self.transition[state, action]
     
     x, y = state
     
+    if type(self.grid[x][y]) == int or type(self.grid[x][y]) == float:
+      termState = self.grid.terminalState
+      return [(termState, 1.0)]
+      
     successors = []                
                 
     northState = (self.__isAllowed(y+1,x) and (x,y+1)) or state
@@ -169,6 +192,28 @@ class Gridworld(mdp.MarkovDecisionProcess):
     if x < 0 or x >= self.grid.width: return False
     return self.grid[x][y] != '#'
 
+class BairdsGridworld(Gridworld):
+  """
+  (0,1), (1,1), (2,1), (3,1), (4,1)
+    \      \      |      /      /
+     >      >    \ /    <     <
+                (2,0)->(3,0)
+
+  Rewards are all 0.
+
+  The world of Baird's Counter-example.
+  Its transition model is different from a normal gridworld.
+  So it's defined separately.
+  """
+  def getPossibleActions(self, state):        
+    "V1 to V5 can only go down to V6. V6 can stay or go right."
+    if self.isTerminal(state):
+      return []
+    elif state == (3, 0):
+      return ['exit']
+    else:
+      return ['south']
+
 class GridworldEnvironment(environment.Environment):
     
   def __init__(self, gridWorld):
@@ -198,9 +243,6 @@ class GridworldEnvironment(environment.Environment):
         
   def reset(self):
     self.state = self.gridWorld.getStartState()
-
-  def isFinal(self):
-    return self.gridWorld.isFinal(self.state)
 
 class Grid:
   """
@@ -254,26 +296,22 @@ def makeGrid(gridString):
   width, height = len(gridString[0]), len(gridString)
   grid = Grid(width, height)
   for ybar, line in enumerate(gridString):
-    #y = height - ybar - 1
-    y = ybar
+    y = height - ybar - 1
     for x, el in enumerate(line):
       grid[x][y] = el
   return grid    
              
-def terminateIfInt(grid):
-	return lambda state : type(grid[state[1]][state[0]]) == int
-
 def getCliffGrid():
   grid = [[' ',' ',' ',' ',' '],
           ['S',' ',' ',' ',10],
           [-100,-100, -100, -100, -100]]
-  return Gridworld(makeGrid(grid), terminateIfInt(grid))
+  return Gridworld(makeGrid(grid))
     
 def getCliffGrid2():
   grid = [[' ',' ',' ',' ',' '],
           [8,'S',' ',' ',10],
           [-100,-100, -100, -100, -100]]
-  return Gridworld(grid, terminateIfInt(grid))
+  return Gridworld(grid)
     
 def getDiscountGrid():
   grid = [[' ',' ',' ',' ',' '],
@@ -281,19 +319,19 @@ def getDiscountGrid():
           [' ','#', 1,'#', 10],
           ['S',' ',' ',' ',' '],
           [-10,-10, -10, -10, -10]]
-  return Gridworld(grid, terminateIfInt(grid))
+  return Gridworld(grid)
    
 def getBridgeGrid():
   grid = [[ '#',-100, -100, -100, -100, -100, '#'],
           [   1, 'S',  ' ',  ' ',  ' ',  ' ',  10],
           [ '#',-100, -100, -100, -100, -100, '#']]
-  return Gridworld(grid, terminateIfInt(grid))
+  return Gridworld(grid)
 
 def getBookGrid():
   grid = [[' ',' ',' ',+1],
-          [' ','#',' ',-1],
+          [' ','#',' ',' '],
           ['S',' ',' ',' ']]
-  return Gridworld(grid, terminateIfInt(grid))
+  return Gridworld(grid)
 
 def getMazeGrid():
   grid = [[' ',' ',' ',+1],
@@ -301,76 +339,47 @@ def getMazeGrid():
           [' ','#',' ',' '],
           [' ','#','#',' '],
           ['S',' ',' ',' ']]
-  return Gridworld(grid, terminateIfInt(grid))
+  return Gridworld(grid)
 
-def getObstacleGrid():
-  grid = [[' ',' ',' ',' ',' '],
-          [' ','S','S','S',' '],
-          [' ','S', -1,'S',' '],
-          [' ','S','S','S',' '],
-          [' ',' ',' ',' ',' ']]
-  isFinal = lambda state : False
-  return Gridworld(grid, isFinal)
+def getRandomWalk():
+  grid = [[0,' ',' ','S',' ',' ',1]]
+  return Gridworld(grid)
 
-def getSidewalkGrid():
-  grid = [[ 'S',' ', ' ', ' ', +1],
-          [ 'S',' ', ' ', ' ', +1],
-          [ 'S',' ', ' ', ' ', +1]]
-  isFinal = lambda state : state[0] == 4
-  return Gridworld(grid, isFinal)
+def getFourRoomGrid():
+  grid = [['S','S','S','S','S','#',' ',' ',' ',' ',' '],
+          ['S','S','S','S','S','#',' ',' ',' ',' ',' '],
+          ['S','S','S','S','S',' ',' ',' ',' ',' ',' '],
+          ['S','S','S','S','S','#',' ',' ',' ',' ',' '],
+          ['S','S','S','S','S','#',' ',' ',' ',' ',' '],
+	  ['#',' ','#','#','#','#','#','#',' ','#','#'],
+	  [' ',' ',' ',' ',' ','#',' ',' ',' ',' ',' '],
+	  [' ',' ',' ',' ',' ','#',' ',' ',' ',' ',' '],
+	  [' ',' ',' ',' ',' ','#',' ',' ',' ',' ',' '],
+	  [' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',1],
+	  [' ',' ',' ',' ',' ','#',' ',' ',' ',' ',' ']]
+  return Gridworld(grid)
 
-def getWalkAvoidGrid():
-  grid = [[ 'S',' ', ' ',  +1, ' ',  +1, +2],
-          [ 'S',' ', ' ', ' ', ' ', ' ', +2],
-          [ 'S',' ',  -1, ' ',  -1, ' ', +2]]
-  isFinal = lambda state : state[0] == 6
-  return Gridworld(grid, isFinal)
-
-def getToyWalkAvoidGrid():
-  grid = [[ 'S',  -1],
-          [ ' ', ' ']]
-  isFinal = lambda state : state[0] == 1 and state[1] == 1
-  return Gridworld(grid, isFinal)
- 
-def getLargeWalkAvoidGrid():
+def getBairdsGrid():
   """
-    Randomly generate a large grid
+  (0,1), (1,1), (2,1), (3,1), (4,1)
+    \      \      |      /      /
+     >      >    \ /    <     <
+                (2,0)->(3,0)
   """
-  width = 25
-  height = 10
-  obstacleProportion = 1.0 / 10
-  targetProportion = 1.0 / 10
 
-  # init grid world
-  grid = [[' ' for i in range(width)] for j in range(height)]
+  grid = [['S','S','S','S','S'],
+          ['#','#',' ','#','#']]
 
-  # add start and end states
-  for j in range(height):
-    grid[j][0] = 'S'
-    grid[j][width - 1] = +2
+  transition = util.Counter()
 
-  # randomly set obstacles
-  for _ in xrange(int(width * height * obstacleProportion)):
-    while True:
-      y = random.choice(range(height))
-      x = random.choice(range(1, width - 1))
-      if grid[y][x] == ' ':
-        grid[y][x] = -1
-        break
+  # first row
+  for i in range(0, 5):
+    transition[(i, 1), 'south'] = [((2, 0), 1)]
 
-  # randomly set targets
-  for _ in xrange(int(width * height * targetProportion)):
-    while True:
-      y = random.choice(range(height))
-      x = random.choice(range(1, width - 1))
-      if grid[y][x] == ' ':
-        grid[y][x] = +1
-        break
+  # second row
+  transition[(2, 0), 'south'] = [((2, 0), .99), ('TERMINAL_STATE', .01)]
 
-  print "Large Walk Avoid grid set up ready."
-
-  isFinal = lambda state : state[0] == width - 1
-  return Gridworld(grid, isFinal)
+  return BairdsGridworld(grid, transition)
 
 def getUserAction(state, actionFunction):
   """
@@ -393,7 +402,6 @@ def getUserAction(state, actionFunction):
   if action not in actions:
     action = actions[0]
   return action
-
 def printString(x): print x
 
 def runEpisode(agent, environment, discount, decision, display, message, pause, episode):
@@ -402,9 +410,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   environment.reset()
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
-
-  runs = 500
-
   while True:
 
     # DISPLAY CURRENT STATE
@@ -414,10 +419,8 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     
     # END IF IN A TERMINAL STATE
     actions = environment.getPossibleActions(state)
-    runs -= 1
-    if environment.isFinal() or runs == 0:
+    if len(actions) == 0:
       message("EPISODE "+str(episode)+" COMPLETE: RETURN WAS "+str(returns)+"\n")
-      agent.final(state)
       return returns
     
     # GET ACTION (USUALLY FROM AGENT)
@@ -450,12 +453,15 @@ def parseOptions():
                          type='float',dest='livingReward',default=0.0,
                          metavar="R", help='Reward for living for a time step (default %default)')
     optParser.add_option('-n', '--noise',action='store',
-                         type='float',dest='noise',default=0,
+                         type='float',dest='noise',default=0.2,
                          metavar="P", help='How often action results in ' +
                          'unintended direction (default %default)' )
     optParser.add_option('-e', '--epsilon',action='store',
                          type='float',dest='epsilon',default=0.3,
                          metavar="E", help='Chance of taking a random action in q-learning (default %default)')
+    optParser.add_option('-x', '--lambda',action='store',
+                         type='float',dest='lambdaValue',default=0.9,
+                         help='Lambda for SARSA(lambda) (default %default)')
     optParser.add_option('-l', '--learningRate',action='store',
                          type='float',dest='learningRate',default=0.5,
                          metavar="P", help='TD learning rate (default %default)' )
@@ -473,6 +479,9 @@ def parseOptions():
     optParser.add_option('-a', '--agent',action='store', metavar="A",
                          type='string',dest='agent',default="random",
                          help='Agent type (options are \'random\', \'value\' and \'q\', default %default)')
+    optParser.add_option('-f', '--feature',action='store', metavar="A",
+                         type='string',dest='extractor',default="IdentityExtractor",
+                         help='Type of extractor if function approximation is applied.')
     optParser.add_option('-t', '--text',action='store_true',
                          dest='textDisplay',default=False,
                          help='Use text-only ASCII display')
@@ -482,6 +491,12 @@ def parseOptions():
     optParser.add_option('-q', '--quiet',action='store_true',
                          dest='quiet',default=False,
                          help='Skip display of any learning episodes')
+    optParser.add_option('-y', '--replace',action='store_true',
+                         dest='replace',default=False,
+                         help='Replacing trace applied')
+    optParser.add_option('-z', '--fileoutput',action='store_true',
+                         dest='fileoutput',default=False,
+                         help='File output')
     optParser.add_option('-s', '--speed',action='store', metavar="S", type=float,
                          dest='speed',default=1.0,
                          help='Speed of animation, S > 1.0 is faster, 0.0 < S < 1.0 is slower (default %default)')
@@ -508,6 +523,14 @@ def parseOptions():
       
     return opts
 
+def checkPolicy(agent):
+   """
+     FIXME should be generalized!
+     the difference between optimal policy and this policy
+   """
+   p = agent.getPolicy
+   consistence = [p((0, 0)) == 'north', p((0, 1)) == 'north', p((0, 2)) == 'east', p((1, 2)) == 'east', p((2, 2)) == 'east']
+   return consistence.count(True)
   
 if __name__ == '__main__':
   
@@ -540,47 +563,56 @@ if __name__ == '__main__':
   # GET THE AGENT
   ###########################
 
-  import valueIterationAgents, qlearningAgents
+  import valueIterationAgents, qlearningAgents, sarsaLambdaAgents
   a = None
   if opts.agent == 'value':
     a = valueIterationAgents.ValueIterationAgent(mdp, opts.discount, opts.iters)
+  elif opts.agent == 'valueApproximate':
+    actionFn = lambda state: mdp.getPossibleActions(state)
+    qLearnOpts = {'gamma': opts.discount, 
+                  'iterations': opts.iters,
+		  'mdp': mdp,
+                  'alpha': opts.learningRate, 
+                  'epsilon': opts.epsilon,
+		  'extractor': opts.extractor,
+                  'actionFn': actionFn}
+    a = valueIterationAgents.ApproximateValueIterAgent(**qLearnOpts)
   elif opts.agent == 'q':
     #env.getPossibleActions, opts.discount, opts.learningRate, opts.epsilon
     #simulationFn = lambda agent, state: simulation.GridworldSimulation(agent,state,mdp)
-    gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
-  elif opts.agent == 'Approximate':
-    gridWorldEnv = GridworldEnvironment(mdp)
-    actionFn = lambda state: mdp.getPossibleActions(state)
-    if opts.grid == 'ObstacleGrid':
-	  extractor = 'ObstacleExtractor'
-    elif opts.grid == 'SidewalkGrid':
-	  extractor = 'SidewalkExtractor'
-    else:
-	  extractor = 'IdentityExtractor'
-
-    qLearnOpts = {'gamma': opts.discount, 
-                  'alpha': opts.learningRate, 
-                  'epsilon': opts.epsilon,
-                  'actionFn': actionFn,
-                  'extractor': extractor}
-    a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
-  elif opts.agent == 'Modular':
-    import modularAgents
-    gridWorldEnv = GridworldEnvironment(mdp)
+  elif opts.agent == 'qApproximate':
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
                   'epsilon': opts.epsilon,
+		  'extractor': opts.extractor,
                   'actionFn': actionFn}
-    a = modularAgents.ModularAgent(**qLearnOpts)
-    # here, set the Q tables of the trained modules
-    a.setQFuncs(modularAgents.getObsAvoidFuncs(mdp))
+    a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
+  elif opts.agent == 'sarsa':
+    actionFn = lambda state: mdp.getPossibleActions(state)
+    qLearnOpts = {'gamma': opts.discount, 
+                  'alpha': opts.learningRate, 
+                  'epsilon': opts.epsilon,
+                  'lambdaValue' : opts.lambdaValue,
+                  'replace' : opts.replace,
+                  'actionFn': actionFn}
+    a = sarsaLambdaAgents.SarsaLambdaAgent(**qLearnOpts)
+  elif opts.agent == 'sarsaApproximate':
+    actionFn = lambda state: mdp.getPossibleActions(state)
+    qLearnOpts = {'gamma': opts.discount, 
+                  'alpha': opts.learningRate, 
+                  'epsilon': opts.epsilon,
+		  'extractor': opts.extractor,
+                  'lambdaValue' : opts.lambdaValue,
+                  'replace' : opts.replace,
+                  'actionFn': actionFn}
+    a = sarsaLambdaAgents.ApproximateSarsaAgent(**qLearnOpts)
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
@@ -628,7 +660,10 @@ if __name__ == '__main__':
     else:
       if opts.agent == 'random': displayCallback = lambda state: display.displayValues(a, state, "CURRENT VALUES")
       if opts.agent == 'value': displayCallback = lambda state: display.displayValues(a, state, "CURRENT VALUES")
-      if opts.agent == 'q' or opts.agent == 'Approximate' or opts.agent == 'Modular': displayCallback = lambda state: display.displayQValues(a, state, "CURRENT Q-VALUES")
+      if opts.agent == 'q': displayCallback = lambda state: display.displayQValues(a, state, "CURRENT Q-VALUES")
+      if opts.agent == 'qApproximate': displayCallback = lambda state: display.displayQValues(a, state, "CURRENT Q-VALUES")
+      if opts.agent == 'sarsa': displayCallback = lambda state: display.displayQValues(a, state, "CURRENT Q-VALUES")
+      if opts.agent == 'sarsaApproximate': displayCallback = lambda state: display.displayQValues(a, state, "CURRENT Q-VALUES")
 
   messageCallback = lambda x: printString(x)
   if opts.quiet:
@@ -651,8 +686,27 @@ if __name__ == '__main__':
     print "RUNNING", opts.episodes, "EPISODES"
     print
   returns = 0
+
+  #policyFile = open('policy' + opts.agent + str(opts.lambdaValue), 'a')
+  #policyFile.write(str(opts.iters) + ' ' + str(checkPolicy(a)) + '\n')
   for episode in range(1, opts.episodes+1):
-    returns += runEpisode(a, env, opts.discount, decisionCallback, displayCallback, messageCallback, pauseCallback, episode)
+    thisReturn = runEpisode(a, env, opts.discount, decisionCallback, displayCallback, messageCallback, pauseCallback, episode)
+
+    if opts.agent == 'qApproximate' or opts.agent == 'sarsaApproximate':
+      #a.final('TERMINAL_STATE')
+
+      f = open("lambda" + str(a.lambdaValue), 'a')
+      
+      # get values from value iteration
+      values = a.getValues(mdp.getStates())
+      valueIter = pickle.load(open("valueIterAnswer"))
+      # calculate rms and outoput
+      f.write(str(episode) + ' ' + str(values.rms(valueIter)) + '\n')
+      
+      f.close()
+
+    returns += thisReturn
+
   if opts.episodes > 0:
     print
     print "AVERAGE RETURNS FROM START STATE: "+str((returns+0.0) / opts.episodes)
@@ -660,10 +714,19 @@ if __name__ == '__main__':
     print
     
   # DISPLAY POST-LEARNING VALUES / Q-VALUES
-  if opts.agent == 'q' or opts.agent == 'Approximate' or opts.agent == 'Modular' and not opts.manual:
-    display.displayQValues(a, message = "Q-VALUES AFTER "+str(opts.episodes)+" EPISODES")
-    display.pause()
-    display.displayValues(a, message = "VALUES AFTER "+str(opts.episodes)+" EPISODES")
-    display.pause()
-    
-   
+  if opts.agent != 'random' and not opts.manual:
+    if not opts.fileoutput:
+      # original output by gridworld
+      display.displayQValues(a, message = "Q-VALUES AFTER "+str(opts.episodes)+" EPISODES")
+      display.pause()
+      display.displayValues(a, message = "VALUES AFTER "+str(opts.episodes)+" EPISODES")
+      display.pause()
+
+  if (opts.agent == 'value') and not opts.manual:
+    if opts.fileoutput:
+       values = a.getValues(mdp.getStates())
+
+       f = open("valueIterAnswer", "w")
+       pickle.dump(values, f)
+
+

@@ -11,8 +11,7 @@ from learningAgents import ReinforcementAgent
 from featureExtractors import *
 
 import random,util,math
-import pickle
-          
+
 class QLearningAgent(ReinforcementAgent):
   """
     Q-Learning Agent
@@ -40,6 +39,7 @@ class QLearningAgent(ReinforcementAgent):
 
     "*** YOUR CODE HERE ***"
     self.values = util.Counter()
+    self.visits = util.Counter()
   
   def getQValue(self, state, action):
     """
@@ -76,14 +76,25 @@ class QLearningAgent(ReinforcementAgent):
     """
     "*** YOUR CODE HERE ***"
     actions = self.getLegalActions(state)
-    if actions: 
-      q_value_func = lambda action: self.getQValue(state, action)
-      maxQValue = max([q_value_func(action) for action in actions])
-      optActions = [action for action in actions if q_value_func(action) == maxQValue]
-      return random.choice(optActions)
-    else:
-      return None
+    max_v = None
+    max_actions = []
 
+    for action in actions:
+      if self.visits[state, action] >= self.k1:
+        q = self.getQValue(state, action)
+      else:
+        q = 100
+
+      if max_v == None or q > max_v:
+        max_v = q
+	max_actions = [action]
+      elif q == max_v:
+        max_actions.append(action)
+
+    if max_actions == []:
+      return None
+    else:
+      return random.choice(max_actions)
     #util.raiseNotDefined()
     
   def getAction(self, state):
@@ -122,10 +133,7 @@ class QLearningAgent(ReinforcementAgent):
     sample = reward + self.gamma * self.getValue(nextState)
     new_qvalue = (1 - self.alpha) * self.getQValue(state, action) + self.alpha * sample 
     self.values[state, action] = new_qvalue 
-
-  def final(self, state):
-    "Called at the end of each game."
-    pass
+    self.visits[state, action] += 1
 
 
 class PacmanQAgent(QLearningAgent):
@@ -158,9 +166,8 @@ class PacmanQAgent(QLearningAgent):
     action = QLearningAgent.getAction(self,state)
     self.doAction(state,action)
     return action
-
     
-class ApproximateQAgent(PacmanQAgent):
+class ApproximateQAgent(QLearningAgent):
   """
      ApproximateQLearningAgent
      
@@ -169,12 +176,26 @@ class ApproximateQAgent(PacmanQAgent):
      should work as is.
   """
   def __init__(self, extractor='IdentityExtractor', **args):
+    if extractor in args:
+      extractor = args['extractor']
+
     self.featExtractor = util.lookup(extractor, globals())()
-    PacmanQAgent.__init__(self, **args)
+    QLearningAgent.__init__(self, **args)
 
     # You might want to initialize weights here.
     "*** YOUR CODE HERE ***"
     self.weights = util.Counter()
+    self.times = 0
+
+    if extractor == 'BairdsExtractor':
+      # doing evil thing here
+      self.weights[0] = 1
+      self.weights[1] = 1
+      self.weights[2] = 1
+      self.weights[3] = 1
+      self.weights[4] = 1
+      self.weights[5] = 10
+      self.weights[6] = 1
     
   def getQValue(self, state, action):
     """
@@ -194,10 +215,26 @@ class ApproximateQAgent(PacmanQAgent):
     """
     "*** YOUR CODE HERE ***"
     correction = (reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)
-
     for feature, value in self.featExtractor.getFeatures(state, action).items():
       self.weights[feature] += self.alpha * correction * value
+    #util.raiseNotDefined()
 
   def final(self, state):
     "Called at the end of each game."
-    pass
+    # for output of Baird's counterexample
+    f = open("weights", "a")
+
+    output = str(self.times) + ' '
+    for i in range(7):
+      output += str(self.weights[i]) + ' '
+    output += '\n'
+    f.write(output)
+    f.close()
+
+    self.times += 1
+    
+    # did we finish training?
+    if self.episodesSoFar == self.numTraining:
+      # you might want to print your weights here for debugging
+      "*** YOUR CODE HERE ***"
+      pass
