@@ -37,6 +37,8 @@ class InverseModularRL:
 
       Args:
         X: parameter vector.
+      Return:
+        the function value
     """
     states = self.mdp.getStates()
     w = X
@@ -62,7 +64,10 @@ class InverseModularRL:
 
   def findWeights(self):
     """
-      Find the approporiate weight for each module, by walking through the policy
+      Find the approporiate weight for each module, by walking through the policy.
+
+      Return:
+        optimal weight
     """
     start_pos = np.zeros(3)
     
@@ -74,6 +79,25 @@ class InverseModularRL:
 
     w = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds ,constraints=cons)
     return w
+
+
+def checkPolicyConsistency(states, a, b):
+  """
+    Check how many policies on the states are consistent with the optimal one.
+
+    Args:
+      states: the set of states that we want to compare the policies
+      a, b: two agents that we want to compare their policies
+    Return:
+      Portion of consistent policies
+  """
+  consistentPolices = 0
+
+  # Walk through each state
+  for state in states:
+    consistentPolices += (a.getPolicy(state) == b.getPolicy(state))
+
+  return 1.0 * consistentPolices / len(states)
 
 
 def main():
@@ -98,15 +122,14 @@ def main():
     a.setQFuncs(qFuncs)
 
     sln = InverseModularRL(a, m, qFuncs)
-    print sln.findWeights()
+    w = sln.findWeights()
 
-    # test
-    print "Some obj function values for other weights:"
-    print sln.obj([1, 0, 0])
-    print sln.obj([0.25, 0.75, 0])
-    print sln.obj([0.5, 0.5, 0])
-    print sln.obj([0.75, 0.25, 0])
-    print sln.obj([0, 1, 0])
+    # check the consistency between the original optimal policy
+    # and the policy predicted by the weights we guessed.
+    aHat = modularAgents.ModularAgent(**qLearnOpts)
+    aHat.setQFuncs(qFuncs)
+    aHat.setWeights(w)
+    print checkPolicyConsistency(m.getStates(), a, aHat)
 
 
 if __name__ == '__main__':
