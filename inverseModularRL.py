@@ -122,13 +122,15 @@ def main():
     a.setQFuncs(qFuncs)
 
     sln = InverseModularRL(a, m, qFuncs)
-    w = sln.findWeights()
+    output = sln.findWeights()
+
+    print output
 
     # check the consistency between the original optimal policy
     # and the policy predicted by the weights we guessed.
     aHat = modularAgents.ModularAgent(**qLearnOpts)
     aHat.setQFuncs(qFuncs)
-    aHat.setWeights(w)
+    aHat.setWeights(output.x.tolist()) # get the weights in the result
     print checkPolicyConsistency(m.getStates(), a, aHat)
 
 
