@@ -105,7 +105,7 @@ def main():
       Can be called to run pre-specified agent and domain.
     """
     # environment, an mdp object
-    m = gw.getWalkAvoidGrid()
+    m = gw.getLargeWalkAvoidGrid()
 
     gridWorldEnv = gw.GridworldEnvironment(m)
     actionFn = lambda state: m.getPossibleActions(state)
@@ -123,14 +123,15 @@ def main():
 
     sln = InverseModularRL(a, m, qFuncs)
     output = sln.findWeights()
+    w = output.x.tolist()
 
-    print output
+    print w
 
     # check the consistency between the original optimal policy
     # and the policy predicted by the weights we guessed.
     aHat = modularAgents.ModularAgent(**qLearnOpts)
     aHat.setQFuncs(qFuncs)
-    aHat.setWeights(output.x.tolist()) # get the weights in the result
+    aHat.setWeights(w) # get the weights in the result
     print checkPolicyConsistency(m.getStates(), a, aHat)
 
 

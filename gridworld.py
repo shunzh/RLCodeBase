@@ -336,7 +336,7 @@ def getLargeWalkAvoidGrid():
   """
     Randomly generate a large grid
   """
-  width = 25
+  width = 15
   height = 10
   obstacleProportion = 1.0 / 10
   targetProportion = 1.0 / 10
@@ -349,11 +349,15 @@ def getLargeWalkAvoidGrid():
     grid[j][0] = 'S'
     grid[j][width - 1] = +2
 
+  # random generator used in this context
+  rand = random.Random()
+  rand.seed(0)
+
   # randomly set obstacles
   for _ in xrange(int(width * height * obstacleProportion)):
     while True:
-      y = random.choice(range(height))
-      x = random.choice(range(1, width - 1))
+      y = rand.choice(range(height))
+      x = rand.choice(range(1, width - 1))
       if grid[y][x] == ' ':
         grid[y][x] = -1
         break
@@ -361,8 +365,8 @@ def getLargeWalkAvoidGrid():
   # randomly set targets
   for _ in xrange(int(width * height * targetProportion)):
     while True:
-      y = random.choice(range(height))
-      x = random.choice(range(1, width - 1))
+      y = rand.choice(range(height))
+      x = rand.choice(range(1, width - 1))
       if grid[y][x] == ' ':
         grid[y][x] = +1
         break
