@@ -88,11 +88,13 @@ class ModularAgent(ApproximateQAgent):
       How significance an agent's correct decision at this state should affect the overall performance.
 
       Using the std of the Q values of this state.
+
+      DUMMY
     """
     actions = self.getLegalActions(state)
 
     values = [self.getQValue(state, action) for action in actions]
-    return np.array(values).std()
+    return np.std(values)
 
 
 def getObsAvoidFuncs(mdp):

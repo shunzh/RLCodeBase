@@ -4,6 +4,8 @@ import modularAgents
 import numpy as np
 from scipy.optimize import minimize
 
+import sys
+
 class InverseModularRL:
   """
     Inverse Reinforcement Learning. From a trained modular agent, find the weights given
@@ -61,9 +63,6 @@ class InverseModularRL:
           denom += np.exp(self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, action))
         term -= np.log(denom)
 
-      # reweight this state
-      #term *= self.agent.getSignificance(state)
-
       ret += term
 
     # This is to be minimized, take the negative.
@@ -102,7 +101,7 @@ def checkPolicyConsistency(states, a, b):
 
   # Walk through each state
   for state in states:
-    consistentPolices += (a.getPolicy(state) == b.getPolicy(state))
+    consistentPolices += int(a.getPolicy(state) == b.getPolicy(state))
 
   return 1.0 * consistentPolices / len(states)
 
@@ -123,6 +122,11 @@ def main():
     # modular agent
     a = modularAgents.ModularAgent(**qLearnOpts)
 
+    if len(sys.argv) > 1:
+      # user wants to set weights themselves
+      w = map(float, sys.argv[1:])
+      a.setWeights(w)
+
     qFuncs = modularAgents.getObsAvoidFuncs(m)
     # set the weights and corresponding q-functions for its sub-mdps
     # note that the modular agent is able to determine the optimal policy based on these
@@ -132,8 +136,6 @@ def main():
     output = sln.findWeights()
     w = output.x.tolist()
     w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
-
-    print w
 
     # check the consistency between the original optimal policy
     # and the policy predicted by the weights we guessed.
