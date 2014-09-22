@@ -3,6 +3,7 @@ from game import Actions
 import util
 
 import math
+import numpy as np
 
 class ModularAgent(ApproximateQAgent):
   """
@@ -18,7 +19,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0.4, 0.6, 0]
+    self.weights = [1, 0, 0]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -70,7 +71,6 @@ class ModularAgent(ApproximateQAgent):
 
   def getPolicy(self, state):
     """
-      If self.weights
       Can toggle between using QValue directly (traditional way)
       or by proportion of exp(QValue)
     """
@@ -82,6 +82,17 @@ class ModularAgent(ApproximateQAgent):
       return actions[values.index(max(values))]
     else:
       raise Exception("Returning None action here.")
+
+  def getSignificance(self, state):
+    """
+      How significance an agent's correct decision at this state should affect the overall performance.
+
+      Using the std of the Q values of this state.
+    """
+    actions = self.getLegalActions(state)
+
+    values = [self.getQValue(state, action) for action in actions]
+    return np.array(values).std()
 
 
 def getObsAvoidFuncs(mdp):

@@ -48,16 +48,23 @@ class InverseModularRL:
     for state in states:
       optAction = self.agent.getPolicy(state)
 
+      term = 0
+
       # Update the weights for each module accordingly.
       for moduleIdx in xrange(len(self.qFuncs)):
-        ret += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
+        term += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
 
         # denominator
         denom = 0
         actionSet = self.mdp.getPossibleActions(state)
         for action in actionSet:
           denom += np.exp(self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, action))
-        ret -= np.log(denom)
+        term -= np.log(denom)
+
+      # reweight this state
+      #term *= self.agent.getSignificance(state)
+
+      ret += term
 
     # This is to be minimized, take the negative.
     return - ret
@@ -124,6 +131,7 @@ def main():
     sln = InverseModularRL(a, m, qFuncs)
     output = sln.findWeights()
     w = output.x.tolist()
+    w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
     print w
 
