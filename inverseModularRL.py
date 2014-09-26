@@ -106,6 +106,16 @@ def checkPolicyConsistency(states, a, b):
   return 1.0 * consistentPolices / len(states)
 
 
+def getWeightDistance(w1, w2):
+  """
+    Return:
+      ||w1 - w2||_2
+  """
+  assert len(w1) == len(w2)
+
+  return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))])
+
+
 def main():
     """
       Can be called to run pre-specified agent and domain.
@@ -142,7 +152,10 @@ def main():
     aHat = modularAgents.ModularAgent(**qLearnOpts)
     aHat.setQFuncs(qFuncs)
     aHat.setWeights(w) # get the weights in the result
-    print checkPolicyConsistency(m.getStates(), a, aHat)
+
+    # print for experiments
+    #print checkPolicyConsistency(m.getStates(), a, aHat)
+    print getWeightDistance(a.getWeights(), w)
 
 
 if __name__ == '__main__':
