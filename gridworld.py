@@ -52,7 +52,7 @@ class Gridworld(mdp.MarkovDecisionProcess):
     that "exit" states transition to the terminal
     state under the special action "done".
     """
-    return ('north','west','south','east')
+    return ('north','west','south','east', 'ne', 'se', 'nw', 'sw')
     
   def getStates(self):
     """
@@ -130,7 +130,7 @@ class Gridworld(mdp.MarkovDecisionProcess):
     westState = (self.__isAllowed(y,x-1) and (x-1,y)) or state
     southState = (self.__isAllowed(y-1,x) and (x,y-1)) or state
     eastState = (self.__isAllowed(y,x+1) and (x+1,y)) or state
-                        
+
     if action == 'north' or action == 'south':
       if action == 'north': 
         successors.append((northState,1-self.noise))
@@ -152,7 +152,7 @@ class Gridworld(mdp.MarkovDecisionProcess):
       successors.append((southState,massLeft/2.0)) 
       
     successors = self.__aggregate(successors)
-                                                                           
+
     return successors                                
   
   def __aggregate(self, statesAndProbs):

@@ -235,12 +235,23 @@ def drawSquare(x, y, val, min, max, valStr, action, isObstacle, isTerminal, isCu
     
   if action == 'north':
     polygon( [(screen_x, screen_y - 0.45*GRID_SIZE), (screen_x+0.05*GRID_SIZE, screen_y-0.40*GRID_SIZE), (screen_x-0.05*GRID_SIZE, screen_y-0.40*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
-  if action == 'south':
+  elif action == 'south':
     polygon( [(screen_x, screen_y + 0.45*GRID_SIZE), (screen_x+0.05*GRID_SIZE, screen_y+0.40*GRID_SIZE), (screen_x-0.05*GRID_SIZE, screen_y+0.40*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
-  if action == 'west':
+  elif action == 'west':
     polygon( [(screen_x-0.45*GRID_SIZE, screen_y), (screen_x-0.4*GRID_SIZE, screen_y+0.05*GRID_SIZE), (screen_x-0.4*GRID_SIZE, screen_y-0.05*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
-  if action == 'east':
+  elif action == 'east':
     polygon( [(screen_x+0.45*GRID_SIZE, screen_y), (screen_x+0.4*GRID_SIZE, screen_y+0.05*GRID_SIZE), (screen_x+0.4*GRID_SIZE, screen_y-0.05*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
+  # added, not elegent maybe
+  elif action == 'ne':
+    polygon( [(screen_x+0.45*GRID_SIZE, screen_y - 0.45*GRID_SIZE), (screen_x+0.5*GRID_SIZE, screen_y-0.40*GRID_SIZE), (screen_x+0.4*GRID_SIZE, screen_y-0.40*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
+  elif action == 'se':
+    polygon( [(screen_x+0.45*GRID_SIZE, screen_y + 0.45*GRID_SIZE), (screen_x+0.5*GRID_SIZE, screen_y+0.40*GRID_SIZE), (screen_x+0.4*GRID_SIZE, screen_y+0.40*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
+  elif action == 'nw':
+    polygon( [(screen_x-0.45*GRID_SIZE, screen_y - 0.45*GRID_SIZE), (screen_x-0.4*GRID_SIZE, screen_y-0.40*GRID_SIZE), (screen_x-0.5*GRID_SIZE, screen_y-0.40*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
+  elif action == 'sw':
+    polygon( [(screen_x-0.45*GRID_SIZE, screen_y + 0.45*GRID_SIZE), (screen_x-0.4*GRID_SIZE, screen_y+0.40*GRID_SIZE), (screen_x-0.5*GRID_SIZE, screen_y+0.40*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
+  else:
+    raise Exception("Unknown action " + action)
     
   
   text_color = TEXT_COLOR

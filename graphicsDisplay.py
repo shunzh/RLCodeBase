@@ -286,8 +286,10 @@ class PacmanGraphics:
       endpoints = (90+delta, 90-delta)
     elif (direction == 'South'):
       endpoints = (270+delta, 270-delta)
-    else:
+    elif (direction == 'East'):
       endpoints = (0+delta, 0-delta)
+    else:
+      raise Exception("Unknown direction.")
     return endpoints
 
   def movePacman(self, position, direction, image):
