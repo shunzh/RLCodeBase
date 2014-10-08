@@ -105,7 +105,7 @@ class ModularAgent(ApproximateQAgent):
 
 def getObsAvoidFuncs(mdp):
   """
-    Return Q functiosn for modular mdp for obstacle avoidance behavior
+    Return Q functions for modular mdp for obstacle avoidance behavior
 
     the environment is passed by mdp
   """
@@ -164,3 +164,6 @@ def getObsAvoidFuncs(mdp):
     return radiusBias(state, action, cond, target)
 
   return [qWalk, qObstacle, qTarget]
+
+
+def getContinuousWorldFuncs(mdp):

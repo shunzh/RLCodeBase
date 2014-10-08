@@ -5,16 +5,97 @@ import environment
 import util
 import optparse
 
+import numpy.linalg
+import warnings
+
 class ContinuousWorld(mdp.MarkovDecisionProcess):
-  def __init__(self, grid, isFinal):
-    # layout
-    if type(grid) == type([]): grid = makeGrid(grid)
-    self.grid = grid
-    
+  """
+  A MDP that captures continuous state space, while the agent moves in discrete steps.
+
+  State: (location, last visited segment)
+  Action: 8 directional movement, with a fixed step size.
+  Transition: trivial.
+  Reward: upon reaching a target / obstacle, obtain the corresponding reward.
+          upon reaching a segment, if this segment is newer than the one visited before (encoded in the state space),
+          then obtain the reward.
+  """
+  def __init__(self):
+    self.loadFromMat('miniRes25.mat', 0)
+
+    # radius of an object (so the object doesn't appear as a point)
+    self.radius = 0.2
+
+    # step size of the agent movement
+    self.step = 0.1
+
+    self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'start': 0, 'end': 0}
+
     # parameters
     self.livingReward = 0.0
     self.noise = 0.0
-    self.isFinal = isFinal
+
+  def loadFromMat(self, filename, domainId):
+    """
+    Load from mat file that provided by Matt.
+
+    Args:
+      filename: name of the mat file, presumebaly in the same directory.
+      domainId: there should be multiple configurations of rooms in this file,
+                indicate which room to use.
+    Return:
+      no return, but add an obj attribute to self.
+    """
+    # read layout from source file
+    s = util.loadmat(filename)
+    s['newRes']['all_objs']
+
+    numObj = len(s['newRes']['all_objs']['id'])
+
+    targs = []
+    obsts = []
+    segs = []
+    elevator1 = None
+    elevator2 = None
+
+    for idx in xrange(numObj):
+      name = s['newRes']['all_objs']['id'][idx]
+
+      x = s['newRes']['all_objs']['object_location']['x'][domainId][idx]
+      y = s['newRes']['all_objs']['object_location']['y'][domainId][idx]
+
+      if 'targ' in name:
+        targs.append((x, y))
+      elif 'obst' in name:
+        obsts.append((x, y))
+      elif 'seg' in name:
+        segs.append((x, y))
+      elif 'elevator1' in name:
+        elevator1 = (x, y)
+      elif 'elevator2' in name:
+        elevator2 = (x, y)
+      else:
+        warnings.warn("Dropped unkown object typed '" + name + "' indexed at " + idx)
+
+    if elevator1 == None or elevator2 == None:
+      raise Exception("Elevators cannot be undefined.")
+
+    self.objs = {'targs':targs, 'obsts':obsts, 'segs':segs, 'start':elevator1, 'end':elevator2}
+
+  def closeToAnObject(self, l):
+    """
+    Determine whether a state is close to any object, within radius.
+    Args:
+      l: the loc to be checked.
+    Return:
+      String: the type of object that it's in the radius of. It is None if it's close to nothing.
+
+    #FIXME not checked whether it's close to multiple objects. However, this won't happen in a valid domain.
+    """
+    for key, locs in self.objs:
+      for loc in locs
+        dist = numpy.linalg.norm(state - loc)
+        if dist < self.radius:
+          return key
 
   def setLivingReward(self, reward):
     """
@@ -35,24 +116,17 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
   def getPossibleActions(self, state):
     """
     Returns list of valid actions for 'state'.
-    
-    Note that you can request moves into walls and
-    that "exit" states transition to the terminal
-    state under the special action "done".
+
+    This discretizes possible aciton set.
     """
     return ('north','west','south','east', 'ne', 'se', 'nw', 'sw')
     
   def getStates(self):
     """
-    Return list of all states.
+    Return list of discrete states. This is usually for sanity check.
     """
-    states = []
-    for x in range(self.grid.width):
-      for y in range(self.grid.height):
-        if self.grid[x][y] != '#':
-          state = (x,y)
-          states.append(state)
-    return states
+    raise Exception("getStates: not implemented for continuous domains.")
+    return None
         
   def getReward(self, state, action, nextState):
     """
@@ -62,20 +136,19 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     departed (as in the R+N book examples, which more or
     less use this convention).
     """
-    if nextState == self.grid.terminalState:
-      return 0.0
-    x, y = nextState
-    cell = self.grid[x][y]
-    if type(cell) == int or type(cell) == float:
-      return cell
-    return self.livingReward
+    stateType = closeToAnObject(self, state):
+    nextStateType = closeToAnObject(self, nextState):
+
+    if stateType != nextStateType:
+      # only consider when the types of states change
+      # i.e. moving from target to target doesn't give extra reward.
+      return self.rewards[nextStateType]
         
   def getStartState(self):
     """
-    Randomly choose a start state
+    Start at the starting location, with no segment previously visited.
     """
-    # TODO return elevator 1
-    pass
+    return (self.objs.start, 0)
     
   def isTerminal(self, state):
     """
@@ -151,11 +224,12 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     if x < 0 or x >= self.grid.width: return False
     return self.grid[x][y] != '#'
 
-class GridworldEnvironment(environment.Environment):
+class ContinuousEnvironment(environment.Environment):
   """
-    which holds a mdp object.
+  which holds a mdp object.
+
+  #FIXME this is essentially the same for all the domains, consider abstract this.
   """
-    
   def __init__(self, gridWorld):
     self.gridWorld = gridWorld
     self.reset()
