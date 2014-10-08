@@ -1,11 +1,3 @@
-# gridworld.py
-# ------------
-# Licensing Information: Please do not distribute or publish solutions to this
-# project. You are free to use and extend these projects for educational
-# purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
-# John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
-# For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
-
 import random
 import sys
 import mdp
@@ -13,10 +5,7 @@ import environment
 import util
 import optparse
 
-class Gridworld(mdp.MarkovDecisionProcess):
-  """
-    Gridworld
-  """
+class ContinuousWorld(mdp.MarkovDecisionProcess):
   def __init__(self, grid, isFinal):
     # layout
     if type(grid) == type([]): grid = makeGrid(grid)
@@ -26,7 +15,7 @@ class Gridworld(mdp.MarkovDecisionProcess):
     self.livingReward = 0.0
     self.noise = 0.0
     self.isFinal = isFinal
-        
+
   def setLivingReward(self, reward):
     """
     The (negative) reward for exiting "normal" states.
@@ -42,7 +31,6 @@ class Gridworld(mdp.MarkovDecisionProcess):
     The probability of moving in an unintended direction.
     """
     self.noise = noise
-        
                                     
   def getPossibleActions(self, state):
     """
@@ -53,13 +41,11 @@ class Gridworld(mdp.MarkovDecisionProcess):
     state under the special action "done".
     """
     return ('north','west','south','east', 'ne', 'se', 'nw', 'sw')
-    #return ('north','west','south','east')
     
   def getStates(self):
     """
     Return list of all states.
     """
-    # The true terminal state.
     states = []
     for x in range(self.grid.width):
       for y in range(self.grid.height):
@@ -85,16 +71,11 @@ class Gridworld(mdp.MarkovDecisionProcess):
     return self.livingReward
         
   def getStartState(self):
-    startStates = []
-    for x in range(self.grid.width):
-      for y in range(self.grid.height):
-        if self.grid[x][y] == 'S':
-          startStates.append((x, y))
-
-    if len(startStates) == 0:
-      raise 'Grid has no start state'
-    else:
-      return random.choice(startStates)  
+    """
+    Randomly choose a start state
+    """
+    # TODO return elevator 1
+    pass
     
   def isTerminal(self, state):
     """
@@ -171,6 +152,9 @@ class Gridworld(mdp.MarkovDecisionProcess):
     return self.grid[x][y] != '#'
 
 class GridworldEnvironment(environment.Environment):
+  """
+    which holds a mdp object.
+  """
     
   def __init__(self, gridWorld):
     self.gridWorld = gridWorld
@@ -202,177 +186,6 @@ class GridworldEnvironment(environment.Environment):
 
   def isFinal(self):
     return self.gridWorld.isFinal(self.state)
-
-class Grid:
-  """
-  A 2-dimensional array of immutables backed by a list of lists.  Data is accessed
-  via grid[x][y] where (x,y) are cartesian coordinates with x horizontal,
-  y vertical and the origin (0,0) in the bottom left corner.  
-  
-  The __str__ method constructs an output that is oriented appropriately.
-  """
-  def __init__(self, width, height, initialValue=' '):
-    self.width = width
-    self.height = height
-    self.data = [[initialValue for y in range(height)] for x in range(width)]
-    self.terminalState = 'TERMINAL_STATE'
-    
-  def __getitem__(self, i):
-    return self.data[i]
-  
-  def __setitem__(self, key, item):
-    self.data[key] = item
-    
-  def __eq__(self, other):
-    if other == None: return False
-    return self.data == other.data
-    
-  def __hash__(self):
-    return hash(self.data)
-  
-  def copy(self):
-    g = Grid(self.width, self.height)
-    g.data = [x[:] for x in self.data]
-    return g
-  
-  def deepCopy(self):
-    return self.copy()
-  
-  def shallowCopy(self):
-    g = Grid(self.width, self.height)
-    g.data = self.data
-    return g
-    
-  def _getLegacyText(self):
-    t = [[self.data[x][y] for x in range(self.width)] for y in range(self.height)]
-    t.reverse()
-    return t
-    
-  def __str__(self):
-    return str(self._getLegacyText())
-
-def makeGrid(gridString):
-  width, height = len(gridString[0]), len(gridString)
-  grid = Grid(width, height)
-  for ybar, line in enumerate(gridString):
-    #y = height - ybar - 1
-    y = ybar
-    for x, el in enumerate(line):
-      grid[x][y] = el
-  return grid    
-             
-def terminateIfInt(grid):
-	return lambda state : type(grid[state[1]][state[0]]) == int
-
-def getCliffGrid():
-  grid = [[' ',' ',' ',' ',' '],
-          ['S',' ',' ',' ',10],
-          [-100,-100, -100, -100, -100]]
-  return Gridworld(makeGrid(grid), terminateIfInt(grid))
-    
-def getCliffGrid2():
-  grid = [[' ',' ',' ',' ',' '],
-          [8,'S',' ',' ',10],
-          [-100,-100, -100, -100, -100]]
-  return Gridworld(grid, terminateIfInt(grid))
-    
-def getDiscountGrid():
-  grid = [[' ',' ',' ',' ',' '],
-          [' ','#',' ',' ',' '],
-          [' ','#', 1,'#', 10],
-          ['S',' ',' ',' ',' '],
-          [-10,-10, -10, -10, -10]]
-  return Gridworld(grid, terminateIfInt(grid))
-   
-def getBridgeGrid():
-  grid = [[ '#',-100, -100, -100, -100, -100, '#'],
-          [   1, 'S',  ' ',  ' ',  ' ',  ' ',  10],
-          [ '#',-100, -100, -100, -100, -100, '#']]
-  return Gridworld(grid, terminateIfInt(grid))
-
-def getBookGrid():
-  grid = [[' ',' ',' ',+1],
-          [' ','#',' ',-1],
-          ['S',' ',' ',' ']]
-  return Gridworld(grid, terminateIfInt(grid))
-
-def getMazeGrid():
-  grid = [[' ',' ',' ',+1],
-          ['#','#',' ','#'],
-          [' ','#',' ',' '],
-          [' ','#','#',' '],
-          ['S',' ',' ',' ']]
-  return Gridworld(grid, terminateIfInt(grid))
-
-def getObstacleGrid():
-  grid = [[' ',' ',' ',' ',' '],
-          [' ','S','S','S',' '],
-          [' ','S', -1,'S',' '],
-          [' ','S','S','S',' '],
-          [' ',' ',' ',' ',' ']]
-  isFinal = lambda state : False
-  return Gridworld(grid, isFinal)
-
-def getSidewalkGrid():
-  grid = [[ 'S',' ', ' ', ' ', +1],
-          [ 'S',' ', ' ', ' ', +1],
-          [ 'S',' ', ' ', ' ', +1]]
-  isFinal = lambda state : state[0] == 4
-  return Gridworld(grid, isFinal)
-
-def getWalkAvoidGrid():
-  grid = [[ 'S',' ', ' ',  +1, ' ',  +1, +2],
-          [ 'S',' ', ' ', ' ', ' ', ' ', +2],
-          [ 'S',' ',  -1, ' ',  -1, ' ', +2]]
-  isFinal = lambda state : state[0] == 6
-  return Gridworld(grid, isFinal)
-
-def getToyWalkAvoidGrid():
-  grid = [[ 'S',  -1],
-          [ ' ', ' ']]
-  isFinal = lambda state : state[0] == 1 and state[1] == 1
-  return Gridworld(grid, isFinal)
- 
-def getLargeWalkAvoidGrid(obstacleProportion = 0.2):
-  """
-    Randomly generate a large grid
-  """
-  width = 10
-  height = 10
-  targetProportion = 0.05
-
-  # init grid world
-  grid = [[' ' for i in range(width)] for j in range(height)]
-
-  # add start and end states
-  for j in range(height):
-    grid[j][0] = 'S'
-    grid[j][width - 1] = +2
-
-  # random generator used in this context
-  rand = random.Random()
-  rand.seed(0)
-
-  # randomly set obstacles
-  for _ in xrange(int(width * height * obstacleProportion)):
-    while True:
-      y = rand.choice(range(height))
-      x = rand.choice(range(1, width - 1))
-      if grid[y][x] == ' ':
-        grid[y][x] = -1
-        break
-
-  # randomly set targets
-  for _ in xrange(int(width * height * targetProportion)):
-    while True:
-      y = rand.choice(range(height))
-      x = rand.choice(range(1, width - 1))
-      if grid[y][x] == ' ':
-        grid[y][x] = +1
-        break
-
-  isFinal = lambda state : state[0] == width - 1
-  return Gridworld(grid, isFinal)
 
 def getUserAction(state, actionFunction):
   """

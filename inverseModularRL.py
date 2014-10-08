@@ -121,7 +121,7 @@ def main():
       Can be called to run pre-specified agent and domain.
     """
     # environment, an mdp object
-    m = gw.getLargeWalkAvoidGrid()
+    m = gw.getLargeWalkAvoidGrid(0.4)
 
     gridWorldEnv = gw.GridworldEnvironment(m)
     actionFn = lambda state: m.getPossibleActions(state)
@@ -154,7 +154,7 @@ def main():
     aHat.setWeights(w) # get the weights in the result
 
     # print for experiments
-    #print checkPolicyConsistency(m.getStates(), a, aHat)
+    print checkPolicyConsistency(m.getStates(), a, aHat)
     print getWeightDistance(a.getWeights(), w)
 
 
