@@ -5,7 +5,7 @@ import environment
 import util
 import optparse
 
-import numpy
+import numpy as np
 import numpy.linalg
 import warnings
 
@@ -45,7 +45,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     # read layout from source file
     s = util.loadmat(filename)
-    s['newRes']['all_objs']
 
     numObj = len(s['newRes']['all_objs']['id'])
 
@@ -54,19 +53,11 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     segs = []
     elevators = []
 
-    xMin = numpy.inf, xMax = -numpy.inf
-    yMin = numpy.inf, yMax = -numpy.inf
-
     for idx in xrange(numObj):
       name = s['newRes']['all_objs']['id'][idx]
 
       x = s['newRes']['all_objs']['object_location']['x'][domainId][idx]
       y = s['newRes']['all_objs']['object_location']['y'][domainId][idx]
-
-      if x < xMin: xMin = x
-      if x > xMax: xMax = x
-      if y < yMin: yMin = y
-      if y > yMax: yMax = y
 
       if 'targ' in name:
         targs.append((x, y))
@@ -85,8 +76,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.objs = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
     # TODO add buffer?
-    self.xBoundary = [xMin, xMax]
-    self.yBoundary = [yMin, yMax]
+    self.xBoundary = [-4, 4]
+    self.yBoundary = [-4, 4]
 
     # radius of an object (so the object doesn't appear as a point)
     self.radius = 0.2
@@ -108,7 +99,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     for key, locs in self.objs.items():
       for idx in xrange(len(locs)):
-        dist = numpy.linalg.norm(numpy.subtract(l, locs[idx]))
+        dist = numpy.linalg.norm(np.subtract(l, locs[idx]))
         if dist < self.radius:
           return (key, idx)
 
@@ -195,7 +186,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     loc, seg = state
 
     # move to new loc and check whether it's allowed
-    newLoc = numpy.add(loc, Actions._directions[action])
+    newLoc = np.add(loc, Actions._directions[action])
     newLoc = (self.__isAllowed(newLoc) and newLoc) or loc
     
     stateType, objId = closeToAnObject(self, newLoc)
@@ -449,7 +440,7 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules
-    a.setQFuncs(modularAgents.getObsAvoidFuncs(mdp))
+    a.setQFuncs(modularAgents.getContinuousWorldFuncs(mdp))
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:

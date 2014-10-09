@@ -4,16 +4,17 @@ import util
 
 import math
 import numpy as np
+import numpy.linalg.norm
 
 class ModularAgent(ApproximateQAgent):
   """
-    State: location of the agent.
-    Action: weights on the sub-MDPs.
-    Transition: transition of the agent.
-    Reward: reward from the environment.
+  State: location of the agent.
+  Action: weights on the sub-MDPs.
+  Transition: transition of the agent.
+  Reward: reward from the environment.
 
-    Assume:
-    Weights are independent from the location of the agent.
+  Assume:
+  Weights are independent from the location of the agent.
   """
   def __init__(self, **args):
     ApproximateQAgent.__init__(self, **args)
@@ -24,7 +25,7 @@ class ModularAgent(ApproximateQAgent):
  
   def getQValue(self, state, action):
     """
-      Get Q value by consulting each module
+    Get Q value by consulting each module
     """
     # sum over q values from each sub mdp
     return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
@@ -51,20 +52,20 @@ class ModularAgent(ApproximateQAgent):
 
   def setQFuncs(self, qFuncs):
     """
-      Set QFuncs from the environment. getQValue will use this.
+    Set QFuncs from the environment. getQValue will use this.
     """
     self.qFuncs = qFuncs
 
   def setWeights(self, weights):
     """
-      If this is set, then the agent simply follows the weights.
+    If this is set, then the agent simply follows the weights.
     """
     self.learningWeights = False
     self.weights = weights
 
   def getWeights(self):
     """
-      Get weights.
+    Get weights.
     """
     return self.weights
   
@@ -77,8 +78,8 @@ class ModularAgent(ApproximateQAgent):
 
   def getPolicy(self, state):
     """
-      Can toggle between using QValue directly (traditional way)
-      or by proportion of exp(QValue)
+    Can toggle between using QValue directly (traditional way)
+    or by proportion of exp(QValue)
     """
     actions = self.getLegalActions(state)
     if actions: 
@@ -91,11 +92,11 @@ class ModularAgent(ApproximateQAgent):
 
   def getSignificance(self, state):
     """
-      How significance an agent's correct decision at this state should affect the overall performance.
+    How significance an agent's correct decision at this state should affect the overall performance.
 
-      Using the std of the Q values of this state.
+    Using the std of the Q values of this state.
 
-      DUMMY
+    DUMMY
     """
     actions = self.getLegalActions(state)
 
@@ -105,9 +106,9 @@ class ModularAgent(ApproximateQAgent):
 
 def getObsAvoidFuncs(mdp):
   """
-    Return Q functions for modular mdp for obstacle avoidance behavior
+  Return Q functions for modular mdp for obstacle avoidance behavior
 
-    the environment is passed by mdp
+  the environment is passed by mdp
   """
   obstacle = {'bias': -0.20931133310480204, 'dis': 0.06742681562641269}
   target = {'bias': 0.20931133310480204, 'dis': -0.06742681562641269}
@@ -126,20 +127,20 @@ def getObsAvoidFuncs(mdp):
 
   def qWalk(state, action):
     """
-      QValue of forward walking
+    QValue of forward walking
     """
     next_x, next_y = getNext(state, action)
     return sidewalk['x'] * next_x
 
   def radiusBias(state, action, cond, w):
     """
-      Compute a Q value responding to an object, considering the distance to it.
-      This is used by obstacle avoidance, and target obtaining.
+    Compute a Q value responding to an object, considering the distance to it.
+    This is used by obstacle avoidance, and target obtaining.
 
-      Args:
-        state, action
-        cond: the lambda expr that given state is the object we want
-        w: weight vector
+    Args:
+      state, action
+      cond: the lambda expr that given state is the object we want
+      w: weight vector
     """
     x, y = state
     next_x, next_y = getNext(state, action)
@@ -167,4 +168,33 @@ def getObsAvoidFuncs(mdp):
 
 
 def getContinuousWorldFuncs(mdp):
-  def radiusBias(state, action, cond, w):
+  """
+  Feature extraction for continuous world.
+  """
+  def radiusBias(state, action, label, w):
+    loc, seg = state
+    newLoc, newSeg = mdp.getTransitionStatesAndProbs(state, action)[0]
+
+    minDist = np.inf
+
+    # search for the minimum one in bag, with the given constraint
+    constraint = lambda idx: True
+    bag = mdp.objs[label]
+    if label == 'seg':
+      constraint = lambda idx: idx > seg
+
+    for idx in xrange(len(bag)):
+      dist = numpy.linalg.norm(np.subtract(loc, bag[idx]))
+      if dist < minDist and constraint(idx):
+        minDist = dist
+
+    return minDist * w['dis'] + 1 * w['bias']
+
+  def qTarget(state, action):
+    return radiusBias(state, action, 'targs', target)
+
+  def qObstacle(state, action):
+    return radiusBias(state, action, 'obsts', obstacle)
+
+  def qSegment(state, action):
+    return radiusBias(state, action, 'segs', seg)
