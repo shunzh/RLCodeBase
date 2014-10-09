@@ -167,3 +167,4 @@ def getObsAvoidFuncs(mdp):
 
 
 def getContinuousWorldFuncs(mdp):
+  def radiusBias(state, action, cond, w):

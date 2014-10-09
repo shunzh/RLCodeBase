@@ -5,8 +5,11 @@ import environment
 import util
 import optparse
 
+import numpy
 import numpy.linalg
 import warnings
+
+from game import Actions
 
 class ContinuousWorld(mdp.MarkovDecisionProcess):
   """
@@ -22,17 +25,12 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
   def __init__(self):
     self.loadFromMat('miniRes25.mat', 0)
 
-    # radius of an object (so the object doesn't appear as a point)
-    self.radius = 0.2
-
-    # step size of the agent movement
-    self.step = 0.1
-
+    # reward values that getReward will use
     self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'start': 0, 'end': 0}
 
     # parameters
     self.livingReward = 0.0
-    self.noise = 0.0
+    self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
 
   def loadFromMat(self, filename, domainId):
     """
@@ -54,8 +52,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     targs = []
     obsts = []
     segs = []
-    elevator1 = None
-    elevator2 = None
+    elevators = []
+
+    xMin = numpy.inf, xMax = -numpy.inf
+    yMin = numpy.inf, yMax = -numpy.inf
 
     for idx in xrange(numObj):
       name = s['newRes']['all_objs']['id'][idx]
@@ -63,23 +63,37 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       x = s['newRes']['all_objs']['object_location']['x'][domainId][idx]
       y = s['newRes']['all_objs']['object_location']['y'][domainId][idx]
 
+      if x < xMin: xMin = x
+      if x > xMax: xMax = x
+      if y < yMin: yMin = y
+      if y > yMax: yMax = y
+
       if 'targ' in name:
         targs.append((x, y))
       elif 'obst' in name:
         obsts.append((x, y))
       elif 'seg' in name:
         segs.append((x, y))
-      elif 'elevator1' in name:
-        elevator1 = (x, y)
-      elif 'elevator2' in name:
-        elevator2 = (x, y)
+      elif 'elevator' in name:
+        elevators.append((x, y))
       else:
-        warnings.warn("Dropped unkown object typed '" + name + "' indexed at " + idx)
+        warnings.warn("Dropped unkown object typed '" + name + "' indexed at " + str(idx))
 
-    if elevator1 == None or elevator2 == None:
+    if len(elevators) < 2:
       raise Exception("Elevators cannot be undefined.")
 
-    self.objs = {'targs':targs, 'obsts':obsts, 'segs':segs, 'start':elevator1, 'end':elevator2}
+    self.objs = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
+
+    # TODO add buffer?
+    self.xBoundary = [xMin, xMax]
+    self.yBoundary = [yMin, yMax]
+
+    # radius of an object (so the object doesn't appear as a point)
+    self.radius = 0.2
+
+    # step size of the agent movement
+    self.step = 0.1
+
 
   def closeToAnObject(self, l):
     """
@@ -87,15 +101,19 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Args:
       l: the loc to be checked.
     Return:
-      String: the type of object that it's in the radius of. It is None if it's close to nothing.
+      String, int: the type of object that it's in the radius of, and its id.
+                   It is (None, None) if it's close to nothing (so easy to be parsed)
 
     #FIXME not checked whether it's close to multiple objects. However, this won't happen in a valid domain.
     """
-    for key, locs in self.objs:
-      for loc in locs
-        dist = numpy.linalg.norm(state - loc)
+    for key, locs in self.objs.items():
+      for idx in xrange(len(locs)):
+        dist = numpy.linalg.norm(numpy.subtract(l, locs[idx]))
         if dist < self.radius:
-          return key
+          return (key, idx)
+
+    # if it's close to nothing
+    return (None, None)
 
   def setLivingReward(self, reward):
     """
@@ -136,81 +154,64 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     departed (as in the R+N book examples, which more or
     less use this convention).
     """
-    stateType = closeToAnObject(self, state):
-    nextStateType = closeToAnObject(self, nextState):
+    loc, seg = state
+    nextLoc, nextSeg = nextState
+    
+    if seg != nextSeg:
+      # reaching a new segment
+      return self.rewards["segs"]
+    else:
+      # check whether reaching a target or obstacle
+      stateType, objId = closeToAnObject(self, loc)
+      nextStateType, newObjId = closeToAnObject(self, nextLoc)
 
-    if stateType != nextStateType:
-      # only consider when the types of states change
-      # i.e. moving from target to target doesn't give extra reward.
-      return self.rewards[nextStateType]
+      if stateType != nextStateType and nextStateType != None:
+        # only consider when the types of states change
+        # i.e. moving from target to target doesn't give extra reward.
+        return self.rewards[nextStateType]
         
   def getStartState(self):
     """
     Start at the starting location, with no segment previously visited.
     """
-    return (self.objs.start, 0)
+    return (self.objs['elevators'][0], 0)
     
-  def isTerminal(self, state):
+  def isFinal(self, state):
     """
-    Only the TERMINAL_STATE state is *actually* a terminal state.
-    The other "exit" states are technically non-terminals with
-    a single action "exit" which leads to the true terminal state.
-    This convention is to make the grids line up with the examples
-    in the R+N textbook.
+    Check whether we should terminate at this state.
     """
-    return self.isFinal(state)
+    loc, seg = state
+    return self.closeToAnObject(loc) == ('elevators', 1)
                    
   def getTransitionStatesAndProbs(self, state, action):
     """
-    Returns list of (nextState, prob) pairs
-    representing the states reachable
-    from 'state' by taking 'action' along
-    with their transition probabilities.          
-    """        
-        
-    if action not in self.getPossibleActions(state):
-      raise "Illegal action!"
-      
-    if action == 'exit':
-      return [(self.grid.terminalState, 1)]
-
-    if self.isTerminal(state):
+    Basically following physics laws, but considering:
+    - bound back within self.xBoundary and self.yBoundary
+    - change seg in the state representation upon reaching a new segment
+    """
+    if self.isFinal(state):
       return []
     
-    x, y = state
-    
-    successors = []                
-                
-    northState = (self.__isAllowed(y+1,x) and (x,y+1)) or state
-    westState = (self.__isAllowed(y,x-1) and (x-1,y)) or state
-    southState = (self.__isAllowed(y-1,x) and (x,y-1)) or state
-    eastState = (self.__isAllowed(y,x+1) and (x+1,y)) or state
+    loc, seg = state
 
-    if action == 'north' or action == 'south':
-      if action == 'north': 
-        successors.append((northState,1-self.noise))
-      else:
-        successors.append((southState,1-self.noise))
-                                
-      massLeft = self.noise
-      successors.append((westState,massLeft/2.0))    
-      successors.append((eastState,massLeft/2.0))
-                                
-    if action == 'west' or action == 'east':
-      if action == 'west':
-        successors.append((westState,1-self.noise))
-      else:
-        successors.append((eastState,1-self.noise))
-                
-      massLeft = self.noise
-      successors.append((northState,massLeft/2.0))
-      successors.append((southState,massLeft/2.0)) 
-      
-    successors = self.__aggregate(successors)
+    # move to new loc and check whether it's allowed
+    newLoc = numpy.add(loc, Actions._directions[action])
+    newLoc = (self.__isAllowed(newLoc) and newLoc) or loc
+    
+    stateType, objId = closeToAnObject(self, newLoc)
+    if stateType == 'segs' and objId > seg:
+      newSeg = objId
+    else:
+      newSeg = seg
+
+    successors = [((newLoc, newSeg), 1)]
 
     return successors                                
   
   def __aggregate(self, statesAndProbs):
+    """
+    Make sure stateAndProbs.keys() is a set (without duplicates)
+    """
     counter = util.Counter()
     for state, prob in statesAndProbs:
       counter[state] += prob
@@ -219,10 +220,13 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       newStatesAndProbs.append((state, prob))
     return newStatesAndProbs
         
-  def __isAllowed(self, y, x):
-    if y < 0 or y >= self.grid.height: return False
-    if x < 0 or x >= self.grid.width: return False
-    return self.grid[x][y] != '#'
+  def __isAllowed(self, loc):
+    """
+    Check whether this state is valid
+    """
+    x, y = loc
+    if x < self.xBoundary[0] or x >= self.xBoundary[1]: return False
+    if y < self.yBoundary[0] or y >= self.yBoundary[1]: return False
 
 class ContinuousEnvironment(environment.Environment):
   """
@@ -230,18 +234,18 @@ class ContinuousEnvironment(environment.Environment):
 
   #FIXME this is essentially the same for all the domains, consider abstract this.
   """
-  def __init__(self, gridWorld):
-    self.gridWorld = gridWorld
+  def __init__(self, mdp):
+    self.mdp = mdp
     self.reset()
             
   def getCurrentState(self):
     return self.state
         
   def getPossibleActions(self, state):        
-    return self.gridWorld.getPossibleActions(state)
+    return self.mdp.getPossibleActions(state)
         
   def doAction(self, action):
-    successors = self.gridWorld.getTransitionStatesAndProbs(self.state, action) 
+    successors = self.mdp.getTransitionStatesAndProbs(self.state, action) 
     sum = 0.0
     rand = random.random()
     state = self.getCurrentState()
@@ -250,16 +254,16 @@ class ContinuousEnvironment(environment.Environment):
       if sum > 1.0:
         raise 'Total transition probability more than one; sample failure.' 
       if rand < sum:
-        reward = self.gridWorld.getReward(state, action, nextState)
+        reward = self.mdp.getReward(state, action, nextState)
         self.state = nextState
         return (nextState, reward)
     raise 'Total transition probability less than one; sample failure.'    
         
   def reset(self):
-    self.state = self.gridWorld.getStartState()
+    self.state = self.mdp.getStartState()
 
   def isFinal(self):
-    return self.gridWorld.isFinal(self.state)
+    return self.mdp.isFinal(self.state)
 
 def getUserAction(state, actionFunction):
   """
@@ -406,62 +410,38 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  import gridworld
-  mdpFunction = getattr(gridworld, "get"+opts.grid)
-  mdp = mdpFunction()
+  mdp = ContinuousWorld()
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
-  env = gridworld.GridworldEnvironment(mdp)
+  env = ContinuousEnvironment(mdp)
 
   
   ###########################
   # GET THE DISPLAY ADAPTER
   ###########################
-
-  import textGridworldDisplay
-  display = textGridworldDisplay.TextGridworldDisplay(mdp)
-  if not opts.textDisplay:
-    import graphicsGridworldDisplay
-    display = graphicsGridworldDisplay.GraphicsGridworldDisplay(mdp, opts.gridSize, opts.speed)
-  display.start()
+  # TODO
 
   ###########################
   # GET THE AGENT
   ###########################
 
+  # SHOULD BE IMPOSSIBLE TO USE Q OR VALUE ITERATION WITHOUT FUNCTION APPROXIMATION!
+  # THE STATE SPACE WOULD BE THE RAW STATE SPACE, WHICH SPANNED BY THE AGENT'S SMALL STEPS!
   import valueIterationAgents, qlearningAgents
   a = None
   if opts.agent == 'value':
     a = valueIterationAgents.ValueIterationAgent(mdp, opts.discount, opts.iters)
   elif opts.agent == 'q':
-    #env.getPossibleActions, opts.discount, opts.learningRate, opts.epsilon
-    #simulationFn = lambda agent, state: simulation.GridworldSimulation(agent,state,mdp)
-    gridWorldEnv = GridworldEnvironment(mdp)
+    continuousEnv = ContinuousEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
-  elif opts.agent == 'Approximate':
-    gridWorldEnv = GridworldEnvironment(mdp)
-    actionFn = lambda state: mdp.getPossibleActions(state)
-    if opts.grid == 'ObstacleGrid':
-	  extractor = 'ObstacleExtractor'
-    elif opts.grid == 'SidewalkGrid':
-	  extractor = 'SidewalkExtractor'
-    else:
-	  extractor = 'IdentityExtractor'
-
-    qLearnOpts = {'gamma': opts.discount, 
-                  'alpha': opts.learningRate, 
-                  'epsilon': opts.epsilon,
-                  'actionFn': actionFn,
-                  'extractor': extractor}
-    a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
   elif opts.agent == 'Modular':
     import modularAgents
-    gridWorldEnv = GridworldEnvironment(mdp)
+    continuousEnv = ContinuousEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -495,38 +475,12 @@ if __name__ == '__main__':
   # RUN EPISODES
   ###########################
   # DISPLAY Q/V VALUES BEFORE SIMULATION OF EPISODES
-  if not opts.manual and opts.agent == 'value':
-    if opts.valueSteps:
-      for i in range(opts.iters):
-        tempAgent = valueIterationAgents.ValueIterationAgent(mdp, opts.discount, i)
-        display.displayValues(tempAgent, message = "VALUES AFTER "+str(i)+" ITERATIONS")
-        display.pause()        
-    
-    display.displayValues(a, message = "VALUES AFTER "+str(opts.iters)+" ITERATIONS")
-    display.pause()
-    display.displayQValues(a, message = "Q-VALUES AFTER "+str(opts.iters)+" ITERATIONS")
-    display.pause()
-    
   
 
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
   displayCallback = lambda x: None
-  if not opts.quiet:
-    if opts.manual and opts.agent == None: 
-      displayCallback = lambda state: display.displayNullValues(state)
-    else:
-      if opts.agent == 'random': displayCallback = lambda state: display.displayValues(a, state, "CURRENT VALUES")
-      if opts.agent == 'value': displayCallback = lambda state: display.displayValues(a, state, "CURRENT VALUES")
-      if opts.agent == 'q' or opts.agent == 'Approximate' or opts.agent == 'Modular': displayCallback = lambda state: display.displayQValues(a, state, "CURRENT Q-VALUES")
-
   messageCallback = lambda x: printString(x)
-  if opts.quiet:
-    messageCallback = lambda x: None
-
-  # FIGURE OUT WHETHER TO WAIT FOR A KEY PRESS AFTER EACH TIME STEP
   pauseCallback = lambda : None
-  if opts.pause:
-    pauseCallback = lambda : display.pause()
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:
@@ -550,9 +504,5 @@ if __name__ == '__main__':
     
   # DISPLAY POST-LEARNING VALUES / Q-VALUES
   if opts.agent == 'q' or opts.agent == 'Approximate' or opts.agent == 'Modular' and not opts.manual:
-    display.displayQValues(a, message = "Q-VALUES AFTER "+str(opts.episodes)+" EPISODES")
-    display.pause()
-    display.displayValues(a, message = "VALUES AFTER "+str(opts.episodes)+" EPISODES")
-    display.pause()
-    
-   
+    messageCallback("Q-VALUES AFTER "+str(opts.episodes)+" EPISODES")
+    messageCallback("VALUES AFTER "+str(opts.episodes)+" EPISODES")
