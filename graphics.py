@@ -513,11 +513,18 @@ class GraphicsObject:
 
          
 class Point(GraphicsObject):
-    def __init__(self, x, y):
+    def __init__(self, *args):
         GraphicsObject.__init__(self, ["outline", "fill"])
         self.setFill = self.setOutline
-        self.x = x
-        self.y = y
+
+        if len(args) == 2:
+          self.x = args[0]
+          self.y = args[1]
+        elif len(args) == 1:
+          self.x = args[0][0]
+          self.y = args[0][1]
+        else:
+          raise Exception("Point init fails.")
         
     def _draw(self, canvas, options):
         x,y = canvas.toScreen(self.x,self.y)

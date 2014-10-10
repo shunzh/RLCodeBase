@@ -122,8 +122,8 @@ def main():
     """
     # environment, an mdp object
     m = gw.getLargeWalkAvoidGrid(0.4)
-
     gridWorldEnv = gw.GridworldEnvironment(m)
+
     actionFn = lambda state: m.getPossibleActions(state)
     qLearnOpts = {'gamma': 0.9,
                   'alpha': 0.5,

@@ -262,10 +262,10 @@ def loadFromMat(filename, domainId):
   ret['yBoundary'] = [-4, 4]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.2
+  ret['radius'] = 0.05
 
   # step size of the agent movement
-  ret['step'] = 0.1
+  ret['step'] = 0.025
 
   return ret
 
@@ -338,7 +338,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 50
+  runs = np.inf
 
   while True:
 
@@ -463,16 +463,21 @@ if __name__ == '__main__':
   ###########################
   # GET THE DISPLAY ADAPTER
   ###########################
-  dim = 500
+  dim = 800
   win = GraphWin('Domain', dim, dim) # give title and dimensions
   win.setBackground('black')
 
   size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
-  scale = 1.0 * dim / size
-
+  radius = mdp.radius / size * dim
+  def shift(loc):
+    """
+    shift to the scale of the GraphWin
+    """
+    return (1.0 * (loc[0] - mdp.xBoundary[0]) / size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / size * dim)
+  
   def drawObjects(label, color):
     for obj in mdp.objs[label]:
-      cir = Circle(Point(obj[0] * scale, obj[1] * scale), mdp.radius * scale)
+      cir = Circle(Point(shift(obj)), radius)
       cir.setFill(color)
       cir.draw(win)
   drawObjects('targs', 'blue')
@@ -542,7 +547,7 @@ if __name__ == '__main__':
       loc, seg = displayCallback.prevState
       newLoc, newSeg = x
 
-      line = Line(Point(loc[0] * scale, loc[1] * scale), Point(newLoc[0] * scale, newLoc[1] * scale))
+      line = Line(Point(shift(loc)), Point(shift(newLoc)))
       line.setWidth(3)
       line.setFill('white')
       line.draw(win)
