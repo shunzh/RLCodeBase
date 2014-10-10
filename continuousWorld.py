@@ -32,7 +32,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.__dict__.update(init)
 
     # reward values that getReward will use
-    self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'start': 0, 'end': 0}
+    self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'elevators': 0}
 
     # parameters
     self.livingReward = 0.0
@@ -180,20 +180,20 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 def toyDomain():
   ret = {}
 
-  targs = [(0.25, 0.2)]
-  obsts = [(0.5, 0.5)]
+  targs = [(0.5, 0.5), (0.7, 0.7)]
+  obsts = [(0.5, 0.7)]
   segs = []
   elevators = [(0, 0), (1, 1)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
-  ret['xBoundary'] = [-0.2, 1.2]
-  ret['yBoundary'] = [-0.2, 1.2]
+  ret['xBoundary'] = [-0, 1]
+  ret['yBoundary'] = [-0, 1]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.05
+  ret['radius'] = 0.1
 
   # step size of the agent movement
-  ret['step'] = 0.02
+  ret['step'] = 0.1
 
   return ret
 
@@ -324,7 +324,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 5000
+  runs = 100
 
   while True:
 

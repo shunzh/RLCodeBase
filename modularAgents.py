@@ -20,7 +20,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0.8, 0.2, 0]
+    self.weights = [1, 0, 0]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -177,7 +177,7 @@ def getContinuousWorldFuncs(mdp):
 
   def radiusBias(state, action, label, w):
     loc, seg = state
-    newLoc, newSeg = mdp.getTransitionStatesAndProbs(state, action)[0]
+    newLoc, newSeg = mdp.getTransitionStatesAndProbs(state, action)[0][0]
 
     minDist = np.inf
 
@@ -188,7 +188,7 @@ def getContinuousWorldFuncs(mdp):
       constraint = lambda idx: idx > seg
 
     for idx in xrange(len(bag)):
-      dist = numpy.linalg.norm(np.subtract(loc, bag[idx]))
+      dist = numpy.linalg.norm(np.subtract(newLoc, bag[idx]))
       if dist < minDist and constraint(idx):
         minDist = dist
 
