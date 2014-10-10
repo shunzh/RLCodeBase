@@ -22,8 +22,14 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
           upon reaching a segment, if this segment is newer than the one visited before (encoded in the state space),
           then obtain the reward.
   """
-  def __init__(self):
-    self.loadFromMat('miniRes25.mat', 0)
+  def __init__(self, init):
+    """
+    Args:
+      init: a dict, that has attributes to be appended to self
+            objs, boundary, radius.
+    """
+    # add necessary domains
+    self.__dict__.update(init)
 
     # reward values that getReward will use
     self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'start': 0, 'end': 0}
@@ -31,59 +37,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     # parameters
     self.livingReward = 0.0
     self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
-
-  def loadFromMat(self, filename, domainId):
-    """
-    Load from mat file that provided by Matt.
-
-    Args:
-      filename: name of the mat file, presumebaly in the same directory.
-      domainId: there should be multiple configurations of rooms in this file,
-                indicate which room to use.
-    Return:
-      no return, but add an obj attribute to self.
-    """
-    # read layout from source file
-    s = util.loadmat(filename)
-
-    numObj = len(s['newRes']['all_objs']['id'])
-
-    targs = []
-    obsts = []
-    segs = []
-    elevators = []
-
-    for idx in xrange(numObj):
-      name = s['newRes']['all_objs']['id'][idx]
-
-      x = s['newRes']['all_objs']['object_location']['x'][domainId][idx]
-      y = s['newRes']['all_objs']['object_location']['y'][domainId][idx]
-
-      if 'targ' in name:
-        targs.append((x, y))
-      elif 'obst' in name:
-        obsts.append((x, y))
-      elif 'seg' in name:
-        segs.append((x, y))
-      elif 'elevator' in name:
-        elevators.append((x, y))
-      else:
-        warnings.warn("Dropped unkown object typed '" + name + "' indexed at " + str(idx))
-
-    if len(elevators) < 2:
-      raise Exception("Elevators cannot be undefined.")
-
-    self.objs = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
-
-    # TODO add buffer?
-    self.xBoundary = [-4, 4]
-    self.yBoundary = [-4, 4]
-
-    # radius of an object (so the object doesn't appear as a point)
-    self.radius = 0.2
-
-    # step size of the agent movement
-    self.step = 0.1
 
 
   def closeToAnObject(self, l):
@@ -153,13 +106,15 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       return self.rewards["segs"]
     else:
       # check whether reaching a target or obstacle
-      stateType, objId = closeToAnObject(self, loc)
-      nextStateType, newObjId = closeToAnObject(self, nextLoc)
+      stateType, objId = self.closeToAnObject(loc)
+      nextStateType, newObjId = self.closeToAnObject(nextLoc)
 
       if stateType != nextStateType and nextStateType != None:
         # only consider when the types of states change
         # i.e. moving from target to target doesn't give extra reward.
         return self.rewards[nextStateType]
+      else:
+        return 0
         
   def getStartState(self):
     """
@@ -186,10 +141,11 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     loc, seg = state
 
     # move to new loc and check whether it's allowed
-    newLoc = np.add(loc, Actions._directions[action])
-    newLoc = (self.__isAllowed(newLoc) and newLoc) or loc
+    newLoc = np.add(loc, np.multiply(self.step, Actions._directions[action]))
+    if not self.__isAllowed(newLoc):
+      newLoc = loc
     
-    stateType, objId = closeToAnObject(self, newLoc)
+    stateType, objId = self.closeToAnObject(newLoc)
     if stateType == 'segs' and objId > seg:
       newSeg = objId
     else:
@@ -218,6 +174,87 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     x, y = loc
     if x < self.xBoundary[0] or x >= self.xBoundary[1]: return False
     if y < self.yBoundary[0] or y >= self.yBoundary[1]: return False
+    return True
+
+
+def toyDomain():
+  ret = {}
+
+  targs = [(0.25, 0.2)]
+  obsts = [(0.5, 0.5)]
+  segs = []
+  elevators = [(0, 0), (1, 1)]
+  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
+
+  ret['xBoundary'] = [-0.2, 1.2]
+  ret['yBoundary'] = [-0.2, 1.2]
+
+  # radius of an object (so the object doesn't appear as a point)
+  ret['radius'] = 0.05
+
+  # step size of the agent movement
+  ret['step'] = 0.02
+
+  return ret
+
+
+def loadFromMat(filename, domainId):
+  """
+  Load from mat file that provided by Matt.
+
+  Args:
+    filename: name of the mat file, presumebaly in the same directory.
+    domainId: there should be multiple configurations of rooms in this file,
+              indicate which room to use.
+  Return:
+    no return, but add an obj attribute to self.
+  """
+  # read layout from source file
+  s = util.loadmat(filename)
+
+  ret = {}
+
+  numObj = len(s['newRes']['all_objs']['id'])
+
+  targs = []
+  obsts = []
+  segs = []
+  elevators = []
+
+  for idx in xrange(numObj):
+    name = s['newRes']['all_objs']['id'][idx]
+
+    x = s['newRes']['all_objs']['object_location']['x'][domainId][idx]
+    y = s['newRes']['all_objs']['object_location']['y'][domainId][idx]
+
+    if 'targ' in name:
+      targs.append((x, y))
+    elif 'obst' in name:
+      obsts.append((x, y))
+    elif 'seg' in name:
+      segs.append((x, y))
+    elif 'elevator' in name:
+      elevators.append((x, y))
+    else:
+      warnings.warn("Dropped unkown object typed '" + name + "' indexed at " + str(idx))
+
+  if len(elevators) < 2:
+    raise Exception("Elevators cannot be undefined.")
+
+  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
+
+  # TODO add buffer?
+  ret['xBoundary'] = [-4, 4]
+  ret['yBoundary'] = [-4, 4]
+
+  # radius of an object (so the object doesn't appear as a point)
+  ret['radius'] = 0.2
+
+  # step size of the agent movement
+  ret['step'] = 0.1
+
+  return ret
+
 
 class ContinuousEnvironment(environment.Environment):
   """
@@ -287,7 +324,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 500
+  runs = 5000
 
   while True:
 
@@ -401,7 +438,9 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  mdp = ContinuousWorld()
+  #init = loadFromMat('miniRes25.mat', 0)
+  init = toyDomain()
+  mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
   env = ContinuousEnvironment(mdp)

@@ -4,7 +4,7 @@ import util
 
 import math
 import numpy as np
-import numpy.linalg.norm
+import numpy.linalg
 
 class ModularAgent(ApproximateQAgent):
   """
@@ -171,6 +171,10 @@ def getContinuousWorldFuncs(mdp):
   """
   Feature extraction for continuous world.
   """
+  target = {'bias': 0.2, 'dis': -0.05}
+  obstacle = {'bias': -0.2, 'dis': 0.05}
+  segment = {'bias': 0.02, 'dis': 0.005}
+
   def radiusBias(state, action, label, w):
     loc, seg = state
     newLoc, newSeg = mdp.getTransitionStatesAndProbs(state, action)[0]
@@ -188,7 +192,11 @@ def getContinuousWorldFuncs(mdp):
       if dist < minDist and constraint(idx):
         minDist = dist
 
-    return minDist * w['dis'] + 1 * w['bias']
+    if minDist == np.inf:
+      # this module keeps quite in this case
+      return 0
+    else:
+      return minDist * w['dis'] + 1 * w['bias']
 
   def qTarget(state, action):
     return radiusBias(state, action, 'targs', target)
@@ -197,4 +205,6 @@ def getContinuousWorldFuncs(mdp):
     return radiusBias(state, action, 'obsts', obstacle)
 
   def qSegment(state, action):
-    return radiusBias(state, action, 'segs', seg)
+    return radiusBias(state, action, 'segs', segment)
+
+  return [qTarget, qObstacle, qSegment]
