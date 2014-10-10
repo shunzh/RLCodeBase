@@ -181,15 +181,12 @@ def getContinuousWorldFuncs(mdp):
 
     minDist = np.inf
 
-    # search for the minimum one in bag, with the given constraint
-    constraint = lambda idx: True
+    # search for the one with minimum distance in bag, with the given constraint
     bag = mdp.objs[label]
-    if label == 'seg':
-      constraint = lambda idx: idx > seg
-
+    
     for idx in xrange(len(bag)):
       dist = numpy.linalg.norm(np.subtract(newLoc, bag[idx]))
-      if dist < minDist and constraint(idx):
+      if dist < minDist:
         minDist = dist
 
     if minDist == np.inf:

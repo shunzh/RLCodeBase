@@ -9,6 +9,8 @@ import numpy as np
 import numpy.linalg
 import warnings
 
+from graphics import *
+
 from game import Actions
 
 class ContinuousWorld(mdp.MarkovDecisionProcess):
@@ -107,15 +109,27 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     else:
       # check whether reaching a target or obstacle
       stateType, objId = self.closeToAnObject(loc)
-      nextStateType, newObjId = self.closeToAnObject(nextLoc)
+      nextStateType, nextObjId = self.closeToAnObject(nextLoc)
 
-      if stateType != nextStateType and nextStateType != None:
-        # only consider when the types of states change
-        # i.e. moving from target to target doesn't give extra reward.
+      if nextStateType != None:
+        # clear this object upon getting it
+        if nextStateType != 'segs':
+          self.clearObj(nextStateType, nextObjId)
+        else:
+          # be careful with this -
+          # once reaching on an segment, deleting the segments before it.
+          [self.clearObj(nextStateType, i) for i in xrange(nextObjId + 1)]
+
         return self.rewards[nextStateType]
       else:
         return 0
         
+  def clearObj(self, objType, objId):
+    """
+    Clear an object from self.objs, usually because the agent has got it.
+    """
+    del self.objs[objType][objId]
+
   def getStartState(self):
     """
     Start at the starting location, with no segment previously visited.
@@ -193,7 +207,7 @@ def toyDomain():
   ret['radius'] = 0.1
 
   # step size of the agent movement
-  ret['step'] = 0.1
+  ret['step'] = 0.05
 
   return ret
 
@@ -324,7 +338,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 100
+  runs = 50
 
   while True:
 
@@ -438,8 +452,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  #init = loadFromMat('miniRes25.mat', 0)
-  init = toyDomain()
+  init = loadFromMat('miniRes25.mat', 0)
+  #init = toyDomain()
   mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
@@ -449,7 +463,22 @@ if __name__ == '__main__':
   ###########################
   # GET THE DISPLAY ADAPTER
   ###########################
-  # TODO
+  dim = 500
+  win = GraphWin('Domain', dim, dim) # give title and dimensions
+  win.setBackground('black')
+
+  size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
+  scale = 1.0 * dim / size
+
+  def drawObjects(label, color):
+    for obj in mdp.objs[label]:
+      cir = Circle(Point(obj[0] * scale, obj[1] * scale), mdp.radius * scale)
+      cir.setFill(color)
+      cir.draw(win)
+  drawObjects('targs', 'blue')
+  drawObjects('obsts', 'red')
+  drawObjects('segs', 'yellow')
+  drawObjects('elevators', 'green')
 
   ###########################
   # GET THE AGENT
@@ -504,11 +533,24 @@ if __name__ == '__main__':
   ###########################
   # RUN EPISODES
   ###########################
-  # DISPLAY Q/V VALUES BEFORE SIMULATION OF EPISODES
-  
 
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
-  displayCallback = lambda x: None
+  def displayCallback(x):
+    # display the corresponding state in graphics
+    if displayCallback.prevState:
+      # only draw lines, so ignore the first state
+      loc, seg = displayCallback.prevState
+      newLoc, newSeg = x
+
+      line = Line(Point(loc[0] * scale, loc[1] * scale), Point(newLoc[0] * scale, newLoc[1] * scale))
+      line.setWidth(3)
+      line.setFill('white')
+      line.draw(win)
+
+    displayCallback.prevState = x
+
+  displayCallback.prevState = None
+
   messageCallback = lambda x: printString(x)
   pauseCallback = lambda : None
 
@@ -532,7 +574,6 @@ if __name__ == '__main__':
     print
     print
     
-  # DISPLAY POST-LEARNING VALUES / Q-VALUES
-  if opts.agent == 'q' or opts.agent == 'Approximate' or opts.agent == 'Modular' and not opts.manual:
-    messageCallback("Q-VALUES AFTER "+str(opts.episodes)+" EPISODES")
-    messageCallback("VALUES AFTER "+str(opts.episodes)+" EPISODES")
+  # hold window
+  win.getMouse()
+  win.close()
