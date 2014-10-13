@@ -144,9 +144,11 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
   def isFinal(self, state):
     """
     Check whether we should terminate at this state.
+
+    No more target to collect or reached exit elevator.
     """
     loc, seg, target = state
-    return self.closeToAnObject(loc) == ('elevators', 1)
+    return target == None or self.closeToAnObject(loc) == ('elevators', 1)
                    
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -154,9 +156,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     - bound back within self.xBoundary and self.yBoundary
     - change seg in the state representation upon reaching a new segment
     """
-    #if self.isFinal(state):
-    #  return []
-    
     loc, seg, target = state
 
     # move to new loc and check whether it's allowed
@@ -345,7 +344,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 600
+  runs = 5
 
   while True:
 
@@ -362,12 +361,17 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
       agent.final(state)
       return returns
     
+    for act in actions:
+      print state, act, agent.getQValue(state, act)
+      print agent.getSubQValues(state, act)
+
     # GET ACTION (USUALLY FROM AGENT)
     action = decision(state)
     if action == None:
       raise 'Error: Agent returned None action'
 
     if recorder != None:
+      print state, action
       recorder.append((state, action))
     
     # EXECUTE ACTION
@@ -462,7 +466,7 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  init = loadFromMat('miniRes25.mat', 0)
+  init = loadFromMat('miniRes25.mat', 1)
   #init = toyDomain()
   mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
@@ -529,7 +533,7 @@ if __name__ == '__main__':
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
-                  'epsilon': opts.epsilon,
+                  'epsilon': 0,
                   'actionFn': actionFn}
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules

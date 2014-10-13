@@ -31,6 +31,9 @@ class ModularAgent(ApproximateQAgent):
     # sum over q values from each sub mdp
     return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
 
+  def getSubQValues(self, state, action):
+    return [self.qFuncs[i](state, action) for i in xrange(len(self.qFuncs))]
+
   def getSoftmaxQValue(self, state, action):
     actions = self.getLegalActions(state)
     j = actions.index(action)
@@ -186,6 +189,7 @@ def getContinuousWorldFuncs(mdp):
   def radiusBias(state, action, label, w):
     extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, label)
     feats = extractor.getFeatures(state, action)
+
     if feats != None:
       return feats['bias'] * w['bias'] + feats['dist'] * w['dist']
     else:

@@ -58,10 +58,13 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
     loc, seg, target = state
     newLoc, newSeg, newTarget = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
 
+    minDist = np.inf
+
     if (self.label == 'targs'):
       # this is encoded in state rep
       # don't look at the environment - some of the targets are already picked up!
-      minDist = numpy.linalg.norm(np.subtract(newLoc, newTarget))
+      if newTarget != None:
+        minDist = numpy.linalg.norm(np.subtract(newLoc, newTarget))
     else:
       [minObj, minDist] = getClosestObj(newLoc, self.mdp.objs[self.label])
 

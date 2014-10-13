@@ -98,9 +98,15 @@ def checkPolicyConsistency(recorder, a, b):
 
   # Walk through each state
   for (state, action) in recorder:
-    consistentPolices += int(action == b.getPolicy(state))
+    # DEBUG
+    for act in ['north','west','south','east', 'ne', 'se', 'nw', 'sw']:
+      print state, act, a.getQValue(state, act)
+      print a.getSubQValues(state, act)
+    
+    print state, a.getPolicy(state), action
+    consistentPolices += int(a.getPolicy(state) == b.getPolicy(state))
 
-  return 1.0 * consistentPolices / len(states)
+  return 1.0 * consistentPolices / len(recorder)
 
 
 def getWeightDistance(w1, w2):
@@ -114,57 +120,66 @@ def getWeightDistance(w1, w2):
 
 
 def main():
-    """
-      Can be called to run pre-specified agent and domain.
-    """
-    # environment, an mdp object FIXME
-    #import gridworld as gw
-    #m = gw.getLargeWalkAvoidGrid(0.4)
-    #gridWorldEnv = gw.GridworldEnvironment(m)
-    
-    import continuousWorld as cw
-    init = cv.loadFromMat('miniRes25.mat', 0)
-    m = cw.ContinuousWorld(init)
-    env = cv.ContinuousEnvironment(m)
+  """
+    Can be called to run pre-specified agent and domain.
+  """
+  # environment, an mdp object FIXME
+  #import gridworld as gw
+  #m = gw.getLargeWalkAvoidGrid(0.4)
+  #gridWorldEnv = gw.GridworldEnvironment(m)
+  
+  import continuousWorld as cw
+  #init = cw.loadFromMat('miniRes25.mat', 0)
+  init = cw.toyDomain()
+  m = cw.ContinuousWorld(init)
+  env = cw.ContinuousEnvironment(m)
 
-    actionFn = lambda state: m.getPossibleActions(state)
-    qLearnOpts = {'gamma': 0.9,
-                  'alpha': 0.5,
-                  'epsilon': 0.3,
-                  'actionFn': actionFn}
-    # modular agent
-    a = modularAgents.ModularAgent(**qLearnOpts)
+  actionFn = lambda state: m.getPossibleActions(state)
+  qLearnOpts = {'gamma': 0.9,
+                'alpha': 0.5,
+                'epsilon': 0,
+                'actionFn': actionFn}
+  # modular agent
+  a = modularAgents.ModularAgent(**qLearnOpts)
 
-    if len(sys.argv) > 1:
-      # user wants to set weights themselves
-      w = map(float, sys.argv[1:])
-      a.setWeights(w)
+  if len(sys.argv) > 1:
+    # user wants to set weights themselves
+    w = map(float, sys.argv[1:])
+    a.setWeights(w)
 
-    #qFuncs = modularAgents.getObsAvoidFuncs(m)
-    qFuncs = modularAgents.getContinuousWorldFuncs(m)
-    # set the weights and corresponding q-functions for its sub-mdps
-    # note that the modular agent is able to determine the optimal policy based on these
-    a.setQFuncs(qFuncs)
+  #qFuncs = modularAgents.getObsAvoidFuncs(m)
+  qFuncs = modularAgents.getContinuousWorldFuncs(m)
+  # set the weights and corresponding q-functions for its sub-mdps
+  # note that the modular agent is able to determine the optimal policy based on these
+  a.setQFuncs(qFuncs)
 
-    recorder = []
-    noneFunc = lambda x: None
-    cw.runEpisode(a, env, 0.9, a.getAction, noneFunc, noneFunc, noneFunc, 1, recorder)
+  print "Ready for simulation"
 
-    sln = InverseModularRL(a, m, recorder, qFuncs)
-    output = sln.findWeights()
-    w = output.x.tolist()
-    w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
+  recorder = []
+  noneFunc = lambda *x: None
+  cw.runEpisode(a, env, 0.9, a.getAction, noneFunc, noneFunc, noneFunc, 1, recorder)
 
-    # check the consistency between the original optimal policy
-    # and the policy predicted by the weights we guessed.
-    aHat = modularAgents.ModularAgent(**qLearnOpts)
-    aHat.setQFuncs(qFuncs)
-    aHat.setWeights(w) # get the weights in the result
+  print "Simulation done. Recover from samples.."
 
-    # print for experiments
-    print checkPolicyConsistency(recorder, a, aHat)
-    print getWeightDistance(a.getWeights(), w)
+  sln = InverseModularRL(a, m, recorder, qFuncs)
+  output = sln.findWeights()
+  w = output.x.tolist()
+  w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
+  print "IRL done."
+  print "Weight: ", w
+
+  # check the consistency between the original optimal policy
+  # and the policy predicted by the weights we guessed.
+  aHat = modularAgents.ModularAgent(**qLearnOpts)
+  aHat.setQFuncs(qFuncs)
+  aHat.setWeights(w) # get the weights in the result
+
+  # print for experiments
+  print checkPolicyConsistency(recorder, a, aHat)
+  print getWeightDistance(a.getWeights(), w)
+
+  print checkPolicyConsistency(recorder, a, aHat)
 
 if __name__ == '__main__':
-    main()
+  main()
