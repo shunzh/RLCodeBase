@@ -31,6 +31,23 @@ class IdentityExtractor(FeatureExtractor):
     return feats
 
 
+def getClosestObj(loc, l):
+  """
+  Args:
+    loc: location of the agent
+    l: list of objects
+  """
+  minDist = np.inf
+  minObj = None
+
+  for obj in l:
+    dist = numpy.linalg.norm(np.subtract(loc, obj))
+    if dist < minDist:
+      minDist = dist
+      minObj = obj
+
+  return [minObj, minDist]
+
 class ContinousRadiusLogExtractor(FeatureExtractor):
   def __init__(self, mdp, label):
     self.mdp = mdp
@@ -38,18 +55,15 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
 
   def getFeatures(self, state, action):
     feats = util.Counter()
-    loc, seg = state
-    newLoc, newSeg = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
+    loc, seg, target = state
+    newLoc, newSeg, newTarget = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
 
-    minDist = np.inf
-
-    # search for the one with minimum distance in bag, with the given constraint
-    bag = self.mdp.objs[self.label]
-    
-    for idx in xrange(len(bag)):
-      dist = numpy.linalg.norm(np.subtract(newLoc, bag[idx]))
-      if dist < minDist:
-        minDist = dist
+    if (self.label == 'targs'):
+      # this is encoded in state rep
+      # don't look at the environment - some of the targets are already picked up!
+      minDist = numpy.linalg.norm(np.subtract(newLoc, newTarget))
+    else:
+      [minObj, minDist] = getClosestObj(newLoc, self.mdp.objs[self.label])
 
     if minDist == np.inf:
       return None
@@ -58,7 +72,6 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
       feats['bias'] = 1
 
     return feats
-
 
 class ObstacleExtractor(FeatureExtractor):
   """

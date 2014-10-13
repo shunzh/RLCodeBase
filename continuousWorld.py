@@ -4,6 +4,7 @@ import mdp
 import environment
 import util
 import optparse
+import featureExtractors
 
 import numpy as np
 import numpy.linalg
@@ -17,7 +18,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
   """
   A MDP that captures continuous state space, while the agent moves in discrete steps.
 
-  State: (location, last visited segment)
+  State: (location, last visited segment, closest target)
   Action: 8 directional movement, with a fixed step size.
   Transition: trivial.
   Reward: upon reaching a target / obstacle, obtain the corresponding reward.
@@ -45,6 +46,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Determine whether a state is close to any object, within radius.
     Args:
       l: the loc to be checked.
+      cond: constraint added
     Return:
       String, int: the type of object that it's in the radius of, and its id.
                    It is (None, None) if it's close to nothing (so easy to be parsed)
@@ -59,6 +61,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     # if it's close to nothing
     return (None, None)
+
+  def getClosestTarget(self, l):
+    [minObj, minDist] = featureExtractors.getClosestObj(l, self.objs['targs'])
+    return minObj
 
   def setLivingReward(self, reward):
     """
@@ -88,9 +94,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     Return list of discrete states. This is usually for sanity check.
     """
-    dividents = 20
-    sliceX = 1.0 * (self.xBoundary[1] - self.xBoundary[0]) / dividents
-    sliceY = 1.0 * (self.yBoundary[1] - self.yBoundary[0]) / dividents
+    util.raiseNotDefined() 
         
   def getReward(self, state, action, nextState):
     """
@@ -100,8 +104,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     departed (as in the R+N book examples, which more or
     less use this convention).
     """
-    loc, seg = state
-    nextLoc, nextSeg = nextState
+    loc, seg, target = state
+    nextLoc, nextSeg, nextTarget = nextState
     
     if seg != nextSeg:
       # reaching a new segment
@@ -134,13 +138,14 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     Start at the starting location, with no segment previously visited.
     """
-    return (self.objs['elevators'][0], 0)
+    loc = self.objs['elevators'][0]
+    return (loc, 0, self.getClosestTarget(loc))
     
   def isFinal(self, state):
     """
     Check whether we should terminate at this state.
     """
-    loc, seg = state
+    loc, seg, target = state
     return self.closeToAnObject(loc) == ('elevators', 1)
                    
   def getTransitionStatesAndProbs(self, state, action):
@@ -152,7 +157,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     #if self.isFinal(state):
     #  return []
     
-    loc, seg = state
+    loc, seg, target = state
 
     # move to new loc and check whether it's allowed
     newLoc = np.add(loc, np.multiply(self.step, Actions._directions[action]))
@@ -165,7 +170,9 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     else:
       newSeg = seg
 
-    successors = [((newLoc, newSeg), 1)]
+    newTarget = self.getClosestTarget(newLoc)
+
+    successors = [((newLoc, newSeg, newTarget), 1)]
 
     return successors                                
   
@@ -466,7 +473,7 @@ if __name__ == '__main__':
   ###########################
   # GET THE DISPLAY ADAPTER
   ###########################
-  dim = 800
+  dim = 1000
   win = GraphWin('Domain', dim, dim) # give title and dimensions
   win.setBackground('black')
 
@@ -507,7 +514,6 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
-    import featureExtractors
     extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, 'obsts')
     continuousEnv = ContinuousEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
@@ -558,8 +564,8 @@ if __name__ == '__main__':
     # display the corresponding state in graphics
     if displayCallback.prevState:
       # only draw lines, so ignore the first state
-      loc, seg = displayCallback.prevState
-      newLoc, newSeg = x
+      loc, seg, target = displayCallback.prevState
+      newLoc, newSeg, newTarget = x
 
       line = Line(Point(shift(loc)), Point(shift(newLoc)))
       line.setWidth(3)
