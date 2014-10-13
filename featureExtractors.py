@@ -35,7 +35,6 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
   def __init__(self, mdp, label):
     self.mdp = mdp
     self.label = label
-    print mdp, label
 
   def getFeatures(self, state, action):
     feats = util.Counter()

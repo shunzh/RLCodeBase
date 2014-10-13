@@ -118,7 +118,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
         elif nextStateType == 'segs':
           # be careful with this -
           # once reaching on an segment, deleting the segments before it.
-          print nextObjId, objId
           [self.clearObj(nextStateType, i) for i in xrange(nextSeg - seg)]
 
         return self.rewards[nextStateType]
@@ -339,7 +338,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 500
+  runs = np.inf
 
   while True:
 
@@ -453,8 +452,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  #init = loadFromMat('miniRes25.mat', 0)
-  init = toyDomain()
+  init = loadFromMat('miniRes25.mat', 0)
+  #init = toyDomain()
   mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
@@ -506,7 +505,7 @@ if __name__ == '__main__':
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
     import featureExtractors
-    extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, 'targs')
+    extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, 'obsts')
     continuousEnv = ContinuousEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 

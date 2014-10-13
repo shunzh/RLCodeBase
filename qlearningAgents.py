@@ -168,7 +168,7 @@ class ApproximateQAgent(PacmanQAgent):
      and update.  All other QLearningAgent functions
      should work as is.
   """
-  def __init__(self, extractor, **args):
+  def __init__(self, extractor = IdentityExtractor(), **args):
     self.featExtractor = extractor
     PacmanQAgent.__init__(self, **args)
 

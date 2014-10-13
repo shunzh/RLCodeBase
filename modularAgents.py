@@ -1,6 +1,7 @@
 from qlearningAgents import ApproximateQAgent
 from game import Actions
 import util
+import featureExtractors
 
 import math
 import numpy as np
@@ -20,7 +21,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0.8, 0.2, 0]
+    self.weights = [0.6, 0.4, 0]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -171,14 +172,24 @@ def getContinuousWorldFuncs(mdp):
   """
   Feature extraction for continuous world.
   """
+  # Raw results
+  """
   target = {'bias': 0.51638480403475961, 'dist': -0.083742023988640099}
   obstacle = {'bias': -0.91251246907492323, 'dist': 1.9383664807859244}
   segment = {'bias': 0.080048736631393835, 'dist': -0.041394412243896173}
+  """
+
+  target = {'bias': 1, 'dist': -0.16}
+  obstacle = {'bias': -1, 'dist': 0.16}
+  segment = {'bias': 0.1, 'dist': -0.05}
   
-  def radiusBias(state, action, label, w)
-    extractor = ContinousRadiusLogExtractor(mdp, label)
-    feats = extractor.getFeatures()
-    return feats['bias'] * w['bias'] + feats['dis'] * w['dis']
+  def radiusBias(state, action, label, w):
+    extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, label)
+    feats = extractor.getFeatures(state, action)
+    if feats != None:
+      return feats['bias'] * w['bias'] + feats['dist'] * w['dist']
+    else:
+      return 0
 
   def qTarget(state, action):
     return radiusBias(state, action, 'targs', target)
