@@ -115,7 +115,9 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       stateType, objId = self.closeToAnObject(loc)
       nextStateType, nextObjId = self.closeToAnObject(nextLoc)
 
+      # DEBUG
       if nextStateType != None:
+        """
         # clear this object upon getting it
         if nextStateType == 'targs':
           self.clearObj(nextStateType, nextObjId)
@@ -123,7 +125,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
           # be careful with this -
           # once reaching on an segment, deleting the segments before it.
           [self.clearObj(nextStateType, i) for i in xrange(nextSeg - seg)]
-
+        """
         return self.rewards[nextStateType]
       else:
         return 0
@@ -344,7 +346,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 5
+  runs = 50
 
   while True:
 
@@ -362,8 +364,8 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
       return returns
     
     for act in actions:
-      print state, act, agent.getQValue(state, act)
-      print agent.getSubQValues(state, act)
+      pass
+      #print agent.getSubQValues(state, act)
 
     # GET ACTION (USUALLY FROM AGENT)
     action = decision(state)
@@ -466,8 +468,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  init = loadFromMat('miniRes25.mat', 1)
-  #init = toyDomain()
+  #init = loadFromMat('miniRes25.mat', 1)
+  init = toyDomain()
   mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)

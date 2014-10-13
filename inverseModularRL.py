@@ -100,8 +100,8 @@ def checkPolicyConsistency(recorder, a, b):
   for (state, action) in recorder:
     # DEBUG
     for act in ['north','west','south','east', 'ne', 'se', 'nw', 'sw']:
-      print state, act, a.getQValue(state, act)
-      print a.getSubQValues(state, act)
+      pass
+      #print a.getSubQValues(state, act)
     
     print state, a.getPolicy(state), action
     consistentPolices += int(a.getPolicy(state) == b.getPolicy(state))
@@ -179,7 +179,6 @@ def main():
   print checkPolicyConsistency(recorder, a, aHat)
   print getWeightDistance(a.getWeights(), w)
 
-  print checkPolicyConsistency(recorder, a, aHat)
 
 if __name__ == '__main__':
   main()
