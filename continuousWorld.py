@@ -331,14 +331,14 @@ def getUserAction(state, actionFunction):
 
 def printString(x): print x
 
-def runEpisode(agent, environment, discount, decision, display, message, pause, episode):
+def runEpisode(agent, environment, discount, decision, display, message, pause, episode, recorder = None):
   returns = 0
   totalDiscount = 1.0
   environment.reset()
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = np.inf
+  runs = 600
 
   while True:
 
@@ -359,6 +359,9 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     action = decision(state)
     if action == None:
       raise 'Error: Agent returned None action'
+
+    if recorder != None:
+      recorder.append((state, action))
     
     # EXECUTE ACTION
     nextState, reward = environment.doAction(action)

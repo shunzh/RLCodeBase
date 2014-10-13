@@ -1,4 +1,3 @@
-import gridworld as gw
 import modularAgents
 
 import numpy as np
@@ -19,7 +18,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, agent, mdp, qFuncs):
+  def __init__(self, agent, mdp, recorder, qFuncs):
     """
       Args:
         agent: the modular agent object
@@ -28,6 +27,7 @@ class InverseModularRL:
     """
     self.agent = agent
     self.mdp = mdp
+    self.recorder = recorder
     self.qFuncs = qFuncs
 
     # confidence on 
@@ -42,14 +42,11 @@ class InverseModularRL:
       Return:
         the function value
     """
-    states = self.mdp.getStates()
     w = X
     ret = 0
 
-    # Walk through each state
-    for state in states:
-      optAction = self.agent.getPolicy(state)
-
+    # replay the process
+    for (state, optAction) in self.recorder:
       term = 0
 
       # Update the weights for each module accordingly.
@@ -87,7 +84,7 @@ class InverseModularRL:
     return w
 
 
-def checkPolicyConsistency(states, a, b):
+def checkPolicyConsistency(recorder, a, b):
   """
     Check how many policies on the states are consistent with the optimal one.
 
@@ -100,8 +97,8 @@ def checkPolicyConsistency(states, a, b):
   consistentPolices = 0
 
   # Walk through each state
-  for state in states:
-    consistentPolices += int(a.getPolicy(state) == b.getPolicy(state))
+  for (state, action) in recorder:
+    consistentPolices += int(action == b.getPolicy(state))
 
   return 1.0 * consistentPolices / len(states)
 
@@ -120,11 +117,15 @@ def main():
     """
       Can be called to run pre-specified agent and domain.
     """
-    # environment, an mdp object
-    """
-    m = gw.getLargeWalkAvoidGrid(0.4)
-    gridWorldEnv = gw.GridworldEnvironment(m)
-    """
+    # environment, an mdp object FIXME
+    #import gridworld as gw
+    #m = gw.getLargeWalkAvoidGrid(0.4)
+    #gridWorldEnv = gw.GridworldEnvironment(m)
+    
+    import continuousWorld as cw
+    init = cv.loadFromMat('miniRes25.mat', 0)
+    m = cw.ContinuousWorld(init)
+    env = cv.ContinuousEnvironment(m)
 
     actionFn = lambda state: m.getPossibleActions(state)
     qLearnOpts = {'gamma': 0.9,
@@ -145,7 +146,11 @@ def main():
     # note that the modular agent is able to determine the optimal policy based on these
     a.setQFuncs(qFuncs)
 
-    sln = InverseModularRL(a, m, qFuncs)
+    recorder = []
+    noneFunc = lambda x: None
+    cw.runEpisode(a, env, 0.9, a.getAction, noneFunc, noneFunc, noneFunc, 1, recorder)
+
+    sln = InverseModularRL(a, m, recorder, qFuncs)
     output = sln.findWeights()
     w = output.x.tolist()
     w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
@@ -157,7 +162,7 @@ def main():
     aHat.setWeights(w) # get the weights in the result
 
     # print for experiments
-    print checkPolicyConsistency(m.getStates(), a, aHat)
+    print checkPolicyConsistency(recorder, a, aHat)
     print getWeightDistance(a.getWeights(), w)
 
 
