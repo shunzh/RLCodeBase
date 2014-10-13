@@ -559,18 +559,12 @@ if __name__ == '__main__':
   elif opts.agent == 'Approximate':
     gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
-    if opts.grid == 'ObstacleGrid':
-	  extractor = 'ObstacleExtractor'
-    elif opts.grid == 'SidewalkGrid':
-	  extractor = 'SidewalkExtractor'
-    else:
-	  extractor = 'IdentityExtractor'
 
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn,
-                  'extractor': extractor}
+                  'extractor': extractor} #FIXME by calling variable name
     a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
   elif opts.agent == 'Modular':
     import modularAgents

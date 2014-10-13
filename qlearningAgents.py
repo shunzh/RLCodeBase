@@ -168,8 +168,8 @@ class ApproximateQAgent(PacmanQAgent):
      and update.  All other QLearningAgent functions
      should work as is.
   """
-  def __init__(self, extractor='IdentityExtractor', **args):
-    self.featExtractor = util.lookup(extractor, globals())()
+  def __init__(self, extractor, **args):
+    self.featExtractor = extractor
     PacmanQAgent.__init__(self, **args)
 
     # You might want to initialize weights here.
@@ -183,10 +183,13 @@ class ApproximateQAgent(PacmanQAgent):
     """
     "*** YOUR CODE HERE ***"
     q = 0.0
-    for feature, value in self.featExtractor.getFeatures(state, action).items():
-      q += self.weights[feature] * value
-    return q
-    #util.raiseNotDefined()
+    feats = self.featExtractor.getFeatures(state, action)
+    if feats != None:
+      for feature, value in self.featExtractor.getFeatures(state, action).items():
+        q += self.weights[feature] * value
+      return q
+    else:
+      return 0
     
   def update(self, state, action, nextState, reward):
     """
@@ -195,8 +198,10 @@ class ApproximateQAgent(PacmanQAgent):
     "*** YOUR CODE HERE ***"
     correction = (reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)
 
-    for feature, value in self.featExtractor.getFeatures(state, action).items():
-      self.weights[feature] += self.alpha * correction * value
+    feats = self.featExtractor.getFeatures(state, action)
+    if feats != None:
+      for feature, value in feats.items():
+        self.weights[feature] += self.alpha * correction * value
 
   def final(self, state):
     "Called at the end of each game."

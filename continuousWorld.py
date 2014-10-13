@@ -40,7 +40,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.livingReward = 0.0
     self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
 
-
   def closeToAnObject(self, l):
     """
     Determine whether a state is close to any object, within radius.
@@ -89,8 +88,9 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     Return list of discrete states. This is usually for sanity check.
     """
-    raise Exception("getStates: not implemented for continuous domains.")
-    return None
+    dividents = 20
+    sliceX = 1.0 * (self.xBoundary[1] - self.xBoundary[0]) / dividents
+    sliceY = 1.0 * (self.yBoundary[1] - self.yBoundary[0]) / dividents
         
   def getReward(self, state, action, nextState):
     """
@@ -113,12 +113,13 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
       if nextStateType != None:
         # clear this object upon getting it
-        if nextStateType != 'segs':
+        if nextStateType == 'targs':
           self.clearObj(nextStateType, nextObjId)
-        else:
+        elif nextStateType == 'segs':
           # be careful with this -
           # once reaching on an segment, deleting the segments before it.
-          [self.clearObj(nextStateType, i) for i in xrange(nextObjId + 1)]
+          print nextObjId, objId
+          [self.clearObj(nextStateType, i) for i in xrange(nextSeg - seg)]
 
         return self.rewards[nextStateType]
       else:
@@ -149,8 +150,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     - bound back within self.xBoundary and self.yBoundary
     - change seg in the state representation upon reaching a new segment
     """
-    if self.isFinal(state):
-      return []
+    #if self.isFinal(state):
+    #  return []
     
     loc, seg = state
 
@@ -194,20 +195,20 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 def toyDomain():
   ret = {}
 
-  targs = [(0.5, 0.5), (0.7, 0.7)]
-  obsts = [(0.5, 0.7)]
-  segs = []
+  targs = [(0.1 * x, 0.1 * y) for x in xrange(1, 10, 2) for y in [1, 3, 7, 9] ]
+  obsts = [(0.5, 0.5)]
+  segs = [(0.2, 0.2 * y) for y in xrange(1, 5)] + [(0.2 * x, 0.8) for x in xrange(2, 5)]
   elevators = [(0, 0), (1, 1)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
-  ret['xBoundary'] = [-0, 1]
-  ret['yBoundary'] = [-0, 1]
+  ret['xBoundary'] = [0, 1]
+  ret['yBoundary'] = [0, 1]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.1
+  ret['radius'] = 0.05
 
   # step size of the agent movement
-  ret['step'] = 0.05
+  ret['step'] = 0.025
 
   return ret
 
@@ -239,7 +240,7 @@ def loadFromMat(filename, domainId):
     name = s['newRes']['all_objs']['id'][idx]
 
     x = s['newRes']['all_objs']['object_location']['x'][domainId][idx]
-    y = s['newRes']['all_objs']['object_location']['y'][domainId][idx]
+    y = s['newRes']['all_objs']['object_location']['z'][domainId][idx]
 
     if 'targ' in name:
       targs.append((x, y))
@@ -338,7 +339,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = np.inf
+  runs = 500
 
   while True:
 
@@ -452,8 +453,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  init = loadFromMat('miniRes25.mat', 0)
-  #init = toyDomain()
+  #init = loadFromMat('miniRes25.mat', 0)
+  init = toyDomain()
   mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
@@ -503,6 +504,17 @@ if __name__ == '__main__':
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
+  elif opts.agent == 'Approximate':
+    import featureExtractors
+    extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, 'targs')
+    continuousEnv = ContinuousEnvironment(mdp)
+    actionFn = lambda state: mdp.getPossibleActions(state)
+    qLearnOpts = {'gamma': opts.discount, 
+                  'alpha': opts.learningRate, 
+                  'epsilon': opts.epsilon,
+                  'actionFn': actionFn,
+                  'extractor': extractor}
+    a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
   elif opts.agent == 'Modular':
     import modularAgents
     continuousEnv = ContinuousEnvironment(mdp)
@@ -579,6 +591,9 @@ if __name__ == '__main__':
     print
     print
     
+  if opts.agent == 'Approximate':
+    print a.weights
+
   # hold window
   win.getMouse()
   win.close()

@@ -171,29 +171,14 @@ def getContinuousWorldFuncs(mdp):
   """
   Feature extraction for continuous world.
   """
-  target = {'bias': 0.2, 'dis': -0.05}
-  obstacle = {'bias': -0.2, 'dis': 0.05}
-  segment = {'bias': 0.02, 'dis': 0.005}
-
-  def radiusBias(state, action, label, w):
-    loc, seg = state
-    newLoc, newSeg = mdp.getTransitionStatesAndProbs(state, action)[0][0]
-
-    minDist = np.inf
-
-    # search for the one with minimum distance in bag, with the given constraint
-    bag = mdp.objs[label]
-    
-    for idx in xrange(len(bag)):
-      dist = numpy.linalg.norm(np.subtract(newLoc, bag[idx]))
-      if dist < minDist:
-        minDist = dist
-
-    if minDist == np.inf:
-      # this module keeps quite in this case
-      return 0
-    else:
-      return minDist * w['dis'] + 1 * w['bias']
+  target = {'bias': 0.51638480403475961, 'dist': -0.083742023988640099}
+  obstacle = {'bias': -0.91251246907492323, 'dist': 1.9383664807859244}
+  segment = {'bias': 0.080048736631393835, 'dist': -0.041394412243896173}
+  
+  def radiusBias(state, action, label, w)
+    extractor = ContinousRadiusLogExtractor(mdp, label)
+    feats = extractor.getFeatures()
+    return feats['bias'] * w['bias'] + feats['dis'] * w['dis']
 
   def qTarget(state, action):
     return radiusBias(state, action, 'targs', target)

@@ -121,8 +121,10 @@ def main():
       Can be called to run pre-specified agent and domain.
     """
     # environment, an mdp object
+    """
     m = gw.getLargeWalkAvoidGrid(0.4)
     gridWorldEnv = gw.GridworldEnvironment(m)
+    """
 
     actionFn = lambda state: m.getPossibleActions(state)
     qLearnOpts = {'gamma': 0.9,
@@ -137,7 +139,8 @@ def main():
       w = map(float, sys.argv[1:])
       a.setWeights(w)
 
-    qFuncs = modularAgents.getObsAvoidFuncs(m)
+    #qFuncs = modularAgents.getObsAvoidFuncs(m)
+    qFuncs = modularAgents.getContinuousWorldFuncs(m)
     # set the weights and corresponding q-functions for its sub-mdps
     # note that the modular agent is able to determine the optimal policy based on these
     a.setQFuncs(qFuncs)

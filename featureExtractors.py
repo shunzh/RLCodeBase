@@ -12,6 +12,9 @@ from game import Directions, Actions
 import util
 import math
 
+import numpy.linalg
+import numpy as np
+
 class FeatureExtractor:  
   def getFeatures(self, state, action):    
     """
@@ -27,30 +30,64 @@ class IdentityExtractor(FeatureExtractor):
     feats[(state,action)] = 1.0
     return feats
 
-class ObstacleExtractor(FeatureExtractor):
+
+class ContinousRadiusLogExtractor(FeatureExtractor):
+  def __init__(self, mdp, label):
+    self.mdp = mdp
+    self.label = label
+    print mdp, label
+
   def getFeatures(self, state, action):
-	feats = util.Counter()
-	feats['bias'] = 1
+    feats = util.Counter()
+    loc, seg = state
+    newLoc, newSeg = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
 
-  	x, y = state
-	dx, dy = Actions.directionToVector(action)
-	# distance to obstacle, on x and y
-	disx = x + dx - 2
-	disy = y + dy - 2
+    minDist = np.inf
 
-	feats['dis'] = math.sqrt(disx*disx + disy*disy)
-	
-	return feats
+    # search for the one with minimum distance in bag, with the given constraint
+    bag = self.mdp.objs[self.label]
+    
+    for idx in xrange(len(bag)):
+      dist = numpy.linalg.norm(np.subtract(newLoc, bag[idx]))
+      if dist < minDist:
+        minDist = dist
+
+    if minDist == np.inf:
+      return None
+    else:
+      feats['dist'] = np.log(1 + minDist)
+      feats['bias'] = 1
+
+    return feats
+
+
+class ObstacleExtractor(FeatureExtractor):
+  """
+  This should use radius extractor.
+  """
+  def getFeatures(self, state, action):
+    feats = util.Counter()
+    feats['bias'] = 1
+
+    x, y = state
+    dx, dy = Actions.directionToVector(action)
+    # distance to obstacle, on x and y
+    disx = x + dx - 2
+    disy = y + dy - 2
+
+    feats['dis'] = math.sqrt(disx*disx + disy*disy)
+    
+    return feats
 	
 class SidewalkExtractor(FeatureExtractor):
   def getFeatures(self, state, action):
-	feats = util.Counter()
+    feats = util.Counter()
 
-  	x, y = state
-	dx, dy = Actions.directionToVector(action)
-	feats['x'] = x + dx
-	
-	return feats
+    x, y = state
+    dx, dy = Actions.directionToVector(action)
+    feats['x'] = x + dx
+    
+    return feats
 
 def closestFood(pos, food, walls):
   """
