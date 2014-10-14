@@ -18,7 +18,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, agent, mdp, recorder, qFuncs):
+  def __init__(self, agent, mdp, qFuncs):
     """
       Args:
         agent: the modular agent object
@@ -27,11 +27,10 @@ class InverseModularRL:
     """
     self.agent = agent
     self.mdp = mdp
-    self.recorder = recorder
     self.qFuncs = qFuncs
 
     # confidence on 
-    self.eta = 20
+    self.eta = 1
 
   def obj(self, X):
     """
@@ -46,7 +45,8 @@ class InverseModularRL:
     ret = 0
 
     # replay the process
-    for (state, optAction) in self.recorder:
+    for state in self.mdp.getStates():
+      optAction = self.agent.getPolicy(state)
       term = 0
 
       # Update the weights for each module accordingly.
@@ -84,7 +84,7 @@ class InverseModularRL:
     return w
 
 
-def checkPolicyConsistency(recorder, a, b):
+def checkPolicyConsistency(states, a, b):
   """
     Check how many policies on the states are consistent with the optimal one.
 
@@ -97,11 +97,10 @@ def checkPolicyConsistency(recorder, a, b):
   consistentPolices = 0
 
   # Walk through each state
-  for (state, action) in recorder:
-    print state, a.getPolicy(state), action
+  for state in states:
     consistentPolices += int(a.getPolicy(state) == b.getPolicy(state))
 
-  return 1.0 * consistentPolices / len(recorder)
+  return 1.0 * consistentPolices / len(states)
 
 
 def getWeightDistance(w1, w2):
@@ -124,8 +123,8 @@ def main():
   #gridWorldEnv = gw.GridworldEnvironment(m)
   
   import continuousWorld as cw
-  #init = cw.loadFromMat('miniRes25.mat', 0)
-  init = cw.toyDomain()
+  init = cw.loadFromMat('miniRes25.mat', 0)
+  #init = cw.toyDomain()
   m = cw.ContinuousWorld(init)
   env = cw.ContinuousEnvironment(m)
 
@@ -148,27 +147,12 @@ def main():
   # note that the modular agent is able to determine the optimal policy based on these
   a.setQFuncs(qFuncs)
 
-  print "Ready for simulation"
-
-  recorder = []
-  noneFunc = lambda *x: None
-  cw.runEpisode(a, env, 0.9, a.getAction, noneFunc, noneFunc, noneFunc, 1, recorder)
-
-  print "Simulation done. Recover from samples.."
-
-  sln = InverseModularRL(a, m, recorder, qFuncs)
+  sln = InverseModularRL(a, m, qFuncs)
   output = sln.findWeights()
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
-  print "IRL done."
   print "Weight: ", w
-
-  # re-initialize
-  m = cw.ContinuousWorld(init)
-  qFuncs = modularAgents.getContinuousWorldFuncs(m)
-  a = modularAgents.ModularAgent(**qLearnOpts)
-  a.setQFuncs(qFuncs)
 
   # check the consistency between the original optimal policy
   # and the policy predicted by the weights we guessed.
@@ -177,8 +161,7 @@ def main():
   aHat.setWeights(w) # get the weights in the result
 
   # print for experiments
-  print checkPolicyConsistency(recorder, a, aHat)
-  #print checkPolicyConsistency(recorder, a, aHat)
+  print checkPolicyConsistency(m.getStates(), a, aHat)
   print getWeightDistance(a.getWeights(), w)
 
 

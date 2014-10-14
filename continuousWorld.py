@@ -92,9 +92,18 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     
   def getStates(self):
     """
-    Return list of discrete states. This is usually for sanity check.
+    Return list of discrete random states. This is usually for sanity check.
     """
-    util.raiseNotDefined() 
+    states = []
+    width = self.xBoundary[1] - self.xBoundary[0]
+    height = self.xBoundary[1] - self.xBoundary[0]
+    
+    while len(states) < 10:
+      x = self.xBoundary[0] + random.random() * width
+      y = self.yBoundary[0] + random.random() * height
+      states.append(((x, y), 0))
+      
+    return states
         
   def getReward(self, state, action, nextState):
     """
@@ -104,8 +113,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     departed (as in the R+N book examples, which more or
     less use this convention).
     """
-    loc, seg, target = state
-    nextLoc, nextSeg, nextTarget = nextState
+    loc, seg= state
+    nextLoc, nextSeg = nextState
     
     if seg != nextSeg:
       # reaching a new segment
@@ -132,7 +141,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Start at the starting location, with no segment previously visited.
     """
     loc = self.objs['elevators'][0]
-    return (loc, 0, self.getClosestTarget(loc))
+    return (loc, 0)
     
   def isFinal(self, state):
     """
@@ -140,8 +149,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     No more target to collect or reached exit elevator.
     """
-    loc, seg, target = state
-    return target == None or self.closeToAnObject(loc) == ('elevators', 1)
+    loc, seg = state
+    return self.closeToAnObject(loc) == ('elevators', 1)
                    
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -149,7 +158,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     - bound back within self.xBoundary and self.yBoundary
     - change seg in the state representation upon reaching a new segment
     """
-    loc, seg, target = state
+    loc, seg = state
 
     # move to new loc and check whether it's allowed
     newLoc = np.add(loc, np.multiply(self.step, Actions._directions[action]))
@@ -162,9 +171,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     else:
       newSeg = seg
 
-    newTarget = self.getClosestTarget(newLoc)
-
-    successors = [((newLoc, newSeg, newTarget), 1)]
+    successors = [((newLoc, newSeg), 1)]
 
     return successors                                
   
@@ -304,8 +311,8 @@ class ContinuousEnvironment(environment.Environment):
 
     # remove objects if necessary
     # clear this object upon getting it
-    loc, seg, target = state
-    nextLoc, nextSeg, nextTarget = nextState
+    loc, seg = state
+    nextLoc, nextSeg = nextState
     nextStateType, nextObjId = self.mdp.closeToAnObject(nextLoc)
     if nextStateType == 'targs':
       self.mdp.clearObj(nextStateType, nextObjId)
@@ -573,8 +580,8 @@ if __name__ == '__main__':
     # display the corresponding state in graphics
     if displayCallback.prevState:
       # only draw lines, so ignore the first state
-      loc, seg, target = displayCallback.prevState
-      newLoc, newSeg, newTarget = x
+      loc, seg = displayCallback.prevState
+      newLoc, newSeg = x
 
       line = Line(Point(shift(loc)), Point(shift(newLoc)))
       line.setWidth(3)
