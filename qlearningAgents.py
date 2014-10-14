@@ -50,9 +50,6 @@ class QLearningAgent(ReinforcementAgent):
     "*** YOUR CODE HERE ***"
     return self.values[state, action]
     
-    #util.raiseNotDefined()
-  
-    
   def getValue(self, state):
     """
       Returns max_action Q(state,action)        

@@ -117,15 +117,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
       # DEBUG
       if nextStateType != None:
-        """
-        # clear this object upon getting it
-        if nextStateType == 'targs':
-          self.clearObj(nextStateType, nextObjId)
-        elif nextStateType == 'segs':
-          # be careful with this -
-          # once reaching on an segment, deleting the segments before it.
-          [self.clearObj(nextStateType, i) for i in xrange(nextSeg - seg)]
-        """
         return self.rewards[nextStateType]
       else:
         return 0
@@ -306,8 +297,24 @@ class ContinuousEnvironment(environment.Environment):
       if rand < sum:
         reward = self.mdp.getReward(state, action, nextState)
         self.state = nextState
-        return (nextState, reward)
-    raise 'Total transition probability less than one; sample failure.'    
+        result = (nextState, reward)
+
+    if sum < 1.0:
+      raise 'Total transition probability less than one; sample failure.'    
+
+    # remove objects if necessary
+    # clear this object upon getting it
+    loc, seg, target = state
+    nextLoc, nextSeg, nextTarget = nextState
+    nextStateType, nextObjId = self.mdp.closeToAnObject(nextLoc)
+    if nextStateType == 'targs':
+      self.mdp.clearObj(nextStateType, nextObjId)
+    elif nextStateType == 'segs':
+      # be careful with this -
+      # once reaching on an segment, deleting the segments before it.
+      [self.mdp.clearObj(nextStateType, i) for i in xrange(nextSeg - seg)]
+
+    return result
         
   def reset(self):
     self.state = self.mdp.getStartState()
@@ -346,7 +353,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 50
+  runs = 40
 
   while True:
 
@@ -363,10 +370,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
       agent.final(state)
       return returns
     
-    for act in actions:
-      pass
-      #print agent.getSubQValues(state, act)
-
     # GET ACTION (USUALLY FROM AGENT)
     action = decision(state)
     if action == None:
@@ -468,8 +471,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  #init = loadFromMat('miniRes25.mat', 1)
-  init = toyDomain()
+  init = loadFromMat('miniRes25.mat', 0)
+  #init = toyDomain()
   mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)

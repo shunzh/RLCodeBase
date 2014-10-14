@@ -80,20 +80,6 @@ class ModularAgent(ApproximateQAgent):
       # TODO
       raise Exception("calling unimplemented method: update for learning weight.")
 
-  def getPolicy(self, state):
-    """
-    Can toggle between using QValue directly (traditional way)
-    or by proportion of exp(QValue)
-    """
-    actions = self.getLegalActions(state)
-    if actions: 
-      # add weight or not?
-      values = [self.getQValue(state, action) for action in actions]
-
-      return actions[values.index(max(values))]
-    else:
-      raise Exception("Returning None action here.")
-
   def getSignificance(self, state):
     """
     How significance an agent's correct decision at this state should affect the overall performance.
