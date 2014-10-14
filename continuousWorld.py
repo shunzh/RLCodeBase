@@ -98,7 +98,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     width = self.xBoundary[1] - self.xBoundary[0]
     height = self.xBoundary[1] - self.xBoundary[0]
     
-    while len(states) < 10:
+    while len(states) < 40:
       x = self.xBoundary[0] + random.random() * width
       y = self.yBoundary[0] + random.random() * height
       states.append(((x, y), 0))
@@ -360,7 +360,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 20
+  runs = 200
 
   while True:
 

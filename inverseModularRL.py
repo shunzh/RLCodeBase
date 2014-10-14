@@ -30,7 +30,7 @@ class InverseModularRL:
     self.qFuncs = qFuncs
 
     # confidence on 
-    self.eta = 1
+    self.eta = 10
 
   def obj(self, X):
     """
