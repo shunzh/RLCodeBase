@@ -124,8 +124,8 @@ def main():
   #gridWorldEnv = gw.GridworldEnvironment(m)
   
   import continuousWorld as cw
-  init = cw.loadFromMat('miniRes25.mat', 0)
-  #init = cw.toyDomain()
+  #init = cw.loadFromMat('miniRes25.mat', 0)
+  init = cw.toyDomain()
   m = cw.ContinuousWorld(init)
   env = cw.ContinuousEnvironment(m)
 
@@ -165,7 +165,6 @@ def main():
   print "Weight: ", w
 
   # re-initialize
-  init = cw.loadFromMat('miniRes25.mat', 0)
   m = cw.ContinuousWorld(init)
   qFuncs = modularAgents.getContinuousWorldFuncs(m)
   a = modularAgents.ModularAgent(**qLearnOpts)
