@@ -18,7 +18,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
   """
   A MDP that captures continuous state space, while the agent moves in discrete steps.
 
-  State: (location, last visited segment, closest target)
+  State: (location)
   Action: 8 directional movement, with a fixed step size.
   Transition: trivial.
   Reward: upon reaching a target / obstacle, obtain the corresponding reward.
@@ -64,6 +64,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
   def getClosestTarget(self, l):
     [minObj, minDist] = featureExtractors.getClosestObj(l, self.objs['targs'])
+    print "closest ", minObj
     return minObj
 
   def setLivingReward(self, reward):
@@ -101,7 +102,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     while len(states) < 40:
       x = self.xBoundary[0] + random.random() * width
       y = self.yBoundary[0] + random.random() * height
-      states.append(((x, y), 0))
+      states.append((x, y))
       
     return states
         
@@ -113,23 +114,19 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     departed (as in the R+N book examples, which more or
     less use this convention).
     """
-    loc, seg= state
-    nextLoc, nextSeg = nextState
+    loc = state
+    nextLoc = nextState
     
-    if seg != nextSeg:
-      # reaching a new segment
-      return self.rewards["segs"]
-    else:
-      # check whether reaching a target or obstacle
-      stateType, objId = self.closeToAnObject(loc)
-      nextStateType, nextObjId = self.closeToAnObject(nextLoc)
+    # check whether reaching a target or obstacle
+    stateType, objId = self.closeToAnObject(loc)
+    nextStateType, nextObjId = self.closeToAnObject(nextLoc)
 
-      # DEBUG
-      if nextStateType != None:
-        return self.rewards[nextStateType]
-      else:
-        return 0
-        
+    # DEBUG
+    if nextStateType != None:
+      return self.rewards[nextStateType]
+    else:
+      return 0
+      
   def clearObj(self, objType, objId):
     """
     Clear an object from self.objs, usually because the agent has got it.
@@ -141,7 +138,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Start at the starting location, with no segment previously visited.
     """
     loc = self.objs['elevators'][0]
-    return (loc, 0)
+    return loc
     
   def isFinal(self, state):
     """
@@ -149,7 +146,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     No more target to collect or reached exit elevator.
     """
-    loc, seg = state
+    loc = state
     return self.closeToAnObject(loc) == ('elevators', 1)
                    
   def getTransitionStatesAndProbs(self, state, action):
@@ -158,20 +155,14 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     - bound back within self.xBoundary and self.yBoundary
     - change seg in the state representation upon reaching a new segment
     """
-    loc, seg = state
+    loc = state
 
     # move to new loc and check whether it's allowed
     newLoc = np.add(loc, np.multiply(self.step, Actions._directions[action]))
     if not self.__isAllowed(newLoc):
       newLoc = loc
     
-    stateType, objId = self.closeToAnObject(newLoc)
-    if stateType == 'segs' and objId > seg:
-      newSeg = objId
-    else:
-      newSeg = seg
-
-    successors = [((newLoc, newSeg), 1)]
+    successors = [(newLoc, 1)]
 
     return successors                                
   
@@ -311,8 +302,8 @@ class ContinuousEnvironment(environment.Environment):
 
     # remove objects if necessary
     # clear this object upon getting it
-    loc, seg = state
-    nextLoc, nextSeg = nextState
+    loc = state
+    nextLoc = nextState
     nextStateType, nextObjId = self.mdp.closeToAnObject(nextLoc)
     if nextStateType == 'targs':
       self.mdp.clearObj(nextStateType, nextObjId)
@@ -578,10 +569,10 @@ if __name__ == '__main__':
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
   def displayCallback(x):
     # display the corresponding state in graphics
-    if displayCallback.prevState:
+    if displayCallback.prevState != None:
       # only draw lines, so ignore the first state
-      loc, seg = displayCallback.prevState
-      newLoc, newSeg = x
+      loc = displayCallback.prevState
+      newLoc = x
 
       line = Line(Point(shift(loc)), Point(shift(newLoc)))
       line.setWidth(3)
