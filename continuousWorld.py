@@ -319,7 +319,7 @@ class ContinuousEnvironment(environment.Environment):
     elif nextStateType == 'segs':
       # be careful with this -
       # once reaching on an segment, deleting the segments before it.
-      [self.mdp.clearObj(nextStateType, i) for i in xrange(nextSeg - seg)]
+      [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId)]
 
     return result
         
@@ -360,7 +360,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 200
+  runs = 1000
 
   while True:
 
@@ -478,8 +478,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  init = loadFromMat('miniRes25.mat', 0)
-  #init = toyDomain()
+  #init = loadFromMat('miniRes25.mat', 0)
+  init = toyDomain()
   mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
@@ -489,7 +489,7 @@ if __name__ == '__main__':
   ###########################
   # GET THE DISPLAY ADAPTER
   ###########################
-  dim = 1000
+  dim = 800
   win = GraphWin('Domain', dim, dim) # give title and dimensions
   win.setBackground('black')
 
