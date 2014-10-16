@@ -2,6 +2,7 @@ import random
 import sys
 import mdp
 import environment
+import mdpEnvironment
 import util
 import optparse
 import featureExtractors
@@ -18,7 +19,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
   """
   A MDP that captures continuous state space, while the agent moves in discrete steps.
 
-  State: (location)
+  State: (location, orientation) # orientation is dummy here
   Action: 8 directional movement, with a fixed step size.
   Transition: trivial.
   Reward: upon reaching a target / obstacle, obtain the corresponding reward.
@@ -102,7 +103,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     while len(states) < 40:
       x = self.xBoundary[0] + random.random() * width
       y = self.yBoundary[0] + random.random() * height
-      states.append((x, y))
+      states.append(((x, y), 0))
       
     return states
         
@@ -114,8 +115,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     departed (as in the R+N book examples, which more or
     less use this convention).
     """
-    loc = state
-    nextLoc = nextState
+    loc, orient = state
+    nextLoc, newOrient = nextState
     
     # check whether reaching a target or obstacle
     stateType, objId = self.closeToAnObject(loc)
@@ -138,7 +139,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Start at the starting location, with no segment previously visited.
     """
     loc = self.objs['elevators'][0]
-    return loc
+    return (loc, 0)
     
   def isFinal(self, state):
     """
@@ -146,7 +147,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     No more target to collect or reached exit elevator.
     """
-    loc = state
+    loc, orient = state
     return self.closeToAnObject(loc) == ('elevators', 1)
                    
   def getTransitionStatesAndProbs(self, state, action):
@@ -155,14 +156,16 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     - bound back within self.xBoundary and self.yBoundary
     - change seg in the state representation upon reaching a new segment
     """
-    loc = state
+    loc, orient = state
 
     # move to new loc and check whether it's allowed
     newLoc = np.add(loc, np.multiply(self.step, Actions._directions[action]))
     if not self.__isAllowed(newLoc):
       newLoc = loc
+
+    newOrient = orient # doesn't change orient in this mdp
     
-    successors = [(newLoc, 1)]
+    successors = [((newLoc, newOrient), 1)]
 
     return successors                                
   
@@ -267,43 +270,14 @@ def loadFromMat(filename, domainId):
   return ret
 
 
-class ContinuousEnvironment(environment.Environment):
-  """
-  which holds a mdp object.
-
-  #FIXME this is essentially the same for all the domains, consider abstract this.
-  """
-  def __init__(self, mdp):
-    self.mdp = mdp
-    self.reset()
-            
-  def getCurrentState(self):
-    return self.state
-        
-  def getPossibleActions(self, state):        
-    return self.mdp.getPossibleActions(state)
-        
+class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
   def doAction(self, action):
-    successors = self.mdp.getTransitionStatesAndProbs(self.state, action) 
-    sum = 0.0
-    rand = random.random()
-    state = self.getCurrentState()
-    for nextState, prob in successors:
-      sum += prob
-      if sum > 1.0:
-        raise 'Total transition probability more than one; sample failure.' 
-      if rand < sum:
-        reward = self.mdp.getReward(state, action, nextState)
-        self.state = nextState
-        result = (nextState, reward)
-
-    if sum < 1.0:
-      raise 'Total transition probability less than one; sample failure.'    
+    (nextState, reward) = mdpEnvironment.MDPEnvironment.doAction(self, action)
 
     # remove objects if necessary
     # clear this object upon getting it
-    loc = state
-    nextLoc = nextState
+    loc, orient = self.state
+    nextLoc, nextOrient = nextState
     nextStateType, nextObjId = self.mdp.closeToAnObject(nextLoc)
     if nextStateType == 'targs':
       self.mdp.clearObj(nextStateType, nextObjId)
@@ -312,13 +286,8 @@ class ContinuousEnvironment(environment.Environment):
       # once reaching on an segment, deleting the segments before it.
       [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId)]
 
-    return result
-        
-  def reset(self):
-    self.state = self.mdp.getStartState()
+    return (nextState, reward)
 
-  def isFinal(self):
-    return self.mdp.isFinal(self.state)
 
 def getUserAction(state, actionFunction):
   """
@@ -571,8 +540,8 @@ if __name__ == '__main__':
     # display the corresponding state in graphics
     if displayCallback.prevState != None:
       # only draw lines, so ignore the first state
-      loc = displayCallback.prevState
-      newLoc = x
+      loc, orient = displayCallback.prevState
+      newLoc, newOrient = x
 
       line = Line(Point(shift(loc)), Point(shift(newLoc)))
       line.setWidth(3)

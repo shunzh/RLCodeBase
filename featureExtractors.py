@@ -55,8 +55,8 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
 
   def getFeatures(self, state, action):
     feats = util.Counter()
-    loc = state
-    newLoc = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
+    loc, orient = state
+    newLoc, newOrient = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
 
     [minObj, minDist] = getClosestObj(newLoc, self.mdp.objs[self.label])
 
