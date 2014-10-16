@@ -49,10 +49,10 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     loc, orient = state
 
     if action == 'L':
-      orient = (orient - turnAngle) % (2 * np.pi)
+      orient = (orient - self.turnAngle) % (2 * np.pi)
       d = self.turnDist
     elif action == 'R':
-      orient = (orient + turnAngle) % (2 * np.pi)
+      orient = (orient + self.turnAngle) % (2 * np.pi)
       d = self.turnDist
     elif action == 'G':
       d = self.walkDist
@@ -64,10 +64,10 @@ class HumanWorld(continuousWorld.ContinuousWorld):
 
     newState = (loc, orient)
 
-    return (newState, 1)
+    return [(newState, 1)]
 
 
-class HumanEnvironment(continuousWorld.ContinuousWorld):
+class HumanEnvironment(continuousWorld.ContinuousEnvironment):
   """
   Environment for human.
   """
@@ -160,7 +160,7 @@ def parseOptions():
                          metavar="P", help='How often action results in ' +
                          'unintended direction (default %default)' )
     optParser.add_option('-e', '--epsilon',action='store',
-                         type='float',dest='epsilon',default=0.3,
+                         type='float',dest='epsilon',default=0,
                          metavar="E", help='Chance of taking a random action in q-learning (default %default)')
     optParser.add_option('-l', '--learningRate',action='store',
                          type='float',dest='learningRate',default=0.5,
@@ -223,8 +223,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  #init = loadFromMat('miniRes25.mat', 0)
-  init = continuousWorld.toyDomain()
+  init = continuousWorld.loadFromMat('miniRes25.mat', 0)
+  #init = continuousWorld.toyDomain()
   mdp = HumanWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
@@ -267,7 +267,7 @@ if __name__ == '__main__':
   if opts.agent == 'value':
     a = valueIterationAgents.ValueIterationAgent(mdp, opts.discount, opts.iters)
   elif opts.agent == 'q':
-    continuousEnv = ContinuousEnvironment(mdp)
+    continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
     extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, 'obsts')
-    continuousEnv = ContinuousEnvironment(mdp)
+    continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -286,11 +286,11 @@ if __name__ == '__main__':
     a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
   elif opts.agent == 'Modular':
     import modularAgents
-    continuousEnv = ContinuousEnvironment(mdp)
+    continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
-                  'epsilon': 0,
+                  'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules
@@ -325,8 +325,8 @@ if __name__ == '__main__':
     # display the corresponding state in graphics
     if displayCallback.prevState != None:
       # only draw lines, so ignore the first state
-      loc = displayCallback.prevState
-      newLoc = x
+      loc, orient = displayCallback.prevState
+      newLoc, orient = x
 
       line = Line(Point(shift(loc)), Point(shift(newLoc)))
       line.setWidth(3)
