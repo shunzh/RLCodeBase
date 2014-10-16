@@ -284,7 +284,7 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
     elif nextStateType == 'segs':
       # be careful with this -
       # once reaching on an segment, deleting the segments before it.
-      [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId)]
+      [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId + 1)]
 
     return (nextState, reward)
 
@@ -375,7 +375,7 @@ def parseOptions():
                          metavar="P", help='How often action results in ' +
                          'unintended direction (default %default)' )
     optParser.add_option('-e', '--epsilon',action='store',
-                         type='float',dest='epsilon',default=0.3,
+                         type='float',dest='epsilon',default=0,
                          metavar="E", help='Chance of taking a random action in q-learning (default %default)')
     optParser.add_option('-l', '--learningRate',action='store',
                          type='float',dest='learningRate',default=0.5,
@@ -438,8 +438,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  #init = loadFromMat('miniRes25.mat', 0)
-  init = toyDomain()
+  init = loadFromMat('miniRes25.mat', 0)
+  #init = toyDomain()
   mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
@@ -505,7 +505,7 @@ if __name__ == '__main__':
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
-                  'epsilon': 0,
+                  'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules

@@ -25,6 +25,13 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   Transition: same as continuousWorld but 
   Reward: same as continuousWorld.
   """
+  def __init__(self, init):
+    continuousWorld.ContinuousWorld.__init__(self, init)
+
+    self.turnAngle = 30.0 / 180 * np.pi
+    self.turnDist = 0.05
+    self.walkDist = 0.2
+    
   def getPossibleActions(self, state):
     """
     L: Turn left 30 degrees and walk ahead 0.05m.
@@ -39,31 +46,32 @@ class HumanWorld(continuousWorld.ContinuousWorld):
 
     Use: self.[turnAngle, turnDist, walkDist]
     """
+    loc, orient = state
+
     if action == 'L':
-      dx = turnDist * np.sin(- turnAngle)
-      dy = turnDist * np.cos(turnAngle)
+      orient = (orient - turnAngle) % (2 * np.pi)
+      d = self.turnDist
     elif action == 'R':
-      dx = turnDist * np.sin(turnAngle)
-      dy = turnDist * np.cos(turnAngle)
+      orient = (orient + turnAngle) % (2 * np.pi)
+      d = self.turnDist
     elif action == 'G':
-      dx = 0
-      dy = self.walkDist
+      d = self.walkDist
     else:
       raise Exception("Unknown action.")
 
-    state = np.add(state, (dx, dy))
+    dv = (d * np.cos(orient), d * np.sin(orient))
+    loc = np.add(loc, dv)
 
-    return (state, 1)
+    newState = (loc, orient)
+
+    return (newState, 1)
 
 
 class HumanEnvironment(continuousWorld.ContinuousWorld):
   """
   Environment for human.
   """
-  def doAction(self, action):
-    (nextState, reward) = super(self, doAction)
-
-    return (nextState, reward)
+  pass # maybe no difference with conti world..= =
 
 
 def getUserAction(state, actionFunction):
@@ -216,7 +224,7 @@ if __name__ == '__main__':
   ###########################
 
   #init = loadFromMat('miniRes25.mat', 0)
-  init = toyDomain()
+  init = continuousWorld.toyDomain()
   mdp = HumanWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
