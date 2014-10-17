@@ -200,14 +200,14 @@ def toyDomain():
   elevators = [(0, 0), (1, 1)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
-  ret['xBoundary'] = [0, 1]
-  ret['yBoundary'] = [0, 1]
+  ret['xBoundary'] = [-0.5, 1.5]
+  ret['yBoundary'] = [-0.5, 1.5]
 
   # radius of an object (so the object doesn't appear as a point)
   ret['radius'] = 0.05
 
   # step size of the agent movement
-  ret['step'] = 0.025
+  ret['step'] = 0.01
 
   return ret
 
@@ -262,10 +262,10 @@ def loadFromMat(filename, domainId):
   ret['yBoundary'] = [-4, 4]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.05
+  ret['radius'] = 0.1
 
   # step size of the agent movement
-  ret['step'] = 0.025
+  ret['step'] = 0.05
 
   return ret
 
@@ -387,7 +387,7 @@ def parseOptions():
                          type='int',dest='episodes',default=1,
                          metavar="K", help='Number of epsiodes of the MDP to run (default %default)')
     optParser.add_option('-g', '--grid',action='store',
-                         metavar="G", type='string',dest='grid',default="BookGrid",
+                         metavar="G", type='string',dest='grid',default="toy",
                          help='Grid to use (case sensitive; options are BookGrid, BridgeGrid, CliffGrid, MazeGrid, default %default)' )
     optParser.add_option('-w', '--windowSize', metavar="X", type='int',dest='gridSize',default=150,
                          help='Request a window width of X pixels *per grid cell* (default %default)')
@@ -438,8 +438,13 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  init = loadFromMat('miniRes25.mat', 0)
-  #init = toyDomain()
+  if opts.grid == 'vr':
+    init = loadFromMat('miniRes25.mat', 0)
+  elif opts.grid == 'toy':
+    init = toyDomain()
+  else:
+    raise Exception("Unknown environment!")
+
   mdp = ContinuousWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
@@ -490,7 +495,7 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
-    extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, 'obsts')
+    extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, 'targs')
     continuousEnv = ContinuousEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 

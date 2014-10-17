@@ -29,8 +29,9 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     continuousWorld.ContinuousWorld.__init__(self, init)
 
     self.turnAngle = 30.0 / 180 * np.pi
-    self.turnDist = 0.05
-    self.walkDist = 0.2
+    # this is scaled by the step size in the domain
+    self.turnDist = 0.25
+    self.walkDist = 1
     
   def getPossibleActions(self, state):
     """
@@ -64,6 +65,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     newLoc = np.add(loc, dv)
     if not self.isAllowed(newLoc):
       newLoc = loc
+
+    newLoc = tuple(newLoc) # make sure type is consistent
 
     newState = (newLoc, newOrient)
 
@@ -175,7 +178,7 @@ def parseOptions():
                          type='int',dest='episodes',default=1,
                          metavar="K", help='Number of epsiodes of the MDP to run (default %default)')
     optParser.add_option('-g', '--grid',action='store',
-                         metavar="G", type='string',dest='grid',default="BookGrid",
+                         metavar="G", type='string',dest='grid',default="toy",
                          help='Grid to use (case sensitive; options are BookGrid, BridgeGrid, CliffGrid, MazeGrid, default %default)' )
     optParser.add_option('-w', '--windowSize', metavar="X", type='int',dest='gridSize',default=150,
                          help='Request a window width of X pixels *per grid cell* (default %default)')
@@ -226,8 +229,13 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  #init = continuousWorld.loadFromMat('miniRes25.mat', 0)
-  init = continuousWorld.toyDomain()
+  if opts.grid == 'vr':
+    init = continuousWorld.loadFromMat('miniRes25.mat', 0)
+  elif opts.grid == 'toy':
+    init = continuousWorld.toyDomain()
+  else:
+    raise Exception("Unknown environment!")
+
   mdp = HumanWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
@@ -342,7 +350,7 @@ if __name__ == '__main__':
   displayCallback.prevState = None
 
   messageCallback = lambda x: printString(x)
-  pauseCallback = lambda : None
+  pauseCallback = lambda : None #raw_input("waiting")
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:

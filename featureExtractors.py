@@ -80,7 +80,7 @@ class HumanViewLogExtractor(ContinousRadiusLogExtractor):
 
     [minObj, minDist] = getClosestObj(newLoc, self.mdp.objs[self.label])
     vector = np.subtract(minObj, newLoc)
-    minOrient = np.angle(vector[0], vector[1] * 1j)
+    minOrient = np.angle(vector[0] + vector[1] * 1j)
 
     feats['dist'] = np.log(1 + minDist)
     feats['angle'] = minOrient
