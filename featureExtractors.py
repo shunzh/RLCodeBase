@@ -68,6 +68,27 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
 
     return feats
 
+
+class HumanViewLogExtractor(ContinousRadiusLogExtractor):
+  """
+  From human's view
+  """
+  def getFeatures(self, state, action):
+    feats = util.Counter()
+    loc, orient = state
+    newLoc, newOrient = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
+
+    [minObj, minDist] = getClosestObj(newLoc, self.mdp.objs[self.label])
+    vector = np.subtract(minObj, newLoc)
+    minOrient = np.angle(vector[0], vector[1] * 1j)
+
+    feats['dist'] = np.log(1 + minDist)
+    feats['angle'] = minOrient
+    feats['bias'] = 1
+
+    return feats
+
+
 class ObstacleExtractor(FeatureExtractor):
   """
   This should use radius extractor.

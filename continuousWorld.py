@@ -160,7 +160,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     # move to new loc and check whether it's allowed
     newLoc = np.add(loc, np.multiply(self.step, Actions._directions[action]))
-    if not self.__isAllowed(newLoc):
+    if not self.isAllowed(newLoc):
       newLoc = loc
 
     newOrient = orient # doesn't change orient in this mdp
@@ -181,7 +181,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       newStatesAndProbs.append((state, prob))
     return newStatesAndProbs
         
-  def __isAllowed(self, loc):
+  def isAllowed(self, loc):
     """
     Check whether this state is valid
     """

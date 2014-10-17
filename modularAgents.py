@@ -157,7 +157,7 @@ def getObsAvoidFuncs(mdp):
   return [qWalk, qObstacle, qTarget]
 
 
-def getContinuousWorldFuncs(mdp):
+def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLogExtractor):
   """
   Feature extraction for continuous world.
   """
@@ -173,7 +173,7 @@ def getContinuousWorldFuncs(mdp):
   segment = {'bias': 0.1, 'dist': -0.05}
   
   def radiusBias(state, action, label, w):
-    extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, label)
+    extractor = Extractor(mdp, label)
     feats = extractor.getFeatures(state, action)
 
     if feats != None:

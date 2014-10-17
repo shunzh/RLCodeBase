@@ -49,20 +49,23 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     loc, orient = state
 
     if action == 'L':
-      orient = (orient - self.turnAngle) % (2 * np.pi)
+      newOrient = (orient - self.turnAngle) % (2 * np.pi)
       d = self.turnDist
     elif action == 'R':
-      orient = (orient + self.turnAngle) % (2 * np.pi)
+      newOrient = (orient + self.turnAngle) % (2 * np.pi)
       d = self.turnDist
     elif action == 'G':
+      newOrient = orient
       d = self.walkDist
     else:
       raise Exception("Unknown action.")
 
-    dv = (d * np.cos(orient), d * np.sin(orient))
-    loc = np.add(loc, dv)
+    dv = (d * np.cos(newOrient), d * np.sin(newOrient))
+    newLoc = np.add(loc, dv)
+    if not self.isAllowed(newLoc):
+      newLoc = loc
 
-    newState = (loc, orient)
+    newState = (newLoc, newOrient)
 
     return [(newState, 1)]
 
@@ -223,8 +226,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  init = continuousWorld.loadFromMat('miniRes25.mat', 0)
-  #init = continuousWorld.toyDomain()
+  #init = continuousWorld.loadFromMat('miniRes25.mat', 0)
+  init = continuousWorld.toyDomain()
   mdp = HumanWorld(init)
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
@@ -275,7 +278,7 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
-    extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, 'obsts')
+    extractor = featureExtractors.HumanViewLogExtractor(mdp, 'targs')
     continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
@@ -294,7 +297,8 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules
-    a.setQFuncs(modularAgents.getContinuousWorldFuncs(mdp))
+    extractor = featureExtractors.HumanViewLogExtractor
+    a.setQFuncs(modularAgents.getContinuousWorldFuncs(mdp, extractor))
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
