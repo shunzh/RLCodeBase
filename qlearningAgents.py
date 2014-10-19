@@ -125,6 +125,43 @@ class QLearningAgent(ReinforcementAgent):
     pass
 
 
+class ReducedQLearningAgent(QLearningAgent):
+  """
+  Rewrite Q learning agent.
+
+  This is different from ApproximateQAgent, which assumes Q values are linear combination of
+  feature values.
+  """
+  def __init__(self, **args):
+    QLearningAgent.__init__(self, **args)
+
+    # Set get state function here.
+    # By default, it is an identity function
+    self.getState = lambda x : x
+
+  def setStateFilter(self, extractor):
+    """
+    Set the state filter here, which returns the state representation for learning.
+    The default one is an identity function.
+    """
+    self.getState = extractor
+
+  def getQValue(self, state, action):
+    return QLearningAgent.getQValue(self, self.getState(state), action)
+
+  def getValue(self, state):
+    return QLearningAgent.getValue(self, self.getState(state))
+
+  def getPolicy(self, state):
+    return QLearningAgent.getPolicy(self, self.getState(state))
+
+  def update(self, state, action, nextState, reward):
+    return QLearningAgent.update(self, self.getState(state), action, self.getState(nextState), reward)
+
+  def final(self, state):
+    return QLearningAgent.final(self, self.getState(state))
+
+
 class PacmanQAgent(QLearningAgent):
   "Exactly the same as QLearningAgent, but with different default parameters"
   

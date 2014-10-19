@@ -200,8 +200,8 @@ def toyDomain():
   elevators = [(0, 0), (1, 1)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
-  ret['xBoundary'] = [-0.5, 1.5]
-  ret['yBoundary'] = [-0.5, 1.5]
+  ret['xBoundary'] = [-0.1, 1.1]
+  ret['yBoundary'] = [-0.1, 1.1]
 
   # radius of an object (so the object doesn't appear as a point)
   ret['radius'] = 0.05
@@ -581,7 +581,8 @@ if __name__ == '__main__':
     print
     
   if opts.agent == 'Approximate':
-    print a.weights
+    import pprint
+    pprint.pprint(a.weights)
 
   # hold window
   win.getMouse()

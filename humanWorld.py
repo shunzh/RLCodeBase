@@ -284,7 +284,8 @@ if __name__ == '__main__':
                   'alpha': opts.learningRate, 
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
-    a = qlearningAgents.QLearningAgent(**qLearnOpts)
+    a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
+    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, 'targs'))
   elif opts.agent == 'Approximate':
     extractor = featureExtractors.HumanViewLogExtractor(mdp, 'targs')
     continuousEnv = HumanEnvironment(mdp)
@@ -374,6 +375,8 @@ if __name__ == '__main__':
     
   if opts.agent == 'Approximate':
     print a.weights
+  elif opts.agent == 'q':
+    print a.values
 
   # hold window
   win.getMouse()

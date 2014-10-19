@@ -24,6 +24,7 @@ class FeatureExtractor:
     """
     util.raiseNotDefined()
 
+
 class IdentityExtractor(FeatureExtractor):
   def getFeatures(self, state, action):
     feats = util.Counter()
@@ -74,12 +75,16 @@ class HumanViewLogExtractor(ContinousRadiusLogExtractor):
   From human's view
   """
   def getFeatures(self, state, action):
-    feats = util.Counter()
-    loc, orient = state
-    newLoc, newOrient = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
+    newState = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
+    return self.getStateFeatures(newState)
 
-    [minObj, minDist] = getClosestObj(newLoc, self.mdp.objs[self.label])
-    vector = np.subtract(minObj, newLoc)
+  def getStateFeatures(self, state):
+    feats = util.Counter()
+
+    loc, orient = state
+
+    [minObj, minDist] = getClosestObj(loc, self.mdp.objs[self.label])
+    vector = np.subtract(minObj, loc)
     minOrient = np.angle(vector[0] + vector[1] * 1j)
 
     feats['dist'] = np.log(1 + minDist)
@@ -88,6 +93,21 @@ class HumanViewLogExtractor(ContinousRadiusLogExtractor):
 
     return feats
 
+def getHumanViewBins(mdp, label):
+  """
+  Get bins extracted from continuous features.
+  """
+  extractor = HumanViewLogExtractor(mdp, label)
+
+  def getBins(state):
+    feats = extractor.getStateFeatures(state)
+
+    distBin = min(int(feats['dist'] / 0.2), 10)
+    angleBin = int(feats['angle'] / (np.pi / 10))
+
+    return (distBin, angleBin)
+
+  return getBins
 
 class ObstacleExtractor(FeatureExtractor):
   """
