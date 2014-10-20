@@ -34,6 +34,12 @@ class Environment:
     """
     abstract
         
+  def step(self, state, action, nextState, reward):
+    """
+      Called at each step. Optional.
+    """
+    pass
+
   def reset(self):
     """
       Resets the current state to the start state

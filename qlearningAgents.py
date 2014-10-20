@@ -15,7 +15,7 @@ import pickle
           
 class QLearningAgent(ReinforcementAgent):
   """
-    Q-Learning Agent
+    Q(lambda)-Learning Agent
     
     Functions you should fill in:
       - getQValue
@@ -40,7 +40,15 @@ class QLearningAgent(ReinforcementAgent):
 
     "*** YOUR CODE HERE ***"
     self.values = util.Counter()
+    # initialize e_t
+    self.e = util.Counter()
+    # default value for lambda
+    self.lambdaValue = 0
+    self.replace = True
   
+  def setLambdaValue(self, lambdaValue):
+    self.lambdaValue = lambdaValue
+
   def getQValue(self, state, action):
     """
       Returns Q(state,action)    
@@ -64,6 +72,11 @@ class QLearningAgent(ReinforcementAgent):
     else: 
       return 0.0
    #util.raiseNotDefined()
+    
+  def printQValues(self):
+    for item, value in self.values.items():
+      print 's, a: ', item
+      print 'q: ', value
     
   def getPolicy(self, state):
     """
@@ -116,9 +129,16 @@ class QLearningAgent(ReinforcementAgent):
       it will be called on your behalf
     """
     "*** YOUR CODE HERE ***"
-    sample = reward + self.gamma * self.getValue(nextState)
-    new_qvalue = (1 - self.alpha) * self.getQValue(state, action) + self.alpha * sample 
-    self.values[state, action] = new_qvalue 
+    delta = reward + self.gamma * self.getValue(nextState) - self.getQValue(state, action)
+
+    if self.replace:
+      self.e[state, action] = 1
+    else:
+      self.e[state, action] += 1
+
+    for state, action in self.values:
+      self.values[state, action] += self.alpha * delta * self.e[state, action]
+      self.e[state, action] *= self.gamma * self.lambdaValue
 
   def final(self, state):
     "Called at the end of each game."

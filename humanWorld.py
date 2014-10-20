@@ -30,8 +30,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
 
     self.turnAngle = 30.0 / 180 * np.pi
     # this is scaled by the step size in the domain
-    self.turnDist = 0.25
-    self.walkDist = 1
+    self.turnDist = self.step * 0.25
+    self.walkDist = self.step * 1
     
   def getPossibleActions(self, state):
     """
@@ -73,11 +73,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     return [(newState, 1)]
 
 
-class HumanEnvironment(continuousWorld.ContinuousEnvironment):
-  """
-  Environment for human.
-  """
-  pass # maybe no difference with conti world..= =
+#Environment for human.
+HumanEnvironment = continuousWorld.ContinuousEnvironment
 
 
 def getUserAction(state, actionFunction):
@@ -111,7 +108,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 1000
+  runs = 2000
 
   while True:
 
@@ -146,6 +143,8 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     # UPDATE LEARNER
     if 'observeTransition' in dir(agent): 
         agent.observeTransition(state, action, nextState, reward)
+
+    environment.step(state, action, nextState, reward)
     
     returns += reward * totalDiscount
     totalDiscount *= discount
@@ -230,13 +229,15 @@ if __name__ == '__main__':
   ###########################
 
   if opts.grid == 'vr':
-    init = continuousWorld.loadFromMat('miniRes25.mat', 0)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0)
   elif opts.grid == 'toy':
-    init = continuousWorld.toyDomain()
+    init = lambda: continuousWorld.toyDomain()
+  elif opts.grid == 'simple':
+    init = lambda: continuousWorld.simpleToyDomain()
   else:
     raise Exception("Unknown environment!")
 
-  mdp = HumanWorld(init)
+  mdp = HumanWorld(init())
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)
   env = HumanEnvironment(mdp)
@@ -245,12 +246,7 @@ if __name__ == '__main__':
   ###########################
   # GET THE DISPLAY ADAPTER
   ###########################
-  dim = 800
-  win = GraphWin('Domain', dim, dim) # give title and dimensions
-  win.setBackground('black')
 
-  size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
-  radius = mdp.radius / size * dim
   def shift(loc):
     """
     shift to the scale of the GraphWin
@@ -262,10 +258,18 @@ if __name__ == '__main__':
       cir = Circle(Point(shift(obj)), radius)
       cir.setFill(color)
       cir.draw(win)
-  drawObjects('targs', 'blue')
-  drawObjects('obsts', 'red')
-  drawObjects('segs', 'yellow')
-  drawObjects('elevators', 'green')
+
+  if not opts.quiet:
+    dim = 800
+    win = GraphWin('Domain', dim, dim) # give title and dimensions
+    win.setBackground('black')
+
+    size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
+    radius = mdp.radius / size * dim
+    drawObjects('targs', 'blue')
+    drawObjects('obsts', 'red')
+    drawObjects('segs', 'yellow')
+    drawObjects('elevators', 'green')
 
   ###########################
   # GET THE AGENT
@@ -286,6 +290,15 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, 'targs'))
+    a.setLambdaValue(0.5)
+  elif opts.agent == 'sarsa':
+    gridWorldEnv = GridworldEnvironment(mdp)
+    actionFn = lambda state: mdp.getPossibleActions(state)
+    qLearnOpts = {'gamma': opts.discount, 
+                  'alpha': opts.learningRate, 
+                  'epsilon': opts.epsilon,
+                  'actionFn': actionFn}
+    a = sarsaLambdaAgents.SarsaLambdaAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
     extractor = featureExtractors.HumanViewLogExtractor(mdp, 'targs')
     continuousEnv = HumanEnvironment(mdp)
@@ -334,23 +347,30 @@ if __name__ == '__main__':
   ###########################
 
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
-  def displayCallback(x):
-    # display the corresponding state in graphics
-    if displayCallback.prevState != None:
-      # only draw lines, so ignore the first state
-      loc, orient = displayCallback.prevState
-      newLoc, orient = x
+  if not opts.quiet:
+    def displayCallback(x):
+      # display the corresponding state in graphics
+      if displayCallback.prevState != None:
+        # only draw lines, so ignore the first state
+        loc, orient = displayCallback.prevState
+        newLoc, orient = x
 
-      line = Line(Point(shift(loc)), Point(shift(newLoc)))
-      line.setWidth(3)
-      line.setFill('white')
-      line.draw(win)
+        line = Line(Point(shift(loc)), Point(shift(newLoc)))
+        line.setWidth(3)
+        line.setFill('white')
+        line.draw(win)
 
-    displayCallback.prevState = x
+      displayCallback.prevState = x
 
-  displayCallback.prevState = None
+    displayCallback.prevState = None
+  else:
+    displayCallback = lambda x: None
 
-  messageCallback = lambda x: printString(x)
+  if not opts.quiet:
+    messageCallback = lambda x: printString(x)
+  else:
+    messageCallback = lambda x: None
+
   pauseCallback = lambda : None #raw_input("waiting")
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
@@ -366,6 +386,7 @@ if __name__ == '__main__':
     print
   returns = 0
   for episode in range(1, opts.episodes+1):
+    mdp.__init__(init())
     returns += runEpisode(a, env, opts.discount, decisionCallback, displayCallback, messageCallback, pauseCallback, episode)
   if opts.episodes > 0:
     print
@@ -376,8 +397,9 @@ if __name__ == '__main__':
   if opts.agent == 'Approximate':
     print a.weights
   elif opts.agent == 'q':
-    print a.values
+    a.printQValues()
 
   # hold window
-  win.getMouse()
-  win.close()
+  if not opts.quiet:
+    win.getMouse()
+    win.close()

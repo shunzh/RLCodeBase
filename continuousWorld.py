@@ -65,7 +65,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
   def getClosestTarget(self, l):
     [minObj, minDist] = featureExtractors.getClosestObj(l, self.objs['targs'])
-    print "closest ", minObj
     return minObj
 
   def setLivingReward(self, reward):
@@ -145,10 +144,12 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     Check whether we should terminate at this state.
 
-    No more target to collect or reached exit elevator.
+    Condition: reached exit elevator.
+    Here, just use list of targets being empty as exiting condition
     """
     loc, orient = state
-    return self.closeToAnObject(loc) == ('elevators', 1)
+    #return self.closeToAnObject(loc) == ('elevators', 1)
+    return len(self.objs['targs']) == 0
                    
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -204,13 +205,29 @@ def toyDomain():
   ret['yBoundary'] = [-0.1, 1.1]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.05
+  ret['radius'] = 0.04
 
   # step size of the agent movement
-  ret['step'] = 0.01
+  ret['step'] = 0.02
 
   return ret
 
+def simpleToyDomain():
+  ret = {}
+
+  targs = [(0.2, 0.1)]
+  obsts = []
+  segs = []
+  elevators = [(0, 0), (0.3, 0.3)]
+  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
+
+  ret['xBoundary'] = [0, 0.3]
+  ret['yBoundary'] = [0, 0.3]
+
+  ret['radius'] = 0.02
+  ret['step'] = 0.02
+
+  return ret
 
 def loadFromMat(filename, domainId):
   """
@@ -262,21 +279,19 @@ def loadFromMat(filename, domainId):
   ret['yBoundary'] = [-4, 4]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.1
+  ret['radius'] = 0.2
 
   # step size of the agent movement
-  ret['step'] = 0.05
+  ret['step'] = 0.1
 
   return ret
 
 
 class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
-  def doAction(self, action):
-    (nextState, reward) = mdpEnvironment.MDPEnvironment.doAction(self, action)
-
+  def step(self, state, action, nextState, reward):
     # remove objects if necessary
     # clear this object upon getting it
-    loc, orient = self.state
+    loc, orient = state
     nextLoc, nextOrient = nextState
     nextStateType, nextObjId = self.mdp.closeToAnObject(nextLoc)
     if nextStateType == 'targs':
@@ -285,8 +300,6 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
       # be careful with this -
       # once reaching on an segment, deleting the segments before it.
       [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId + 1)]
-
-    return (nextState, reward)
 
 
 def getUserAction(state, actionFunction):
@@ -343,7 +356,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
       raise 'Error: Agent returned None action'
 
     if recorder != None:
-      print state, action
       recorder.append((state, action))
     
     # EXECUTE ACTION

@@ -39,7 +39,7 @@ def getClosestObj(loc, l):
     l: list of objects
   """
   minDist = np.inf
-  minObj = None
+  minObj = loc
 
   for obj in l:
     dist = numpy.linalg.norm(np.subtract(loc, obj))
@@ -101,9 +101,27 @@ def getHumanViewBins(mdp, label):
 
   def getBins(state):
     feats = extractor.getStateFeatures(state)
+    if feats == []:
+      return ()
 
-    distBin = min(int(feats['dist'] / 0.2), 10)
-    angleBin = int(feats['angle'] / (np.pi / 10))
+    step = mdp.step
+
+    # FIXME OVERFIT
+    if feats['dist'] < step * 2:
+      distBin = 0
+    elif feats['dist'] < step * 4:
+      distBin = 1
+    elif feats['dist'] < step * 10:
+      distBin = 2
+    else:
+      distBin = 3
+
+    if abs(feats['angle']) < 15.0 / 180 * np.pi:
+      angleBin = 0
+    elif abs(feats['angle']) < 45.0 / 180 * np.pi:
+      angleBin = 1 * np.sign(feats['angle'])
+    else:
+      angleBin = 2 * np.sign(feats['angle'])
 
     return (distBin, angleBin)
 
