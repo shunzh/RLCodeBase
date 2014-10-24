@@ -228,7 +228,7 @@ def parseOptions():
 
 def parseValues(values):
   import pickle
-  output = open('humanAgentValues.pkl', 'wb')
+  output = open('humanAgentObstValues.pkl', 'wb')
   pickle.dump(values, output)
   output.close()
 
@@ -311,7 +311,7 @@ if __name__ == '__main__':
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, 'targs'))
+    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, 'obsts'))
     a.setLambdaValue(0.5)
   elif opts.agent == 'sarsa':
     gridWorldEnv = GridworldEnvironment(mdp)
@@ -393,7 +393,8 @@ if __name__ == '__main__':
   else:
     messageCallback = lambda x: None
 
-  pauseCallback = lambda : raw_input("waiting")
+  pauseCallback = lambda : None
+  #pauseCallback = lambda : raw_input("waiting")
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:

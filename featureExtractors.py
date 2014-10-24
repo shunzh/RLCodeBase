@@ -91,7 +91,7 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
     feats['angle'] = adjustAngle(objDirect - orient)
     feats['bias'] = 1
 
-    print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']
+    #print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']
 
     return feats
 

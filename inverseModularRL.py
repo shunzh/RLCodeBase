@@ -18,19 +18,46 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, agent, mdp, qFuncs):
+  def __init__(self, qFuncs):
     """
       Args:
-        agent: the modular agent object
-        mdp: the hybird environment
         qFuncs: a list of Q functions for all the modules
     """
-    self.agent = agent
-    self.mdp = mdp
     self.qFuncs = qFuncs
 
     # confidence on 
     self.eta = 10
+
+  def setSamplesFromMdp(self, mdp, agent):
+    """
+    One way to set the samples.
+    Read form mdp and get the policies of states.
+    """
+    self.samples = []
+    self.getActions = lambda s : mdp.getPossibleActions(s)
+
+    for state in mdp.getStates():
+      self.samples.append((state, agent.getPolicy(state)))
+
+  def setSamplesFromMat(self, filename, idx):
+    """
+    Read from subj*.parsed.mat file.
+    """
+    import util
+    mat = util.loadmat(filename)
+
+    objDist = mat['pRes'][idx].obstDist1
+    objAngle = mat['pRes'][idx].obstAngle1
+    targDist = mat['pRes'][idx].targDist1
+    targAngle = mat['pRes'][idx].targAngle1
+    actions = mat['pRes'][idx].action
+
+    assert len(objDist) == len(objAngle) == len(targDist) == len(tarAngle) == len(action)
+
+    for i in range(len(objDist)):
+      state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]))
+      action = actions[i]
+      self.samples.append(state, action)
 
   def obj(self, X):
     """
@@ -45,8 +72,7 @@ class InverseModularRL:
     ret = 0
 
     # replay the process
-    for state in self.mdp.getStates():
-      optAction = self.agent.getPolicy(state)
+    for state, optAction in self.samples:
       term = 0
 
       # Update the weights for each module accordingly.
@@ -55,7 +81,7 @@ class InverseModularRL:
 
         # denominator
         denom = 0
-        actionSet = self.mdp.getPossibleActions(state)
+        actionSet = self.getActions(state)
         for action in actionSet:
           denom += np.exp(self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, action))
         term -= np.log(denom)
@@ -102,7 +128,6 @@ def checkPolicyConsistency(states, a, b):
 
   return 1.0 * consistentPolices / len(states)
 
-
 def getWeightDistance(w1, w2):
   """
     Return:
@@ -112,7 +137,23 @@ def getWeightDistance(w1, w2):
 
   return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))])
 
-def loadModularAgent(m):
+def continuousWorldExperiment():
+  """
+    Can be called to run pre-specified agent and domain.
+  """
+  """
+  # environment, an mdp object FIXME
+  import gridworld as gw
+  m = gw.getLargeWalkAvoidGrid(0.4)
+  gridWorldEnv = gw.GridworldEnvironment(m)
+  """
+  
+  import continuousWorld as cw
+  init = cw.loadFromMat('miniRes25.mat', 0)
+  #init = cw.toyDomain()
+  m = cw.ContinuousWorld(init)
+  env = cw.ContinuousEnvironment(m)
+
   actionFn = lambda state: m.getPossibleActions(state)
   qLearnOpts = {'gamma': 0.9,
                 'alpha': 0.5,
@@ -132,26 +173,8 @@ def loadModularAgent(m):
   # note that the modular agent is able to determine the optimal policy based on these
   a.setQFuncs(qFuncs)
 
-  return a
-
-def loadHumanAgent(m):
-
-def main():
-  """
-    Can be called to run pre-specified agent and domain.
-  """
-  # environment, an mdp object FIXME
-  #import gridworld as gw
-  #m = gw.getLargeWalkAvoidGrid(0.4)
-  #gridWorldEnv = gw.GridworldEnvironment(m)
-  
-  import continuousWorld as cw
-  init = cw.loadFromMat('miniRes25.mat', 0)
-  #init = cw.toyDomain()
-  m = cw.ContinuousWorld(init)
-  env = cw.ContinuousEnvironment(m)
-
-  sln = InverseModularRL(a, m, qFuncs)
+  sln = InverseModularRL(qFuncs)
+  sln.setSamplesFromMdp(m, a)
   output = sln.findWeights()
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
@@ -170,4 +193,4 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+  continuousWorldExperiment()

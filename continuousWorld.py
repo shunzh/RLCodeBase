@@ -216,7 +216,7 @@ def simpleToyDomain():
   ret = {}
 
   targs = [(0.2, 0.1)]
-  obsts = []
+  obsts = [(0.2, 0.2)]
   segs = []
   elevators = [(0, 0), (0.3, 0.3)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
