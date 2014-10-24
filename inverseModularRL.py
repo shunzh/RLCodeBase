@@ -112,22 +112,7 @@ def getWeightDistance(w1, w2):
 
   return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))])
 
-
-def main():
-  """
-    Can be called to run pre-specified agent and domain.
-  """
-  # environment, an mdp object FIXME
-  #import gridworld as gw
-  #m = gw.getLargeWalkAvoidGrid(0.4)
-  #gridWorldEnv = gw.GridworldEnvironment(m)
-  
-  import continuousWorld as cw
-  init = cw.loadFromMat('miniRes25.mat', 0)
-  #init = cw.toyDomain()
-  m = cw.ContinuousWorld(init)
-  env = cw.ContinuousEnvironment(m)
-
+def loadModularAgent(m):
   actionFn = lambda state: m.getPossibleActions(state)
   qLearnOpts = {'gamma': 0.9,
                 'alpha': 0.5,
@@ -146,6 +131,25 @@ def main():
   # set the weights and corresponding q-functions for its sub-mdps
   # note that the modular agent is able to determine the optimal policy based on these
   a.setQFuncs(qFuncs)
+
+  return a
+
+def loadHumanAgent(m):
+
+def main():
+  """
+    Can be called to run pre-specified agent and domain.
+  """
+  # environment, an mdp object FIXME
+  #import gridworld as gw
+  #m = gw.getLargeWalkAvoidGrid(0.4)
+  #gridWorldEnv = gw.GridworldEnvironment(m)
+  
+  import continuousWorld as cw
+  init = cw.loadFromMat('miniRes25.mat', 0)
+  #init = cw.toyDomain()
+  m = cw.ContinuousWorld(init)
+  env = cw.ContinuousEnvironment(m)
 
   sln = InverseModularRL(a, m, qFuncs)
   output = sln.findWeights()

@@ -70,7 +70,7 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
     return feats
 
 
-class HumanViewLogExtractor(ContinousRadiusLogExtractor):
+class HumanViewExtractor(ContinousRadiusLogExtractor):
   """
   From human's view
   """
@@ -85,19 +85,28 @@ class HumanViewLogExtractor(ContinousRadiusLogExtractor):
 
     [minObj, minDist] = getClosestObj(loc, self.mdp.objs[self.label])
     vector = np.subtract(minObj, loc)
-    minOrient = np.angle(vector[0] + vector[1] * 1j)
+    objDirect = np.angle(vector[0] + vector[1] * 1j)
 
-    feats['dist'] = np.log(1 + minDist)
-    feats['angle'] = minOrient
+    feats['dist'] = minDist
+    feats['angle'] = adjustAngle(objDirect - orient)
     feats['bias'] = 1
 
+    print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']
+
     return feats
+
+def adjustAngle(angle):
+  while angle < - np.pi:
+    angle += 2 * np.pi
+  while angle > np.pi:
+    angle -= 2 * np.pi
+  return angle
 
 def getHumanViewBins(mdp, label):
   """
   Get bins extracted from continuous features.
   """
-  extractor = HumanViewLogExtractor(mdp, label)
+  extractor = HumanViewExtractor(mdp, label)
 
   def getBins(state):
     feats = extractor.getStateFeatures(state)
@@ -107,29 +116,27 @@ def getHumanViewBins(mdp, label):
     step = mdp.step
 
     # FIXME OVERFIT
-    if feats['dist'] < step * 0.1:
+    if feats['dist'] < step * 1:
       distBin = 0
-    elif feats['dist'] < step * 1:
-      distBin = 1
     elif feats['dist'] < step * 2:
-      distBin = 2
+      distBin = 1
     elif feats['dist'] < step * 3:
-      distBin = 3
+      distBin = 2
     elif feats['dist'] < step * 5:
-      distBin = 4
+      distBin = 3
     elif feats['dist'] < step * 10:
-      distBin = 5
+      distBin = 4
     else:
-      distBin = 6
+      distBin = 5
 
     if abs(feats['angle']) < 10.0 / 180 * np.pi:
       angleBin = 0
     elif abs(feats['angle']) < 30.0 / 180 * np.pi:
-      angleBin = 1 * np.sign(feats['angle'])
+      angleBin = int(1 * np.sign(feats['angle']))
     elif abs(feats['angle']) < 90.0 / 180 * np.pi:
-      angleBin = 2 * np.sign(feats['angle'])
+      angleBin = int(2 * np.sign(feats['angle']))
     else:
-      angleBin = 3 * np.sign(feats['angle'])
+      angleBin = int(3 * np.sign(feats['angle']))
 
     return (distBin, angleBin)
 

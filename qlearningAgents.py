@@ -57,7 +57,7 @@ class QLearningAgent(ReinforcementAgent):
     """
     "*** YOUR CODE HERE ***"
     return self.values[state, action]
-    
+ 
   def getValue(self, state):
     """
       Returns max_action Q(state,action)        
@@ -73,11 +73,7 @@ class QLearningAgent(ReinforcementAgent):
       return 0.0
    #util.raiseNotDefined()
     
-  def printQValues(self):
-    for item, value in self.values.items():
-      print 's, a: ', item
-      print 'q: ', value
-    
+   
   def getPolicy(self, state):
     """
       Compute the best action to take in a state.  Note that if there
@@ -166,14 +162,8 @@ class ReducedQLearningAgent(QLearningAgent):
     """
     self.getState = extractor
 
-  def getQValue(self, state, action):
-    return QLearningAgent.getQValue(self, self.getState(state), action)
-
-  def getValue(self, state):
-    return QLearningAgent.getValue(self, self.getState(state))
-
-  def getPolicy(self, state):
-    return QLearningAgent.getPolicy(self, self.getState(state))
+  def getAction(self, state):
+    return QLearningAgent.getAction(self, self.getState(state))
 
   def update(self, state, action, nextState, reward):
     return QLearningAgent.update(self, self.getState(state), action, self.getState(nextState), reward)
@@ -229,7 +219,8 @@ class ApproximateQAgent(PacmanQAgent):
     # You might want to initialize weights here.
     "*** YOUR CODE HERE ***"
     self.weights = util.Counter()
-    
+
+   
   def getQValue(self, state, action):
     """
       Should return Q(state,action) = w * featureVector

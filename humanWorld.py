@@ -50,16 +50,18 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     loc, orient = state
 
     if action == 'L':
-      newOrient = (orient - self.turnAngle) % (2 * np.pi)
+      newOrient = orient - self.turnAngle
       d = self.turnDist
     elif action == 'R':
-      newOrient = (orient + self.turnAngle) % (2 * np.pi)
+      newOrient = orient + self.turnAngle
       d = self.turnDist
     elif action == 'G':
       newOrient = orient
       d = self.walkDist
     else:
       raise Exception("Unknown action.")
+
+    orient = featureExtractors.adjustAngle(orient)
 
     dv = (d * np.cos(newOrient), d * np.sin(newOrient))
     newLoc = np.add(loc, dv)
@@ -224,7 +226,22 @@ def parseOptions():
       
     return opts
 
-  
+def parseValues(values):
+  import pickle
+  output = open('humanAgentValues.pkl', 'wb')
+  pickle.dump(values, output)
+  output.close()
+
+  actions = {'G', 'L', 'R'}
+
+  for action in actions:
+    print action
+    for dist in range(5, 0, -1):
+      for ang in range(-3, 4):
+        print values[((dist, ang), action)],
+      print
+    print
+   
 if __name__ == '__main__':
   
   opts = parseOptions()
@@ -305,7 +322,7 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = sarsaLambdaAgents.SarsaLambdaAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
-    extractor = featureExtractors.HumanViewLogExtractor(mdp, 'targs')
+    extractor = featureExtractors.HumanViewExtractor(mdp, 'targs')
     continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
@@ -324,7 +341,7 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules
-    extractor = featureExtractors.HumanViewLogExtractor
+    extractor = featureExtractors.HumanViewExtractor
     a.setQFuncs(modularAgents.getContinuousWorldFuncs(mdp, extractor))
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
@@ -376,7 +393,7 @@ if __name__ == '__main__':
   else:
     messageCallback = lambda x: None
 
-  pauseCallback = lambda : None #raw_input("waiting")
+  pauseCallback = lambda : raw_input("waiting")
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:
@@ -402,7 +419,7 @@ if __name__ == '__main__':
   if opts.agent == 'Approximate':
     print a.weights
   elif opts.agent == 'q':
-    a.printQValues()
+    parseValues(a.values)
 
   # hold window
   if not opts.quiet:
