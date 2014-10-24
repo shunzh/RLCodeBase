@@ -107,21 +107,29 @@ def getHumanViewBins(mdp, label):
     step = mdp.step
 
     # FIXME OVERFIT
-    if feats['dist'] < step * 2:
+    if feats['dist'] < step * 0.1:
       distBin = 0
-    elif feats['dist'] < step * 4:
+    elif feats['dist'] < step * 1:
       distBin = 1
-    elif feats['dist'] < step * 10:
+    elif feats['dist'] < step * 2:
       distBin = 2
-    else:
+    elif feats['dist'] < step * 3:
       distBin = 3
-
-    if abs(feats['angle']) < 15.0 / 180 * np.pi:
-      angleBin = 0
-    elif abs(feats['angle']) < 45.0 / 180 * np.pi:
-      angleBin = 1 * np.sign(feats['angle'])
+    elif feats['dist'] < step * 5:
+      distBin = 4
+    elif feats['dist'] < step * 10:
+      distBin = 5
     else:
+      distBin = 6
+
+    if abs(feats['angle']) < 10.0 / 180 * np.pi:
+      angleBin = 0
+    elif abs(feats['angle']) < 30.0 / 180 * np.pi:
+      angleBin = 1 * np.sign(feats['angle'])
+    elif abs(feats['angle']) < 90.0 / 180 * np.pi:
       angleBin = 2 * np.sign(feats['angle'])
+    else:
+      angleBin = 3 * np.sign(feats['angle'])
 
     return (distBin, angleBin)
 

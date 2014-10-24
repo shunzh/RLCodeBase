@@ -136,6 +136,11 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     
     # EXECUTE ACTION
     nextState, reward = environment.doAction(action)
+
+    if 'getState' in dir(agent):
+      message("Started in belief state: "+str(agent.getState(state))+
+              "\nEnded in belief state: "+str(agent.getState(nextState)))
+
     message("Started in state: "+str(state)+
             "\nTook action: "+str(action)+
             "\nEnded in state: "+str(nextState)+
@@ -386,7 +391,7 @@ if __name__ == '__main__':
     print
   returns = 0
   for episode in range(1, opts.episodes+1):
-    mdp.__init__(init())
+    mdp.__init__(init()) # reset the environment every time.
     returns += runEpisode(a, env, opts.discount, decisionCallback, displayCallback, messageCallback, pauseCallback, episode)
   if opts.episodes > 0:
     print

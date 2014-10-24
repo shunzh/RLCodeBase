@@ -136,7 +136,7 @@ class QLearningAgent(ReinforcementAgent):
     else:
       self.e[state, action] += 1
 
-    for state, action in self.values:
+    for state, action in self.e:
       self.values[state, action] += self.alpha * delta * self.e[state, action]
       self.e[state, action] *= self.gamma * self.lambdaValue
 
