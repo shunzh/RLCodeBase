@@ -227,10 +227,13 @@ def parseOptions():
     return opts
 
 def parseValues(values):
+  # do not update everytime
+  """
   import pickle
   output = open('humanAgentObstValues.pkl', 'wb')
   pickle.dump(values, output)
   output.close()
+  """
 
   actions = {'G', 'L', 'R'}
 
@@ -311,7 +314,7 @@ if __name__ == '__main__':
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, 'obsts'))
+    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, 'targs'))
     a.setLambdaValue(0.5)
   elif opts.agent == 'sarsa':
     gridWorldEnv = GridworldEnvironment(mdp)

@@ -145,11 +145,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Check whether we should terminate at this state.
 
     Condition: reached exit elevator.
-    Here, just use list of targets being empty as exiting condition
     """
     loc, orient = state
-    #return self.closeToAnObject(loc) == ('elevators', 1)
-    return len(self.objs['targs']) == 0
+    return self.closeToAnObject(loc) == ('elevators', 1)
+    #return len(self.objs['targs']) == 0
                    
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -215,8 +214,8 @@ def toyDomain():
 def simpleToyDomain():
   ret = {}
 
-  targs = [(0.2, 0.1)]
-  obsts = [(0.2, 0.2)]
+  #targs = [(0.2, 0.1)]; obsts = []
+  obsts = [(0.2, 0.1)]; targs = []
   segs = []
   elevators = [(0, 0), (0.3, 0.3)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
@@ -368,6 +367,8 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     if 'observeTransition' in dir(agent): 
         agent.observeTransition(state, action, nextState, reward)
     
+    environment.step(state, action, nextState, reward)
+
     returns += reward * totalDiscount
     totalDiscount *= discount
 

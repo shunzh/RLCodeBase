@@ -21,7 +21,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [1, 0, 0]
+    self.weights = [0.6, 0.4, 0]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -191,3 +191,34 @@ def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLo
     return radiusBias(state, action, 'segs', segment)
 
   return [qTarget, qObstacle, qSegment]
+
+
+def getHumanWorldFuncs():
+  """
+  Use to get q functions.
+  Note that the blief states are provided here - ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]))
+  """
+  import pickle
+
+  tValues = pickle.load(open('humanAgentTargValues.pkl'))
+  oValues = pickle.load(open('humanAgentObstValues.pkl'))
+  stateMap = lambda s: featureExtractors.mapStateToBin(s, 0.2)
+
+  def qTarget(state, action):
+    targState, objState = state
+    blfState = stateMap(targState)
+
+    assert (blfState, action) in tValues.keys()
+    return tValues[blfState, action]
+
+  def qObstacle(state, action):
+    # FIXME
+    targState, objState = state
+    blfState = stateMap(objState)
+
+    assert (blfState, action) in oValues.keys()
+    return oValues[blfState, action]
+
+  qPath = qTarget # same for path
+
+  return [qTarget, qObstacle, qPath]

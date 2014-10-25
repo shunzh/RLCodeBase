@@ -102,6 +102,32 @@ def adjustAngle(angle):
     angle -= 2 * np.pi
   return angle
 
+def mapStateToBin((dist, angle), step = 1):
+  # FIXME OVERFIT
+  if dist < step * 1:
+    distBin = 0
+  elif dist < step * 2:
+    distBin = 1
+  elif dist < step * 3:
+    distBin = 2
+  elif dist < step * 5:
+    distBin = 3
+  elif dist < step * 10:
+    distBin = 4
+  else:
+    distBin = 5
+
+  if abs(angle) < 10.0 / 180 * np.pi:
+    angleBin = 0
+  elif abs(angle) < 30.0 / 180 * np.pi:
+    angleBin = int(1 * np.sign(angle))
+  elif abs(angle) < 90.0 / 180 * np.pi:
+    angleBin = int(2 * np.sign(angle))
+  else:
+    angleBin = int(3 * np.sign(angle))
+
+  return (distBin, angleBin)
+
 def getHumanViewBins(mdp, label):
   """
   Get bins extracted from continuous features.
@@ -113,32 +139,7 @@ def getHumanViewBins(mdp, label):
     if feats == []:
       return ()
 
-    step = mdp.step
-
-    # FIXME OVERFIT
-    if feats['dist'] < step * 1:
-      distBin = 0
-    elif feats['dist'] < step * 2:
-      distBin = 1
-    elif feats['dist'] < step * 3:
-      distBin = 2
-    elif feats['dist'] < step * 5:
-      distBin = 3
-    elif feats['dist'] < step * 10:
-      distBin = 4
-    else:
-      distBin = 5
-
-    if abs(feats['angle']) < 10.0 / 180 * np.pi:
-      angleBin = 0
-    elif abs(feats['angle']) < 30.0 / 180 * np.pi:
-      angleBin = int(1 * np.sign(feats['angle']))
-    elif abs(feats['angle']) < 90.0 / 180 * np.pi:
-      angleBin = int(2 * np.sign(feats['angle']))
-    else:
-      angleBin = int(3 * np.sign(feats['angle']))
-
-    return (distBin, angleBin)
+    return mapStateToBin((feats['dist'], feats['angle']), mdp.step)
 
   return getBins
 

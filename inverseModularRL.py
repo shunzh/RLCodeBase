@@ -43,6 +43,8 @@ class InverseModularRL:
     """
     Read from subj*.parsed.mat file.
     """
+    self.samples = []
+
     import util
     mat = util.loadmat(filename)
 
@@ -52,12 +54,15 @@ class InverseModularRL:
     targAngle = mat['pRes'][idx].targAngle1
     actions = mat['pRes'][idx].action
 
-    assert len(objDist) == len(objAngle) == len(targDist) == len(tarAngle) == len(action)
+    assert len(objDist) == len(objAngle) == len(targDist) == len(targAngle) == len(actions)
 
     for i in range(len(objDist)):
       state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]))
       action = actions[i]
-      self.samples.append(state, action)
+      self.samples.append((state, action))
+
+    # FIXME overfit
+    self.getActions = lambda s : ['L', 'R', 'G']
 
   def obj(self, X):
     """
@@ -98,7 +103,8 @@ class InverseModularRL:
       Return:
         optimal weight
     """
-    start_pos = np.zeros(3)
+    n = len(self.qFuncs)
+    start_pos = np.zeros(n)
     
     # range of weights
     bnds = tuple((0, 1) for x in start_pos)
@@ -191,6 +197,17 @@ def continuousWorldExperiment():
   print checkPolicyConsistency(m.getStates(), a, aHat)
   print getWeightDistance(a.getWeights(), w)
 
+def humanWorldExperiment():
+  qFuncs = modularAgents.getHumanWorldFuncs()
+
+  sln = InverseModularRL(qFuncs)
+  sln.setSamplesFromMat("subj25.parsed.mat", 0)
+  output = sln.findWeights()
+  w = output.x.tolist()
+  w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
+
+  print "Weight: ", w
 
 if __name__ == '__main__':
   continuousWorldExperiment()
+  #humanWorldExperiment()
