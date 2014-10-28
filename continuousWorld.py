@@ -147,8 +147,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Condition: reached exit elevator.
     """
     loc, orient = state
-    return self.closeToAnObject(loc) == ('elevators', 1)
-    #return len(self.objs['targs']) == 0
+    #return self.closeToAnObject(loc) == ('elevators', 1)
+    return len(self.objs['targs']) == 0
                    
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -214,8 +214,8 @@ def toyDomain():
 def simpleToyDomain():
   ret = {}
 
-  #targs = [(0.2, 0.1)]; obsts = []
-  obsts = [(0.2, 0.1)]; targs = []
+  targs = [(0.2, 0.1)]; obsts = []
+  #obsts = [(0.2, 0.1)]; targs = []
   segs = []
   elevators = [(0, 0), (0.3, 0.3)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}

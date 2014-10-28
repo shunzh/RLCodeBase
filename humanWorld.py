@@ -139,10 +139,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     # EXECUTE ACTION
     nextState, reward = environment.doAction(action)
 
-    if 'getState' in dir(agent):
-      message("Started in belief state: "+str(agent.getState(state))+
-              "\nEnded in belief state: "+str(agent.getState(nextState)))
-
     message("Started in state: "+str(state)+
             "\nTook action: "+str(action)+
             "\nEnded in state: "+str(nextState)+
@@ -333,7 +329,8 @@ if __name__ == '__main__':
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn,
                   'extractor': extractor}
-    a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
+    #a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
+    a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
   elif opts.agent == 'Modular':
     import modularAgents
     continuousEnv = HumanEnvironment(mdp)

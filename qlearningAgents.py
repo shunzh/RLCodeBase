@@ -175,7 +175,7 @@ class ReducedQLearningAgent(QLearningAgent):
 class PacmanQAgent(QLearningAgent):
   "Exactly the same as QLearningAgent, but with different default parameters"
   
-  def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0, **args):
+  def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.1, numTraining=0, **args):
     """
     These default parameters can be changed from the pacman.py command line.
     For example, to change the exploration rate, try:
@@ -250,3 +250,55 @@ class ApproximateQAgent(PacmanQAgent):
   def final(self, state):
     "Called at the end of each game."
     pass
+
+
+class ApproximateVAgent(ApproximateQAgent):
+  """
+  Approximate the states instead.
+  self.weights[action] keeps a directory of weightes for that state, action pair.
+  """
+  def getQValue(self, state, action):
+    """
+      Should return Q(state,action) = w * featureVector
+      where * is the dotProduct operator
+    """
+    "*** YOUR CODE HERE ***"
+    self.checkAction(action)
+
+    q = 0.0
+    feats = self.featExtractor.getStateFeatures(state)
+    if feats != None:
+      for feature, value in self.featExtractor.getStateFeatures(state).items():
+        q += self.weights[action][feature] * value
+      return q
+    else:
+      return 0
+    
+  def update(self, state, action, nextState, reward):
+    """
+       Should update your weights based on transition  
+    """
+    "*** YOUR CODE HERE ***"
+    """
+    # DEBUG
+    print "One update:", self.featExtractor.getStateFeatures(state), action,
+    print self.featExtractor.getStateFeatures(nextState)
+    print
+    """
+
+    self.checkAction(action)
+
+    correction = (reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)
+
+    feats = self.featExtractor.getStateFeatures(state)
+    if feats != None:
+      for feature, value in feats.items():
+        self.weights[action][feature] += self.alpha * correction * value
+
+  def checkAction(self, action):
+    """
+    Make sure such action is already in the list.
+    If not, create a Counter object for that action.
+    """
+    if not action in self.weights:
+      self.weights[action] = util.Counter()
