@@ -220,7 +220,6 @@ class ApproximateQAgent(PacmanQAgent):
     "*** YOUR CODE HERE ***"
     self.weights = util.Counter()
 
-   
   def getQValue(self, state, action):
     """
       Should return Q(state,action) = w * featureVector

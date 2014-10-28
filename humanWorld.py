@@ -325,7 +325,7 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = sarsaLambdaAgents.SarsaLambdaAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
-    extractor = featureExtractors.HumanViewExtractor(mdp, 'targs')
+    extractor = featureExtractors.HumanViewExtractor(mdp, 'targs', square = True)
     continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 

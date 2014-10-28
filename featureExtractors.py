@@ -74,7 +74,10 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
   """
   From human's view
   """
-  def getFeatures(self, state, action):
+  def __init__(self, mdp, label, square = False):
+    self.__init__(self, mdp, label):
+
+  def getFeatures(self, state, action, square):
     newState = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
     return self.getStateFeatures(newState)
 
@@ -89,6 +92,8 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
 
     feats['dist'] = minDist
     feats['angle'] = adjustAngle(objDirect - orient)
+    if square:
+      feats['angleSq'] = feats['angle'] ** 2 # used square of angle as a feature
     feats['bias'] = 1
 
     #print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']
