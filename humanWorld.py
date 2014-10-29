@@ -171,7 +171,7 @@ def parseOptions():
                          type='float',dest='epsilon',default=0,
                          metavar="E", help='Chance of taking a random action in q-learning (default %default)')
     optParser.add_option('-l', '--learningRate',action='store',
-                         type='float',dest='learningRate',default=0.01,
+                         type='float',dest='learningRate',default=0.5,
                          metavar="P", help='TD learning rate (default %default)' )
     optParser.add_option('-i', '--iterations',action='store',
                          type='int',dest='iters',default=10,

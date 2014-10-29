@@ -219,6 +219,8 @@ class ApproximateQAgent(PacmanQAgent):
     # You might want to initialize weights here.
     "*** YOUR CODE HERE ***"
     self.weights = util.Counter()
+    # parameter for BTLS
+    self.beta = 0.5
 
   def getQValue(self, state, action):
     """
@@ -276,24 +278,38 @@ class ApproximateVAgent(ApproximateQAgent):
     
   def update(self, state, action, nextState, reward):
     """
-       Should update your weights based on transition  
-    """
-    "*** YOUR CODE HERE ***"
-    """
-    # DEBUG
-    print "One update:", self.featExtractor.getStateFeatures(state), action,
-    print self.featExtractor.getStateFeatures(nextState)
-    print
-    """
+       Should update your weights based on transition.
 
+       Considering using BTLS.
+    """
     self.checkAction(action)
+    feats = self.featExtractor.getStateFeatures(state)
 
     correction = (reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)
 
-    feats = self.featExtractor.getStateFeatures(state)
+    t = 1
+    # back tracking line search
+    while True:
+      for feature, value in feats.items():
+        self.weights[action][feature] += t * correction * value
+
+      fStep = ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2
+
+      # revert
+      for feature, value in feats.items():
+        self.weights[action][feature] -= t * correction * value
+
+      fApprox = ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2\
+                - self.alpha * t * ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2
+
+      if fStep > fApprox:
+        t *= self.beta
+      else:
+        break
+
     if feats != None:
       for feature, value in feats.items():
-        self.weights[action][feature] += self.alpha * correction * value
+        self.weights[action][feature] += self.alpha * t * correction * value
 
   def checkAction(self, action):
     """
