@@ -302,7 +302,7 @@ class ApproximateVAgent(ApproximateQAgent):
       fApprox = ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2\
                 - self.alpha * t * ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2
 
-      if fStep > fApprox:
+      if fStep > fApprox and t > 0.000001:
         t *= self.beta
       else:
         break
