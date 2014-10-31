@@ -25,25 +25,26 @@ class InverseModularRL:
     """
     self.qFuncs = qFuncs
 
-    # confidence on 
-    self.eta = 10
+    # confidence
+    self.eta = 5
 
   def setSamplesFromMdp(self, mdp, agent):
     """
     One way to set the samples.
     Read form mdp and get the policies of states.
-    """
-    self.samples = []
-    self.getActions = lambda s : mdp.getPossibleActions(s)
 
-    for state in mdp.getStates():
-      self.samples.append((state, agent.getPolicy(state)))
+    Set self.getSamples and self.getActions here.
+    """
+    self.getSamples = lambda : [(state, agent.getPolicy(state)) for state in mdp.getStates()]
+    self.getActions = lambda s : mdp.getPossibleActions(s)
 
   def setSamplesFromMat(self, filename, idx):
     """
     Read from subj*.parsed.mat file.
+
+    Set self.getSamples and self.getActions here.
     """
-    self.samples = []
+    samples = []
 
     import util
     mat = util.loadmat(filename)
@@ -59,8 +60,9 @@ class InverseModularRL:
     for i in range(len(objDist)):
       state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]))
       action = actions[i]
-      self.samples.append((state, action))
+      samples.append((state, action))
 
+    self.getSamples = lambda : samples
     # FIXME overfit
     self.getActions = lambda s : ['L', 'R', 'G']
 
@@ -77,7 +79,7 @@ class InverseModularRL:
     ret = 0
 
     # replay the process
-    for state, optAction in self.samples:
+    for state, optAction in self.getSamples():
       term = 0
 
       # Update the weights for each module accordingly.
@@ -155,8 +157,8 @@ def continuousWorldExperiment():
   """
   
   import continuousWorld as cw
-  init = cw.loadFromMat('miniRes25.mat', 0)
-  #init = cw.toyDomain()
+  #init = cw.loadFromMat('miniRes25.mat', 0)
+  init = cw.toyDomain()
   m = cw.ContinuousWorld(init)
   env = cw.ContinuousEnvironment(m)
 
