@@ -193,10 +193,11 @@ def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLo
   return [qTarget, qObstacle, qSegment]
 
 
-def getHumanWorldFuncs():
+def getHumanWorldDiscreteFuncs():
   """
   Use to get q functions.
   Note that the blief states are provided here - ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]))
+  These are further mapped to be bins.
   """
   import pickle
 
@@ -222,3 +223,32 @@ def getHumanWorldFuncs():
   qPath = qTarget # same for path
 
   return [qTarget, qObstacle, qPath]
+
+
+def getHumanWorldContinuousFuncs():
+  import pickle
+
+  tValues = pickle.load(open('humanAgentTargWeights.pkl'))
+  oValues = pickle.load(open('humanAgentObstWeights.pkl'))
+
+  def qTarget(state, action):
+    targState, objState = state
+    blfState = stateMap(targState)
+
+    assert (blfState, action) in tValues.keys()
+    return tValues[blfState, action]
+
+  def qObstacle(state, action):
+    # FIXME
+    targState, objState = state
+    blfState = stateMap(objState)
+
+    assert (blfState, action) in oValues.keys()
+    return oValues[blfState, action]
+
+  def qPath(state, action):
+    # TODO
+
+  return [qTarget, qObstacle, qPath]
+
+

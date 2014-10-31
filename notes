@@ -1,0 +1,9 @@
+Compare trajectoriers - human and avator.
+
+8 x {
+path
+path + obstacle
+path + target
+all}
+
+head of tail of trial (0.5).

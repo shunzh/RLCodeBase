@@ -110,7 +110,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 2000
+  runs = 1000
 
   while True:
 
@@ -123,7 +123,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     actions = environment.getPossibleActions(state)
     runs -= 1
     if environment.isFinal() or runs == 0:
-      message("EPISODE "+str(episode)+" COMPLETE: RETURN WAS "+str(returns)+"\n")
+      print "EPISODE "+str(episode)+" COMPLETE: RETURN WAS "+str(returns)+"\n"
       agent.final(state)
       return returns
     
@@ -222,15 +222,14 @@ def parseOptions():
       
     return opts
 
-def parseValues(values):
+def parseValues(values, filename):
   # do not update everytime
-  """
   import pickle
-  output = open('humanAgentObstValues.pkl', 'wb')
+  output = open(filename, 'wb')
   pickle.dump(values, output)
   output.close()
-  """
 
+  """
   actions = {'G', 'L', 'R'}
 
   for action in actions:
@@ -240,6 +239,7 @@ def parseValues(values):
         print values[((dist, ang), action)],
       print
     print
+  """
    
 if __name__ == '__main__':
   
@@ -249,12 +249,14 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
+  category = 'obsts'
+
   if opts.grid == 'vr':
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain()
   elif opts.grid == 'simple':
-    init = lambda: continuousWorld.simpleToyDomain()
+    init = lambda: continuousWorld.simpleToyDomain(category == 'obsts')
   else:
     raise Exception("Unknown environment!")
 
@@ -310,7 +312,7 @@ if __name__ == '__main__':
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, 'targs'))
+    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, category))
     a.setLambdaValue(0.5)
   elif opts.agent == 'sarsa':
     gridWorldEnv = GridworldEnvironment(mdp)
@@ -321,7 +323,7 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = sarsaLambdaAgents.SarsaLambdaAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
-    extractor = featureExtractors.HumanViewExtractor(mdp, 'targs', square = True)
+    extractor = featureExtractors.HumanViewExtractor(mdp, category, square = True)
     continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
@@ -419,8 +421,9 @@ if __name__ == '__main__':
     
   if opts.agent == 'Approximate':
     print a.weights
+    parseValues(a.weights, 'humanAgent' + category + 'Weights.pkl')
   elif opts.agent == 'q':
-    parseValues(a.values)
+    parseValues(a.values, 'humanAgent' + category + 'Values.pkl')
 
   # hold window
   if not opts.quiet:

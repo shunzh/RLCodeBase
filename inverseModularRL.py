@@ -53,6 +53,8 @@ class InverseModularRL:
     objAngle = mat['pRes'][idx].obstAngle1
     targDist = mat['pRes'][idx].targDist1
     targAngle = mat['pRes'][idx].targAngle1
+    pathDist = mat['pRes'][idx].pathDist1
+    pathAngle = mat['pRes'][idx].pathAngle1
     actions = mat['pRes'][idx].action
 
     assert len(objDist) == len(objAngle) == len(targDist) == len(targAngle) == len(actions)
