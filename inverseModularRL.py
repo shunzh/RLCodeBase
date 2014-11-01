@@ -53,14 +53,14 @@ class InverseModularRL:
     objAngle = mat['pRes'][idx].obstAngle1
     targDist = mat['pRes'][idx].targDist1
     targAngle = mat['pRes'][idx].targAngle1
-    pathDist = mat['pRes'][idx].pathDist1
-    pathAngle = mat['pRes'][idx].pathAngle1
+    segDist = mat['pRes'][idx].pathDist
+    segAngle = mat['pRes'][idx].pathAngle
     actions = mat['pRes'][idx].action
 
-    assert len(objDist) == len(objAngle) == len(targDist) == len(targAngle) == len(actions)
+    assert len(objDist) == len(targDist) == len(segDist) == len(actions)
 
     for i in range(len(objDist)):
-      state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]))
+      state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]), (segDist[i], segAngle[i]))
       action = actions[i]
       samples.append((state, action))
 
@@ -202,7 +202,7 @@ def continuousWorldExperiment():
   print getWeightDistance(a.getWeights(), w)
 
 def humanWorldExperiment():
-  qFuncs = modularAgents.getHumanWorldFuncs()
+  qFuncs = modularAgents.getHumanWorldContinuousFuncs()
 
   sln = InverseModularRL(qFuncs)
   sln.setSamplesFromMat("subj25.parsed.mat", 0)
@@ -213,5 +213,5 @@ def humanWorldExperiment():
   print "Weight: ", w
 
 if __name__ == '__main__':
-  continuousWorldExperiment()
-  #humanWorldExperiment()
+  #continuousWorldExperiment()
+  humanWorldExperiment()

@@ -201,8 +201,8 @@ def getHumanWorldDiscreteFuncs():
   """
   import pickle
 
-  tValues = pickle.load(open('humanAgentTargValues.pkl'))
-  oValues = pickle.load(open('humanAgentObstValues.pkl'))
+  tValues = pickle.load(open('learnedValues/humanAgentTargValues.pkl'))
+  oValues = pickle.load(open('learnedValues/humanAgentObstValues.pkl'))
   stateMap = lambda s: featureExtractors.mapStateToBin(s, 0.2)
 
   def qTarget(state, action):
@@ -213,42 +213,46 @@ def getHumanWorldDiscreteFuncs():
     return tValues[blfState, action]
 
   def qObstacle(state, action):
-    # FIXME
     targState, objState = state
     blfState = stateMap(objState)
 
     assert (blfState, action) in oValues.keys()
     return oValues[blfState, action]
 
-  qPath = qTarget # same for path
+  qSegment = lambda state, action: 0 # TODO
 
-  return [qTarget, qObstacle, qPath]
+  return [qTarget, qObstacle, qSegment]
 
 
 def getHumanWorldContinuousFuncs():
+  """
+  Q value is a continuous approximator of the features.
+
+  weights: Action x Feature -> Value
+  """
   import pickle
 
-  tValues = pickle.load(open('humanAgentTargWeights.pkl'))
-  oValues = pickle.load(open('humanAgentObstWeights.pkl'))
+  tWeights = pickle.load(open('learnedValues/humanAgenttargsWeights.pkl'))
+  oWeights = pickle.load(open('learnedValues/humanAgentobstsWeights.pkl'))
+  sWeights = tWeights # FIXME should train separately
+
+  def qValue(state, action, weights):
+    dist, angle = state
+    w = weights[action]
+    return w['bias'] + dist * w['bias'] + angle * w['angle'] + angle ** 2 * w['angleSq']
 
   def qTarget(state, action):
-    targState, objState = state
-    blfState = stateMap(targState)
-
-    assert (blfState, action) in tValues.keys()
-    return tValues[blfState, action]
+    targState, obstState, segState = state
+    return qValue(targState, action, tWeights)
 
   def qObstacle(state, action):
-    # FIXME
-    targState, objState = state
-    blfState = stateMap(objState)
+    targState, obstState, segState = state
+    return qValue(obstState, action, oWeights)
 
-    assert (blfState, action) in oValues.keys()
-    return oValues[blfState, action]
+  def qSegment(state, action):
+    targState, obstState, segState = state
+    return qValue(segState, action, sWeights)
 
-  def qPath(state, action):
-    # TODO
-
-  return [qTarget, qObstacle, qPath]
+  return [qTarget, qObstacle, qSegment]
 
 
