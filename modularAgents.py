@@ -21,7 +21,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [1, 0, 0]
+    self.weights = [0, 1, 0]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -92,6 +92,34 @@ class ModularAgent(ApproximateQAgent):
 
     values = [self.getQValue(state, action) for action in actions]
     return np.std(values)
+
+
+class ReducedModularAgent(ModularAgent):
+  """
+  Modular agent, which first maps state to an inner representation (so the state space reduced).
+  """
+  def __init__(self, **args):
+    ModularAgent.__init__(self, **args)
+
+    # Set get state function here.
+    # By default, it is an identity function
+    self.getState = lambda x : x
+
+  def setStateFilter(self, extractor):
+    """
+    Set the state filter here, which returns the state representation for learning.
+    The default one is an identity function.
+    """
+    self.getState = extractor
+
+  def getAction(self, state):
+    return ModularAgent.getAction(self, self.getState(state))
+
+  def update(self, state, action, nextState, reward):
+    return ModularAgent.update(self, self.getState(state), action, self.getState(nextState), reward)
+
+  def final(self, state):
+    return ModularAgent.final(self, self.getState(state))
 
 
 def getObsAvoidFuncs(mdp):

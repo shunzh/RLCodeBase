@@ -144,9 +144,6 @@ class QLearningAgent(ReinforcementAgent):
 class ReducedQLearningAgent(QLearningAgent):
   """
   Rewrite Q learning agent.
-
-  This is different from ApproximateQAgent, which assumes Q values are linear combination of
-  feature values.
   """
   def __init__(self, **args):
     QLearningAgent.__init__(self, **args)

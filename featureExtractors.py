@@ -80,6 +80,9 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
     self.square = square
 
   def getFeatures(self, state, action):
+    """
+    This has to assume that the transition is known.
+    """
     newState = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
     return self.getStateFeatures(newState)
 
@@ -102,6 +105,21 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
 
     return feats
 
+def getHumanContinuousState(mdp):
+  """
+  Return ((targDist, targAngle), (obstDist, obstAngle), (segDist, segAngle))
+  """
+  extractors = [HumanViewExtractor(mdp, label, square = True) for label in ['targs', 'obsts', 'segs']]
+
+  def getDistAngelList(state):
+    ret = []
+    for extractor in extractors:
+      feats = extractor.getStateFeatures(state)
+      ret.append((feats['dist'], feats['angle']))
+    return ret
+
+  return getDistAngelList
+  
 def adjustAngle(angle):
   while angle < - np.pi:
     angle += 2 * np.pi

@@ -341,10 +341,9 @@ if __name__ == '__main__':
                   'alpha': opts.learningRate, 
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
-    a = modularAgents.ModularAgent(**qLearnOpts)
-    # here, set the Q tables of the trained modules
-    extractor = featureExtractors.HumanViewExtractor
-    a.setQFuncs(modularAgents.getContinuousWorldFuncs(mdp, extractor))
+    a = modularAgents.ReducedModularAgent(**qLearnOpts)
+    a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
+    a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
