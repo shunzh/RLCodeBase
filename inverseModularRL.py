@@ -26,7 +26,7 @@ class InverseModularRL:
     self.qFuncs = qFuncs
 
     # confidence
-    self.eta = 5
+    self.eta = 10
 
   def setSamplesFromMdp(self, mdp, agent):
     """
@@ -159,8 +159,8 @@ def continuousWorldExperiment():
   """
   
   import continuousWorld as cw
-  #init = cw.loadFromMat('miniRes25.mat', 0)
-  init = cw.toyDomain()
+  init = cw.loadFromMat('miniRes25.mat', 0)
+  #init = cw.toyDomain()
   m = cw.ContinuousWorld(init)
   env = cw.ContinuousEnvironment(m)
 
@@ -213,5 +213,5 @@ def humanWorldExperiment():
   print "Weight: ", w
 
 if __name__ == '__main__':
-  #continuousWorldExperiment()
-  humanWorldExperiment()
+  continuousWorldExperiment()
+  #humanWorldExperiment()
