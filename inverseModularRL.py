@@ -151,13 +151,6 @@ def continuousWorldExperiment():
   """
     Can be called to run pre-specified agent and domain.
   """
-  """
-  # environment, an mdp object FIXME
-  import gridworld as gw
-  m = gw.getLargeWalkAvoidGrid(0.4)
-  gridWorldEnv = gw.GridworldEnvironment(m)
-  """
-  
   import continuousWorld as cw
   init = cw.loadFromMat('miniRes25.mat', 0)
   #init = cw.toyDomain()
@@ -177,7 +170,6 @@ def continuousWorldExperiment():
     w = map(float, sys.argv[1:])
     a.setWeights(w)
 
-  #qFuncs = modularAgents.getObsAvoidFuncs(m)
   qFuncs = modularAgents.getContinuousWorldFuncs(m)
   # set the weights and corresponding q-functions for its sub-mdps
   # note that the modular agent is able to determine the optimal policy based on these

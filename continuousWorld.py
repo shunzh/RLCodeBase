@@ -99,7 +99,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     width = self.xBoundary[1] - self.xBoundary[0]
     height = self.xBoundary[1] - self.xBoundary[0]
     
-    while len(states) < 40:
+    while len(states) < 200:
       x = self.xBoundary[0] + random.random() * width
       y = self.yBoundary[0] + random.random() * height
       states.append(((x, y), 0))
@@ -121,7 +121,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     stateType, objId = self.closeToAnObject(loc)
     nextStateType, nextObjId = self.closeToAnObject(nextLoc)
 
-    # DEBUG
     if nextStateType != None:
       return self.rewards[nextStateType]
     else:
@@ -276,14 +275,14 @@ def loadFromMat(filename, domainId):
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
   # TODO add buffer?
-  ret['xBoundary'] = [-4, 4]
-  ret['yBoundary'] = [-4, 4]
+  ret['xBoundary'] = [-2.6, 2.6]
+  ret['yBoundary'] = [-2.6, 2.6]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.2
+  ret['radius'] = 0.05
 
   # step size of the agent movement
-  ret['step'] = 0.1
+  ret['step'] = 0.025
 
   return ret
 
@@ -454,7 +453,7 @@ if __name__ == '__main__':
   ###########################
 
   if opts.grid == 'vr':
-    init = loadFromMat('miniRes25.mat', 0)
+    init = loadFromMat('miniRes25.mat', 1)
   elif opts.grid == 'toy':
     init = toyDomain()
   else:
