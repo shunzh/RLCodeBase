@@ -35,7 +35,8 @@ class InverseModularRL:
 
     Set self.getSamples and self.getActions here.
     """
-    self.getSamples = lambda : [(state, agent.getPolicy(state)) for state in mdp.getStates()]
+    states = mdp.getStates()
+    self.getSamples = lambda : [(state, agent.getPolicy(state)) for state in states]
     self.getActions = lambda s : mdp.getPossibleActions(s)
 
   def setSamplesFromMat(self, filename, idx):
@@ -93,6 +94,7 @@ class InverseModularRL:
         actionSet = self.getActions(state)
         for action in actionSet:
           denom += np.exp(self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, action))
+
         term -= np.log(denom)
 
       ret += term

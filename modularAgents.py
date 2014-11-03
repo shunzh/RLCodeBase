@@ -207,7 +207,7 @@ def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLo
     if feats != None:
       return feats['bias'] * w['bias'] + feats['dist'] * w['dist']
     else:
-      return 0
+      return None
 
   def qTarget(state, action):
     return radiusBias(state, action, 'targs', target)

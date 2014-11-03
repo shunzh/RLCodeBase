@@ -99,7 +99,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     width = self.xBoundary[1] - self.xBoundary[0]
     height = self.xBoundary[1] - self.xBoundary[0]
     
-    while len(states) < 200:
+    while len(states) < 400:
       x = self.xBoundary[0] + random.random() * width
       y = self.yBoundary[0] + random.random() * height
       states.append(((x, y), 0))
@@ -275,8 +275,8 @@ def loadFromMat(filename, domainId):
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
   # TODO add buffer?
-  ret['xBoundary'] = [-2.6, 2.6]
-  ret['yBoundary'] = [-2.6, 2.6]
+  ret['xBoundary'] = [-3, 3]
+  ret['yBoundary'] = [-3, 3]
 
   # radius of an object (so the object doesn't appear as a point)
   ret['radius'] = 0.05
@@ -453,7 +453,7 @@ if __name__ == '__main__':
   ###########################
 
   if opts.grid == 'vr':
-    init = loadFromMat('miniRes25.mat', 1)
+    init = loadFromMat('miniRes25.mat', 0)
   elif opts.grid == 'toy':
     init = toyDomain()
   else:
