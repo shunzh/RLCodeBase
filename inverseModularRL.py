@@ -26,7 +26,7 @@ class InverseModularRL:
     self.qFuncs = qFuncs
 
     # confidence
-    self.eta = 10
+    self.eta = 1
 
   def setSamplesFromMdp(self, mdp, agent):
     """
@@ -39,7 +39,7 @@ class InverseModularRL:
     self.getSamples = lambda : [(state, agent.getPolicy(state)) for state in states]
     self.getActions = lambda s : mdp.getPossibleActions(s)
 
-  def setSamplesFromMat(self, filename, idx):
+  def setSamplesFromMat(self, filename, idxSet):
     """
     Read from subj*.parsed.mat file.
 
@@ -50,20 +50,21 @@ class InverseModularRL:
     import util
     mat = util.loadmat(filename)
 
-    objDist = mat['pRes'][idx].obstDist1
-    objAngle = mat['pRes'][idx].obstAngle1
-    targDist = mat['pRes'][idx].targDist1
-    targAngle = mat['pRes'][idx].targAngle1
-    segDist = mat['pRes'][idx].pathDist
-    segAngle = mat['pRes'][idx].pathAngle
-    actions = mat['pRes'][idx].action
+    for idx in idxSet:
+      objDist = mat['pRes'][idx].obstDist1
+      objAngle = mat['pRes'][idx].obstAngle1
+      targDist = mat['pRes'][idx].targDist1
+      targAngle = mat['pRes'][idx].targAngle1
+      segDist = mat['pRes'][idx].pathDist
+      segAngle = mat['pRes'][idx].pathAngle
+      actions = mat['pRes'][idx].action
 
-    assert len(objDist) == len(targDist) == len(segDist) == len(actions)
+      assert len(objDist) == len(targDist) == len(segDist) == len(actions)
 
-    for i in range(len(objDist)):
-      state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]), (segDist[i], segAngle[i]))
-      action = actions[i]
-      samples.append((state, action))
+      for i in range(len(objDist)):
+        state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]), (segDist[i], segAngle[i]))
+        action = actions[i]
+        samples.append((state, action))
 
     self.getSamples = lambda : samples
     # FIXME overfit
@@ -199,7 +200,7 @@ def humanWorldExperiment():
   qFuncs = modularAgents.getHumanWorldContinuousFuncs()
 
   sln = InverseModularRL(qFuncs)
-  sln.setSamplesFromMat("subj25.parsed.mat", 0)
+  sln.setSamplesFromMat("subj25.parsed.mat", range(26, 31))
   output = sln.findWeights()
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
@@ -207,5 +208,5 @@ def humanWorldExperiment():
   print "Weight: ", w
 
 if __name__ == '__main__':
-  continuousWorldExperiment()
-  #humanWorldExperiment()
+  #continuousWorldExperiment()
+  humanWorldExperiment()
