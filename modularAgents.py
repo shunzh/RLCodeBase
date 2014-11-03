@@ -266,6 +266,7 @@ def getHumanWorldContinuousFuncs():
 
   def qValue(state, action, weights):
     dist, angle = state
+    assert action in weights.keys()
     w = weights[action]
     return w['bias'] + dist * w['bias'] + angle * w['angle'] + angle ** 2 * w['angleSq']
 

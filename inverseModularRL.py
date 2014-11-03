@@ -52,11 +52,11 @@ class InverseModularRL:
 
     for idx in idxSet:
       objDist = mat['pRes'][idx].obstDist1
-      objAngle = mat['pRes'][idx].obstAngle1
+      objAngle = mat['pRes'][idx].obstAngle1 / np.pi
       targDist = mat['pRes'][idx].targDist1
-      targAngle = mat['pRes'][idx].targAngle1
+      targAngle = mat['pRes'][idx].targAngle1 / np.pi
       segDist = mat['pRes'][idx].pathDist
-      segAngle = mat['pRes'][idx].pathAngle
+      segAngle = mat['pRes'][idx].pathAngle / np.pi
       actions = mat['pRes'][idx].action
 
       assert len(objDist) == len(targDist) == len(segDist) == len(actions)
@@ -200,7 +200,7 @@ def humanWorldExperiment():
   qFuncs = modularAgents.getHumanWorldContinuousFuncs()
 
   sln = InverseModularRL(qFuncs)
-  sln.setSamplesFromMat("subj25.parsed.mat", range(26, 31))
+  sln.setSamplesFromMat("subj25.parsed.mat", range(25, 31))
   output = sln.findWeights()
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
