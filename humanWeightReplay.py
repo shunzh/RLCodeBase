@@ -8,18 +8,19 @@ import numpy as np
 def main():
   [w, sln] = inverseModularRL.humanWorldExperiment("subj25.parsed.mat", range(25, 31))
 
+  init = continuousWorld.loadFromMat('miniRes25.mat', 25)
+  mdp = humanWorld.HumanWorld(init)
+
   qLearnOpts = {'gamma': 0.9,
                 'alpha': 0.5,
-                'epsilon': 0}
+                'epsilon': 0, # make sure no exploration in decision making.
+                'actionFn': mdp.getPossibleActions}
   qFuncs = modularAgents.getHumanWorldContinuousFuncs()
   aHat = modularAgents.ModularAgent(**qLearnOpts)
   aHat.setQFuncs(qFuncs)
   aHat.setWeights(w) # get the weights in the result
 
   # plot domain and policy
-  init = continuousWorld.loadFromMat('miniRes25.mat', 24)
-  mdp = humanWorld.HumanWorld(init)
-
   win = continuousWorld.drawDomain(mdp)
   # parse human positions and actions
   humanSamples = parseHumanActions("subj25.parsed.mat", 25)
@@ -29,7 +30,8 @@ def main():
   assert len(humanSamples) == len(featureSamples)
 
   for i in range(len(humanSamples)):
-    print humanSamples[i]['action'], featureSamples[i][1]
+    # Note that aHat is a Modular agent, not a ReducedModular one. It accepts belief state directly.
+    print aHat.getPolicy(featureSamples[i][0]), featureSamples[i][1]
 
   win.getMouse()
   win.close()
