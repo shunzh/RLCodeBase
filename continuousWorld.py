@@ -443,7 +443,40 @@ def parseOptions():
       
     return opts
 
+
+def drawDomain(mdp):
+  """
+  Args:
+    mdp: parsed from mat file.
+
+  Return:
+    win object
+  """
+  dim = 800
+  win = GraphWin('Domain', dim, dim) # give title and dimensions
+  win.setBackground('black')
+
+  size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
+  radius = mdp.radius / size * dim
+  def shift(loc):
+    """
+    shift to the scale of the GraphWin
+    """
+    return (1.0 * (loc[0] - mdp.xBoundary[0]) / size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / size * dim)
   
+  def drawObjects(label, color):
+    for obj in mdp.objs[label]:
+      cir = Circle(Point(shift(obj)), radius)
+      cir.setFill(color)
+      cir.draw(win)
+  drawObjects('targs', 'blue')
+  drawObjects('obsts', 'red')
+  drawObjects('segs', 'yellow')
+  drawObjects('elevators', 'green')
+
+  return win
+
+ 
 if __name__ == '__main__':
   
   opts = parseOptions()
@@ -468,27 +501,7 @@ if __name__ == '__main__':
   ###########################
   # GET THE DISPLAY ADAPTER
   ###########################
-  dim = 800
-  win = GraphWin('Domain', dim, dim) # give title and dimensions
-  win.setBackground('black')
-
-  size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
-  radius = mdp.radius / size * dim
-  def shift(loc):
-    """
-    shift to the scale of the GraphWin
-    """
-    return (1.0 * (loc[0] - mdp.xBoundary[0]) / size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / size * dim)
-  
-  def drawObjects(label, color):
-    for obj in mdp.objs[label]:
-      cir = Circle(Point(shift(obj)), radius)
-      cir.setFill(color)
-      cir.draw(win)
-  drawObjects('targs', 'blue')
-  drawObjects('obsts', 'red')
-  drawObjects('segs', 'yellow')
-  drawObjects('elevators', 'green')
+  win = drawDomain(mdp)
 
   ###########################
   # GET THE AGENT

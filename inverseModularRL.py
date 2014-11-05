@@ -52,11 +52,11 @@ class InverseModularRL:
 
     for idx in idxSet:
       objDist = mat['pRes'][idx].obstDist1
-      objAngle = mat['pRes'][idx].obstAngle1 / np.pi
+      objAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
       targDist = mat['pRes'][idx].targDist1
-      targAngle = mat['pRes'][idx].targAngle1 / np.pi
+      targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
       segDist = mat['pRes'][idx].pathDist
-      segAngle = mat['pRes'][idx].pathAngle / np.pi
+      segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
       actions = mat['pRes'][idx].action
 
       assert len(objDist) == len(targDist) == len(segDist) == len(actions)
@@ -70,6 +70,13 @@ class InverseModularRL:
     # FIXME overfit
     self.getActions = lambda s : ['L', 'R', 'G']
 
+  def printSamples(self):
+    samples = self.getSamples()
+
+    for state, action in samples:
+      print state
+      print action
+    
   def obj(self, X):
     """
       The objective function to be minimized.
@@ -196,17 +203,26 @@ def continuousWorldExperiment():
   print checkPolicyConsistency(m.getStates(), a, aHat)
   print getWeightDistance(a.getWeights(), w)
 
-def humanWorldExperiment():
+  return w
+
+def humanWorldExperiment(rang):
+  """
+  Args:
+    rang: load mat with given rang of trials
+  """
   qFuncs = modularAgents.getHumanWorldContinuousFuncs()
+  #qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
 
   sln = InverseModularRL(qFuncs)
-  sln.setSamplesFromMat("subj25.parsed.mat", range(25, 31))
+  sln.setSamplesFromMat("subj25.parsed.mat", rang)
   output = sln.findWeights()
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
   print "Weight: ", w
 
+  return w
+
 if __name__ == '__main__':
   #continuousWorldExperiment()
-  humanWorldExperiment()
+  humanWorldExperiment(26, 31)

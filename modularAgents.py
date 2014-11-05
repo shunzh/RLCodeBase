@@ -231,23 +231,30 @@ def getHumanWorldDiscreteFuncs():
 
   tValues = pickle.load(open('learnedValues/humanAgentTargValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentObstValues.pkl'))
+  sValues = tValues
+
   stateMap = lambda s: featureExtractors.mapStateToBin(s, 0.2)
 
   def qTarget(state, action):
-    targState, objState = state
+    targState, objState, segState = state
     blfState = stateMap(targState)
 
     assert (blfState, action) in tValues.keys()
     return tValues[blfState, action]
 
   def qObstacle(state, action):
-    targState, objState = state
+    targState, objState, segState = state
     blfState = stateMap(objState)
 
     assert (blfState, action) in oValues.keys()
     return oValues[blfState, action]
 
-  qSegment = lambda state, action: 0 # TODO
+  def qSegment(state, action):
+    targState, objState, segState = state
+    blfState = stateMap(targState)
+
+    assert (blfState, action) in sValues.keys()
+    return sValues[blfState, action]
 
   return [qTarget, qObstacle, qSegment]
 
