@@ -18,7 +18,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs):
+  def __init__(self, qFuncs, eta = 1):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -26,7 +26,7 @@ class InverseModularRL:
     self.qFuncs = qFuncs
 
     # confidence
-    self.eta = 1
+    self.eta = eta
 
   def setSamplesFromMdp(self, mdp, agent):
     """
@@ -201,7 +201,7 @@ def getSamplesFromMat(filename, idxSet):
 
     assert len(objDist) == len(targDist) == len(segDist) == len(actions)
 
-    for i in range(len(objDist)):
+    for i in range(len(objDist) - 15):
       state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]), (segDist[i], segAngle[i]))
       action = actions[i]
       samples.append((state, action))

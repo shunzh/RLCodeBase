@@ -2,13 +2,17 @@ import inverseModularRL
 import modularAgents
 import continuousWorld, humanWorld
 import util
+import featureExtractors
+from graphics import *
 
 import numpy as np
 
-def main():
-  [w, sln] = inverseModularRL.humanWorldExperiment("subj25.parsed.mat", range(25, 31))
+def main(domainFrom, domainTo, domainDemo = None):
+  domainDemo = domainDemo or domainFrom
 
-  init = continuousWorld.loadFromMat('miniRes25.mat', 25)
+  [w, sln] = inverseModularRL.humanWorldExperiment("subj25.parsed.mat", range(domainFrom, domainTo))
+
+  init = continuousWorld.loadFromMat('miniRes25.mat', domainDemo)
   mdp = humanWorld.HumanWorld(init)
 
   qLearnOpts = {'gamma': 0.9,
@@ -21,17 +25,58 @@ def main():
   aHat.setWeights(w) # get the weights in the result
 
   # plot domain and policy
-  win = continuousWorld.drawDomain(mdp)
+  dim = 800
+  win = continuousWorld.drawDomain(mdp, dim)
+  size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
+
   # parse human positions and actions
-  humanSamples = parseHumanActions("subj25.parsed.mat", 25)
+  humanSamples = parseHumanActions("subj25.parsed.mat", domainDemo)
   # use IRL code to get features
-  featureSamples = inverseModularRL.getSamplesFromMat("subj25.parsed.mat", [25])
+  featureSamples = inverseModularRL.getSamplesFromMat("subj25.parsed.mat", [domainDemo])
 
-  assert len(humanSamples) == len(featureSamples)
+  def shift(loc):
+    """
+    shift to the scale of the GraphWin
+    """
+    return (1.0 * (loc[0] - mdp.xBoundary[0]) / size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / size * dim)
+ 
+  def plotCircle(win, loc, color):
+    cir = Circle(Point(shift(loc)), 4)
+    cir.setFill(color)
+    cir.draw(win)
 
-  for i in range(len(humanSamples)):
+  def plotArrow(win, loc, orient, orientDiff, color):
+    orient = - orient + np.pi / 2 - orientDiff
+    orient = featureExtractors.adjustAngle(orient)
+
+    segLen = 0.2
+    newLoc = (loc[0] + segLen * np.cos(orient), loc[1] + segLen * np.sin(orient))
+
+    line = Line(Point(shift(loc)), Point(shift(newLoc)))
+    line.setWidth(2)
+    line.setFill(color)
+    line.draw(win)
+
+  for i in range(len(featureSamples)):
     # Note that aHat is a Modular agent, not a ReducedModular one. It accepts belief state directly.
-    print aHat.getPolicy(featureSamples[i][0]), featureSamples[i][1]
+    # For estimated agent, it only predicts discrete actions.
+    # For human, just use the angle it moves.
+    estimatedPolicy = aHat.getPolicy(featureSamples[i][0])
+    if estimatedPolicy == 'L':
+      estimatedMoveAngle = -mdp.turnAngle
+    elif estimatedPolicy == 'R':
+      estimatedMoveAngle = mdp.turnAngle
+    elif estimatedPolicy == 'G':
+      estimatedMoveAngle = 0
+
+    trueMoveAngle = humanSamples[i]['moveAngle']
+
+    loc = (humanSamples[i]['x'], humanSamples[i]['y'])
+    orient = humanSamples[i]['orient']
+
+    plotCircle(win, loc, 'white')
+    plotArrow(win, loc, orient, estimatedMoveAngle, 'green')
+    plotArrow(win, loc, orient, trueMoveAngle, 'white')
 
   win.getMouse()
   win.close()
@@ -54,12 +99,14 @@ def parseHumanActions(filename, domainId):
   agentXs = mat['pRes'][domainId].agentX
   agentZs= mat['pRes'][domainId].agentZ
   agentAngles = mat['pRes'][domainId].agentAngle / 180 * np.pi
+  moveAngles = mat['pRes'][domainId].agentMoveAngle / 180 * np.pi
   actions = mat['pRes'][domainId].action
 
   for i in range(len(agentXs)):
-    samples.append({'x': agentXs[i], 'y': agentZs[i], 'orient': agentAngles[i], 'action': actions[i]})
+    samples.append({'x': agentXs[i], 'y': agentZs[i], 'orient': agentAngles[i], 'action': actions[i], 'moveAngle': moveAngles[i]})
 
   return samples
 
 if __name__ == '__main__':
-  main()
+  #main(0, 8)
+  main(24, 31)

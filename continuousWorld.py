@@ -444,7 +444,7 @@ def parseOptions():
     return opts
 
 
-def drawDomain(mdp):
+def drawDomain(mdp, dim = 800):
   """
   Args:
     mdp: parsed from mat file.
@@ -452,7 +452,6 @@ def drawDomain(mdp):
   Return:
     win object
   """
-  dim = 800
   win = GraphWin('Domain', dim, dim) # give title and dimensions
   win.setBackground('black')
 
