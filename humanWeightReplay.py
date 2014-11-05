@@ -1,9 +1,12 @@
 import inverseModularRL
 import modularAgents
 import continuousWorld, humanWorld
+import util
+
+import numpy as np
 
 def main():
-  w = inverseModularRL.humanWorldExperiment(range(24, 25))
+  [w, sln] = inverseModularRL.humanWorldExperiment("subj25.parsed.mat", range(25, 31))
 
   qLearnOpts = {'gamma': 0.9,
                 'alpha': 0.5,
@@ -18,9 +21,43 @@ def main():
   mdp = humanWorld.HumanWorld(init)
 
   win = continuousWorld.drawDomain(mdp)
+  # parse human positions and actions
+  humanSamples = parseHumanActions("subj25.parsed.mat", 25)
+  # use IRL code to get features
+  featureSamples = inverseModularRL.getSamplesFromMat("subj25.parsed.mat", [25])
+
+  assert len(humanSamples) == len(featureSamples)
+
+  for i in range(len(humanSamples)):
+    print humanSamples[i]['action'], featureSamples[i][1]
 
   win.getMouse()
   win.close()
+
+def parseHumanActions(filename, domainId):
+  """
+  Parse human behavivors from mat, which includes at which point, take which action.
+
+  Args:
+    filename: mat file to read
+    domainId: room number
+
+  Return:
+    a list of dicts, which includes x, y, orient and action.
+  """
+  mat = util.loadmat(filename)
+
+  samples = []
+
+  agentXs = mat['pRes'][domainId].agentX
+  agentZs= mat['pRes'][domainId].agentZ
+  agentAngles = mat['pRes'][domainId].agentAngle / 180 * np.pi
+  actions = mat['pRes'][domainId].action
+
+  for i in range(len(agentXs)):
+    samples.append({'x': agentXs[i], 'y': agentZs[i], 'orient': agentAngles[i], 'action': actions[i]})
+
+  return samples
 
 if __name__ == '__main__':
   main()

@@ -39,33 +39,12 @@ class InverseModularRL:
     self.getSamples = lambda : [(state, agent.getPolicy(state)) for state in states]
     self.getActions = lambda s : mdp.getPossibleActions(s)
 
-  def setSamplesFromMat(self, filename, idxSet):
+  def setSamples(self, samples):
     """
     Read from subj*.parsed.mat file.
 
     Set self.getSamples and self.getActions here.
     """
-    samples = []
-
-    import util
-    mat = util.loadmat(filename)
-
-    for idx in idxSet:
-      objDist = mat['pRes'][idx].obstDist1
-      objAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
-      targDist = mat['pRes'][idx].targDist1
-      targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
-      segDist = mat['pRes'][idx].pathDist
-      segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
-      actions = mat['pRes'][idx].action
-
-      assert len(objDist) == len(targDist) == len(segDist) == len(actions)
-
-      for i in range(len(objDist)):
-        state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]), (segDist[i], segAngle[i]))
-        action = actions[i]
-        samples.append((state, action))
-
     self.getSamples = lambda : samples
     # FIXME overfit
     self.getActions = lambda s : ['L', 'R', 'G']
@@ -203,9 +182,33 @@ def continuousWorldExperiment():
   print checkPolicyConsistency(m.getStates(), a, aHat)
   print getWeightDistance(a.getWeights(), w)
 
-  return w
+  return w, sln
 
-def humanWorldExperiment(rang):
+def getSamplesFromMat(filename, idxSet):
+  samples = []
+
+  import util
+  mat = util.loadmat(filename)
+
+  for idx in idxSet:
+    objDist = mat['pRes'][idx].obstDist1
+    objAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
+    targDist = mat['pRes'][idx].targDist1
+    targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
+    segDist = mat['pRes'][idx].pathDist
+    segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
+    actions = mat['pRes'][idx].action
+
+    assert len(objDist) == len(targDist) == len(segDist) == len(actions)
+
+    for i in range(len(objDist)):
+      state = ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]), (segDist[i], segAngle[i]))
+      action = actions[i]
+      samples.append((state, action))
+
+  return samples
+
+def humanWorldExperiment(filename, rang):
   """
   Args:
     rang: load mat with given rang of trials
@@ -214,15 +217,17 @@ def humanWorldExperiment(rang):
   #qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
 
   sln = InverseModularRL(qFuncs)
-  sln.setSamplesFromMat("subj25.parsed.mat", rang)
+  samples = getSamplesFromMat(filename, rang)
+  sln.setSamples(samples)
+
   output = sln.findWeights()
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
   print "Weight: ", w
 
-  return w
+  return w, sln
 
 if __name__ == '__main__':
   #continuousWorldExperiment()
-  humanWorldExperiment(26, 31)
+  humanWorldExperiment("subj25.parsed.mat", range(25, 31))

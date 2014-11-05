@@ -262,6 +262,7 @@ def getHumanWorldDiscreteFuncs():
 def getHumanWorldContinuousFuncs():
   """
   Q value is a continuous approximator of the features.
+  The state given here is belief state. Need use featureExtractor if having only raw states.
 
   weights: Action x Feature -> Value
   """
