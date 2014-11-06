@@ -275,8 +275,8 @@ def loadFromMat(filename, domainId):
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
   # TODO add buffer?
-  ret['xBoundary'] = [-3, 3]
-  ret['yBoundary'] = [-3, 3]
+  ret['xBoundary'] = [-4, 4]
+  ret['yBoundary'] = [-4, 4]
 
   # radius of an object (so the object doesn't appear as a point)
   ret['radius'] = 0.05

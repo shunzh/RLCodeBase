@@ -38,7 +38,7 @@ def main(domainFrom, domainTo, domainDemo = None):
     """
     shift to the scale of the GraphWin
     """
-    return (1.0 * (loc[0] - mdp.xBoundary[0]) / size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / size * dim)
+    return (1.0 * (mdp.xBoundary[1] - loc[0]) / size * dim, 1.0 * (mdp.yBoundary[1] - loc[1]) / size * dim)
  
   def plotCircle(win, loc, color):
     cir = Circle(Point(shift(loc)), 4)
@@ -109,4 +109,6 @@ def parseHumanActions(filename, domainId):
 
 if __name__ == '__main__':
   #main(0, 8)
-  main(24, 31)
+  #main(24, 31)
+  #main(8, 16)
+  main(16, 24, 17)
