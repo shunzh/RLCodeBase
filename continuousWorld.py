@@ -42,28 +42,33 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.livingReward = 0.0
     self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
 
-  def closeToObjects(self, l):
+  def getReachedObjects(self, l):
     """
     Determine whether a state is close to any object, within radius.
     Args:
       l: the loc to be checked.
       cond: constraint added
     Return:
-      String, int: the type of object that it's in the radius of, and its id.
-                   It is (None, None) if it's close to nothing (so easy to be parsed)
+      [(String, int)]: A list of the type of object that it's in the radius of, and its id.
+                       Return [] if nothing matches.
 
     #FIXME not checked whether it's close to multiple objects. However, this won't happen in a valid domain.
     """
+    ret = []
+
     for key, locs in self.objs.items():
       for idx in xrange(len(locs)):
         dist = numpy.linalg.norm(np.subtract(l, locs[idx]))
         if dist < self.radius:
-          return (key, idx)
+          ret.append((key, idx))
 
     # if it's close to nothing
-    return (None, None)
+    return ret
 
   def getClosestTarget(self, l):
+    """
+    Get the closest target.
+    """
     [minObj, minDist] = featureExtractors.getClosestObj(l, self.objs['targs'])
     return minObj
 
@@ -117,14 +122,16 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     loc, orient = state
     nextLoc, newOrient = nextState
     
-    # check whether reaching a target or obstacle
-    stateType, objId = self.closeToAnObject(loc)
-    nextStateType, nextObjId = self.closeToAnObject(nextLoc)
+    reward = 0
 
-    if nextStateType != None:
-      return self.rewards[nextStateType]
-    else:
-      return 0
+    # check whether reaching a target or obstacle
+    objInfoList = self.getReachedObjects(nextLoc)
+
+    # any reached object applies
+    for nextStateType, nextObjId in objInfoList:
+      reward += self.rewards[nextStateType]
+
+    return reward
       
   def clearObj(self, objType, objId):
     """
@@ -143,12 +150,16 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     Check whether we should terminate at this state.
 
-    Condition: reached exit elevator.
+    Condition: reached exit elevator or no target left.
     """
     loc, orient = state
-    return self.closeToAnObject(loc) == ('elevators', 1)
-    #return len(self.objs['targs']) == 0
-                   
+
+    # have trouble if two elevators are the same
+    #objInfoList = self.getReachedObjects(loc)
+    #return ('elevators', 1) in objInfoLists
+
+    return len(self.objs['targs']) == 0
+
   def getTransitionStatesAndProbs(self, state, action):
     """
     Basically following physics laws, but considering:
@@ -293,14 +304,17 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
     # clear this object upon getting it
     loc, orient = state
     nextLoc, nextOrient = nextState
-    nextStateType, nextObjId = self.mdp.closeToAnObject(nextLoc)
-    if nextStateType == 'targs':
-      self.mdp.clearObj(nextStateType, nextObjId)
-    elif nextStateType == 'segs':
-      print "next is seg"
-      # be careful with this -
-      # once reaching on an segment, deleting the segments before it.
-      [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId + 1)]
+
+    objInfoLists = self.mdp.getReachedObjects(nextLoc)
+
+    for nextStateType, nextObjId in objInfoLists:
+      if nextStateType == 'targs':
+        self.mdp.clearObj(nextStateType, nextObjId)
+      elif nextStateType == 'segs':
+        print "next is seg"
+        # be careful with this -
+        # once reaching on an segment, deleting the segments before it.
+        [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId + 1)]
 
 
 def getUserAction(state, actionFunction):

@@ -40,6 +40,7 @@ def getClosestObj(loc, l):
   """
   minDist = np.inf
   minObj = loc
+  ret = []
 
   for obj in l:
     dist = numpy.linalg.norm(np.subtract(loc, obj))
