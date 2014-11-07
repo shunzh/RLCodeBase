@@ -221,13 +221,16 @@ def toyDomain():
 
   return ret
 
-def simpleToyDomain(useObst = False):
+def simpleToyDomain(category):
   ret = {}
 
-  if not useObst:
-    targs = [(0.2, 0.1)]; obsts = []
+  if category == 'targs':
+    targs = [(0.15, 0.15)]; obsts = []
+  elif category == 'obsts':
+    obsts = [(0.15, 0.15)]; targs = [(0.3, 0.3)]
   else:
-    obsts = [(0.2, 0.1)]; targs = []
+    raise Exception("Undefined category.")
+
   segs = []
   elevators = [(0, 0), (0.3, 0.3)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
