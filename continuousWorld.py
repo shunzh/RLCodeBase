@@ -42,7 +42,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.livingReward = 0.0
     self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
 
-  def closeToAnObject(self, l):
+  def closeToObjects(self, l):
     """
     Determine whether a state is close to any object, within radius.
     Args:
@@ -297,6 +297,7 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
     if nextStateType == 'targs':
       self.mdp.clearObj(nextStateType, nextObjId)
     elif nextStateType == 'segs':
+      print "next is seg"
       # be careful with this -
       # once reaching on an segment, deleting the segments before it.
       [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId + 1)]
@@ -500,7 +501,16 @@ if __name__ == '__main__':
   ###########################
   # GET THE DISPLAY ADAPTER
   ###########################
-  win = drawDomain(mdp)
+  # FIXME repeated here.
+  dim = 800
+  size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
+  def shift(loc):
+    """
+    shift to the scale of the GraphWin
+    """
+    return (1.0 * (loc[0] - mdp.xBoundary[0]) / size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / size * dim)
+ 
+  win = drawDomain(mdp, dim)
 
   ###########################
   # GET THE AGENT

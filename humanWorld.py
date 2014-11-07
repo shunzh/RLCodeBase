@@ -133,7 +133,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
       raise 'Error: Agent returned None action'
 
     if recorder != None:
-      print state, action
       recorder.append((state, action))
     
     # EXECUTE ACTION
@@ -143,6 +142,10 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
             "\nTook action: "+str(action)+
             "\nEnded in state: "+str(nextState)+
             "\nGot reward: "+str(reward)+"\n")    
+    if 'getState' in dir(agent):
+      message("Started in belief state: " + str(agent.getState(state)) + 
+              "\nEnded in belief state: " + str(agent.getState(nextState)) + "\n")
+
     # UPDATE LEARNER
     if 'observeTransition' in dir(agent): 
         agent.observeTransition(state, action, nextState, reward)
@@ -228,18 +231,6 @@ def parseValues(values, filename):
   output = open(filename, 'wb')
   pickle.dump(values, output)
   output.close()
-
-  """
-  actions = {'G', 'L', 'R'}
-
-  for action in actions:
-    print action
-    for dist in range(5, 0, -1):
-      for ang in range(-3, 4):
-        print values[((dist, ang), action)],
-      print
-    print
-  """
    
 if __name__ == '__main__':
   
