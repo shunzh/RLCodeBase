@@ -290,12 +290,14 @@ class ApproximateVAgent(ApproximateQAgent):
       for feature, value in feats.items():
         self.weights[action][feature] += t * correction * value
 
+      # f(x + t * delta)
       fStep = ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2
 
       # revert
       for feature, value in feats.items():
         self.weights[action][feature] -= t * correction * value
 
+      # f(x) + alpha * t * Df (x) * delta
       fApprox = ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2\
                 - self.alpha * t * ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2
 

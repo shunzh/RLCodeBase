@@ -158,7 +158,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     #objInfoList = self.getReachedObjects(loc)
     #return ('elevators', 1) in objInfoLists
 
-    return len(self.objs['targs']) == 0
+    return len(self.objs['targs']) == 0 or len(self.objs['segs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -231,7 +231,7 @@ def simpleToyDomain(category):
   else:
     raise Exception("Undefined category.")
 
-  segs = []
+  segs = [(0.3, 0.3)]
   elevators = [(0, 0), (0.3, 0.3)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
@@ -277,7 +277,10 @@ def loadFromMat(filename, domainId):
     elif 'obst' in name:
       obsts.append((x, y))
     elif 'seg' in name:
-      segs.append((x, y))
+      # FIXME just guesses
+      # drop far located segments
+      if numpy.linalg.norm((x, y)) < 10:
+        segs.append((x, y))
     elif 'elevator' in name:
       elevators.append((x, y))
     else:
@@ -288,15 +291,16 @@ def loadFromMat(filename, domainId):
 
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
-  # TODO add buffer?
-  ret['xBoundary'] = [-4, 4]
-  ret['yBoundary'] = [-4, 4]
+  ret['xBoundary'] = [-3.5, 3.5]
+  ret['yBoundary'] = [-3.5, 3.5]
 
   # radius of an object (so the object doesn't appear as a point)
   ret['radius'] = 0.05
 
   # step size of the agent movement
   ret['step'] = 0.025
+
+  print segs
 
   return ret
 
@@ -314,7 +318,6 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
       if nextStateType == 'targs':
         self.mdp.clearObj(nextStateType, nextObjId)
       elif nextStateType == 'segs':
-        print "next is seg"
         # be careful with this -
         # once reaching on an segment, deleting the segments before it.
         [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId + 1)]
@@ -461,37 +464,59 @@ def parseOptions():
       
     return opts
 
+class Plotting:
+  def __init__(self, mdp, dim = 800):
+    self.mdp = mdp
+    self.size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
+    self.radius = mdp.radius / self.size * dim
 
-def drawDomain(mdp, dim = 800):
-  """
-  Args:
-    mdp: parsed from mat file.
+    def shift(loc):
+      """
+      shift to the scale of the GraphWin
+      """
+      return (1.0 * (loc[0] - mdp.xBoundary[0]) / self.size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / self.size * dim)
 
-  Return:
-    win object
-  """
-  win = GraphWin('Domain', dim, dim) # give title and dimensions
-  win.setBackground('black')
-
-  size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
-  radius = mdp.radius / size * dim
-  def shift(loc):
+    self.shift = shift
+ 
+  def drawDomain(self):
     """
-    shift to the scale of the GraphWin
-    """
-    return (1.0 * (loc[0] - mdp.xBoundary[0]) / size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / size * dim)
-  
-  def drawObjects(label, color):
-    for obj in mdp.objs[label]:
-      cir = Circle(Point(shift(obj)), radius)
-      cir.setFill(color)
-      cir.draw(win)
-  drawObjects('targs', 'blue')
-  drawObjects('obsts', 'red')
-  drawObjects('segs', 'yellow')
-  drawObjects('elevators', 'green')
+    Args:
+      mdp: parsed from mat file.
 
-  return win
+    Return:
+      win object
+    """
+    win = GraphWin('Domain', dim, dim) # give title and dimensions
+    win.setBackground('grey')
+   
+    def drawObjects(label, color):
+      """
+      Plot the objects as separate dots.
+      """
+      for obj in self.mdp.objs[label]:
+        cir = Circle(Point(self.shift(obj)), self.radius)
+        cir.setFill(color)
+        cir.draw(win)
+
+    def drawSegments(label, color):
+      """
+      Plot the adjacent objects as segments.
+      """
+      prevObj = None
+      for obj in self.mdp.objs[label]:
+        if prevObj:
+          line = Line(Point(self.shift(prevObj)), Point(self.shift(obj)))
+          line.setWidth(3)
+          line.setFill(color)
+          line.draw(win)
+        prevObj = obj
+      
+    drawObjects('targs', 'blue')
+    drawObjects('obsts', 'red')
+    drawSegments('segs', 'green')
+    drawObjects('elevators', 'green')
+
+    return win
 
  
 if __name__ == '__main__':
@@ -520,14 +545,9 @@ if __name__ == '__main__':
   ###########################
   # FIXME repeated here.
   dim = 800
-  size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
-  def shift(loc):
-    """
-    shift to the scale of the GraphWin
-    """
-    return (1.0 * (loc[0] - mdp.xBoundary[0]) / size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / size * dim)
- 
-  win = drawDomain(mdp, dim)
+
+  plotting = Plotting(mdp, dim)
+  win = plotting.drawDomain()
 
   ###########################
   # GET THE AGENT
@@ -601,7 +621,7 @@ if __name__ == '__main__':
       loc, orient = displayCallback.prevState
       newLoc, newOrient = x
 
-      line = Line(Point(shift(loc)), Point(shift(newLoc)))
+      line = Line(Point(plotting.shift(loc)), Point(plotting.shift(newLoc)))
       line.setWidth(3)
       line.setFill('white')
       line.draw(win)
