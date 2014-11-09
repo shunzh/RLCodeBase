@@ -200,13 +200,54 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     if y < self.yBoundary[0] or y >= self.yBoundary[1]: return False
     return True
 
+def simpleToyDomain(category = 'targs'):
+  """
+  This domain can be configed using the category argument,
+  so that we only have one target / obstacle for training.
 
-def toyDomain():
+  We put irrelevant objects in infPos that beyond the border,
+  so that the agent cannot reach.
+  """
   ret = {}
 
-  targs = [(0.1 * x, 0.1 * y) for x in xrange(1, 10, 2) for y in [1, 3, 7, 9] ]
-  obsts = [(0.5, 0.5)]
-  segs = [(0.2, 0.2 * y) for y in xrange(1, 5)] + [(0.2 * x, 0.8) for x in xrange(2, 5)]
+  size = 0.5
+  # place that can't be reached
+  infPos = (size + 1, size + 1)
+
+  if category == 'targs':
+    targs = [(size / 2, size / 2)]; obsts = []
+  elif category == 'obsts':
+    obsts = [(size / 2, size / 2)]; targs = [(size, size)]
+  else:
+    raise Exception("Undefined category.")
+
+  segs = [(size, size)]
+  elevators = [(0, 0), (size, size)]
+  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
+
+  ret['xBoundary'] = [0, size]
+  ret['yBoundary'] = [0, size]
+
+  ret['radius'] = 0.02
+  ret['step'] = 0.02
+
+  return ret
+
+def toyDomain(category = 'targs'):
+  """
+  Similar to the simple toy domain, but with multiple (same) objects.
+  """
+  ret = {}
+
+  layout = [(0.3 * x, 0.3 * y) for x in xrange(1, 4) for y in xrange(1, 4) ]
+  infPos = (2, 2)
+
+  if category == 'targs':
+    targs = layout; obsts = []
+  elif category == 'obsts':
+    obsts = layout; targs = [infPos]
+  segs = [infPos]
+
   elevators = [(0, 0), (1, 1)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
@@ -221,27 +262,6 @@ def toyDomain():
 
   return ret
 
-def simpleToyDomain(category):
-  ret = {}
-
-  if category == 'targs':
-    targs = [(0.15, 0.15)]; obsts = []
-  elif category == 'obsts':
-    obsts = [(0.15, 0.15)]; targs = [(0.3, 0.3)]
-  else:
-    raise Exception("Undefined category.")
-
-  segs = [(0.3, 0.3)]
-  elevators = [(0, 0), (0.3, 0.3)]
-  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
-
-  ret['xBoundary'] = [0, 0.3]
-  ret['yBoundary'] = [0, 0.3]
-
-  ret['radius'] = 0.02
-  ret['step'] = 0.02
-
-  return ret
 
 def loadFromMat(filename, domainId):
   """
@@ -354,7 +374,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 1000
+  runs = 500
 
   while True:
 
