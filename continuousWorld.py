@@ -469,6 +469,7 @@ class Plotting:
     self.mdp = mdp
     self.size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
     self.radius = mdp.radius / self.size * dim
+    self.dim = dim
 
     def shift(loc):
       """
@@ -486,7 +487,7 @@ class Plotting:
     Return:
       win object
     """
-    win = GraphWin('Domain', dim, dim) # give title and dimensions
+    win = GraphWin('Domain', self.dim, self.dim) # give title and dimensions
     win.setBackground('grey')
    
     def drawObjects(label, color):
@@ -544,10 +545,10 @@ if __name__ == '__main__':
   # GET THE DISPLAY ADAPTER
   ###########################
   # FIXME repeated here.
-  dim = 800
-
-  plotting = Plotting(mdp, dim)
-  win = plotting.drawDomain()
+  if not opts.quiet:
+    dim = 800
+    plotting = Plotting(mdp, dim)
+    win = plotting.drawDomain()
 
   ###########################
   # GET THE AGENT
@@ -614,21 +615,24 @@ if __name__ == '__main__':
   ###########################
 
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
-  def displayCallback(x):
-    # display the corresponding state in graphics
-    if displayCallback.prevState != None:
-      # only draw lines, so ignore the first state
-      loc, orient = displayCallback.prevState
-      newLoc, newOrient = x
+  if not opts.quiet:
+    def displayCallback(x):
+      # display the corresponding state in graphics
+      if displayCallback.prevState != None:
+        # only draw lines, so ignore the first state
+        loc, orient = displayCallback.prevState
+        newLoc, newOrient = x
 
-      line = Line(Point(plotting.shift(loc)), Point(plotting.shift(newLoc)))
-      line.setWidth(3)
-      line.setFill('white')
-      line.draw(win)
+        line = Line(Point(plotting.shift(loc)), Point(plotting.shift(newLoc)))
+        line.setWidth(3)
+        line.setFill('white')
+        line.draw(win)
 
-    displayCallback.prevState = x
+      displayCallback.prevState = x
 
-  displayCallback.prevState = None
+    displayCallback.prevState = None
+  else:
+    displayCallback = lambda x : None
 
   messageCallback = lambda x: printString(x)
   pauseCallback = lambda : None
