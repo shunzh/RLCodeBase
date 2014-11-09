@@ -276,7 +276,7 @@ def getHumanWorldContinuousFuncs():
     dist, angle = state
     assert action in weights.keys()
     w = weights[action]
-    return w['bias'] + dist * w['bias'] + angle * w['angle'] + angle ** 2 * w['angleSq'] + dist ** 2 * w['distSq']
+    return w['bias'] + dist * w['dist'] + angle * w['angle'] + angle ** 2 * w['angleSq']
 
   def qTarget(state, action):
     targState, obstState, segState = state
