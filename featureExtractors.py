@@ -99,6 +99,7 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
     feats['angle'] = adjustAngle(objDirect - orient)
     if self.square:
       feats['angleSq'] = feats['angle'] ** 2 # used square of angle as a feature
+      feats['distSq'] = feats['dist'] ** 2 # used square of angle as a feature
     feats['bias'] = 1
 
     #print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']

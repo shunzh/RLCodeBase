@@ -157,7 +157,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     # have trouble if two elevators are the same
     #objInfoList = self.getReachedObjects(loc)
     #return ('elevators', 1) in objInfoLists
-
     return len(self.objs['targs']) == 0 or len(self.objs['segs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
@@ -215,13 +214,13 @@ def simpleToyDomain(category = 'targs'):
   infPos = (size + 1, size + 1)
 
   if category == 'targs':
-    targs = [(size / 2, size / 2)]; obsts = []
+    targs = [(size / 2, size / 2)]; obsts = [infPos]
   elif category == 'obsts':
-    obsts = [(size / 2, size / 2)]; targs = [(size, size)]
+    obsts = [(size / 2, size / 2)]; targs = [infPos]
   else:
     raise Exception("Undefined category.")
 
-  segs = [(size, size)]
+  segs = [infPos]
   elevators = [(0, 0), (size, size)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
@@ -239,11 +238,11 @@ def toyDomain(category = 'targs'):
   """
   ret = {}
 
-  layout = [(0.3 * x, 0.3 * y) for x in xrange(1, 4) for y in xrange(1, 4) ]
+  layout = [(0.1 + 0.4 * x, 0.1 + 0.4 * y) for x in xrange(0, 3) for y in xrange(0, 3) ]
   infPos = (2, 2)
 
   if category == 'targs':
-    targs = layout; obsts = []
+    targs = layout; obsts = [infPos]
   elif category == 'obsts':
     obsts = layout; targs = [infPos]
   segs = [infPos]
@@ -540,8 +539,7 @@ class Plotting:
     return win
 
  
-if __name__ == '__main__':
-  
+def main():
   opts = parseOptions()
 
   ###########################
@@ -684,3 +682,6 @@ if __name__ == '__main__':
   # hold window
   win.getMouse()
   win.close()
+
+if __name__ == '__main__':
+  main()

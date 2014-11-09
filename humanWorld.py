@@ -61,7 +61,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     else:
       raise Exception("Unknown action.")
 
-    orient = featureExtractors.adjustAngle(orient)
+    newOrient = featureExtractors.adjustAngle(newOrient)
 
     dv = (d * np.cos(newOrient), d * np.sin(newOrient))
     newLoc = np.add(loc, dv)
@@ -110,7 +110,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 500
+  runs = 1000
 
   while True:
 
@@ -232,8 +232,7 @@ def parseValues(values, filename):
   pickle.dump(values, output)
   output.close()
    
-if __name__ == '__main__':
-  
+def main(): 
   opts = parseOptions()
 
   ###########################
@@ -401,3 +400,6 @@ if __name__ == '__main__':
   if not opts.quiet:
     win.getMouse()
     win.close()
+
+if __name__ == '__main__':
+  main()
