@@ -221,7 +221,7 @@ def simpleToyDomain(category = 'targs'):
     raise Exception("Undefined category.")
 
   segs = [infPos]
-  elevators = [(0, 0), (size, size)]
+  elevators = [(size / 3, size / 3), (size, size)]
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
   ret['xBoundary'] = [0, size]
@@ -373,7 +373,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 500
+  runs = 5000
 
   while True:
 
@@ -531,10 +531,11 @@ class Plotting:
           line.draw(win)
         prevObj = obj
       
+    pathColor = color_rgb(200, 200, 200)
     drawObjects('targs', 'blue')
     drawObjects('obsts', 'red')
-    drawSegments('segs', 'green')
-    drawObjects('elevators', 'green')
+    drawSegments('segs', pathColor)
+    drawObjects('elevators', pathColor)
 
     return win
 
@@ -643,7 +644,7 @@ def main():
 
         line = Line(Point(plotting.shift(loc)), Point(plotting.shift(newLoc)))
         line.setWidth(3)
-        line.setFill('white')
+        line.setFill('green')
         line.draw(win)
 
       displayCallback.prevState = x

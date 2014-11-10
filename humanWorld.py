@@ -352,8 +352,8 @@ def main():
         newLoc, orient = x
 
         line = Line(Point(plotting.shift(loc)), Point(plotting.shift(newLoc)))
-        line.setWidth(3)
-        line.setFill('white')
+        line.setWidth(5)
+        line.setFill(color_rgb(0, 255, 0))
         line.draw(win)
 
       displayCallback.prevState = x
