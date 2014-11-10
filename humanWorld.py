@@ -40,7 +40,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     R: Turn right 30 degrees and walk ahead 0.05m.
     G: Go ahead 0.2m.
     """
-    return ('L', 'SL', 'R', 'SR', 'G')
+    return ('L', 'R', 'G')
 
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -53,14 +53,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     if action == 'L':
       newOrient = orient - self.turnAngle
       d = self.turnDist
-    elif action == 'SL':
-      newOrient = orient - self.slightTurnAngle
-      d = self.turnDist
     elif action == 'R':
       newOrient = orient + self.turnAngle
-      d = self.turnDist
-    elif action == 'SR':
-      newOrient = orient + self.slightTurnAngle
       d = self.turnDist
     elif action == 'G':
       newOrient = orient
@@ -246,8 +240,8 @@ def main():
   # GET THE GRIDWORLD
   ###########################
 
-  category = 'targs'
-  #category = 'obsts'
+  #category = 'targs'
+  category = 'obsts'
 
   if opts.grid == 'vr':
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0)

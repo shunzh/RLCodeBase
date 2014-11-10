@@ -19,7 +19,7 @@ def main(domainFrom, domainTo, domainDemo = None):
                 'alpha': 0.5,
                 'epsilon': 0, # make sure no exploration in decision making.
                 'actionFn': mdp.getPossibleActions}
-  qFuncs = modularAgents.getHumanWorldContinuousFuncs()
+  qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
   aHat = modularAgents.ModularAgent(**qLearnOpts)
   aHat.setQFuncs(qFuncs)
   aHat.setWeights(w) # get the weights in the result
