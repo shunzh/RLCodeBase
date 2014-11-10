@@ -99,6 +99,8 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
     feats['angle'] = adjustAngle(objDirect - orient)
     if self.square:
       feats['angleSq'] = feats['angle'] ** 2 # used square of angle as a feature
+      feats['angleDist'] = feats['angle'] * feats['dist']
+      feats['angleSqDist'] = feats['angle'] ** 2 * feats['dist']
     feats['bias'] = 1
 
     #print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']
@@ -142,14 +144,16 @@ def mapStateToBin((dist, angle), step = 1):
   else:
     distBin = 5
 
-  if abs(angle) < 10.0 / 180 * np.pi:
+  if abs(angle) < 15.0 / 180 * np.pi:
     angleBin = 0
-  elif abs(angle) < 30.0 / 180 * np.pi:
+  elif abs(angle) < 45.0 / 180 * np.pi:
     angleBin = int(1 * np.sign(angle))
   elif abs(angle) < 90.0 / 180 * np.pi:
     angleBin = int(2 * np.sign(angle))
-  else:
+  elif abs(angle) < 135.0 / 180 * np.pi:
     angleBin = int(3 * np.sign(angle))
+  else:
+    angleBin = int(4 * np.sign(angle))
 
   return (distBin, angleBin)
 
@@ -168,6 +172,21 @@ def getHumanViewBins(mdp, label):
 
   return getBins
 
+def getHumanDiscreteState(mdp):
+  """
+  Return ((targDist, targAngle), (obstDist, obstAngle), (segDist, segAngle))
+  """
+  extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
+
+  def getDistAngelList(state):
+    ret = []
+    for extractor in extractors:
+      feats = extractor.getStateFeatures(state)
+      ret.append(mapStateToBin((feats['dist'], feats['angle']), mdp.step))
+    return ret
+
+  return getDistAngelList
+ 
 class ObstacleExtractor(FeatureExtractor):
   """
   This should use radius extractor.

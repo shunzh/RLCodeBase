@@ -509,6 +509,7 @@ getDirection	game.py	/^  def getDirection(self):$/;"	m	class:Configuration
 getDirection	graphicsDisplay.py	/^  def getDirection(self, agentState):$/;"	m	class:PacmanGraphics
 getDiscountGrid	gridworld.py	/^def getDiscountGrid():$/;"	f
 getDistAngelList	featureExtractors.py	/^  def getDistAngelList(state):$/;"	f	function:getHumanContinuousState
+getDistAngelList	featureExtractors.py	/^  def getDistAngelList(state):$/;"	f	function:getHumanDiscreteState
 getDistribution	ghostAgents.py	/^  def getDistribution( self, state ):$/;"	m	class:DirectionalGhost
 getDistribution	ghostAgents.py	/^  def getDistribution( self, state ):$/;"	m	class:RandomGhost
 getDistribution	ghostAgents.py	/^  def getDistribution(self, state):$/;"	m	class:GhostAgent
@@ -531,6 +532,7 @@ getGhostStates	pacman.py	/^  def getGhostStates( self ):$/;"	m	class:GameState
 getHeight	graphics.py	/^    def getHeight(self):$/;"	m	class:GraphWin
 getHeight	graphics.py	/^    def getHeight(self):$/;"	m	class:Image
 getHumanContinuousState	featureExtractors.py	/^def getHumanContinuousState(mdp):$/;"	f
+getHumanDiscreteState	featureExtractors.py	/^def getHumanDiscreteState(mdp):$/;"	f
 getHumanViewBins	featureExtractors.py	/^def getHumanViewBins(mdp, label):$/;"	f
 getHumanWorldContinuousFuncs	modularAgents.py	/^def getHumanWorldContinuousFuncs():$/;"	f
 getHumanWorldDiscreteFuncs	modularAgents.py	/^def getHumanWorldDiscreteFuncs():$/;"	f

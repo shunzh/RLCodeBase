@@ -229,8 +229,8 @@ def getHumanWorldDiscreteFuncs():
   """
   import pickle
 
-  tValues = pickle.load(open('learnedValues/humanAgentTargValues.pkl'))
-  oValues = pickle.load(open('learnedValues/humanAgentObstValues.pkl'))
+  tValues = pickle.load(open('learnedValues/humanAgenttargValues.pkl'))
+  oValues = pickle.load(open('learnedValues/humanAgentobstValues.pkl'))
   sValues = tValues
 
   stateMap = lambda s: featureExtractors.mapStateToBin(s, 0.2)
@@ -239,6 +239,8 @@ def getHumanWorldDiscreteFuncs():
     targState, objState, segState = state
     blfState = stateMap(targState)
 
+    print tValues
+    print (blfState, action)
     assert (blfState, action) in tValues.keys()
     return tValues[blfState, action]
 
@@ -246,7 +248,7 @@ def getHumanWorldDiscreteFuncs():
     targState, objState, segState = state
     blfState = stateMap(objState)
 
-    assert (blfState, action) in oValues.keys()
+    #assert (blfState, action) in oValues.keys()
     return oValues[blfState, action]
 
   def qSegment(state, action):
@@ -276,7 +278,8 @@ def getHumanWorldContinuousFuncs():
     dist, angle = state
     assert action in weights.keys()
     w = weights[action]
-    return w['bias'] + dist * w['dist'] + angle * w['angle'] + angle ** 2 * w['angleSq']
+    return w['bias'] + dist * w['dist'] + angle * w['angle'] + angle ** 2 * w['angleSq']\
+           + w['angleDist'] * angle * dist + w['angleSqDist'] * angle ** 2 * dist
 
   def qTarget(state, action):
     targState, obstState, segState = state

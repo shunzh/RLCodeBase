@@ -314,8 +314,8 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
-    a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-    a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
+    a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
+    a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:

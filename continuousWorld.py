@@ -238,7 +238,7 @@ def toyDomain(category = 'targs'):
   """
   ret = {}
 
-  layout = [(0.1 + 0.6 * x, 0.1 + 0.6 * y) for x in xrange(0, 2) for y in xrange(0, 2) ]
+  layout = [(0.1 + 0.3 * x, 0.1 + 0.3 * y) for x in xrange(0, 3) for y in xrange(0, 3) ]
   infPos = (2, 2)
 
   if category == 'targs':
