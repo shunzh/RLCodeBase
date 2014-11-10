@@ -21,7 +21,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0, 1, 0]
+    self.weights = [0.57414, 0.11633, 0.30954]
     self.learningWeights = False
  
   def getQValue(self, state, action):

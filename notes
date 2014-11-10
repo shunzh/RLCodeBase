@@ -20,3 +20,9 @@ Policy maps: arrows. Target module.
 
 Talk:
 distance of gazes + uncertainty + importance.
+
+Weight:  [-0.0, -0.0, 1.0]
+Weight:  [0.0023, -0.0, 0.9977]
+Weight:  [0.52704, -0.0, 0.47296]
+Weight:  [0.57414, 0.11633, 0.30954]
+
