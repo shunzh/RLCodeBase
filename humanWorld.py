@@ -29,6 +29,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     continuousWorld.ContinuousWorld.__init__(self, init)
 
     self.turnAngle = 30.0 / 180 * np.pi
+    self.slightTurnAngle = 15.0 / 180 * np.pi
     # this is scaled by the step size in the domain
     self.turnDist = self.step * 0.25
     self.walkDist = self.step * 1
@@ -39,7 +40,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     R: Turn right 30 degrees and walk ahead 0.05m.
     G: Go ahead 0.2m.
     """
-    return ('L', 'R', 'G')
+    return ('L', 'SL', 'R', 'SR', 'G')
 
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -52,8 +53,14 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     if action == 'L':
       newOrient = orient - self.turnAngle
       d = self.turnDist
+    elif action == 'SL':
+      newOrient = orient - self.slightTurnAngle
+      d = self.turnDist
     elif action == 'R':
       newOrient = orient + self.turnAngle
+      d = self.turnDist
+    elif action == 'SR':
+      newOrient = orient + self.slightTurnAngle
       d = self.turnDist
     elif action == 'G':
       newOrient = orient
@@ -110,7 +117,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 1000
+  runs = 5000
 
   while True:
 
