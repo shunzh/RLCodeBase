@@ -285,7 +285,7 @@ def main():
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, category))
-    a.setLambdaValue(0.5)
+    a.setLambdaValue(0.3)
   elif opts.agent == 'sarsa':
     gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
