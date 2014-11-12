@@ -55,10 +55,10 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     loc, orient = state
 
     if action == 'L':
-      newOrient = orient - self.turnAngle
+      newOrient = orient + self.turnAngle
       d = self.turnDist
     elif action == 'R':
-      newOrient = orient + self.turnAngle
+      newOrient = orient - self.turnAngle
       d = self.turnDist
     elif action == 'G':
       newOrient = orient
@@ -247,8 +247,8 @@ def main():
   # GET THE GRIDWORLD
   ###########################
 
-  #category = 'targs'
-  category = 'obsts'
+  category = 'targs'
+  #category = 'obsts'
 
   if opts.grid == 'vr':
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 8)
@@ -324,6 +324,8 @@ def main():
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
     a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
+    #a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
+    #a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:

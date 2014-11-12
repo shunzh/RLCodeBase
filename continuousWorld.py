@@ -519,7 +519,8 @@ class Plotting:
       Plot the objects as separate dots.
       """
       for obj in self.mdp.objs[label]:
-        cir = Circle(Point(self.shift(obj)), self.radius)
+        # graphically increase the radius
+        cir = Circle(Point(self.shift(obj)), self.radius * 2)
         cir.setFill(color)
         cir.draw(win)
 
@@ -536,9 +537,11 @@ class Plotting:
           line.draw(win)
         prevObj = obj
       
+    targColor = color_rgb(80, 77, 157)
+    obstColor = color_rgb(153, 77, 79)
     pathColor = color_rgb(200, 200, 200)
-    drawObjects('targs', 'blue')
-    drawObjects('obsts', 'red')
+    drawObjects('targs', targColor)
+    drawObjects('obsts', obstColor)
     drawSegments('segs', pathColor)
     drawObjects('elevators', pathColor)
 
