@@ -23,13 +23,13 @@ Weight:  [0.57414, 0.11633, 0.30954]
 
 sanity check obstacle module
 
-Path segment.
+# Path segment.
 
 color: paler background.
 
 check actions.
 
-cut the heading samples.
+# cut the heading samples.
 
 graphically increase radius.
 

@@ -224,6 +224,8 @@ def simpleToyDomain(category = 'targs'):
 
   # set the starting point to be random for training
   elevators = [(random.random() * size, random.random() * size), infPos] 
+  # set starting point at the center of the obstacle
+  # elevators = [obsts[0], infPos] 
 
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 

@@ -59,7 +59,11 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
     loc, orient = state
     newLoc, newOrient = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
 
-    [minObj, minDist] = getClosestObj(newLoc, self.mdp.objs[self.label])
+    if label == 'segs':
+      minObj = self.mdp.objs['segs'][0]
+      minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+    else:
+      [minObj, minDist] = getClosestObj(newLoc, self.mdp.objs[self.label])
 
     if minDist == np.inf:
       return None

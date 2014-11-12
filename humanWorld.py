@@ -312,7 +312,7 @@ def main():
                   'actionFn': actionFn,
                   'extractor': extractor}
     a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
-    #a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
+    a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
   elif opts.agent == 'Modular':
     import modularAgents
     continuousEnv = HumanEnvironment(mdp)
