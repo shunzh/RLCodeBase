@@ -292,6 +292,7 @@ class ApproximateVAgent(ApproximateQAgent):
     correction = (reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)
 
     t = 1
+    thres = 0.00001
     # back tracking line search
     while True:
       for feature, value in feats.items():
@@ -308,10 +309,14 @@ class ApproximateVAgent(ApproximateQAgent):
       fApprox = ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2\
                 - self.alpha * t * ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2
 
-      if fStep > fApprox and t > 0.000001:
+      if fStep > fApprox and t > thres:
         t *= self.beta
       else:
         break
+
+    if t < thres:
+      # nothing to do, already converged
+      return
 
     if feats != None:
       for feature, value in feats.items():
