@@ -118,7 +118,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 1000
+  runs = 8000
 
   while True:
 
@@ -247,8 +247,8 @@ def main():
   # GET THE GRIDWORLD
   ###########################
 
-  category = 'targs'
-  #category = 'obsts'
+  #category = 'targs'
+  category = 'obsts'
 
   if opts.grid == 'vr':
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 8)
@@ -312,7 +312,7 @@ def main():
                   'actionFn': actionFn,
                   'extractor': extractor}
     a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
-    a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
+    #a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
   elif opts.agent == 'Modular':
     import modularAgents
     continuousEnv = HumanEnvironment(mdp)

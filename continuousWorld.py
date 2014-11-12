@@ -154,9 +154,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     loc, orient = state
 
-    if loc == None:
-      return True
-
     # have trouble if two elevators are the same
     #objInfoList = self.getReachedObjects(loc)
     #return ('elevators', 1) in objInfoLists
