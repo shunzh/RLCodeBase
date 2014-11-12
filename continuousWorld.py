@@ -154,6 +154,9 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     loc, orient = state
 
+    if loc == None:
+      return True
+
     # have trouble if two elevators are the same
     #objInfoList = self.getReachedObjects(loc)
     #return ('elevators', 1) in objInfoLists
@@ -221,7 +224,10 @@ def simpleToyDomain(category = 'targs'):
     raise Exception("Undefined category.")
 
   segs = [infPos]
-  elevators = [(size / 3, size / 3), (size, size)]
+
+  # set the starting point to be random for training
+  elevators = [(random.random() * size, random.random() * size), infPos] 
+
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
   ret['xBoundary'] = [0, size]

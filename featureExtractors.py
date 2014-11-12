@@ -95,12 +95,10 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
     vector = np.subtract(minObj, loc)
     objDirect = np.angle(vector[0] + vector[1] * 1j)
 
-    feats['dist'] = np.log(1 + minDist)
+    feats['dist'] = minDist
     feats['angle'] = adjustAngle(objDirect - orient)
     if self.square:
       feats['angleSq'] = feats['angle'] ** 2 # used square of angle as a feature
-      feats['angleDist'] = feats['angle'] * feats['dist']
-      feats['angleSqDist'] = feats['angle'] ** 2 * feats['dist']
     feats['bias'] = 1
 
     #print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']

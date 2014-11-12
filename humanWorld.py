@@ -33,6 +33,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     # this is scaled by the step size in the domain
     self.turnDist = self.step * 0.25
     self.walkDist = self.step * 1
+    self.atBorder = False
     
   def getPossibleActions(self, state):
     """
@@ -41,6 +42,9 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     G: Go ahead 0.2m.
     """
     return ('L', 'R', 'G')
+
+  def isFinal(self, state):
+    return continuousWorld.ContinuousWorld.isFinal(self, state) or self.atBorder
 
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -67,7 +71,10 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     dv = (d * np.cos(newOrient), d * np.sin(newOrient))
     newLoc = np.add(loc, dv)
     if not self.isAllowed(newLoc):
+      self.atBorder = True
       newLoc = loc
+    else:
+      self.atBorder = False
 
     newLoc = tuple(newLoc) # make sure type is consistent
 
@@ -111,7 +118,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 5000
+  runs = 1000
 
   while True:
 
@@ -240,11 +247,11 @@ def main():
   # GET THE GRIDWORLD
   ###########################
 
-  #category = 'targs'
-  category = 'obsts'
+  category = 'targs'
+  #category = 'obsts'
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 24)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 8)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':
@@ -304,8 +311,8 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn,
                   'extractor': extractor}
-    #a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
     a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
+    #a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
   elif opts.agent == 'Modular':
     import modularAgents
     continuousEnv = HumanEnvironment(mdp)
@@ -315,8 +322,8 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
-    a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
-    a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
+    a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
+    a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:

@@ -256,6 +256,13 @@ class ApproximateVAgent(ApproximateQAgent):
   Approximate the states instead.
   self.weights[action] keeps a directory of weightes for that state, action pair.
   """
+  def setWeights(self, filename):
+    """
+      Set initial weights, if we have it
+    """
+    import pickle
+    self.weights = pickle.load(open(filename))
+
   def getQValue(self, state, action):
     """
       Should return Q(state,action) = w * featureVector
