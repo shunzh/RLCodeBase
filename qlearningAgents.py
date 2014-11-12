@@ -152,6 +152,13 @@ class ReducedQLearningAgent(QLearningAgent):
     # By default, it is an identity function
     self.getState = lambda x : x
 
+  def setWeights(self, filename):
+    """
+      Set initial weights, if we have it
+    """
+    import pickle
+    self.weights = pickle.load(open(filename))
+
   def setStateFilter(self, extractor):
     """
     Set the state filter here, which returns the state representation for learning.

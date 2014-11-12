@@ -18,7 +18,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = .1):
+  def __init__(self, qFuncs, eta = 1):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -214,8 +214,8 @@ def humanWorldExperiment(filename, rang):
   Args:
     rang: load mat with given rang of trials
   """
-  qFuncs = modularAgents.getHumanWorldContinuousFuncs()
-  #qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
+  #qFuncs = modularAgents.getHumanWorldContinuousFuncs()
+  qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
 
   sln = InverseModularRL(qFuncs)
   samples = getSamplesFromMat(filename, rang)
@@ -234,4 +234,4 @@ if __name__ == '__main__':
   #humanWorldExperiment("subj25.parsed.mat", range(0, 8))
   #humanWorldExperiment("subj25.parsed.mat", range(8, 16))
   #humanWorldExperiment("subj25.parsed.mat", range(16, 24))
-  humanWorldExperiment("subj25.parsed.mat", range(24, 31))
+  #humanWorldExperiment("subj25.parsed.mat", range(24, 31))
