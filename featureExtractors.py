@@ -131,7 +131,7 @@ def adjustAngle(angle):
     angle -= 2 * np.pi
   return angle
 
-def mapStateToBin((dist, angle), step = 1):
+def mapStateToBin((dist, angle), step = 0.04):
   # FIXME OVERFIT
   if dist < step * 1:
     distBin = 1

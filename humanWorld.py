@@ -251,7 +251,7 @@ def main():
   category = 'obsts'
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 8)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 24)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':
@@ -377,8 +377,8 @@ def main():
   else:
     messageCallback = lambda x: None
 
-  pauseCallback = lambda : None
-  #pauseCallback = lambda : raw_input("waiting")
+  #pauseCallback = lambda : None
+  pauseCallback = lambda : raw_input("waiting")
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:
