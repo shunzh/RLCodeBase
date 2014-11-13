@@ -215,15 +215,16 @@ def simpleToyDomain(category = 'targs'):
 
   if category == 'targs':
     targs = [(size / 2, size / 2)]; obsts = [infPos]
+    # set the starting point to be random for training
+    elevators = [(random.random() * size, random.random() * size), infPos]
   elif category == 'obsts':
     obsts = [(size / 2, size / 2)]; targs = [infPos]
+    # set the starting point to be exactly at the obstacle
+    elevators = [obsts[0], infPos]
   else:
     raise Exception("Undefined category.")
 
   segs = [infPos]
-
-  # set the starting point to be random for training
-  elevators = [(random.random() * size, random.random() * size), infPos] 
 
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
 
@@ -241,7 +242,7 @@ def toyDomain(category = 'targs'):
   """
   ret = {}
 
-  layout = [(0.1 + 0.3 * x, 0.1 + 0.3 * y) for x in xrange(0, 3) for y in xrange(0, 3) ]
+  layout = [(0.3 + 0.4 * x, 0.3 + 0.4 * y) for x in xrange(0, 2) for y in xrange(0, 2) ]
   infPos = (2, 2)
 
   if category == 'targs':
@@ -320,9 +321,7 @@ def loadFromMat(filename, domainId):
   ret['radius'] = 0.05
 
   # step size of the agent movement
-  ret['step'] = 0.01
-
-  print segs
+  ret['step'] = 0.04
 
   return ret
 
@@ -682,10 +681,6 @@ def main():
     print
     print
     
-  if opts.agent == 'Approximate':
-    import pprint
-    pprint.pprint(a.weights)
-
   # hold window
   win.getMouse()
   win.close()

@@ -118,7 +118,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 1000
+  runs = 500
 
   while True:
 
@@ -251,7 +251,7 @@ def main():
   category = 'obsts'
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 8)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':
@@ -292,9 +292,9 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    #a.setWeights('learnedValues/humanAgent' + category + 'Values.pkl')
+    a.setValues('learnedValues/humanAgent' + category + 'Values.pkl')
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, category))
-    a.setLambdaValue(0.1)
+    a.setLambdaValue(0.3)
   elif opts.agent == 'sarsa':
     gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
@@ -326,7 +326,7 @@ def main():
     #a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
     #a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
     a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
-    a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
+    a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs(mdp.step))
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:

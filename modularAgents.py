@@ -74,6 +74,7 @@ class ModularAgent(ApproximateQAgent):
     return self.weights
   
   def update(self, state, action, nextState, reward):
+    print state
     if not self.learningWeights:
       pass
     else:
@@ -221,7 +222,7 @@ def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLo
   return [qTarget, qObstacle, qSegment]
 
 
-def getHumanWorldDiscreteFuncs():
+def getHumanWorldDiscreteFuncs(step = 0.03):
   """
   Use to get q functions.
   Note that the blief states are provided here - ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]))
@@ -233,25 +234,25 @@ def getHumanWorldDiscreteFuncs():
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
   sValues = tValues
 
-  stateMap = lambda s: featureExtractors.mapStateToBin(s, 0.2)
+  stateMap = lambda s: featureExtractors.mapStateToBin(s, step)
 
   # FIXME should check whether (blfState, action) is in the keys.
   # Now, assume 0.
 
   def qTarget(state, action):
-    targState, objState, segState = state
+    targState, obstState, segState = state
     blfState = stateMap(targState)
 
     return tValues[blfState, action]
 
   def qObstacle(state, action):
-    targState, objState, segState = state
-    blfState = stateMap(objState)
+    targState, obstState, segState = state
+    blfState = stateMap(obstState)
 
     return oValues[blfState, action]
 
   def qSegment(state, action):
-    targState, objState, segState = state
+    targState, obstState, segState = state
     blfState = stateMap(segState)
 
     return sValues[blfState, action]

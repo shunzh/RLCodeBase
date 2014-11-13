@@ -61,7 +61,7 @@ def parseHumanActions(filename, domainId):
   return samples
 
 if __name__ == '__main__':
-  main(0)
-  #main(8)
+  #main(0)
+  main(8)
   #main(16)
   #main(24)

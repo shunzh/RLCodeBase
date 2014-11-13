@@ -21,11 +21,11 @@ Weight:  [0.0023, -0.0, 0.9977]
 Weight:  [0.52704, -0.0, 0.47296]
 Weight:  [0.57414, 0.11633, 0.30954]
 
-sanity check obstacle module
+sanity check obstacle module, looks ok though
 
 # Path segment.
 
-color: paler background.
+# color: paler background.
 
 check actions.
 
