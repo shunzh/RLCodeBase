@@ -161,6 +161,8 @@ def mapStateToBin((dist, angle), step = 0.04):
   else:
     angleBin = int(4 * np.sign(angle))
 
+  print dist, angle, "->", distBin, angleBin
+
   return (distBin, angleBin)
 
 def getHumanViewBins(mdp, label):

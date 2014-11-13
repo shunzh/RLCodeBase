@@ -247,8 +247,8 @@ def main():
   # GET THE GRIDWORLD
   ###########################
 
-  #category = 'targs'
-  category = 'obsts'
+  category = 'targs'
+  #category = 'obsts'
 
   if opts.grid == 'vr':
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 24)
@@ -292,9 +292,9 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    #a.setValues('learnedValues/humanAgent' + category + 'Values.pkl')
+    a.setValues('learnedValues/humanAgent' + category + 'Values.pkl')
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, category))
-    a.setLambdaValue(0.3)
+    a.setLambdaValue(0.1)
   elif opts.agent == 'sarsa':
     gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
