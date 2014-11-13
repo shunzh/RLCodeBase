@@ -34,3 +34,13 @@ check actions.
 graphically increase radius.
 
 sum of qtable normalize to 1
+
+modular
+(8, 0) L 7.79382427697e-06
+(8, 0) R 8.33373134557e-05
+(8, 0) G 1.74110620852e-05
+
+q
+(8, 0) L 1.16025410594e-06
+(8, 0) R 1.00324854765e-06
+(8, 0) G 0.00850052868781

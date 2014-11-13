@@ -21,7 +21,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0.0, 1, 0]
+    self.weights = [0, 1, 0]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -29,7 +29,6 @@ class ModularAgent(ApproximateQAgent):
     Get Q value by consulting each module
     """
     # sum over q values from each sub mdp
-    print state, action, self.getSubQValues(state, action)
     return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
 
   def getSubQValues(self, state, action):
@@ -75,7 +74,6 @@ class ModularAgent(ApproximateQAgent):
     return self.weights
   
   def update(self, state, action, nextState, reward):
-    print state
     if not self.learningWeights:
       pass
     else:

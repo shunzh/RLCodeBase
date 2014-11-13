@@ -232,7 +232,7 @@ def simpleToyDomain(category = 'targs'):
   ret['yBoundary'] = [0, size]
 
   ret['radius'] = 0.02
-  ret['step'] = 0.004
+  ret['step'] = 0.015
 
   return ret
 
@@ -261,7 +261,7 @@ def toyDomain(category = 'targs'):
   ret['radius'] = 0.04
 
   # step size of the agent movement
-  ret['step'] = 0.008
+  ret['step'] = 0.03
 
   return ret
 

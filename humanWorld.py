@@ -292,7 +292,7 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    a.setValues('learnedValues/humanAgent' + category + 'Values.pkl')
+    #a.setValues('learnedValues/humanAgent' + category + 'Values.pkl')
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, category))
     a.setLambdaValue(0.3)
   elif opts.agent == 'sarsa':
@@ -377,8 +377,8 @@ def main():
   else:
     messageCallback = lambda x: None
 
-  #pauseCallback = lambda : None
-  pauseCallback = lambda : raw_input("waiting")
+  pauseCallback = lambda : None
+  #pauseCallback = lambda : raw_input("waiting")
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:
