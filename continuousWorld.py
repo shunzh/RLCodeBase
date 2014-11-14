@@ -209,7 +209,7 @@ def simpleToyDomain(category = 'targs'):
   """
   ret = {}
 
-  size = 0.5
+  size = 2.0
   # place that can't be reached
   infPos = (size + 1, size + 1)
 
@@ -222,6 +222,7 @@ def simpleToyDomain(category = 'targs'):
     # set the starting point to be exactly at the obstacle
     elevators = [obsts[0], infPos]
     #elevators = [(random.random() * size, random.random() * size), infPos]
+    ret['borderReward'] = 1
   else:
     raise Exception("Undefined category.")
 
@@ -232,8 +233,8 @@ def simpleToyDomain(category = 'targs'):
   ret['xBoundary'] = [0, size]
   ret['yBoundary'] = [0, size]
 
-  ret['radius'] = 0.02
-  ret['step'] = 0.015
+  ret['radius'] = 0.05
+  ret['step'] = 0.04
 
   return ret
 
@@ -422,7 +423,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
 def parseOptions():
     optParser = optparse.OptionParser()
     optParser.add_option('-d', '--discount',action='store',
-                         type='float',dest='discount',default=0.9,
+                         type='float',dest='discount',default=0.5,
                          help='Discount on future (default %default)')
     optParser.add_option('-r', '--livingReward',action='store',
                          type='float',dest='livingReward',default=0.0,

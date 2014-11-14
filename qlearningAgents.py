@@ -156,8 +156,13 @@ class ReducedQLearningAgent(QLearningAgent):
     """
       Set initial weights, if we have it
     """
-    import pickle
-    self.values = pickle.load(open(filename))
+    if os.path.isfile(filename):
+      import pickle
+      self.values = pickle.load(open(filename))
+    else:
+      import warnings
+      warnings.warn("Unknown file " + filename)
+      raw_input("Confirm:")
 
   def setStateFilter(self, extractor):
     """
@@ -267,8 +272,13 @@ class ApproximateVAgent(ApproximateQAgent):
     """
       Set initial weights, if we have it
     """
-    import pickle
-    self.weights = pickle.load(open(filename))
+    if os.path.isfile(filename):
+      import pickle
+      self.weights = pickle.load(open(filename))
+    else:
+      import warnings
+      warnings.warn("Unknown file " + filename)
+      raw_input("Confirm this message to continue:")
 
   def getQValue(self, state, action):
     """
@@ -297,6 +307,7 @@ class ApproximateVAgent(ApproximateQAgent):
     feats = self.featExtractor.getStateFeatures(state)
 
     correction = (reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)
+    # note f(w) = 0.5 * correction ** 2
 
     t = 1
     thres = 0.00001
@@ -304,17 +315,16 @@ class ApproximateVAgent(ApproximateQAgent):
     while True:
       for feature, value in feats.items():
         self.weights[action][feature] += t * correction * value
-
-      # f(x + t * delta)
-      fStep = ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2
-
+      newQValue = self.getQValue(state, action)
       # revert
       for feature, value in feats.items():
         self.weights[action][feature] -= t * correction * value
 
-      # f(x) + alpha * t * Df (x) * delta
-      fApprox = ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2\
-                - self.alpha * t * ((reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)) ** 2
+      # f(w + t * delta)
+      fStep = 0.5 * ((reward + self.gamma * self.getValue(nextState)) - newQValue) ** 2
+
+      # f(w) + alpha * t * Df (w) * delta
+      fApprox = 0.5 * correction ** 2 - self.alpha * t * (correction * value) ** 2
 
       if fStep > fApprox and t > thres:
         t *= self.beta

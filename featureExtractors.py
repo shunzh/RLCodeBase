@@ -78,10 +78,9 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
   """
   From human's view
   """
-  def __init__(self, mdp, label, square = False):
+  def __init__(self, mdp, label):
     ContinousRadiusLogExtractor.__init__(self, mdp, label)
     # enable then add squared term for angle
-    self.square = square
 
   def getFeatures(self, state, action):
     """
@@ -101,8 +100,7 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
 
     feats['dist'] = np.log(1 + minDist)
     feats['angle'] = adjustAngle(objDirect - orient)
-    if self.square:
-      feats['angleSq'] = feats['angle'] ** 2 # used square of angle as a feature
+    feats['angleSq'] = feats['angle'] ** 2
     feats['bias'] = 1
 
     #print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']
@@ -113,7 +111,7 @@ def getHumanContinuousState(mdp):
   """
   Return ((targDist, targAngle), (obstDist, obstAngle), (segDist, segAngle))
   """
-  extractors = [HumanViewExtractor(mdp, label, square = True) for label in ['targs', 'obsts', 'segs']]
+  extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
 
   def getDistAngelList(state):
     ret = []
@@ -147,8 +145,12 @@ def mapStateToBin((dist, angle), step = 0.04):
     distBin = 6
   elif dist < step * 10:
     distBin = 7
-  else:
+  elif dist < step * 15:
     distBin = 8
+  elif dist < step * 20:
+    distBin = 9
+  else:
+    distBin = 10
 
   if abs(angle) < 15.0 / 180 * np.pi:
     angleBin = 0
@@ -160,8 +162,6 @@ def mapStateToBin((dist, angle), step = 0.04):
     angleBin = int(3 * np.sign(angle))
   else:
     angleBin = int(4 * np.sign(angle))
-
-  print dist, angle, "->", distBin, angleBin
 
   return (distBin, angleBin)
 

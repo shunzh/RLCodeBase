@@ -43,6 +43,14 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     """
     return ('L', 'R', 'G')
 
+  def getReward(self, state, action, nextState):
+    reward = continuousWorld.ContinuousWorld.getReward(self, state, action, nextState)
+
+    if self.atBorder and 'borderReward' in self.__dict__.keys():
+      reward += self.borderReward
+
+    return reward
+
   def isFinal(self, state):
     return continuousWorld.ContinuousWorld.isFinal(self, state) or self.atBorder
 
@@ -55,10 +63,10 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     loc, orient = state
 
     if action == 'L':
-      newOrient = orient + self.turnAngle
+      newOrient = orient - self.turnAngle
       d = self.turnDist
     elif action == 'R':
-      newOrient = orient - self.turnAngle
+      newOrient = orient + self.turnAngle
       d = self.turnDist
     elif action == 'G':
       newOrient = orient
@@ -169,7 +177,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
 def parseOptions():
     optParser = optparse.OptionParser()
     optParser.add_option('-d', '--discount',action='store',
-                         type='float',dest='discount',default=0.5,
+                         type='float',dest='discount',default=0.2,
                          help='Discount on future (default %default)')
     optParser.add_option('-r', '--livingReward',action='store',
                          type='float',dest='livingReward',default=0.0,
@@ -249,9 +257,13 @@ def main():
 
   category = 'targs'
   #category = 'obsts'
+  #category = 'segs'
+
+  if category == 'segs': trainCategory = 'targs'
+  else: trainCategory = category
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 24)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':
@@ -292,7 +304,7 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    a.setValues('learnedValues/humanAgent' + category + 'Values.pkl')
+    a.setValues('learnedValues/humanAgent' + trainCategory + 'Values.pkl')
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, category))
     a.setLambdaValue(0.1)
   elif opts.agent == 'sarsa':
@@ -304,7 +316,7 @@ def main():
                   'actionFn': actionFn}
     a = sarsaLambdaAgents.SarsaLambdaAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
-    extractor = featureExtractors.HumanViewExtractor(mdp, category, square = True)
+    extractor = featureExtractors.HumanViewExtractor(mdp, category)
     continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
@@ -313,7 +325,7 @@ def main():
                   'actionFn': actionFn,
                   'extractor': extractor}
     a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
-    a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
+    a.setWeights('learnedValues/humanAgent' + trainCategory + 'Weights.pkl')
   elif opts.agent == 'Modular':
     import modularAgents
     continuousEnv = HumanEnvironment(mdp)
@@ -323,10 +335,10 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
-    #a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-    #a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
-    a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
-    a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs(mdp.step))
+    a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
+    a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
+    #a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
+    #a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs(mdp.step))
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
@@ -377,8 +389,8 @@ def main():
   else:
     messageCallback = lambda x: None
 
-  pauseCallback = lambda : None
-  #pauseCallback = lambda : raw_input("waiting")
+  #pauseCallback = lambda : None
+  pauseCallback = lambda : raw_input("waiting")
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:

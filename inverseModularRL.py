@@ -214,8 +214,8 @@ def humanWorldExperiment(filename, rang):
   Args:
     rang: load mat with given rang of trials
   """
-  #qFuncs = modularAgents.getHumanWorldContinuousFuncs()
-  qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
+  qFuncs = modularAgents.getHumanWorldContinuousFuncs()
+  #qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
 
   sln = InverseModularRL(qFuncs)
   samples = getSamplesFromMat(filename, rang)
