@@ -19,7 +19,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 5):
+  def __init__(self, qFuncs, eta = 4):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -203,7 +203,7 @@ def getSamplesFromMat(filename, idxSet):
     # cut the head and tail samples
     for i in range(5, len(targDist) - 15):
       state = ((targDist[i], targAngle[i]), (obstDist[i], obstAngle[i]), (segDist[i], segAngle[i]))
-      beliefState = [featureExtractors.mapStateToBin((dist, angle), 0.1) for (dist, angle) in state]
+      beliefState = [featureExtractors.mapStateToBin((dist, angle), 0.2) for (dist, angle) in state]
       action = actions[i]
       samples.append((beliefState, action))
 

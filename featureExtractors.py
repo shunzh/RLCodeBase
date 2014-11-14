@@ -60,8 +60,11 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
     newLoc, newOrient = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
 
     if label == 'segs':
-      minObj = self.mdp.objs['segs'][0]
-      minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+      if len(self.mdp.objs['segs']) > 0:
+        minObj = self.mdp.objs['segs'][0]
+        minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+      else:
+        minObj = loc; minDist = np.inf
     else:
       [minObj, minDist] = getClosestObj(newLoc, self.mdp.objs[self.label])
 
@@ -95,9 +98,11 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
     loc, orient = state
 
     if self.label == 'segs':
-      # simply get the next segment
-      minObj = self.mdp.objs['segs'][0]
-      minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+      if len(self.mdp.objs['segs']) > 0:
+        minObj = self.mdp.objs['segs'][0]
+        minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+      else:
+        minObj = loc; minDist = np.inf
     else:
       [minObj, minDist] = getClosestObj(loc, self.mdp.objs[self.label])
     vector = np.subtract(minObj, loc)

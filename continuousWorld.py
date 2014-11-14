@@ -58,7 +58,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       for idx in xrange(len(locs)):
         dist = numpy.linalg.norm(np.subtract(l, locs[idx]))
         if dist < self.radius:
-          ret.append((key, idx))
+          if key == 'segs' and idx > 0: pass
+          else: ret.append((key, idx))
 
     # if it's close to nothing
     return ret
@@ -155,7 +156,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     # have trouble if two elevators are the same
     #objInfoList = self.getReachedObjects(loc)
     #return ('elevators', 1) in objInfoLists
-    return len(self.objs['targs']) == 0 or len(self.objs['segs']) == 0
+    return len(self.objs['segs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -219,8 +220,9 @@ def simpleToyDomain(category = 'targs'):
   elif category == 'obsts':
     obsts = [(size / 2, size / 2)]; targs = [infPos]
     # set the starting point to be exactly at the obstacle
-    elevators = [obsts[0], infPos]
-    #elevators = [(random.random() * size, random.random() * size), infPos]
+    #elevators = [obsts[0], infPos]
+    elevators = [(random.random() * size, random.random() * size), infPos]
+    ret['borderReward'] = 1
   else:
     raise Exception("Undefined category.")
 
