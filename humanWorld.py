@@ -335,10 +335,10 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
-    a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-    a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
-    #a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
-    #a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs(mdp.step))
+    #a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
+    #a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
+    a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
+    a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs(mdp.step))
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
@@ -389,8 +389,8 @@ def main():
   else:
     messageCallback = lambda x: None
 
-  #pauseCallback = lambda : None
-  pauseCallback = lambda : raw_input("waiting")
+  pauseCallback = lambda : None
+  #pauseCallback = lambda : raw_input("waiting")
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:

@@ -37,10 +37,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     # reward values that getReward will use
     self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'elevators': 0}
-
-    # parameters
-    self.livingReward = 0.0
     self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
+
+    if not 'livingReward' in self.__dict__.keys():
+      self.livingReward = 0
 
   def getReachedObjects(self, l):
     """
@@ -131,7 +131,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     for nextStateType, nextObjId in objInfoList:
       reward += self.rewards[nextStateType]
 
-    return reward
+    return reward or self.livingReward
       
   def clearObj(self, objType, objId):
     """
@@ -209,7 +209,7 @@ def simpleToyDomain(category = 'targs'):
   """
   ret = {}
 
-  size = 2.0
+  size = 3.0
   # place that can't be reached
   infPos = (size + 1, size + 1)
 
@@ -217,11 +217,12 @@ def simpleToyDomain(category = 'targs'):
     targs = [(size / 2, size / 2)]; obsts = [infPos]
     # set the starting point to be random for training
     elevators = [(random.random() * size, random.random() * size), infPos]
+    ret['livingReward'] = -1
   elif category == 'obsts':
     obsts = [(size / 2, size / 2)]; targs = [infPos]
     # set the starting point to be exactly at the obstacle
-    elevators = [obsts[0], infPos]
-    #elevators = [(random.random() * size, random.random() * size), infPos]
+    #elevators = [obsts[0], infPos]
+    elevators = [(random.random() * size, random.random() * size), infPos]
     ret['borderReward'] = 1
   else:
     raise Exception("Undefined category.")
@@ -233,8 +234,8 @@ def simpleToyDomain(category = 'targs'):
   ret['xBoundary'] = [0, size]
   ret['yBoundary'] = [0, size]
 
-  ret['radius'] = 0.05
-  ret['step'] = 0.04
+  ret['radius'] = 0.075
+  ret['step'] = 0.1
 
   return ret
 
@@ -260,10 +261,10 @@ def toyDomain(category = 'targs'):
   ret['yBoundary'] = [-0.1, 1.1]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.04
+  ret['radius'] = 0.075
 
   # step size of the agent movement
-  ret['step'] = 0.03
+  ret['step'] = 0.1
 
   return ret
 
@@ -320,10 +321,10 @@ def loadFromMat(filename, domainId):
   ret['yBoundary'] = [-3.5, 3.5]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.05
+  ret['radius'] = 0.075
 
   # step size of the agent movement
-  ret['step'] = 0.04
+  ret['step'] = 0.1
 
   return ret
 
@@ -519,7 +520,7 @@ class Plotting:
       """
       for obj in self.mdp.objs[label]:
         # graphically increase the radius
-        cir = Circle(Point(self.shift(obj)), self.radius * 2)
+        cir = Circle(Point(self.shift(obj)), self.radius)
         cir.setFill(color)
         cir.draw(win)
 
