@@ -94,11 +94,16 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
 
     loc, orient = state
 
-    [minObj, minDist] = getClosestObj(loc, self.mdp.objs[self.label])
+    if self.label == 'segs':
+      # simply get the next segment
+      minObj = self.mdp.objs['segs'][0]
+      minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+    else:
+      [minObj, minDist] = getClosestObj(loc, self.mdp.objs[self.label])
     vector = np.subtract(minObj, loc)
     objDirect = np.angle(vector[0] + vector[1] * 1j)
 
-    feats['dist'] = np.log(1 + minDist)
+    feats['dist'] = minDist
     feats['angle'] = adjustAngle(objDirect - orient)
     feats['angleSq'] = feats['angle'] ** 2
     feats['bias'] = 1

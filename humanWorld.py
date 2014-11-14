@@ -263,7 +263,7 @@ def main():
   else: trainCategory = category
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 24)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':
@@ -338,7 +338,7 @@ def main():
     #a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
     #a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
     a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
-    a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs(mdp.step))
+    a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:

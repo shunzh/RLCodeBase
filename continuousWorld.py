@@ -51,8 +51,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Return:
       [(String, int)]: A list of the type of object that it's in the radius of, and its id.
                        Return [] if nothing matches.
-
-    #FIXME not checked whether it's close to multiple objects. However, this won't happen in a valid domain.
     """
     ret = []
 
@@ -209,7 +207,7 @@ def simpleToyDomain(category = 'targs'):
   """
   ret = {}
 
-  size = 3.0
+  size = 5.0
   # place that can't be reached
   infPos = (size + 1, size + 1)
 
@@ -221,9 +219,8 @@ def simpleToyDomain(category = 'targs'):
   elif category == 'obsts':
     obsts = [(size / 2, size / 2)]; targs = [infPos]
     # set the starting point to be exactly at the obstacle
-    #elevators = [obsts[0], infPos]
-    elevators = [(random.random() * size, random.random() * size), infPos]
-    ret['borderReward'] = 1
+    elevators = [obsts[0], infPos]
+    #elevators = [(random.random() * size, random.random() * size), infPos]
   else:
     raise Exception("Undefined category.")
 

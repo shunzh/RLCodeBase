@@ -1,4 +1,5 @@
 import modularAgents
+import featureExtractors
 
 import numpy as np
 from scipy.optimize import minimize
@@ -18,7 +19,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 1):
+  def __init__(self, qFuncs, eta = 5):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -191,21 +192,20 @@ def getSamplesFromMat(filename, idxSet):
   mat = util.loadmat(filename)
 
   for idx in idxSet:
-    objDist = mat['pRes'][idx].obstDist1
-    objAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
+    obstDist = mat['pRes'][idx].obstDist1
+    obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
     targDist = mat['pRes'][idx].targDist1
     targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
     segDist = mat['pRes'][idx].pathDist
     segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
     actions = mat['pRes'][idx].action
 
-    assert len(objDist) == len(targDist) == len(segDist) == len(actions)
-
     # cut the head and tail samples
-    for i in range(5, len(objDist) - 15):
-      state = ((np.log(targDist[i] + 1), targAngle[i]), (np.log(objDist[i] + 1), objAngle[i]), (np.log(segDist[i] + 1), segAngle[i]))
+    for i in range(5, len(targDist) - 15):
+      state = ((targDist[i], targAngle[i]), (obstDist[i], obstAngle[i]), (segDist[i], segAngle[i]))
+      beliefState = [featureExtractors.mapStateToBin((dist, angle), 0.1) for (dist, angle) in state]
       action = actions[i]
-      samples.append((state, action))
+      samples.append((beliefState, action))
 
   return samples
 
@@ -232,6 +232,6 @@ def humanWorldExperiment(filename, rang):
 if __name__ == '__main__':
   #continuousWorldExperiment()
   humanWorldExperiment("subj25.parsed.mat", range(0, 8))
-  #humanWorldExperiment("subj25.parsed.mat", range(8, 16))
-  #humanWorldExperiment("subj25.parsed.mat", range(16, 24))
-  #humanWorldExperiment("subj25.parsed.mat", range(24, 31))
+  humanWorldExperiment("subj25.parsed.mat", range(8, 16))
+  humanWorldExperiment("subj25.parsed.mat", range(16, 24))
+  humanWorldExperiment("subj25.parsed.mat", range(24, 31))

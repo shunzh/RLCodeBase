@@ -4,8 +4,6 @@ import random
 class MDPEnvironment(environment.Environment):
   """
   which holds a mdp object.
-
-  #FIXME this is essentially the same for all the domains, consider abstract this.
   """
   def __init__(self, mdp):
     self.mdp = mdp
