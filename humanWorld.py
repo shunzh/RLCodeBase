@@ -126,7 +126,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 500
+  runs = 1000
 
   while True:
 
@@ -263,7 +263,7 @@ def main():
   else: trainCategory = category
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 24)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 8)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':

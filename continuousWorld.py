@@ -208,7 +208,13 @@ def simpleToyDomain(category = 'targs'):
   """
   ret = {}
 
-  size = 5.0
+  assert category in ['targs', 'obsts']
+
+  if category == 'targs':
+    size = 3.0
+  else:
+    size = 1.0
+
   # place that can't be reached
   infPos = (size + 1, size + 1)
 
@@ -222,9 +228,6 @@ def simpleToyDomain(category = 'targs'):
     # set the starting point to be exactly at the obstacle
     #elevators = [obsts[0], infPos]
     elevators = [(random.random() * size, random.random() * size), infPos]
-    ret['borderReward'] = 1
-  else:
-    raise Exception("Undefined category.")
 
   segs = [infPos]
 

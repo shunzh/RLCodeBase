@@ -19,7 +19,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 4):
+  def __init__(self, qFuncs, eta = 20):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -75,6 +75,10 @@ class InverseModularRL:
 
       # Update the weights for each module accordingly.
       for moduleIdx in xrange(len(self.qFuncs)):
+        if self.qFuncs[moduleIdx](state, optAction) == None:
+          # the module is off in this case
+          continue
+
         term += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
 
         # denominator

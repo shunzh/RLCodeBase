@@ -21,7 +21,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0.34164, 0.22314, 0.43522]
+    self.weights = [0, 1.0, 0]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -29,7 +29,7 @@ class ModularAgent(ApproximateQAgent):
     Get Q value by consulting each module
     """
     # sum over q values from each sub mdp
-    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
+    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs)) if self.qFuncs[i](state, action) != None])
 
   def getSubQValues(self, state, action):
     return [self.qFuncs[i](state, action) for i in xrange(len(self.qFuncs))]
@@ -231,7 +231,6 @@ def getHumanWorldDiscreteFuncs():
 
   tValues = pickle.load(open('learnedValues/humanAgenttargsValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
-  sValues = tValues
 
   # FIXME should check whether (state, action) is in the keys.
   # Now, assume 0.
@@ -242,11 +241,20 @@ def getHumanWorldDiscreteFuncs():
 
   def qObstacle(state, action):
     targState, obstState, segState = state
+    # turn off this module when far away from the obstacle
     return oValues[obstState, action]
 
   def qSegment(state, action):
+    # hand-made path following
     targState, obstState, segState = state
-    return sValues[segState, action]
+    aheadCond = abs(segState[1]) <= 1 and action == 'G'
+    leftCond = segState[1] <= -1 and action == 'L'
+    rightCond = segState[1] >= 1 and action == 'R'
+
+    if aheadCond or leftCond or rightCond:
+      return 0.1
+    else:
+      return 0
 
   return [qTarget, qObstacle, qSegment]
 
