@@ -209,6 +209,15 @@ def getSamplesFromMat(filename, idxSet):
 
   return samples
 
+def debugWeight(sln):
+  for i in range(0, 11):
+    for j in range(0, 11 - i):
+      k = 10 - i - j
+      print -sln.obj([0.1 * i, 0.1 * j, 0.1 * k]),
+    for j in range(11 - i, 11):
+      print 0,
+    print
+
 def humanWorldExperiment(filename, rang):
   """
   Args:
@@ -227,11 +236,13 @@ def humanWorldExperiment(filename, rang):
 
   print "Weight: ", w
 
+  # debugWeight(sln)
+
   return w, sln
 
 if __name__ == '__main__':
   #continuousWorldExperiment()
-  subjFile = "subj26.parsed.mat"
+  subjFile = "subj28.parsed.mat"
   humanWorldExperiment(subjFile, range(0, 8))
   humanWorldExperiment(subjFile, range(8, 16))
   humanWorldExperiment(subjFile, range(16, 24))

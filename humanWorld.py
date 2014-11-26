@@ -263,7 +263,7 @@ def main():
   else: trainCategory = category
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 24)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 26)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':

@@ -44,3 +44,12 @@ q
 (8, 0) L 1.16025410594e-06
 (8, 0) R 1.00324854765e-06
 (8, 0) G 0.00850052868781
+
+
+
+
+All trials put together.
+step size: 0.6 -- obstacle bigger?
+noises in q tables.
+
+Train in the same domain OR UCT for planning.

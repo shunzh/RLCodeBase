@@ -57,7 +57,9 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     for key, locs in self.objs.items():
       for idx in xrange(len(locs)):
         dist = numpy.linalg.norm(np.subtract(l, locs[idx]))
-        if dist < self.radius:
+        radiusFactor = 3 if key == 'segs' else 1
+
+        if dist < radiusFactor * self.radius:
           if key == 'segs' and idx > 0: pass
           else: ret.append((key, idx))
 
@@ -226,8 +228,8 @@ def simpleToyDomain(category = 'targs'):
   elif category == 'obsts':
     obsts = [(size / 2, size / 2)]; targs = [infPos]
     # set the starting point to be exactly at the obstacle
-    #elevators = [obsts[0], infPos]
-    elevators = [(random.random() * size, random.random() * size), infPos]
+    elevators = [obsts[0], infPos]
+    #elevators = [(random.random() * size, random.random() * size), infPos]
 
   segs = [infPos]
 
@@ -323,10 +325,10 @@ def loadFromMat(filename, domainId):
   ret['yBoundary'] = [-3.5, 3.5]
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.075
+  ret['radius'] = 0.1905
 
   # step size of the agent movement
-  ret['step'] = 0.1
+  ret['step'] = 0.6
 
   return ret
 
