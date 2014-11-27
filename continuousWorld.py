@@ -273,7 +273,7 @@ def toyDomain(category = 'targs'):
   return ret
 
 
-def loadFromMat(filename, domainId):
+def loadFromMat(filename, domainId, randInit = False):
   """
   Load from mat file that provided by Matt.
 
@@ -324,11 +324,16 @@ def loadFromMat(filename, domainId):
   ret['xBoundary'] = [-3.5, 3.5]
   ret['yBoundary'] = [-3.5, 3.5]
 
+  if randInit:
+    x = ret['xBoundary'][0] + random.random() * (ret['xBoundary'][1] - ret['xBoundary'][0])
+    y = ret['yBoundary'][0] + random.random() * (ret['yBoundary'][1] - ret['yBoundary'][0])
+    ret['objs']['elevators'][0] = (x, y)
+
   # radius of an object (so the object doesn't appear as a point)
   ret['radius'] = 0.1905
 
   # step size of the agent movement
-  ret['step'] = 0.6
+  ret['step'] = 0.3
 
   return ret
 
@@ -341,6 +346,7 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
     nextLoc, nextOrient = nextState
 
     objInfoLists = self.mdp.getReachedObjects(nextLoc)
+    if len(objInfoLists) > 0: objInfoLists.reverse()
 
     for nextStateType, nextObjId in objInfoLists:
       if nextStateType == 'targs':
@@ -348,7 +354,7 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
       elif nextStateType == 'segs':
         # be careful with this -
         # once reaching on an segment, deleting the segments before it.
-        [self.mdp.clearObj(nextStateType, 0) for i in xrange(nextObjId + 1)]
+        self.mdp.clearObj(nextStateType, 0)
 
 
 def getUserAction(state, actionFunction):

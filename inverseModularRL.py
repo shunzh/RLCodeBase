@@ -185,27 +185,29 @@ def continuousWorldExperiment():
 
   return w, sln
 
-def getSamplesFromMat(filename, idxSet):
+def getSamplesFromMat(filenames, idxSet):
   samples = []
 
   import util
-  mat = util.loadmat(filename)
 
-  for idx in idxSet:
-    obstDist = mat['pRes'][idx].obstDist1
-    obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
-    targDist = mat['pRes'][idx].targDist1
-    targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
-    segDist = mat['pRes'][idx].pathDist
-    segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
-    actions = mat['pRes'][idx].action
+  for filename in filenames:
+    mat = util.loadmat(filename)
 
-    # cut the head and tail samples
-    for i in range(5, len(targDist) - 15):
-      state = ((targDist[i], targAngle[i]), (obstDist[i], obstAngle[i]), (segDist[i], segAngle[i]))
-      beliefState = [featureExtractors.mapStateToBin((dist, angle), 0.2) for (dist, angle) in state]
-      action = actions[i]
-      samples.append((beliefState, action))
+    for idx in idxSet:
+      obstDist = mat['pRes'][idx].obstDist1
+      obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
+      targDist = mat['pRes'][idx].targDist1
+      targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
+      segDist = mat['pRes'][idx].pathDist
+      segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
+      actions = mat['pRes'][idx].action
+
+      # cut the head and tail samples
+      for i in range(5, len(targDist) - 15):
+        state = ((targDist[i], targAngle[i]), (obstDist[i], obstAngle[i]), (segDist[i], segAngle[i]))
+        beliefState = [featureExtractors.mapStateToBin((dist, angle), 0.2) for (dist, angle) in state]
+        action = actions[i]
+        samples.append((beliefState, action))
 
   return samples
 
@@ -218,7 +220,7 @@ def debugWeight(sln):
       print 0,
     print
 
-def humanWorldExperiment(filename, rang):
+def humanWorldExperiment(filenames, rang):
   """
   Args:
     rang: load mat with given rang of trials
@@ -227,7 +229,7 @@ def humanWorldExperiment(filename, rang):
   qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
 
   sln = InverseModularRL(qFuncs)
-  samples = getSamplesFromMat(filename, rang)
+  samples = getSamplesFromMat(filenames, rang)
   sln.setSamples(samples)
 
   output = sln.findWeights()
@@ -242,8 +244,8 @@ def humanWorldExperiment(filename, rang):
 
 if __name__ == '__main__':
   #continuousWorldExperiment()
-  subjFile = "subj28.parsed.mat"
-  humanWorldExperiment(subjFile, range(0, 8))
-  humanWorldExperiment(subjFile, range(8, 16))
-  humanWorldExperiment(subjFile, range(16, 24))
-  humanWorldExperiment(subjFile, range(24, 31))
+  subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
+  humanWorldExperiment(subjFiles, range(0, 8))
+  humanWorldExperiment(subjFiles, range(8, 16))
+  humanWorldExperiment(subjFiles, range(16, 24))
+  humanWorldExperiment(subjFiles, range(24, 31))
