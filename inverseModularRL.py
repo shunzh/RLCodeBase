@@ -225,6 +225,7 @@ def humanWorldExperiment(filenames, rang):
   Args:
     rang: load mat with given rang of trials
   """
+  print rang, ": Started."
   #qFuncs = modularAgents.getHumanWorldContinuousFuncs()
   qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
 
@@ -236,16 +237,19 @@ def humanWorldExperiment(filenames, rang):
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
-  print "Weight: ", w
+  print rang, ": weights are", w
+  print rang, ": OK."
 
-  # debugWeight(sln)
-
-  return w, sln
+  #debugWeight(sln)
+  return w
 
 if __name__ == '__main__':
   #continuousWorldExperiment()
+  from multiprocessing import Pool
+  pool = Pool(processes=4)
+
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
-  humanWorldExperiment(subjFiles, range(0, 8))
-  humanWorldExperiment(subjFiles, range(8, 16))
-  humanWorldExperiment(subjFiles, range(16, 24))
-  humanWorldExperiment(subjFiles, range(24, 31))
+  taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
+  results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
+
+  print '\n'.join([str(r.get()) for r in results])

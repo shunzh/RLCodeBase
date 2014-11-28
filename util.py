@@ -507,6 +507,14 @@ def loadmat(filename):
     data = spio.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
 
+def normalizePkl(filename, value = 1):
+    """
+    Read the counter from filenmae, then normalize the value so that it sums to 1
+    """
+    import pickle
+    d = pickle.load(open(filename))
+    # TODO
+
 def _check_keys(dict):
     '''
     checks if entries in dictionary are mat-objects. If yes
