@@ -248,7 +248,6 @@ def getHumanWorldDiscreteFuncs():
     targState, obstState, segState = state
 
     # hand-made path following
-    """
     aheadCond = abs(segState[1]) <= 1 and action == 'G'
     leftCond = segState[1] <= -1 and action == 'L'
     rightCond = segState[1] >= 1 and action == 'R'
@@ -257,8 +256,6 @@ def getHumanWorldDiscreteFuncs():
       return 0.1
     else:
       return 0
-    """
-    return sValues[segState, action]
 
   return [qTarget, qObstacle, qSegment]
 

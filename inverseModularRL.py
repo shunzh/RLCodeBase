@@ -19,7 +19,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 3):
+  def __init__(self, qFuncs, eta = 10):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
