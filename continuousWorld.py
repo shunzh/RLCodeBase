@@ -228,8 +228,8 @@ def simpleToyDomain(category = 'targs'):
   elif category == 'obsts':
     obsts = [(size / 2, size / 2)]; targs = [infPos]
     # set the starting point to be exactly at the obstacle
-    elevators = [obsts[0], infPos]
-    #elevators = [(random.random() * size, random.random() * size), infPos]
+    #elevators = [obsts[0], infPos]
+    elevators = [(random.random() * size, random.random() * size), infPos]
 
   segs = [infPos]
 

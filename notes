@@ -46,10 +46,10 @@ q
 (8, 0) G 0.00850052868781
 
 
-
-
 All trials put together (done).
 step size: 0.6 (too big) -- obstacle bigger?
 noises in q tables (try turn off again).
 
 Train in the same domain (won't work) OR UCT for planning.
+
+Train obstacle module again with larger discounter.

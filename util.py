@@ -513,7 +513,12 @@ def normalizePkl(filename, value = 1):
     """
     import pickle
     d = pickle.load(open(filename))
-    # TODO
+    s = sum([abs(x) for x in d.values()])
+
+    for key in d.keys():
+      d[key] = d[key] / s * value
+
+    pickle.dump(s, open(filename, 'wb'))
 
 def _check_keys(dict):
     '''

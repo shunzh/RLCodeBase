@@ -2,13 +2,14 @@ import inverseModularRL
 import modularAgents
 import continuousWorld, humanWorld
 import util
+import sys
 import featureExtractors
 from graphics import *
 
 import numpy as np
 
-def main(domainId):
-  init = continuousWorld.loadFromMat('miniRes25.mat', domainId)
+def main(subjId, domainId):
+  init = continuousWorld.loadFromMat('miniRes25.mat', int(domainId))
   mdp = humanWorld.HumanWorld(init)
 
   # plot domain and policy
@@ -17,7 +18,7 @@ def main(domainId):
   win = plotting.drawDomain()
 
   # parse human positions and actions
-  humanSamples = parseHumanActions("subj25.parsed.mat", domainId)
+  humanSamples = parseHumanActions('subj' + str(subjId) + '.parsed.mat', int(domainId))
 
   prevLoc = None
   for sample in humanSamples:
@@ -61,9 +62,10 @@ def parseHumanActions(filename, domainId):
   return samples
 
 if __name__ == '__main__':
-  #main(0)
-  #main(8)
-  #main(16)
-  #main(24)
+  if len(sys.argv) < 3:
+    print 'args: subjId domainId'
+  else:
+    subjId = sys.argv[1]
+    domainId = sys.argv[2]
 
-  main(1)
+    main(subjId, domainId)
