@@ -255,15 +255,15 @@ def main():
   # GET THE GRIDWORLD
   ###########################
 
-  category = 'targs'
-  #category = 'obsts'
+  #category = 'targs'
+  category = 'obsts'
   #category = 'segs'
 
   if category == 'segs': trainCategory = 'targs'
   else: trainCategory = category
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 26)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0)
   elif opts.grid == 'vrTrain':
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 26, randInit = True)
   elif opts.grid == 'toy':
