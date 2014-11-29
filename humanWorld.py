@@ -391,8 +391,8 @@ def main():
   else:
     messageCallback = lambda x: None
 
-  pauseCallback = lambda : None
-  #pauseCallback = lambda : raw_input("waiting")
+  #pauseCallback = lambda : None
+  pauseCallback = lambda : raw_input("waiting")
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:

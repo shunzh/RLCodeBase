@@ -75,6 +75,10 @@ class InverseModularRL:
 
       # Update the weights for each module accordingly.
       for moduleIdx in xrange(len(self.qFuncs)):
+        # check whether this module is off
+        if self.qFuncs[moduleIdx](state, optAction) == None:
+          continue
+
         term += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
 
         # denominator

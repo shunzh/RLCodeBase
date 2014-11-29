@@ -29,7 +29,7 @@ class ModularAgent(ApproximateQAgent):
     Get Q value by consulting each module
     """
     # sum over q values from each sub mdp
-    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
+    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs)) if self.qFuncs[i](state, action) != None])
 
   def getSubQValues(self, state, action):
     return [self.qFuncs[i](state, action) for i in xrange(len(self.qFuncs))]
@@ -241,7 +241,12 @@ def getHumanWorldDiscreteFuncs():
 
   def qObstacle(state, action):
     targState, obstState, segState = state
-    return oValues[targState, action]
+
+    if obstState[0] > 3:
+      # turn off the module when the obstacle is in distance
+      return None
+    else:
+      return oValues[targState, action]
     
   def qSegment(state, action):
     # hand-made path following
