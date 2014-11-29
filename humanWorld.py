@@ -255,8 +255,8 @@ def main():
   # GET THE GRIDWORLD
   ###########################
 
-  #category = 'targs'
-  category = 'obsts'
+  category = 'targs'
+  #category = 'obsts'
   #category = 'segs'
 
   if category == 'segs': trainCategory = 'targs'

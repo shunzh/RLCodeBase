@@ -52,4 +52,4 @@ noises in q tables (try turn off again).
 
 Train in the same domain (won't work) OR UCT for planning.
 
-Train obstacle module again with larger discounter.
+Train obstacle module again with larger discounter.(did)
