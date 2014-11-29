@@ -518,7 +518,7 @@ def normalizePkl(filename, value = 1):
     for key in d.keys():
       d[key] = d[key] / s * value
 
-    pickle.dump(s, open(filename, 'wb'))
+    pickle.dump(d, open(filename, 'wb'))
 
 def _check_keys(dict):
     '''
