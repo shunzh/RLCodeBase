@@ -57,7 +57,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     for key, locs in self.objs.items():
       for idx in xrange(len(locs)):
         dist = numpy.linalg.norm(np.subtract(l, locs[idx]))
-        radiusFactor = 3 if key == 'segs' else 1
+        radiusFactor = 2 if key == 'segs' else 1
 
         if dist < radiusFactor * self.radius:
           if key == 'segs' and idx > 0: pass
@@ -212,10 +212,7 @@ def simpleToyDomain(category = 'targs'):
 
   assert category in ['targs', 'obsts']
 
-  if category == 'targs':
-    size = 3.0
-  else:
-    size = 1.0
+  size = 3.0
 
   # place that can't be reached
   infPos = (size + 1, size + 1)

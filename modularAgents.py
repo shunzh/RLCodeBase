@@ -21,7 +21,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0.27547, 0.23159, 0.49294]
+    self.weights = [0, 0, 1]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -229,19 +229,23 @@ def getHumanWorldDiscreteFuncs():
   """
   import pickle
 
+  # these are util.Counter objects
   tValues = pickle.load(open('learnedValues/humanAgenttargsValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
-  sValues = tValues # FIXME
-
-  # FIXME should check whether (state, action) is in the keys.
-  # Now, assume 0.
+  #sValues = tValues
 
   def qTarget(state, action):
     targState, obstState, segState = state
+
+    if not (targState, action) in tValues.keys():
+      raise Exception('Unseen target ' + str(targState) + ' ' + action)
     return tValues[targState, action]
 
   def qObstacle(state, action):
     targState, obstState, segState = state
+
+    if not (obstState, action) in oValues.keys():
+      raise Exception('Unseen obstacle ' + str(obstState) + ' ' + action)
     return oValues[obstState, action]
     
   def qSegment(state, action):
@@ -256,6 +260,7 @@ def getHumanWorldDiscreteFuncs():
       return 0.1
     else:
       return 0
+    #return sValues[segState, action]
 
   return [qTarget, qObstacle, qSegment]
 
