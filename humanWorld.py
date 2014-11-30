@@ -232,7 +232,6 @@ def parseOptions():
 
     # MANAGE CONFLICTS
     if opts.textDisplay or opts.quiet:
-    # if opts.quiet:      
       opts.pause = False
       # opts.manual = False
       
@@ -263,9 +262,9 @@ def main():
   else: trainCategory = category
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 8)
   elif opts.grid == 'vrTrain':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 26, randInit = True)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0, randInit = True)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':
@@ -391,8 +390,10 @@ def main():
   else:
     messageCallback = lambda x: None
 
-  pauseCallback = lambda : None
-  #pauseCallback = lambda : raw_input("waiting")
+  if opts.pause:
+    pauseCallback = lambda : raw_input("waiting")
+  else:
+    pauseCallback = lambda : None
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:
