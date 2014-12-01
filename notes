@@ -48,8 +48,18 @@ q
 
 All trials put together (done).
 step size: 0.6 (too big) -- obstacle bigger?
-noises in q tables (try turn off again).
-
-Train in the same domain (won't work) OR UCT for planning.
+noises in q tables (try turn off again. didn't).
 
 Train obstacle module again with larger discounter.(did)
+
+
+larger obstalce.
+initial orientation, flip signs of elevator
+
+Path following (when close to the next waypoint).
+
+Train in the same domain (more training) OR UCT for planning.
+
+Figures: humans and model in the same domain.
+Values of qtable, and policies.
+Number of targets / obstacles.
