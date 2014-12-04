@@ -73,7 +73,6 @@ class QLearningAgent(ReinforcementAgent):
       return 0.0
    #util.raiseNotDefined()
     
-   
   def getPolicy(self, state):
     """
       Compute the best action to take in a state.  Note that if there

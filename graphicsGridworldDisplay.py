@@ -142,7 +142,7 @@ def drawQValues(gridworld, qValues, currentState = None, message = 'State-Action
     for y in range(grid.height):
       state = (x, y)
       gridType = grid[x][y]
-      #isExit = (str(gridType) != gridType)
+      isExit = (str(gridType) != gridType)
       isCurrent = (currentState == state)
       actions = gridworld.getPossibleActions(state)
       if actions == None or len(actions) == 0:
@@ -158,6 +158,11 @@ def drawQValues(gridworld, qValues, currentState = None, message = 'State-Action
         valStrings[action] = '%.2f' % v
       if gridType == '#':
         drawSquare(x, y, 0, 0, 0, None, None, True, False, isCurrent)
+      elif isExit:
+        action = 'exit'
+        value = q[action]
+        valString = '%.2f' % value
+        drawSquare(x, y, value, minValue, maxValue, valString, action, False, isExit, isCurrent)
       else:
         drawSquareQ(x, y, q, minValue, maxValue, valStrings, actions, isCurrent)
   pos = to_screen(((grid.width - 1.0) / 2.0, - 0.8))
@@ -204,8 +209,8 @@ def drawNullSquare(grid,x, y, isObstacle, isTerminal, isCurrent):
   if not isObstacle and isCurrent:
     circle( (screen_x, screen_y), 0.1*GRID_SIZE, LOCATION_COLOR, fillColor=LOCATION_COLOR )
 
-  # if not isObstacle:
-  #   text( (screen_x, screen_y), text_color, valStr, "Courier", 24, "bold", "c")
+  if not isObstacle:
+    text( (screen_x, screen_y), text_color, valStr, "Courier", 24, "bold", "c")
       
 def drawSquare(x, y, val, min, max, valStr, action, isObstacle, isTerminal, isCurrent, edgeColor = EDGE_COLOR):
 
@@ -250,8 +255,6 @@ def drawSquare(x, y, val, min, max, valStr, action, isObstacle, isTerminal, isCu
     polygon( [(screen_x-0.45*GRID_SIZE, screen_y - 0.45*GRID_SIZE), (screen_x-0.4*GRID_SIZE, screen_y-0.40*GRID_SIZE), (screen_x-0.5*GRID_SIZE, screen_y-0.40*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
   elif action == 'sw':
     polygon( [(screen_x-0.45*GRID_SIZE, screen_y + 0.45*GRID_SIZE), (screen_x-0.4*GRID_SIZE, screen_y+0.40*GRID_SIZE), (screen_x-0.5*GRID_SIZE, screen_y+0.40*GRID_SIZE)], EDGE_COLOR, filled = 1, smoothed = False)
-  else:
-    raise Exception("Unknown action " + action)
     
   
   text_color = TEXT_COLOR
