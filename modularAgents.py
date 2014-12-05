@@ -21,7 +21,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0.09491, 0.35153, 0.55356]
+    self.weights = [0.08119, 0.26433, 0.65448]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -29,7 +29,7 @@ class ModularAgent(ApproximateQAgent):
     Get Q value by consulting each module
     """
     # sum over q values from each sub mdp
-    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
+    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs)) if self.qFuncs[i](state, action) != None])
 
   def getSubQValues(self, state, action):
     return [self.qFuncs[i](state, action) for i in xrange(len(self.qFuncs))]
@@ -229,34 +229,43 @@ def getHumanWorldDiscreteFuncs():
   """
   import pickle
 
+  # these are util.Counter objects
   tValues = pickle.load(open('learnedValues/humanAgenttargsValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
-
-  # FIXME should check whether (state, action) is in the keys.
-  # Now, assume 0.
+  sValues = pickle.load(open('learnedValues/humanAgentsegsValues.pkl'))
 
   def qTarget(state, action):
     targState, obstState, segState = state
+
+    if not (targState, action) in tValues.keys():
+      raise Exception('Unseen target ' + str(targState) + ' ' + action)
     return tValues[targState, action]
 
   def qObstacle(state, action):
     targState, obstState, segState = state
-    if obstState[0] > 6:
-      return 0
-    else:
-      return oValues[obstState, action]
+
+    if not (obstState, action) in oValues.keys():
+      raise Exception('Unseen obstacle ' + str(obstState) + ' ' + action)
+    return oValues[obstState, action]
     
   def qSegment(state, action):
-    # hand-made path following
     targState, obstState, segState = state
-    aheadCond = abs(segState[1]) <= 1 and action == 'G'
-    leftCond = segState[1] <= -1 and action == 'L'
-    rightCond = segState[1] >= 1 and action == 'R'
 
-    if aheadCond or leftCond or rightCond:
-      return 0.1
+    bigQ = 0.2
+    smallQ = 0.1
+
+    # hand-made path following
+    if abs(segState[1]) == 0 and action == 'G':
+      return bigQ
+    elif abs(segState[1]) == 0:
+      return smallQ
+    elif abs(segState[1]) == 1 and action == 'G':
+      return smallQ
+    elif segState[1] < 0 and action == 'L' or segState[1] > 0 and action == 'R':
+      return bigQ
     else:
       return 0
+    #return sValues[segState, action]
 
   return [qTarget, qObstacle, qSegment]
 

@@ -6,6 +6,7 @@ import util
 import optparse
 import featureExtractors
 import continuousWorld
+import humanWeightReplay
 
 import numpy as np
 import numpy.linalg
@@ -232,7 +233,6 @@ def parseOptions():
 
     # MANAGE CONFLICTS
     if opts.textDisplay or opts.quiet:
-    # if opts.quiet:      
       opts.pause = False
       # opts.manual = False
       
@@ -259,11 +259,11 @@ def main():
   category = 'obsts'
   #category = 'segs'
 
-  if category == 'segs': trainCategory = 'targs'
-  else: trainCategory = category
-
+  vrDomainId = 9
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 24)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', vrDomainId)
+  elif opts.grid == 'vrTrain':
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', vrDomainId, randInit = True)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':
@@ -285,6 +285,8 @@ def main():
     dim = 800
     plotting = continuousWorld.Plotting(mdp, dim)
     win = plotting.drawDomain()
+    if opts.grid == 'vr':
+      humanWeightReplay.plotHuman(plotting, win, range(25, 29), vrDomainId)
 
   ###########################
   # GET THE AGENT
@@ -304,7 +306,7 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    a.setValues('learnedValues/humanAgent' + trainCategory + 'Values.pkl')
+    a.setValues('learnedValues/humanAgent' + category + 'Values.pkl')
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, category))
     a.setLambdaValue(0.1)
   elif opts.agent == 'sarsa':
@@ -325,7 +327,7 @@ def main():
                   'actionFn': actionFn,
                   'extractor': extractor}
     a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
-    a.setWeights('learnedValues/humanAgent' + trainCategory + 'Weights.pkl')
+    a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
   elif opts.agent == 'Modular':
     import modularAgents
     continuousEnv = HumanEnvironment(mdp)
@@ -389,8 +391,10 @@ def main():
   else:
     messageCallback = lambda x: None
 
-  pauseCallback = lambda : None
-  #pauseCallback = lambda : raw_input("waiting")
+  if opts.pause:
+    pauseCallback = lambda : raw_input("waiting")
+  else:
+    pauseCallback = lambda : None
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:

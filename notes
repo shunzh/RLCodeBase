@@ -44,3 +44,23 @@ q
 (8, 0) L 1.16025410594e-06
 (8, 0) R 1.00324854765e-06
 (8, 0) G 0.00850052868781
+
+
+All trials put together (done).
+step size: 0.6 (too big) -- obstacle bigger?
+noises in q tables (try turn off again. didn't).
+
+Train obstacle module again with larger discounter.(did)
+
+
+larger obstalce.ok
+initial orientation, flip signs of elevator. (only on even ones)
+
+Path following (when close to the next waypoint) (increase the way points.
+Multi objects
+
+Train in the same domain (more training) OR UCT for planning.
+
+Figures: humans and model in the same domain.
+Values of qtable, and policies.
+Number of targets / obstacles.

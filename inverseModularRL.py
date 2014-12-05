@@ -19,7 +19,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 10):
+  def __init__(self, qFuncs, eta = 5):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -75,6 +75,10 @@ class InverseModularRL:
 
       # Update the weights for each module accordingly.
       for moduleIdx in xrange(len(self.qFuncs)):
+        # check whether this module is off
+        if self.qFuncs[moduleIdx](state, optAction) == None:
+          continue
+
         term += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
 
         # denominator
@@ -185,54 +189,71 @@ def continuousWorldExperiment():
 
   return w, sln
 
-def getSamplesFromMat(filename, idxSet):
+def getSamplesFromMat(filenames, idxSet):
   samples = []
 
   import util
-  mat = util.loadmat(filename)
 
-  for idx in idxSet:
-    obstDist = mat['pRes'][idx].obstDist1
-    obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
-    targDist = mat['pRes'][idx].targDist1
-    targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
-    segDist = mat['pRes'][idx].pathDist
-    segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
-    actions = mat['pRes'][idx].action
+  for filename in filenames:
+    mat = util.loadmat(filename)
 
-    # cut the head and tail samples
-    for i in range(5, len(targDist) - 15):
-      state = ((targDist[i], targAngle[i]), (obstDist[i], obstAngle[i]), (segDist[i], segAngle[i]))
-      beliefState = [featureExtractors.mapStateToBin((dist, angle), 0.2) for (dist, angle) in state]
-      action = actions[i]
-      samples.append((beliefState, action))
+    for idx in idxSet:
+      obstDist = mat['pRes'][idx].obstDist1
+      obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
+      targDist = mat['pRes'][idx].targDist1
+      targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
+      segDist = mat['pRes'][idx].pathDist
+      segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
+      actions = mat['pRes'][idx].action
+
+      # cut the head and tail samples
+      for i in range(5, len(targDist) - 15):
+        state = ((targDist[i], targAngle[i]), (obstDist[i], obstAngle[i]), (segDist[i], segAngle[i]))
+        beliefState = [featureExtractors.mapStateToBin((dist, angle), 0.3) for (dist, angle) in state]
+        action = actions[i]
+        samples.append((beliefState, action))
 
   return samples
 
-def humanWorldExperiment(filename, rang):
+def debugWeight(sln):
+  for i in range(0, 11):
+    for j in range(0, 11 - i):
+      k = 10 - i - j
+      print -sln.obj([0.1 * i, 0.1 * j, 0.1 * k]),
+    for j in range(11 - i, 11):
+      print 0,
+    print
+
+def humanWorldExperiment(filenames, rang):
   """
   Args:
     rang: load mat with given rang of trials
   """
+  print rang, ": Started."
   #qFuncs = modularAgents.getHumanWorldContinuousFuncs()
   qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
 
   sln = InverseModularRL(qFuncs)
-  samples = getSamplesFromMat(filename, rang)
+  samples = getSamplesFromMat(filenames, rang)
   sln.setSamples(samples)
 
   output = sln.findWeights()
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
-  print "Weight: ", w
+  print rang, ": weights are", w
+  print rang, ": OK."
 
-  return w, sln
+  #debugWeight(sln)
+  return w
 
 if __name__ == '__main__':
   #continuousWorldExperiment()
-  subjFile = "subj26.parsed.mat"
-  humanWorldExperiment(subjFile, range(0, 8))
-  humanWorldExperiment(subjFile, range(8, 16))
-  humanWorldExperiment(subjFile, range(16, 24))
-  humanWorldExperiment(subjFile, range(24, 31))
+  from multiprocessing import Pool
+  pool = Pool(processes=4)
+
+  subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
+  taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
+  results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
+
+  print '\n'.join([str(r.get()) for r in results])
