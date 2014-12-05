@@ -21,7 +21,7 @@ class ModularAgent(ApproximateQAgent):
     ApproximateQAgent.__init__(self, **args)
 
     # assume the weights are not dynamically learned, intialize them here.
-    self.weights = [0.23062, 0.60835, 0.16103]
+    self.weights = [0.08119, 0.26433, 0.65448]
     self.learningWeights = False
  
   def getQValue(self, state, action):
@@ -254,7 +254,6 @@ def getHumanWorldDiscreteFuncs():
     bigQ = 0.2
     smallQ = 0.1
 
-    """
     # hand-made path following
     if abs(segState[1]) == 0 and action == 'G':
       return bigQ
@@ -266,8 +265,7 @@ def getHumanWorldDiscreteFuncs():
       return bigQ
     else:
       return 0
-    """
-    return sValues[segState, action]
+    #return sValues[segState, action]
 
   return [qTarget, qObstacle, qSegment]
 

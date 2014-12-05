@@ -58,6 +58,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       for idx in xrange(len(locs)):
         dist = numpy.linalg.norm(np.subtract(l, locs[idx]))
         if key == 'segs':
+          radiusFactor = 3
+        elif key == 'obsts':
           radiusFactor = 2
         else:
           radiusFactor = 1

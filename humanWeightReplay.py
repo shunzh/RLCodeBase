@@ -8,32 +8,25 @@ from graphics import *
 
 import numpy as np
 
-def main(subjId, domainId):
-  init = continuousWorld.loadFromMat('miniRes25.mat', int(domainId))
-  mdp = humanWorld.HumanWorld(init)
-
-  # plot domain and policy
-  dim = 800
-  plotting = continuousWorld.Plotting(mdp, dim)
-  win = plotting.drawDomain()
+def plotHuman(plotting, win, subjIdSet, domainId):
+  dim = plotting.dim
 
   # parse human positions and actions
-  humanSamples = parseHumanActions('subj' + str(subjId) + '.parsed.mat', int(domainId))
+  for subjId in subjIdSet:
+    humanSamples = parseHumanActions('subj' + str(subjId) + '.parsed.mat', int(domainId))
 
-  prevLoc = None
-  for sample in humanSamples:
-    loc = plotting.shift((sample['x'], sample['y']))
-    loc = (dim - loc[0], dim - loc[1]) # need 180 degree rotation
+    prevLoc = None
+    for sample in humanSamples:
+      loc = plotting.shift((sample['x'], sample['y']))
+      loc = (dim - loc[0], dim - loc[1]) # need 180 degree rotation
 
-    if prevLoc:
-      line = Line(Point(prevLoc), Point(loc))
-      line.setWidth(5)
-      line.setFill(color_rgb(0, 255, 0))
-      line.draw(win)
-    prevLoc = loc
-
-  win.getMouse()
-  win.close()
+      if prevLoc:
+        line = Line(Point(prevLoc), Point(loc))
+        line.setWidth(5)
+        line.setFill(color_rgb(0, 0, 0))
+        line.draw(win)
+      prevLoc = loc
+    prevLoc = None
 
 def parseHumanActions(filename, domainId):
   """
@@ -68,4 +61,14 @@ if __name__ == '__main__':
     subjId = sys.argv[1]
     domainId = sys.argv[2]
 
-    main(subjId, domainId)
+    # create plotting canvas, load room configuration
+    init = continuousWorld.loadFromMat('miniRes25.mat', int(domainId))
+    mdp = humanWorld.HumanWorld(init)
+    dim = 800
+    plotting = continuousWorld.Plotting(mdp, dim)
+    win = plotting.drawDomain()
+
+    plotHuman(plotting, win, [subjId], domainId)
+
+    win.getMouse()
+    win.close()

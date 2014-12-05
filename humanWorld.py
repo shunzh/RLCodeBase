@@ -6,6 +6,7 @@ import util
 import optparse
 import featureExtractors
 import continuousWorld
+import humanWeightReplay
 
 import numpy as np
 import numpy.linalg
@@ -255,13 +256,14 @@ def main():
   ###########################
 
   #category = 'targs'
-  #category = 'obsts'
-  category = 'segs'
+  category = 'obsts'
+  #category = 'segs'
 
+  vrDomainId = 9
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 1)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', vrDomainId)
   elif opts.grid == 'vrTrain':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0, randInit = True)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', vrDomainId, randInit = True)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':
@@ -283,6 +285,8 @@ def main():
     dim = 800
     plotting = continuousWorld.Plotting(mdp, dim)
     win = plotting.drawDomain()
+    if opts.grid == 'vr':
+      humanWeightReplay.plotHuman(plotting, win, range(25, 29), vrDomainId)
 
   ###########################
   # GET THE AGENT
