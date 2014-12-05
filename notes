@@ -53,10 +53,11 @@ noises in q tables (try turn off again. didn't).
 Train obstacle module again with larger discounter.(did)
 
 
-larger obstalce.
-initial orientation, flip signs of elevator
+larger obstalce.ok
+initial orientation, flip signs of elevator. (only on even ones)
 
-Path following (when close to the next waypoint).
+Path following (when close to the next waypoint) (increase the way points.
+Multi objects
 
 Train in the same domain (more training) OR UCT for planning.
 

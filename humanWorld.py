@@ -255,14 +255,11 @@ def main():
   ###########################
 
   #category = 'targs'
-  category = 'obsts'
-  #category = 'segs'
-
-  if category == 'segs': trainCategory = 'targs'
-  else: trainCategory = category
+  #category = 'obsts'
+  category = 'segs'
 
   if opts.grid == 'vr':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 24)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 1)
   elif opts.grid == 'vrTrain':
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0, randInit = True)
   elif opts.grid == 'toy':
@@ -305,7 +302,7 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    a.setValues('learnedValues/humanAgent' + trainCategory + 'Values.pkl')
+    a.setValues('learnedValues/humanAgent' + category + 'Values.pkl')
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, category))
     a.setLambdaValue(0.1)
   elif opts.agent == 'sarsa':
@@ -326,7 +323,7 @@ def main():
                   'actionFn': actionFn,
                   'extractor': extractor}
     a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
-    a.setWeights('learnedValues/humanAgent' + trainCategory + 'Weights.pkl')
+    a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
   elif opts.agent == 'Modular':
     import modularAgents
     continuousEnv = HumanEnvironment(mdp)

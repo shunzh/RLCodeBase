@@ -36,7 +36,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.__dict__.update(init)
 
     # reward values that getReward will use
-    self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'elevators': 0}
+    self.rewards = {'targs': 1, 'obsts': -1, 'segs': 1, 'elevators': 0, 'entrance': 0}
     self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
 
     if not 'livingReward' in self.__dict__.keys():
@@ -57,7 +57,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     for key, locs in self.objs.items():
       for idx in xrange(len(locs)):
         dist = numpy.linalg.norm(np.subtract(l, locs[idx]))
-        radiusFactor = 2 if key == 'segs' else 1
+        if key == 'segs':
+          radiusFactor = 2
+        else:
+          radiusFactor = 1
 
         if dist < radiusFactor * self.radius:
           if key == 'segs' and idx > 0: pass
@@ -144,8 +147,12 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     Start at the starting location, with no segment previously visited.
     """
-    loc = self.objs['elevators'][0]
-    return (loc, 0)
+    loc = self.objs['entrance']
+    #loc = (-loc[0], -loc[1]) # flip the signs of exit (elevator) to get the entrance
+
+    if loc[0] < 0: angle = 45.0 / 180 * np.pi
+    else: angle = - 135.0 / 180 * np.pi
+    return (loc, angle)
     
   def isFinal(self, state):
     """
@@ -210,27 +217,27 @@ def simpleToyDomain(category = 'targs'):
   """
   ret = {}
 
-  assert category in ['targs', 'obsts']
-
   size = 3.0
 
   # place that can't be reached
   infPos = (size + 1, size + 1)
 
   if category == 'targs':
-    targs = [(size / 2, size / 2)]; obsts = [infPos]
+    targs = [(size / 2, size / 2)]; obsts = [infPos]; segs = [infPos]
     # set the starting point to be random for training
-    elevators = [(random.random() * size, random.random() * size), infPos]
+    entrance = (random.random() * size, random.random() * size)
     ret['livingReward'] = -1
   elif category == 'obsts':
-    obsts = [(size / 2, size / 2)]; targs = [infPos]
+    obsts = [(size / 2, size / 2)]; targs = [infPos]; segs = [infPos]
     # set the starting point to be exactly at the obstacle
     #elevators = [obsts[0], infPos]
-    elevators = [(random.random() * size, random.random() * size), infPos]
+    entrance = (random.random() * size, random.random() * size)
+  elif category == 'segs':
+    segs = [(size / 2, size / 2)]; obsts = [infPos]; targs = [infPos]
+    entrance = (random.random() * size, random.random() * size)
 
-  segs = [infPos]
-
-  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
+  elevators = []
+  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators, 'entrance': entrance}
 
   ret['xBoundary'] = [0, size]
   ret['yBoundary'] = [0, size]
@@ -255,8 +262,9 @@ def toyDomain(category = 'targs'):
     obsts = layout; targs = [infPos]
   segs = [infPos]
 
-  elevators = [(0, 0), (1, 1)]
-  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
+  elevators = [(1, 1)]
+  entrance = (0, 0)
+  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators, 'entrance': entrance}
 
   ret['xBoundary'] = [-0.1, 1.1]
   ret['yBoundary'] = [-0.1, 1.1]
@@ -313,10 +321,13 @@ def loadFromMat(filename, domainId, randInit = False):
     else:
       warnings.warn("Dropped unkown object typed '" + name + "' indexed at " + str(idx))
 
-  if len(elevators) < 2:
+  if len(elevators) == 0:
     raise Exception("Elevators cannot be undefined.")
 
-  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators}
+  # entrance is always the position symmetric to the elevator wrt the origin
+  entrance = (-elevators[0][0], -elevators[0][1])
+
+  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators, 'entrance': entrance}
 
   ret['xBoundary'] = [-3.5, 3.5]
   ret['yBoundary'] = [-3.5, 3.5]
