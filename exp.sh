@@ -1,5 +1,5 @@
 #!/bin/bash
-for i in `seq 0 30`;
+for i in `seq 0 31`;
 do
-  python humanWorld.py -a Modular -g vr$i
+  python humanWorld.py -a Modular -g vr$i -q
 done  

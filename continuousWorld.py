@@ -36,8 +36,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.__dict__.update(init)
 
     # reward values that getReward will use
-    self.rewards = {'targs': 1, 'obsts': -1, 'segs': 1, 'elevators': 0, 'entrance': 0}
+    self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'elevators': 0, 'entrance': 0}
     self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
+
+    self.touchedObstacleSet = []
 
     if not 'livingReward' in self.__dict__.keys():
       self.livingReward = 0
@@ -59,8 +61,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
         dist = numpy.linalg.norm(np.subtract(l, locs[idx]))
         if key == 'segs':
           radiusFactor = 3
-        elif key == 'obsts':
-          radiusFactor = 2
         else:
           radiusFactor = 1
 
@@ -136,6 +136,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     # any reached object applies
     for nextStateType, nextObjId in objInfoList:
       reward += self.rewards[nextStateType]
+      if nextStateType == 'obsts' and not nextObjId in self.touchedObstacleSet:
+        self.touchedObstacleSet.append(nextObjId)
 
     return reward or self.livingReward
       

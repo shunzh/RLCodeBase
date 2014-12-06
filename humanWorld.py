@@ -91,10 +91,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
 
     return [(newState, 1)]
 
-
 #Environment for human.
 HumanEnvironment = continuousWorld.ContinuousEnvironment
-
 
 def getUserAction(state, actionFunction):
   """
@@ -141,6 +139,13 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     runs -= 1
     if environment.isFinal() or runs == 0:
       print "EPISODE "+str(episode)+" COMPLETE: RETURN WAS "+str(returns)+"\n"
+
+      targsNum = 12 - len(environment.mdp.objs['targs'])
+      obstsNum = len(environment.mdp.touchedObstacleSet)
+      stats = open('stats','a')
+      stats.write(str(targsNum) + ' ' + str(obstsNum) + '\n')
+      stats.close()
+
       agent.final(state)
       return returns
     
@@ -168,7 +173,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
         agent.observeTransition(state, action, nextState, reward)
 
     environment.step(state, action, nextState, reward)
-    
+
     returns += reward * totalDiscount
     totalDiscount *= discount
 
