@@ -520,6 +520,15 @@ def normalizePkl(filename, value = 1):
 
     pickle.dump(d, open(filename, 'wb'))
 
+def printPklInMatrix(filename):
+    import pickle
+    d = pickle.load(open(filename))
+
+    for i in reversed(range(1, 11)): # 1 ~ 10. so that 1 appears at bottom
+      for j in range(-4, 5): # -4 ~ 4.
+        print max([d[(i, j), act] for act in ['L', 'R', 'G']]),
+      print
+
 def _check_keys(dict):
     '''
     checks if entries in dictionary are mat-objects. If yes

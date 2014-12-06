@@ -323,6 +323,10 @@ def loadFromMat(filename, domainId, randInit = False):
     else:
       warnings.warn("Dropped unkown object typed '" + name + "' indexed at " + str(idx))
 
+  # FIXME segs need to be reversed for even numbered rooms
+  if domainId % 2 == 0:
+    segs.reverse()
+
   if len(elevators) == 0:
     raise Exception("Elevators cannot be undefined.")
 
@@ -532,7 +536,10 @@ class Plotting:
       win object
     """
     win = GraphWin('Domain', self.dim, self.dim) # give title and dimensions
-    win.setBackground('grey')
+
+    rect = Rectangle(Point(0, 0), Point(self.dim, self.dim))
+    rect.setFill('grey')
+    rect.draw(win)
    
     def drawObjects(label, color):
       """

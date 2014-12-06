@@ -53,14 +53,13 @@ noises in q tables (try turn off again. didn't).
 Train obstacle module again with larger discounter.(did)
 
 
-larger obstalce.ok
-initial orientation, flip signs of elevator. (only on even ones)
+Due this weekend:
 
-Path following (when close to the next waypoint) (increase the way points.
+Raw number of targets collected and obstacles avoided.
+Policy.
+
 Multi objects
-
+Path following (when close to the next waypoint) (increase the way points.
 Train in the same domain (more training) OR UCT for planning.
 
-Figures: humans and model in the same domain.
-Values of qtable, and policies.
-Number of targets / obstacles.
+Heat map on object values.

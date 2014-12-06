@@ -259,11 +259,17 @@ def main():
   category = 'obsts'
   #category = 'segs'
 
-  vrDomainId = 9
-  if opts.grid == 'vr':
+  if 'vr' in opts.grid:
+    vrDomainId = int(opts.grid[2:])
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', vrDomainId)
+
+    import pickle
+    weightTable = pickle.load(open('learnedValues/weights.pkl'))
+    weights = weightTable[vrDomainId / 8] # 8 domains per task
+
+    print "init using domain #", vrDomainId, "with weights", weights
   elif opts.grid == 'vrTrain':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', vrDomainId, randInit = True)
+    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0, randInit = True)
   elif opts.grid == 'toy':
     init = lambda: continuousWorld.toyDomain(category)
   elif opts.grid == 'simple':
@@ -285,7 +291,7 @@ def main():
     dim = 800
     plotting = continuousWorld.Plotting(mdp, dim)
     win = plotting.drawDomain()
-    if opts.grid == 'vr':
+    if 'vr' in opts.grid:
       humanWeightReplay.plotHuman(plotting, win, range(25, 29), vrDomainId)
 
   ###########################
@@ -337,6 +343,7 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
+    a.setWeights(weights)
     #a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
     #a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
     a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
@@ -425,7 +432,8 @@ def main():
 
   # hold window
   if not opts.quiet:
-    win.getMouse()
+    handler = 'task_' + str(vrDomainId / 8 + 1) + '_room_' + str(vrDomainId + 1)
+    win.postscript(file=handler+".eps")
     win.close()
 
 if __name__ == '__main__':
