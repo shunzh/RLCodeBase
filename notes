@@ -1,65 +1,14 @@
-Compare trajectoriers - human and avator.
-
-8 x {
-path
-path + obstacle
-path + target
-all}
-
-head of tail of trial (0.5).
-
-Figures:
-FIX: green paths (use segments?).
-background color: grey.
-
-Average deviation / percentage of agreement.
-
-Give trajectory.
-
-Weight:  [-0.0, -0.0, 1.0]
-Weight:  [0.0023, -0.0, 0.9977]
-Weight:  [0.52704, -0.0, 0.47296]
-Weight:  [0.57414, 0.11633, 0.30954]
-
-sanity check obstacle module, looks ok though
-
-# Path segment.
-
-# color: paler background.
-
-check actions.
-
-# cut the heading samples.
-
-graphically increase radius.
-
-sum of qtable normalize to 1
-
-modular
-(8, 0) L 7.79382427697e-06
-(8, 0) R 8.33373134557e-05
-(8, 0) G 1.74110620852e-05
-
-q
-(8, 0) L 1.16025410594e-06
-(8, 0) R 1.00324854765e-06
-(8, 0) G 0.00850052868781
-
-
-All trials put together (done).
 step size: 0.6 (too big) -- obstacle bigger?
 noises in q tables (try turn off again. didn't).
 
-Train obstacle module again with larger discounter.(did)
-
-
-Due this weekend:
-
-Raw number of targets collected and obstacles avoided.
-Policy.
+Policy map.
 
 Multi objects
-Path following (when close to the next waypoint) (increase the way points.
-Train in the same domain (more training) OR UCT for planning.
 
-Heat map on object values.
+Path following
+- If get closer to the current one compared to the past one,
+  move ahead to the next one.
+- Consider the distance to the path segment, and progress made
+  to approach the next waypoint.
+
+Heat map on object values. Adjust color.
