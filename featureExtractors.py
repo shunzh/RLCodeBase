@@ -205,7 +205,7 @@ def getHumanDiscreteState(mdp):
 
   return getDistAngelList
  
-def getHumanDiscreteState5Tuple(mdp):
+def getHumanDiscreteStateIncludeSecond(mdp):
   """
   Consider both the closest and the 2nd closest ones.
 
@@ -213,7 +213,7 @@ def getHumanDiscreteState5Tuple(mdp):
           (obstDist, obstAngle), (secondObstDist, secondObstAngle),
           (segDist, segAngle))
   """
-  #TODO
+  # TODO
   extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
 
   def getDistAngelList(state):
