@@ -205,26 +205,6 @@ def getHumanDiscreteState(mdp):
 
   return getDistAngelList
  
-def getHumanDiscreteStateIncludeSecond(mdp):
-  """
-  Consider both the closest and the 2nd closest ones.
-
-  Return ((targDist, targAngle), (secondTargDist, secondTargAngle),
-          (obstDist, obstAngle), (secondObstDist, secondObstAngle),
-          (segDist, segAngle))
-  """
-  # TODO
-  extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
-
-  def getDistAngelList(state):
-    ret = []
-    for extractor in extractors:
-      feats = extractor.getStateFeatures(state)
-      ret.append(mapStateToBin((feats['dist'], feats['angle']), mdp.step))
-    return ret
-
-  return getDistAngelList
- 
 class ObstacleExtractor(FeatureExtractor):
   """
   This should use radius extractor.

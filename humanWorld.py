@@ -131,7 +131,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
 
     # DISPLAY CURRENT STATE
     state = environment.getCurrentState()
-    display(state)
+    if display: display.drawPath(state)
     pause()
     
     # END IF IN A TERMINAL STATE
@@ -163,6 +163,8 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     # EXECUTE ACTION
     nextState, reward = environment.doAction(action)
 
+    if display: display.highlight(environment.mdp.objInfoList)
+
     message("Started in state: "+str(state)+
             "\nTook action: "+str(action)+
             "\nEnded in state: "+str(nextState)+
@@ -175,6 +177,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     if 'observeTransition' in dir(agent): 
         agent.observeTransition(state, action, nextState, reward)
 
+    # here, change the environment reponding to the agent's behavior
     environment.step(state, action, nextState, reward)
 
     returns += reward * totalDiscount
@@ -298,7 +301,9 @@ def main():
   if not opts.quiet:
     dim = 800
     plotting = continuousWorld.Plotting(mdp, dim)
+    # draw the environment -- path, targets, etc.
     win = plotting.drawDomain()
+    # draw human trajectories
     if 'vr' in opts.grid:
       humanWeightReplay.plotHuman(plotting, win, range(25, 29), vrDomainId)
 
@@ -383,23 +388,37 @@ def main():
 
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
   if not opts.quiet:
-    def displayCallback(x):
-      # display the corresponding state in graphics
-      if displayCallback.prevState != None:
-        # only draw lines, so ignore the first state
-        loc, orient = displayCallback.prevState
-        newLoc, orient = x
+    class DisplayCallback:
+      def __init__(self):
+        self.prevState = None
 
-        line = Line(Point(plotting.shift(loc)), Point(plotting.shift(newLoc)))
-        line.setWidth(5)
-        line.setFill(color_rgb(0, 255, 0))
-        line.draw(win)
+      def drawPath(self, x):
+        """
+        display the corresponding state in graphics
+        """
+        if self.prevState != None:
+          # only draw lines, so ignore the first state
+          loc, orient = self.prevState
+          newLoc, orient = x
 
-      displayCallback.prevState = x
+          line = Line(Point(plotting.shift(loc)), Point(plotting.shift(newLoc)))
+          line.setWidth(5)
+          line.setFill(color_rgb(0, 255, 0))
+          line.draw(win)
 
-    displayCallback.prevState = None
+        self.prevState = x
+
+      def highlight(self, l):
+        """
+        highlight the elements in the list l
+        elements of l are (type, id)
+        """
+        for stateType, stateId in l:
+          print stateType, stateId
+
+    displayCallback = DisplayCallback()
   else:
-    displayCallback = lambda x: None
+    displayCallback = None
 
   if not opts.quiet:
     messageCallback = lambda x: printString(x)

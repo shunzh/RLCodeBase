@@ -131,10 +131,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     reward = 0
 
     # check whether reaching a target or obstacle
-    objInfoList = self.getReachedObjects(nextLoc)
+    self.objInfoList = self.getReachedObjects(nextLoc)
 
     # any reached object applies
-    for nextStateType, nextObjId in objInfoList:
+    for nextStateType, nextObjId in self.objInfoList:
       reward += self.rewards[nextStateType]
       if nextStateType == 'obsts' and not nextObjId in self.touchedObstacleSet:
         self.touchedObstacleSet.append(nextObjId)
@@ -362,14 +362,14 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
     nextLoc, nextOrient = nextState
 
     objInfoLists = self.mdp.getReachedObjects(nextLoc)
+    # to remove object by id, make sure remove the ones with larger id first
+    # so the list won't screw up.
     if len(objInfoLists) > 0: objInfoLists.reverse()
 
     for nextStateType, nextObjId in objInfoLists:
       if nextStateType == 'targs':
         self.mdp.clearObj(nextStateType, nextObjId)
       elif nextStateType == 'segs':
-        # be careful with this -
-        # once reaching on an segment, deleting the segments before it.
         self.mdp.clearObj(nextStateType, 0)
 
 
@@ -560,10 +560,16 @@ class Plotting:
       prevObj = None
       for obj in self.mdp.objs[label]:
         if prevObj:
+          # draw segments between waypoints
           line = Line(Point(self.shift(prevObj)), Point(self.shift(obj)))
           line.setWidth(3)
           line.setFill(color)
           line.draw(win)
+
+          # draw a small circle at the waypoints
+          cir = Circle(Point(self.shift(prevObj)), 5)
+          cir.setFill(color)
+          cir.draw(win)
         prevObj = obj
       
     targColor = color_rgb(80, 77, 157)
