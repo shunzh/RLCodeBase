@@ -142,12 +142,15 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
 
       """
       # write number of contact objects into a stat file
-      targsNum = 12 - len(environment.mdp.objs['targs'])
+      targsNum = len(environment.mdp.collectedTargetSet['targs'])
       obstsNum = len(environment.mdp.touchedObstacleSet)
       stats = open('stats','a')
       stats.write(str(targsNum) + ' ' + str(obstsNum) + '\n')
       stats.close()
       """
+
+      # mark touched objects here
+      if display: display.highlight(environment.mdp)
 
       agent.final(state)
       return returns
@@ -162,8 +165,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     
     # EXECUTE ACTION
     nextState, reward = environment.doAction(action)
-
-    if display: display.highlight(environment.mdp.objInfoList)
 
     message("Started in state: "+str(state)+
             "\nTook action: "+str(action)+
@@ -185,6 +186,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
 
   if 'stopEpisode' in dir(agent):
     agent.stopEpisode()
+
 
 def parseOptions():
     optParser = optparse.OptionParser()
@@ -389,6 +391,9 @@ def main():
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
   if not opts.quiet:
     class DisplayCallback:
+      """
+      The class that plots the behavior of the agent on the fly.
+      """
       def __init__(self):
         self.prevState = None
 
@@ -408,13 +413,15 @@ def main():
 
         self.prevState = x
 
-      def highlight(self, l):
+      def highlight(self, mdp):
         """
         highlight the elements in the list l
         elements of l are (type, id)
         """
-        for stateType, stateId in l:
-          print stateType, stateId
+        for loc in mdp.collectedTargetSet + mdp.touchedObstacleSet:
+          cir = Circle(Point(plotting.shift(loc)), 5)
+          cir.setFill(color_rgb(255, 255, 255))
+          cir.draw(win)
 
     displayCallback = DisplayCallback()
   else:

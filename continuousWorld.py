@@ -39,7 +39,9 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'elevators': 0, 'entrance': 0}
     self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
 
+    # stat set
     self.touchedObstacleSet = []
+    self.collectedTargetSet = []
 
     if not 'livingReward' in self.__dict__.keys():
       self.livingReward = 0
@@ -130,14 +132,18 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     
     reward = 0
 
-    # check whether reaching a target or obstacle
-    self.objInfoList = self.getReachedObjects(nextLoc)
+    # get the list of contacted objects
+    objInfoList = self.getReachedObjects(nextLoc)
 
     # any reached object applies
-    for nextStateType, nextObjId in self.objInfoList:
+    for nextStateType, nextObjId in objInfoList:
       reward += self.rewards[nextStateType]
-      if nextStateType == 'obsts' and not nextObjId in self.touchedObstacleSet:
-        self.touchedObstacleSet.append(nextObjId)
+      # keep a set of reached objects
+      objLoc = self.objs[nextStateType][nextObjId]
+      if nextStateType == 'obsts' and not objLoc in self.touchedObstacleSet:
+        self.touchedObstacleSet.append(objLoc)
+      elif nextStateType == 'targs':
+        self.collectedTargetSet.append(objLoc)
 
     return reward or self.livingReward
       
