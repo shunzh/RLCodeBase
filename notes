@@ -16,7 +16,5 @@ Path following
   to approach the next waypoint.
 - Consider the past, current and next segment.
 
-Larger size for obstacles.
+Larger size for obstacles (Different from human ?).
 Agreement on policies.
-
-Change graphics for waypoints, contacted objects.

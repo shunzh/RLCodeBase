@@ -419,8 +419,8 @@ def main():
         elements of l are (type, id)
         """
         for loc in mdp.collectedTargetSet + mdp.touchedObstacleSet:
-          cir = Circle(Point(plotting.shift(loc)), 5)
-          cir.setFill(color_rgb(255, 255, 255))
+          cir = Circle(Point(plotting.shift(loc)), 7)
+          cir.setFill(color_rgb(255, 0, 0))
           cir.draw(win)
 
     displayCallback = DisplayCallback()
