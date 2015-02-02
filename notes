@@ -1,12 +1,10 @@
 Q values (color choice), policy map.
 
-Multi objects
-
 Heat map on object values. Adjust color.
 
 =====================
 
-Path following - larger path waypoint?
+Path following - larger path waypoint and train again.
 Matt proposes:
 - If get closer to the current one compared to the past one,
   move ahead to the next one.
@@ -14,6 +12,7 @@ Matt proposes:
   to approach the next waypoint.
 - Consider the past, current and next segment.
 
-Larger size for obstacles (Different from human ?).
-
 Agreement on policies.
+
+Multi objects (objects within distance and angle range)
+
