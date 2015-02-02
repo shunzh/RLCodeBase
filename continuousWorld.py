@@ -36,7 +36,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.__dict__.update(init)
 
     # reward values that getReward will use
-    self.rewards = {'targs': 1, 'obsts': -1, 'segs': 0.1, 'elevators': 0, 'entrance': 0}
+    self.rewards = {'targs': 1, 'obsts': -1, 'segs': 1, 'elevators': 0, 'entrance': 0}
     self.noise = 0.0 # DUMMY - need assumption on what it means to be noisy
 
     # stat set
@@ -49,6 +49,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
   def getReachedObjects(self, l):
     """
     Determine whether a state is close to any object, within radius.
+    The radius for segments are larger than that for targets / obstacles.
+
     Args:
       l: the loc to be checked.
       cond: constraint added
@@ -286,7 +288,6 @@ def toyDomain(category = 'targs'):
   ret['step'] = 0.1
 
   return ret
-
 
 def loadFromMat(filename, domainId, randInit = False):
   """

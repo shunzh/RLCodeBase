@@ -255,22 +255,49 @@ def parseOptions():
     return opts
 
 def parseValues(values, filename):
-  # do not update everytime
+  """
+  Write to a file in the local directory for temporary use.
+  Note that the files in learnedValues/ are used.
+  """
   import pickle
   output = open(filename, 'wb')
   pickle.dump(values, output)
   output.close()
+
+def plotQFuncs(values, filename):
+  """
+  Print the values of states in heatmap
+  """
+  import matplotlib.pyplot as plt
+
+  data = []
+  for i in reversed(range(1, 11)): # 1 ~ 10. so that 1 appears at bottom
+    row = []
+    for j in range(-4, 5): # -4 ~ 4.
+      row.append(max([values[(i, j), act] for act in ['L', 'R', 'G']]))
+    data.append(row)
+
+  plt.imshow(data, interpolation='none')
+  plt.xticks(range(9), ['-135', '-90', '-45', '-15', '0', '15', '45', '90', '135'])
+  plt.yticks(range(10), ['>20', '20', '15', '10', '8', '5', '4', '3', '2', '1'])
+  plt.xlabel('Angle');
+  plt.ylabel('Distance (x steps)');
+
+  plt.jet()
+  plt.colorbar()
+
+  plt.savefig(filename)
    
 def main(): 
   opts = parseOptions()
 
   ###########################
-  # GET THE GRIDWORLD
+  # GET THE ENVIRONMENT
   ###########################
 
   #category = 'targs'
-  category = 'obsts'
-  #category = 'segs'
+  #category = 'obsts'
+  category = 'segs'
 
   if 'vr' in opts.grid:
     vrDomainId = int(opts.grid[2:])
@@ -279,6 +306,9 @@ def main():
     import pickle
     weightTable = pickle.load(open('learnedValues/weights.pkl'))
     weights = weightTable[vrDomainId / 8] # 8 domains per task
+
+    # TEST
+    weights = [0, 0, 1]
 
     print "init using domain #", vrDomainId, "with weights", weights
   elif opts.grid == 'vrTrain':
@@ -463,9 +493,10 @@ def main():
     parseValues(a.weights, 'humanAgent' + category + 'Weights.pkl')
   elif opts.agent == 'q':
     parseValues(a.values, 'humanAgent' + category + 'Values.pkl')
+    plotQFuncs(a.values, 'humanAgent' + category + 'Q.png')
 
   # hold window
-  if not opts.quiet:
+  if not opts.quiet and 'vr' in opts.grid:
     handler = 'task_' + str(vrDomainId / 8 + 1) + '_room_' + str(vrDomainId + 1)
     win.postscript(file=handler+".eps")
     win.close()

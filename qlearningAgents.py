@@ -160,8 +160,8 @@ class ReducedQLearningAgent(QLearningAgent):
       self.values = pickle.load(open(filename))
     else:
       import warnings
-      warnings.warn("Unknown file " + filename)
-      raw_input("Confirm:")
+      warnings.warn("Unknown file " + filename + ". No initial values set.")
+      raw_input("Confirm this message to continue:")
 
   def setStateFilter(self, extractor):
     """
@@ -177,6 +177,7 @@ class ReducedQLearningAgent(QLearningAgent):
     return QLearningAgent.update(self, self.getState(state), action, self.getState(nextState), reward)
 
   def final(self, state):
+    # TODO print values here?
     return QLearningAgent.final(self, self.getState(state))
 
 
@@ -276,7 +277,7 @@ class ApproximateVAgent(ApproximateQAgent):
       self.weights = pickle.load(open(filename))
     else:
       import warnings
-      warnings.warn("Unknown file " + filename)
+      warnings.warn("Unknown file " + filename + ". No initial weight set.")
       raw_input("Confirm this message to continue:")
 
   def getQValue(self, state, action):
