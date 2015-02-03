@@ -259,7 +259,7 @@ def humanWorldExperiment(filenames, rang):
   print rang, ": weights are", w
   print rang, ": OK."
 
-  debugWeight(sln, 'objValues' + str(rang[0]) + '.png')
+  debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   return w
 
 if __name__ == '__main__':
