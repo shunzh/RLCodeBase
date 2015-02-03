@@ -238,7 +238,6 @@ def simpleToyDomain(category = 'targs'):
     targs = [(size / 2, size / 2)]; obsts = [infPos]; segs = [infPos]
     # set the starting point to be random for training
     entrance = (random.random() * size, random.random() * size)
-    ret['livingReward'] = -1
   elif category == 'obsts':
     obsts = [(size / 2, size / 2)]; targs = [infPos]; segs = [infPos]
     # set the starting point to be exactly at the obstacle

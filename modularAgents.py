@@ -269,7 +269,8 @@ def getHumanWorldContinuousFuncs():
 
   tWeights = pickle.load(open('learnedValues/humanAgenttargsWeights.pkl'))
   oWeights = pickle.load(open('learnedValues/humanAgentobstsWeights.pkl'))
-  sWeights = pickle.load(open('learnedValues/humanAgentsegsWeights.pkl'))
+  #sWeights = pickle.load(open('learnedValues/humanAgentsegsWeights.pkl'))
+  sWeights = tWeights # assume same behavior as target collection
 
   def qValue(state, action, weights):
     dist, angle = state

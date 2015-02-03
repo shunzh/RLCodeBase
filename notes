@@ -1,16 +1,11 @@
-Q values (color choice, automate it), policy map.
-
-Heat map on object values. Adjust color.
-
-=====================
-
-Path following - larger path waypoint and train again.
-Matt proposes:
-- If get closer to the current one compared to the past one,
-  move ahead to the next one.
-- Consider the distance to the path segment, and progress made
-  to approach the next waypoint.
-- Consider the past, current and next segment.
+Path following
+- Not exactly as target module, should be more tolerant.
+- Matt proposes:
+  - If get closer to the current one compared to the past one,
+    move ahead to the next one.
+  - Consider the distance to the path segment, and progress made
+    to approach the next waypoint.
+  - Consider the past, current and next segment.
 
 Agreement on policies.
 

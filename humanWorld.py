@@ -295,9 +295,9 @@ def main():
   # GET THE ENVIRONMENT
   ###########################
 
-  #category = 'targs'
+  category = 'targs'
   #category = 'obsts'
-  category = 'segs'
+  #category = 'segs'
 
   if 'vr' in opts.grid:
     vrDomainId = int(opts.grid[2:])
@@ -306,9 +306,6 @@ def main():
     import pickle
     weightTable = pickle.load(open('learnedValues/weights.pkl'))
     weights = weightTable[vrDomainId / 8] # 8 domains per task
-
-    # TEST
-    weights = [0, 0, 1]
 
     print "init using domain #", vrDomainId, "with weights", weights
   elif opts.grid == 'vrTrain':

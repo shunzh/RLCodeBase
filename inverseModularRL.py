@@ -19,7 +19,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 5):
+  def __init__(self, qFuncs, eta = 4):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -71,15 +71,13 @@ class InverseModularRL:
 
     # replay the process
     for state, optAction in self.getSamples():
-      term = 0
-
       # Update the weights for each module accordingly.
       for moduleIdx in xrange(len(self.qFuncs)):
         # check whether this module is off
         if self.qFuncs[moduleIdx](state, optAction) == None:
           continue
 
-        term += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
+        ret += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
 
         # denominator
         denom = 0
@@ -87,9 +85,7 @@ class InverseModularRL:
         for action in actionSet:
           denom += np.exp(self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, action))
 
-        term -= np.log(denom)
-
-      ret += term
+        ret -= np.log(denom)
 
     # This is to be minimized, take the negative.
     return - ret
@@ -213,6 +209,7 @@ def getSamplesFromMat(filenames, idxSet):
         action = actions[i]
         samples.append((beliefState, action))
 
+  print samples
   return samples
 
 def debugWeight(sln, filename):
@@ -233,8 +230,8 @@ def debugWeight(sln, filename):
   data = np.ma.array(data, mask=mask)
 
   plt.imshow(data, interpolation='none')
-  plt.xticks(range(11), np.arange(0,1,0.1))
-  plt.yticks(range(11), np.arange(0,1,0.1))
+  plt.xticks(range(11), np.arange(0,1.1,0.1))
+  plt.yticks(range(11), np.arange(0,1.1,0.1))
   plt.xlabel('Obstacle Module Weight');
   plt.ylabel('Target Module Weight');
 
@@ -267,7 +264,6 @@ def humanWorldExperiment(filenames, rang):
   return w
 
 if __name__ == '__main__':
-  #continuousWorldExperiment()
   from multiprocessing import Pool
   pool = Pool(processes=4)
 
@@ -275,4 +271,9 @@ if __name__ == '__main__':
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
   results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
 
+  import pickle
+  weights = [r.get() for r in results]
+  output = open('weights.pkl', 'wb')
+  pickle.dump(weights, output)
+  output.close()
   print '\n'.join([str(r.get()) for r in results])
