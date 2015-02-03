@@ -232,7 +232,7 @@ def getHumanWorldDiscreteFuncs():
   # these are util.Counter objects
   tValues = pickle.load(open('learnedValues/humanAgenttargsValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
-  sValues = tValues # assume path module same as target module
+  sValues = None # Assume not an RL module
 
   def qTarget(state, action):
     targState, obstState, segState = state
@@ -247,13 +247,25 @@ def getHumanWorldDiscreteFuncs():
     if not (obstState, action) in oValues.keys():
       raise Exception('Un-learned obstacle ' + str(obstState) + ' ' + action)
     return oValues[obstState, action]
-    
+
   def qSegment(state, action):
     targState, obstState, segState = state
 
-    if not (segState, action) in sValues.keys():
-      raise Exception('Un-learned segment ' + str(segState) + ' ' + action)
-    return sValues[segState, action]
+    bigQ = 0.2
+    smallQ = 0.1
+
+    # hand-made path following
+    if abs(segState[1]) == 0 and action == 'G':
+      return bigQ
+    elif abs(segState[1]) == 0:
+      return smallQ
+    elif abs(segState[1]) == 1 and action == 'G':
+      return smallQ
+    elif segState[1] < 0 and action == 'L' or segState[1] > 0 and action == 'R':
+      return bigQ
+    else:
+      return 0
+    #return sValues[segState, action]
 
   return [qTarget, qObstacle, qSegment]
 
