@@ -269,7 +269,7 @@ def getHumanWorldContinuousFuncs():
 
   tWeights = pickle.load(open('learnedValues/humanAgenttargsWeights.pkl'))
   oWeights = pickle.load(open('learnedValues/humanAgentobstsWeights.pkl'))
-  sWeights = tWeights # FIXME should train separately
+  sWeights = pickle.load(open('learnedValues/humanAgentsegsWeights.pkl'))
 
   def qValue(state, action, weights):
     dist, angle = state
