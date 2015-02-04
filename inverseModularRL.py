@@ -251,7 +251,6 @@ def policyCompare(samples, w):
   # define agent
   import modularAgents
   import humanWorld
-  continuousEnv = humanWorld.HumanEnvironment(mdp)
   actionFn = lambda state: humanWorld.HumanWorld.actions
   qLearnOpts = {'gamma': 0.9,
                 'alpha': 0.5,
@@ -262,6 +261,11 @@ def policyCompare(samples, w):
   a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
 
   # go through samples
+  agreedPolicies = 0
+  for state, action in samples:
+    agreedPolicies += a.getPolicy(state) == action 
+
+  return 1.0 * agreedPolicies / len(samples)
 
 def humanWorldExperiment(filenames, rang):
   """
@@ -279,13 +283,14 @@ def humanWorldExperiment(filenames, rang):
   output = sln.findWeights()
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
+  agreedPoliciesRatio = policyCompare(samples, w)
 
   print rang, ": weights are", w
+  print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
   print rang, ": OK."
 
   debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
-  policyCompare(samples, w)
-  return w
+  return [w, agreedPoliciesRatio] 
 
 if __name__ == '__main__':
   from multiprocessing import Pool
@@ -296,8 +301,13 @@ if __name__ == '__main__':
   results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
-  weights = [r.get() for r in results]
+  weights = [r.get()[0] for r in results]
+  agreedPoliciesRatios = [r.get()[1] for r in results]
+
   output = open('weights.pkl', 'wb')
   pickle.dump(weights, output)
   output.close()
-  print '\n'.join([str(r.get()) for r in results])
+
+  output = open('agreedPolicies.pkl', 'wb')
+  pickle.dump(agreedPoliciesRatios, output)
+  output.close()
