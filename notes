@@ -1,5 +1,5 @@
 Path following
-- Not exactly as target module, should be more tolerant.
+- Not exactly as target module, should be more tolerant (using predefined).
 - Matt proposes:
   - If get closer to the current one compared to the past one,
     move ahead to the next one.
