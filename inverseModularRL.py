@@ -239,6 +239,30 @@ def debugWeight(sln, filename):
 
   plt.savefig(filename)
 
+def policyCompare(samples, w):
+  """
+  Given samples and weights, compare policies of human and our agent.
+  Args:
+    samples: list of (state, action)
+    w: weight learned
+  Return:
+    Proportion of agreed policies
+  """
+  # define agent
+  import modularAgents
+  import humanWorld
+  continuousEnv = humanWorld.HumanEnvironment(mdp)
+  actionFn = lambda state: humanWorld.HumanWorld.actions
+  qLearnOpts = {'gamma': 0.9,
+                'alpha': 0.5,
+                'epsilon': 0,
+                'actionFn': actionFn}
+  a = modularAgents.ModularAgent(**qLearnOpts)
+  a.setWeights(w)
+  a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
+
+  # go through samples
+
 def humanWorldExperiment(filenames, rang):
   """
   Args:
@@ -260,6 +284,7 @@ def humanWorldExperiment(filenames, rang):
   print rang, ": OK."
 
   debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  policyCompare(samples, w)
   return w
 
 if __name__ == '__main__':

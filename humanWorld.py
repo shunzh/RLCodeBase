@@ -35,6 +35,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     self.turnDist = self.step * 0.25
     self.walkDist = self.step * 1
     self.atBorder = False
+
+  actions = ('L', 'R', 'G')
     
   def getPossibleActions(self, state):
     """
@@ -42,7 +44,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     R: Turn right 30 degrees and walk ahead 0.05m.
     G: Go ahead 0.2m.
     """
-    return ('L', 'R', 'G')
+    return HumanWorld.actions
 
   def getReward(self, state, action, nextState):
     reward = continuousWorld.ContinuousWorld.getReward(self, state, action, nextState)
@@ -295,8 +297,8 @@ def main():
   # GET THE ENVIRONMENT
   ###########################
 
-  #category = 'targs'
-  category = 'obsts'
+  category = 'targs'
+  #category = 'obsts'
   #category = 'segs'
 
   if 'vr' in opts.grid:
