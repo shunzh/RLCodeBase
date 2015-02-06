@@ -1,5 +1,5 @@
 Path following
-- Not exactly as target module, should be more tolerant (using predefined).
+- Using predefined?
 - Matt proposes:
   - If get closer to the current one compared to the past one,
     move ahead to the next one.
@@ -7,8 +7,4 @@ Path following
     to approach the next waypoint.
   - Consider the past, current and next segment.
 
-Agreement on policies.
-
 Multi objects (objects within distance and angle range)
-
-Q: for a human does task A in such a way, what do we expect his behavior in task B?

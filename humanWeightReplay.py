@@ -14,7 +14,6 @@ def plotHuman(plotting, win, subjIdSet, domainId):
   # parse human positions and actions
   for subjId in subjIdSet:
     humanSamples = parseHumanActions('subj' + str(subjId) + '.parsed.mat', int(domainId))
-    allHumanSamples += humanSamples
 
     prevLoc = None
     for sample in humanSamples:
