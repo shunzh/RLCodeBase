@@ -235,39 +235,37 @@ def getHumanWorldDiscreteFuncs():
   sValues = None # Assume not an RL module
 
   def qTarget(state, action):
-    targState, obstState, segState = state
-
-    if not (targState, action) in tValues.keys():
-      raise Exception('Un-learned target ' + str(targState) + ' ' + action)
-    return tValues[targState, action]
+    if not (state, action) in tValues.keys():
+      raise Exception('Un-learned target ' + str(state) + ' ' + action)
+    return tValues[state, action]
 
   def qObstacle(state, action):
-    targState, obstState, segState = state
-
-    if not (obstState, action) in oValues.keys():
-      raise Exception('Un-learned obstacle ' + str(obstState) + ' ' + action)
-    return oValues[obstState, action]
+    if not (state, action) in oValues.keys():
+      raise Exception('Un-learned obstacle ' + str(state) + ' ' + action)
+    return oValues[state, action]
 
   def qSegment(state, action):
-    targState, obstState, segState = state
-
     bigQ = 0.2
     smallQ = 0.1
 
     # hand-made path following
-    if abs(segState[1]) == 0 and action == 'G':
+    if abs(state[1]) == 0 and action == 'G':
       return bigQ
-    elif abs(segState[1]) == 0:
+    elif abs(state[1]) == 0:
       return smallQ
-    elif abs(segState[1]) == 1 and action == 'G':
+    elif abs(state[1]) == 1 and action == 'G':
       return smallQ
-    elif segState[1] < 0 and action == 'L' or segState[1] > 0 and action == 'R':
+    elif state[1] < 0 and action == 'L' or state[1] > 0 and action == 'R':
       return bigQ
     else:
       return 0
-    #return sValues[segState, action]
 
-  return [qTarget, qObstacle, qSegment]
+  # decouple the state representation, and call corresponding q functions
+  return [lambda s, a: qTarget(s[0], a), # closest target
+          lambda s, a: qTarget(s[1], a), # second closest target
+          lambda s, a: qObstacle(s[2], a), # closest obstacle
+          lambda s, a: qObstacle(s[3], a), # second closest obstacle
+          lambda s, a: qSegment(s[4], a)]
 
 
 def getHumanWorldContinuousFuncs():

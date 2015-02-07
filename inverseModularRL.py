@@ -74,9 +74,6 @@ class InverseModularRL:
       # Update the weights for each module accordingly.
       for moduleIdx in xrange(len(self.qFuncs)):
         # check whether this module is off
-        if self.qFuncs[moduleIdx](state, optAction) == None:
-          continue
-
         ret += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
 
         # denominator
@@ -196,15 +193,26 @@ def getSamplesFromMat(filenames, idxSet):
     for idx in idxSet:
       obstDist = mat['pRes'][idx].obstDist1
       obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
+      obstDist2 = mat['pRes'][idx].obstDist2
+      obstAngle2 = mat['pRes'][idx].obstAngle2 / 180.0 * np.pi
+
       targDist = mat['pRes'][idx].targDist1
       targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
+      targDist2 = mat['pRes'][idx].targDist2
+      targAngle2 = mat['pRes'][idx].targAngle2 / 180.0 * np.pi
+
       segDist = mat['pRes'][idx].pathDist
       segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
+
       actions = mat['pRes'][idx].action
 
       # cut the head and tail samples
       for i in range(5, len(targDist) - 15):
-        state = ((targDist[i], targAngle[i]), (obstDist[i], obstAngle[i]), (segDist[i], segAngle[i]))
+        state = ((targDist[i], targAngle[i]),
+                 (targDist2[i], targAngle2[i]),
+                 (obstDist[i], obstAngle[i]),
+                 (obstDist2[i], obstAngle2[i]),
+                 (segDist[i], segAngle[i]))
         beliefState = [featureExtractors.mapStateToBin((dist, angle), 0.3) for (dist, angle) in state]
         action = actions[i]
         samples.append((beliefState, action))
@@ -289,7 +297,7 @@ def humanWorldExperiment(filenames, rang):
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
   print rang, ": OK."
 
-  debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  #debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   return [w, agreedPoliciesRatio] 
 
 if __name__ == '__main__':
@@ -298,6 +306,7 @@ if __name__ == '__main__':
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
+  #humanWorldExperiment(subjFiles, taskRanges[0])
   results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
