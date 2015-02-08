@@ -49,6 +49,16 @@ def getClosestObj(loc, l):
 
   return [minObj, minDist]
 
+
+def getSortedObjs(loc, l):
+  """
+  Sort l out-of-place wrt the distance to loc
+  """
+  newl = list(l)
+  newl.sort(key = lambda obj : numpy.linalg.norm(np.subtract(loc, obj)))
+  return newl
+
+
 class ContinousRadiusLogExtractor(FeatureExtractor):
   def __init__(self, mdp, label):
     self.mdp = mdp
@@ -97,6 +107,13 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
 
     loc, orient = state
 
+    def getOrient(f, t):
+      """
+      Compute the orient from f to t, both are points
+      """
+      vector = np.subtract(t, f)
+      return np.angle(vector[0] + vector[1] * 1j)
+
     if self.label == 'segs':
       if len(self.mdp.objs['segs']) > 0:
         minObj = self.mdp.objs['segs'][0]
@@ -104,13 +121,12 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
       else:
         minObj = loc; minDist = np.inf
     else:
-      [minObj, minDist] = getClosestObj(loc, self.mdp.objs[self.label])
-    vector = np.subtract(minObj, loc)
-    objDirect = np.angle(vector[0] + vector[1] * 1j)
+      l = getSortedObjs(loc, self.mdp.objs[self.label])
+      minDist = numpy.linalg.norm(np.subtract(loc, minObj))
 
+    # TODO
     feats['dist'] = minDist
-    feats['angle'] = adjustAngle(objDirect - orient)
-    feats['angleSq'] = feats['angle'] ** 2
+    feats['angle'] = getOrient(loc, minObj)
     feats['bias'] = 1
 
     #print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']
@@ -200,6 +216,7 @@ def getHumanDiscreteState(mdp):
     ret = []
     for extractor in extractors:
       feats = extractor.getStateFeatures(state)
+      if 
       ret.append(mapStateToBin((feats['dist'], feats['angle']), mdp.step))
     return ret
 

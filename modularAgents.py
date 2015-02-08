@@ -261,10 +261,8 @@ def getHumanWorldDiscreteFuncs():
       return 0
 
   # decouple the state representation, and call corresponding q functions
-  return [lambda s, a: qTarget(s[0], a), # closest target
-          lambda s, a: qTarget(s[1], a), # second closest target
-          lambda s, a: qObstacle(s[2], a), # closest obstacle
-          lambda s, a: qObstacle(s[3], a), # second closest obstacle
+  return [lambda s, a: qTarget(s[0], a) + qTarget(s[1], a), # closest targets
+          lambda s, a: qObstacle(s[2], a) + qObstacle(s[3], a), # closest obstacles
           lambda s, a: qSegment(s[4], a)]
 
 

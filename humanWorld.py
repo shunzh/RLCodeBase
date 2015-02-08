@@ -387,8 +387,6 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
-    #a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-    #a.setQFuncs(modularAgents.getHumanWorldContinuousFuncs())
     a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
     a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
   elif opts.agent == 'random':
