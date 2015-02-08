@@ -264,6 +264,11 @@ def getHumanWorldDiscreteFuncs():
   return [lambda s, a: qTarget(s[0], a) + qTarget(s[1], a), # closest targets
           lambda s, a: qObstacle(s[2], a) + qObstacle(s[3], a), # closest obstacles
           lambda s, a: qSegment(s[4], a)]
+  """
+  return [lambda s, a: qTarget(s[0], a), # closest targets
+          lambda s, a: qObstacle(s[2], a), # closest obstacles
+          lambda s, a: qSegment(s[4], a)]
+  """
 
 
 def getHumanWorldContinuousFuncs():

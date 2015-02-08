@@ -95,6 +95,9 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
     ContinousRadiusLogExtractor.__init__(self, mdp, label)
     # enable then add squared term for angle
 
+    # keep the label for convenience
+    self.label = label
+
   def getFeatures(self, state, action):
     """
     This has to assume that the transition is known.
@@ -112,24 +115,39 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
       Compute the orient from f to t, both are points
       """
       vector = np.subtract(t, f)
-      return np.angle(vector[0] + vector[1] * 1j)
+      objOrient = np.angle(vector[0] + vector[1] * 1j)
+      return adjustAngle(objOrient - orient)
 
     if self.label == 'segs':
+      # get features for waypoints
       if len(self.mdp.objs['segs']) > 0:
         minObj = self.mdp.objs['segs'][0]
         minDist = numpy.linalg.norm(np.subtract(loc, minObj))
       else:
         minObj = loc; minDist = np.inf
-    else:
-      l = getSortedObjs(loc, self.mdp.objs[self.label])
-      minDist = numpy.linalg.norm(np.subtract(loc, minObj))
 
-    # TODO
-    feats['dist'] = minDist
-    feats['angle'] = getOrient(loc, minObj)
+      feats['dist'] = minDist
+      feats['angle'] = getOrient(loc, minObj)
+    else:
+      # get features for targets / objects
+      # get both closest and the second closest -- may not be both used though
+      l = getSortedObjs(loc, self.mdp.objs[self.label])
+      minObj = l[0]
+      minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+      if len(l) > 1:
+        # if there are more than two objects
+        secMinObj = l[1]
+        secMinDist = numpy.linalg.norm(np.subtract(loc, secMinObj))
+      else:
+        secMinObj = loc; secMinDist = np.inf
+      feats['dist'] = minDist
+      feats['angle'] = getOrient(loc, minObj)
+      feats['dist2'] = secMinDist
+      feats['angle2'] = getOrient(loc, secMinObj)
+
     feats['bias'] = 1
 
-    #print 'state feature:', loc, orient, minObj, vector, objDirect, feats['angle']
+    print feats
 
     return feats
 
@@ -208,7 +226,7 @@ def getHumanViewBins(mdp, label):
 
 def getHumanDiscreteState(mdp):
   """
-  Return ((targDist, targAngle), (obstDist, obstAngle), (segDist, segAngle))
+  Return ((targDist, targAngle)_1^2, (obstDist, obstAngle)_1^2, (segDist, segAngle))
   """
   extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
 
@@ -216,8 +234,12 @@ def getHumanDiscreteState(mdp):
     ret = []
     for extractor in extractors:
       feats = extractor.getStateFeatures(state)
-      if 
       ret.append(mapStateToBin((feats['dist'], feats['angle']), mdp.step))
+      if not extractor.label == 'segs':
+        # add second closest objects
+        ret.append(mapStateToBin((feats['dist2'], feats['angle2']), mdp.step))
+
+    print ret
     return ret
 
   return getDistAngelList

@@ -55,3 +55,4 @@ docs/_build/
 # don't include experiments data
 *.mat
 *.eps
+*.png
