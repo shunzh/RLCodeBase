@@ -297,8 +297,8 @@ def main():
   # GET THE ENVIRONMENT
   ###########################
 
-  #category = 'targs'
-  category = 'obsts'
+  category = 'targs'
+  #category = 'obsts'
   #category = 'segs'
 
   if 'vr' in opts.grid:

@@ -132,22 +132,25 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
       # get features for targets / objects
       # get both closest and the second closest -- may not be both used though
       l = getSortedObjs(loc, self.mdp.objs[self.label])
-      minObj = l[0]
-      minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+      if len(l) > 0:
+        minObj = l[0]
+        minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+      else:
+        minObj = loc; minDist = np.inf
+
       if len(l) > 1:
         # if there are more than two objects
         secMinObj = l[1]
         secMinDist = numpy.linalg.norm(np.subtract(loc, secMinObj))
       else:
         secMinObj = loc; secMinDist = np.inf
+
       feats['dist'] = minDist
       feats['angle'] = getOrient(loc, minObj)
       feats['dist2'] = secMinDist
       feats['angle2'] = getOrient(loc, secMinObj)
 
     feats['bias'] = 1
-
-    print feats
 
     return feats
 
@@ -175,23 +178,23 @@ def adjustAngle(angle):
 
 def mapStateToBin((dist, angle), step):
   # FIXME OVERFIT
-  if dist < step * 1:
+  if dist < step * 0.5:
     distBin = 1
-  elif dist < step * 2:
+  elif dist < step * 1:
     distBin = 2
-  elif dist < step * 3:
+  elif dist < step * 1.5:
     distBin = 3
-  elif dist < step * 4:
+  elif dist < step * 2:
     distBin = 4
-  elif dist < step * 5:
+  elif dist < step * 2.5:
     distBin = 5
-  elif dist < step * 8:
+  elif dist < step * 3:
     distBin = 6
-  elif dist < step * 10:
+  elif dist < step * 4:
     distBin = 7
-  elif dist < step * 15:
+  elif dist < step * 5:
     distBin = 8
-  elif dist < step * 20:
+  elif dist < step * 10:
     distBin = 9
   else:
     distBin = 10
@@ -239,7 +242,6 @@ def getHumanDiscreteState(mdp):
         # add second closest objects
         ret.append(mapStateToBin((feats['dist2'], feats['angle2']), mdp.step))
 
-    print ret
     return ret
 
   return getDistAngelList

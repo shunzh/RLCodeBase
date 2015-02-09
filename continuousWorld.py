@@ -49,28 +49,38 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
   def getReachedObjects(self, l):
     """
     Determine whether a state is close to any object, within radius.
-    The radius for segments are larger than that for targets / obstacles.
+    The radius for obstacles should be larger than that of targets.
+    A waypoint is 'reached' when the agent gets closer to the next waypoint.
 
     Args:
       l: the loc to be checked.
-      cond: constraint added
     Return:
       [(String, int)]: A list of the type of object that it's in the radius of, and its id.
                        Return [] if nothing matches.
     """
     ret = []
 
-    for key, locs in self.objs.items():
-      for idx in xrange(len(locs)):
-        dist = numpy.linalg.norm(np.subtract(l, locs[idx]))
-        if key == 'segs':
-          radiusFactor = 3
-        else:
-          radiusFactor = 1
+    # get a target?
+    tLocs = self.objs['targs']
+    for idx in xrange(len(tLocs)):
+      dist = numpy.linalg.norm(np.subtract(l, tLocs[idx]))
+      if dist < self.radius:
+        ret.append(('targs', idx))
 
-        if dist < radiusFactor * self.radius:
-          if key == 'segs' and idx > 0: pass
-          else: ret.append((key, idx))
+    # run into a obstacle?
+    oLocs = self.objs['obsts']
+    for idx in xrange(len(tLocs)):
+      dist = numpy.linalg.norm(np.subtract(l, oLocs[idx]))
+      if dist < self.radius * 2: # larger buffer
+        ret.append(('obsts', idx))
+
+    # close to the next segment?
+    sLocs = self.objs['segs']
+    if len(sLocs) >= 2:
+      distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[0]))
+      distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[1]))
+      if distSeg2 < distSeg1:
+        ret.append(('segs', 0))
 
     # if it's close to nothing
     return ret
@@ -160,8 +170,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Start at the starting location, with no segment previously visited.
     """
     loc = self.objs['entrance']
-    #loc = (-loc[0], -loc[1]) # flip the signs of exit (elevator) to get the entrance
 
+    # face towards the center of the domain
     if loc[0] < 0: angle = 45.0 / 180 * np.pi
     else: angle = - 135.0 / 180 * np.pi
     return (loc, angle)
@@ -177,7 +187,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     # have trouble if two elevators are the same
     #objInfoList = self.getReachedObjects(loc)
     #return ('elevators', 1) in objInfoLists
-    return len(self.objs['segs']) == 0
+    return len(self.objs['segs']) == 0 or len(self.objs['targs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -372,10 +382,8 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
     if len(objInfoLists) > 0: objInfoLists.reverse()
 
     for nextStateType, nextObjId in objInfoLists:
-      if nextStateType == 'targs':
+      if nextStateType == 'targs' or nextStateType == 'segs':
         self.mdp.clearObj(nextStateType, nextObjId)
-      elif nextStateType == 'segs':
-        self.mdp.clearObj(nextStateType, 0)
 
 
 def getUserAction(state, actionFunction):

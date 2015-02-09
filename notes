@@ -1,10 +1,9 @@
 Path following
+- Shrinking distance. activate next segment when closer.
 - Using predefined?
-- Matt proposes:
-  - If get closer to the current one compared to the past one,
-    move ahead to the next one.
-  - Consider the distance to the path segment, and progress made
-    to approach the next waypoint.
-  - Consider the past, current and next segment.
 
-Multi objects (objects within distance and angle range)
+Obstacle size - ok
+
+contacted number of objects
+
+fine-grined q table - ok
