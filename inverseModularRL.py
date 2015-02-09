@@ -297,7 +297,7 @@ def humanWorldExperiment(filenames, rang):
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
   print rang, ": OK."
 
-  #debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   return [w, agreedPoliciesRatio] 
 
 if __name__ == '__main__':
