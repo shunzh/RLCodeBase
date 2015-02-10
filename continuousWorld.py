@@ -77,6 +77,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     # close to the next segment?
     sLocs = self.objs['segs']
     segIdx = 0
+    # FIXME should be `while`?
     if len(sLocs) > segIdx + 1:
       # when get closer to the next one
       distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
