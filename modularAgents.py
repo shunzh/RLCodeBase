@@ -245,27 +245,23 @@ def getHumanWorldDiscreteFuncs():
     return oValues[state, action]
 
   def qSegment(state, action):
-    bigQ = 0.2
-    smallQ = 0.1
-
     dist, orient = state
+    # FIXME
     turnAngle = 30 / 180 * np.pi
+    walkDist = 0.3
+    turnDist = 0.3 * 0.25
 
     if action == 'L':
       newOrient = featureExtractors.adjustAngle(orient - turnAngle)
+      return turnDist * np.cos(newOrient)
     elif action == 'R':
       newOrient = featureExtractors.adjustAngle(orient + turnAngle)
+      return turnDist * np.cos(newOrient)
     elif action == 'G':
       newOrient = orient
+      return walkDist * np.cos(newOrient)
     else:
       raise Exception('Unknown Action.')
-
-    if newOrient < np.pi / 4 and newOrient > - np.pi / 4:
-      return bigQ
-    elif newOrient < np.pi / 2 and newOrient > - np.pi / 2:
-      return smallQ
-    else:
-      return 0
 
   # decouple the state representation, and call corresponding q functions
   return [lambda s, a: qTarget(s[0], a) + qTarget(s[1], a), # closest targets

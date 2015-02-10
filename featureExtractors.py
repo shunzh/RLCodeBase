@@ -240,9 +240,11 @@ def getHumanDiscreteState(mdp):
     ret = []
     for extractor in extractors:
       feats = extractor.getStateFeatures(state)
-      ret.append(mapStateToBin((feats['dist'], feats['angle']), mdp.step))
-      if not extractor.label == 'segs':
-        # add second closest objects
+      if extractor.label == 'segs':
+        #FIXME segs are not in bins
+        ret.append((feats['dist'], feats['angle']))
+      else:
+        ret.append(mapStateToBin((feats['dist'], feats['angle']), mdp.step))
         ret.append(mapStateToBin((feats['dist2'], feats['angle2']), mdp.step))
 
     return ret
