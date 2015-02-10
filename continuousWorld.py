@@ -76,10 +76,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     # close to the next segment?
     sLocs = self.objs['segs']
-    if len(sLocs) >= 2:
+    if len(sLocs) > 1:
       distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[0]))
       distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[1]))
-      if distSeg2 < distSeg1:
+      if distSeg1 > distSeg2 :
         ret.append(('segs', 0))
     elif len(sLocs) == 1:
       # remove the last one upon reaching it
