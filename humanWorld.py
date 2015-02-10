@@ -127,7 +127,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
   if 'startEpisode' in dir(agent): agent.startEpisode()
   message("BEGINNING EPISODE: "+str(episode)+"\n")
 
-  runs = 1000
+  runs = 500
 
   while True:
 
@@ -281,7 +281,7 @@ def plotQFuncs(values, filename):
 
   plt.imshow(data, interpolation='none')
   plt.xticks(range(9), ['-135', '-90', '-45', '-15', '0', '15', '45', '90', '135'])
-  plt.yticks(range(10), ['>20', '20', '15', '10', '8', '5', '4', '3', '2', '1'])
+  plt.yticks(range(10), ['>10', '10', '5', '4', '3', '2.5', '2', '1.5', '1', '.5'])
   plt.xlabel('Angle');
   plt.ylabel('Distance (x steps)');
 
@@ -297,9 +297,9 @@ def main():
   # GET THE ENVIRONMENT
   ###########################
 
-  category = 'targs'
+  #category = 'targs'
   #category = 'obsts'
-  #category = 'segs'
+  category = 'segs'
 
   if 'vr' in opts.grid:
     vrDomainId = int(opts.grid[2:])

@@ -232,7 +232,7 @@ def getHumanWorldDiscreteFuncs():
   # these are util.Counter objects
   tValues = pickle.load(open('learnedValues/humanAgenttargsValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
-  sValues = tValues
+  sValues = pickle.load(open('learnedValues/humanAgentsegsValues.pkl'))
 
   def qTarget(state, action):
     if not (state, action) in tValues.keys():
@@ -245,20 +245,9 @@ def getHumanWorldDiscreteFuncs():
     return oValues[state, action]
 
   def qSegment(state, action):
-    bigQ = 0.2
-    smallQ = 0.1
-
-    # hand-made path following
-    if abs(state[1]) == 0 and action == 'G':
-      return bigQ
-    elif abs(state[1]) == 0:
-      return smallQ
-    elif abs(state[1]) == 1 and action == 'G':
-      return smallQ
-    elif state[1] < 0 and action == 'L' or state[1] > 0 and action == 'R':
-      return bigQ
-    else:
-      return 0
+    if not (state, action) in sValues.keys():
+      raise Exception('Un-learned target ' + str(state) + ' ' + action)
+    return sValues[state, action]
 
   # decouple the state representation, and call corresponding q functions
   return [lambda s, a: qTarget(s[0], a) + qTarget(s[1], a), # closest targets

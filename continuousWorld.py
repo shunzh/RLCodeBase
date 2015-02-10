@@ -77,6 +77,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     # close to the next segment?
     sLocs = self.objs['segs']
     if len(sLocs) > 1:
+      # when get closer to the next one
       distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[0]))
       distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[1]))
       if distSeg1 > distSeg2 :
@@ -258,7 +259,8 @@ def simpleToyDomain(category = 'targs'):
     # random entrance point near the center
     entrance = (size * 2 / 5 + random.random() * size / 5, size * 2 / 5 + random.random() * size / 5)
   elif category == 'segs':
-    segs = [(size / 2, size / 2)]; obsts = [infPos]; targs = [infPos]
+    segs = [(size / 2, size / 2), (random.random() * size, random.random() * size)]
+    obsts = [infPos]; targs = [infPos]
     entrance = (random.random() * size, random.random() * size)
 
   elevators = []
