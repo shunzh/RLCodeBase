@@ -248,14 +248,14 @@ def simpleToyDomain(category = 'targs'):
   size = 3.0
 
   # place that can't be reached
-  infPos = (size + 1, size + 1)
+  infPos = (size + 1, size + 1); infPos2 = (size + 3, size + 3)
 
   if category == 'targs':
-    targs = [(size / 2, size / 2)]; obsts = [infPos]; segs = [infPos]
+    targs = [(size / 2, size / 2)]; obsts = [infPos]; segs = [infPos, infPos2]
     # set the starting point to be random for training
     entrance = (random.random() * size, random.random() * size)
   elif category == 'obsts':
-    obsts = [(size / 2, size / 2)]; targs = [infPos]; segs = [infPos]
+    obsts = [(size / 2, size / 2)]; targs = [infPos]; segs = [infPos, infPos2]
     # random entrance point near the center
     entrance = (size * 2 / 5 + random.random() * size / 5, size * 2 / 5 + random.random() * size / 5)
   elif category == 'segs':

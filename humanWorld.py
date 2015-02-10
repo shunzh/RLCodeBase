@@ -297,9 +297,9 @@ def main():
   # GET THE ENVIRONMENT
   ###########################
 
-  #category = 'targs'
+  category = 'targs'
   #category = 'obsts'
-  category = 'segs'
+  #category = 'segs'
 
   if 'vr' in opts.grid:
     vrDomainId = int(opts.grid[2:])
