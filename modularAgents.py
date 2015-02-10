@@ -245,18 +245,12 @@ def getHumanWorldDiscreteFuncs():
     return oValues[state, action]
 
   def qSegment(state, action):
-    bigQ = 0.2
-    smallQ = 0.1
+    distBin, orientBin = state
 
-    # hand-made path following
-    if abs(state[1]) == 0 and action == 'G':
-      return bigQ
-    elif abs(state[1]) == 0:
-      return smallQ
-    elif abs(state[1]) == 1 and action == 'G':
-      return smallQ
-    elif state[1] < 0 and action == 'L' or state[1] > 0 and action == 'R':
-      return bigQ
+    if action == 'G' and abs(orientBin) <= 2 or\
+       action == 'L' and orientBin >= -3 and orientBin <= 1 or\
+       action == 'R' and orientBin >= -1 and orientBin <= 3:
+      return 0.5
     else:
       return 0
 
