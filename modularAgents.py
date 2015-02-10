@@ -245,11 +245,17 @@ def getHumanWorldDiscreteFuncs():
     return oValues[state, action]
 
   def qSegment(state, action):
-    if not (state, action) in sValues.keys():
-      raise Exception('Un-learned target ' + str(state) + ' ' + action)
-    return sValues[state, action]
+    distBin, orientBin = state
+
+    if action == 'G' and abs(orientBin) <= 2 or\
+       action == 'L' and orientBin >= -3 and orientBin <= 1 or\
+       action == 'R' and orientBin >= -1 and orientBin <= 3:
+      return 0.5
+    else:
+      return 0
 
   # decouple the state representation, and call corresponding q functions
+  """
   return [lambda s, a: qTarget(s[0], a) + qTarget(s[1], a), # closest targets
           lambda s, a: qObstacle(s[2], a) + qObstacle(s[3], a), # closest obstacles
           lambda s, a: qSegment(s[4], a)]
@@ -257,7 +263,6 @@ def getHumanWorldDiscreteFuncs():
   return [lambda s, a: qTarget(s[0], a), # closest targets
           lambda s, a: qObstacle(s[2], a), # closest obstacles
           lambda s, a: qSegment(s[4], a)]
-  """
 
 
 def getHumanWorldContinuousFuncs():
