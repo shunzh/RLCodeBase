@@ -81,6 +81,11 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[1]))
       if distSeg2 < distSeg1:
         ret.append(('segs', 0))
+    elif len(sLocs) == 1:
+      # remove the last one upon reaching it
+      distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[0]))
+      if distSeg1 < self.radius:
+        ret.append(('segs', 0))
 
     # if it's close to nothing
     return ret

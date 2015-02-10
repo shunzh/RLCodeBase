@@ -248,15 +248,22 @@ def getHumanWorldDiscreteFuncs():
     bigQ = 0.2
     smallQ = 0.1
 
-    # hand-made path following
-    if abs(state[1]) == 0 and action == 'G':
+    dist, orient = state
+    turnAngle = 30 / 180 * np.pi
+
+    if action == 'L':
+      newOrient = featureExtractors.adjustAngle(orient - turnAngle)
+    elif action == 'R':
+      newOrient = featureExtractors.adjustAngle(orient + turnAngle)
+    elif action == 'G':
+      newOrient = orient
+    else:
+      raise Exception('Unknown Action.')
+
+    if newOrient < np.pi / 4 and newOrient > - np.pi / 4:
       return bigQ
-    elif abs(state[1]) == 0:
+    elif newOrient < np.pi / 2 and newOrient > - np.pi / 2:
       return smallQ
-    elif abs(state[1]) == 1 and action == 'G':
-      return smallQ
-    elif state[1] < 0 and action == 'L' or state[1] > 0 and action == 'R':
-      return bigQ
     else:
       return 0
 

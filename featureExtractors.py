@@ -123,6 +123,9 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
       if len(self.mdp.objs['segs']) > 1:
         minObj = self.mdp.objs['segs'][1] # look at the NEXT waypoint
         minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+      elif len(self.mdp.objs['segs']) == 1:
+        minObj = self.mdp.objs['segs'][0] # this is the last segment
+        minDist = numpy.linalg.norm(np.subtract(loc, minObj))
       else:
         minObj = loc; minDist = np.inf
 
