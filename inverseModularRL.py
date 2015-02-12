@@ -215,14 +215,33 @@ def getSamplesFromMat(filenames, idxSet):
 
   return samples
 
-def debugWeight(sln):
+def debugWeight(sln, filename):
+  import matplotlib.pyplot as plt
+
+  data = []
   for i in range(0, 11):
+    row = []
     for j in range(0, 11 - i):
       k = 10 - i - j
-      print -sln.obj([0.1 * i, 0.1 * j, 0.1 * k]),
+      row.append(-sln.obj([0.1 * i, 0.1 * j, 0.1 * k]))
     for j in range(11 - i, 11):
-      print 0,
-    print
+      row.append(0) # will be masked
+    data.append(row)
+
+  mask = np.tri(11, k=-1)
+  mask = np.fliplr(mask)
+  data = np.ma.array(data, mask=mask)
+
+  plt.imshow(data, interpolation='none')
+  plt.xticks(range(11), np.arange(0,1.1,0.1))
+  plt.yticks(range(11), np.arange(0,1.1,0.1))
+  plt.xlabel('Obstacle Module Weight');
+  plt.ylabel('Target Module Weight');
+
+  plt.jet()
+  plt.colorbar()
+
+  plt.savefig(filename)
 
 def humanWorldExperiment(filenames, rang):
   """
@@ -244,7 +263,7 @@ def humanWorldExperiment(filenames, rang):
   print rang, ": weights are", w
   print rang, ": OK."
 
-  #debugWeight(sln)
+  debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   return w
 
 if __name__ == '__main__':
