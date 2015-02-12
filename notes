@@ -1,8 +1,12 @@
 Path following
-- Shrinking distance. activate next segment when closer - ok
+- Shrinking distance. activate next segment when closer - ok, not working
+- Generally okay, then for path only module.
+- Still regard waypoint as target?
+
+===
 
 Obstacle size - ok
 
-contacted number of objects
+contacted number of objects - output to stats
 
 fine-grined q table - ok
