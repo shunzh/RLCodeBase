@@ -232,13 +232,12 @@ def debugWeight(sln, filename):
   mask = np.fliplr(mask)
   data = np.ma.array(data, mask=mask)
 
-  plt.imshow(data, interpolation='none')
+  plt.imshow(data, cmap='bone', interpolation='none')
   plt.xticks(range(11), np.arange(0,1.1,0.1))
   plt.yticks(range(11), np.arange(0,1.1,0.1))
   plt.xlabel('Obstacle Module Weight');
   plt.ylabel('Target Module Weight');
 
-  plt.jet()
   plt.colorbar()
 
   plt.savefig(filename)
