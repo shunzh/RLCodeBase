@@ -662,7 +662,7 @@ def main():
                   'extractor': extractor}
     a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
   elif opts.agent == 'Modular':
-    import modularAgents
+    import modularAgents, modularQFuncs
     continuousEnv = ContinuousEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
@@ -671,7 +671,7 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules
-    a.setQFuncs(modularAgents.getContinuousWorldFuncs(mdp))
+    a.setQFuncs(modularQFuncs.getContinuousWorldFuncs(mdp))
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:

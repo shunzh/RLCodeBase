@@ -230,6 +230,9 @@ def parseOptions():
     optParser.add_option('-s', '--speed',action='store', metavar="S", type=float,
                          dest='speed',default=1.0,
                          help='Speed of animation, S > 1.0 is faster, 0.0 < S < 1.0 is slower (default %default)')
+    optParser.add_option('-c', '--category',action='store', metavar="S", type=str,
+                         dest='category',default=None,
+                         help='For HumanWorld domain to train module separately, can be "targs", "obsts" or "segs"')
     optParser.add_option('-m', '--manual',action='store_true',
                          dest='manual',default=False,
                          help='Manually control agent')
@@ -252,7 +255,7 @@ def parseOptions():
       
     return opts
 
-def parseValues(values, filename):
+def saveValues(values, filename):
   """
   Write to a file in the local directory for temporary use.
   Note that the files in learnedValues/ are used.
@@ -288,14 +291,11 @@ def plotQFuncs(values, filename):
    
 def main(): 
   opts = parseOptions()
+  possibleCategories = ['targs', 'obsts', 'segs']
 
   ###########################
   # GET THE ENVIRONMENT
   ###########################
-
-  #category = 'targs'
-  category = 'obsts'
-  #category = 'segs'
 
   if 'vr' in opts.grid:
     vrDomainId = int(opts.grid[2:])
@@ -309,9 +309,13 @@ def main():
   elif opts.grid == 'vrTrain':
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0, randInit = True)
   elif opts.grid == 'toy':
-    init = lambda: continuousWorld.toyDomain(category)
+    if not opts.category in possibleCategories:
+      raise Exception('Unexpected category ' + opts.category)
+    init = lambda: continuousWorld.toyDomain(opts.category)
   elif opts.grid == 'simple':
-    init = lambda: continuousWorld.simpleToyDomain(category)
+    if not opts.category in possibleCategories:
+      raise Exception('Unexpected category ' + opts.category)
+    init = lambda: continuousWorld.simpleToyDomain(opts.category)
   else:
     raise Exception("Unknown environment!")
 
@@ -352,8 +356,8 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
-    a.setValues('learnedValues/humanAgent' + category + 'Values.pkl')
-    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, category))
+    a.setValues('learnedValues/humanAgent' + opts.category + 'Values.pkl')
+    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, opts.category))
   elif opts.agent == 'sarsa':
     gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
@@ -363,7 +367,7 @@ def main():
                   'actionFn': actionFn}
     a = sarsaLambdaAgents.SarsaLambdaAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
-    extractor = featureExtractors.HumanViewExtractor(mdp, category)
+    extractor = featureExtractors.HumanViewExtractor(mdp, opts.category)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -371,9 +375,9 @@ def main():
                   'actionFn': actionFn,
                   'extractor': extractor}
     a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
-    a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
+    a.setWeights('learnedValues/humanAgent' + opts.category + 'Weights.pkl')
   elif opts.agent == 'Modular':
-    import modularAgents
+    import modularAgents, modularQFuncs
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -383,7 +387,7 @@ def main():
     a.setWeights(weights)
     #a.setWeights([0, 0, 1])
     a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
-    a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
+    a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
@@ -404,11 +408,6 @@ def main():
   else:
     if not opts.manual: raise 'Unknown agent type: '+opts.agent
     
-    
-  ###########################
-  # RUN EPISODES
-  ###########################
-
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
   if not opts.quiet:
     class DisplayCallback:
@@ -454,7 +453,7 @@ def main():
     messageCallback = lambda x: None
 
   if opts.pause:
-    pauseCallback = lambda : raw_input("waiting")
+    pauseCallback = lambda : raw_input("Press enter to continue.")
   else:
     pauseCallback = lambda : None
 
@@ -471,7 +470,10 @@ def main():
     print
   returns = 0
   for episode in range(1, opts.episodes+1):
-    mdp.__init__(init()) # reset the environment every time.
+    # Some environments have random settings (random init state, etc.).
+    # So reset the environment every time.
+    mdp.__init__(init()) 
+
     returns += runEpisode(a, env, opts.discount, decisionCallback, displayCallback, messageCallback, pauseCallback, episode)
   if opts.episodes > 0:
     print
@@ -481,10 +483,11 @@ def main():
     
   if opts.agent == 'Approximate':
     print a.weights
-    parseValues(a.weights, 'humanAgent' + category + 'Weights.pkl')
+    saveValues(a.weights, 'humanAgent' + opts.category + 'Weights.pkl')
   elif opts.agent == 'q':
-    parseValues(a.values, 'humanAgent' + category + 'Values.pkl')
-    plotQFuncs(a.values, 'humanAgent' + category + 'Q.png')
+    # output learned values to pickle file
+    saveValues(a.values, 'humanAgent' + opts.category + 'Values.pkl')
+    plotQFuncs(a.values, 'humanAgent' + opts.category + 'Q.png')
 
   # hold window
   if not opts.quiet and 'vr' in opts.grid:

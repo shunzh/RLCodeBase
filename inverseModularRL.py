@@ -5,6 +5,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 import sys
+import modularQFuncs
 
 class InverseModularRL:
   """
@@ -157,7 +158,7 @@ def continuousWorldExperiment():
     w = map(float, sys.argv[1:])
     a.setWeights(w)
 
-  qFuncs = modularAgents.getContinuousWorldFuncs(m)
+  qFuncs = modularQFuncs.getContinuousWorldFuncs(m)
   # set the weights and corresponding q-functions for its sub-mdps
   # note that the modular agent is able to determine the optimal policy based on these
   a.setQFuncs(qFuncs)
@@ -266,7 +267,7 @@ def policyCompare(samples, w):
                 'actionFn': actionFn}
   a = modularAgents.ModularAgent(**qLearnOpts)
   a.setWeights(w)
-  a.setQFuncs(modularAgents.getHumanWorldDiscreteFuncs())
+  a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
 
   # go through samples
   agreedPolicies = 0
@@ -282,7 +283,7 @@ def humanWorldExperiment(filenames, rang):
   """
   print rang, ": Started."
   #qFuncs = modularAgents.getHumanWorldContinuousFuncs()
-  qFuncs = modularAgents.getHumanWorldDiscreteFuncs()
+  qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
 
   sln = InverseModularRL(qFuncs)
   samples = getSamplesFromMat(filenames, rang)
@@ -301,6 +302,7 @@ def humanWorldExperiment(filenames, rang):
   return [w, agreedPoliciesRatio] 
 
 if __name__ == '__main__':
+  # run tasks in parallel (mine is quad-core)
   from multiprocessing import Pool
   pool = Pool(processes=4)
 
