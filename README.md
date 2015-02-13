@@ -7,41 +7,37 @@ purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
 John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html**
 
-This is implemented as instructed in reinforcement.html. As this repo is modified, it may not work as expected as specified in the html file.
-
 Make sure you have python-tk installed for GUI display. You may do it by `sudo apt-get install python-tk`.
 
-Useful commands
+Useful Commands
 --------------
 
 See all possible arguments:
 
-``python gridworld.py -h``
+``python humanWorld.py -h``
 
 Example:
 
-``python gridworld.py -a Modular -g WalkAvoidGrid -k 10 -q``
+``python humanWorld.py -a q -g simple -c obsts -k 10 -q``
 
-- `-a Modular`: use modular agent
-- `-g ObstacleGrid`: in ObstacleGrid domain.
+- `-a q`: use Q-learning agent
+- `-g simple`: in the simple domain.
 - `-k 10`: run 10 iterations.
 - `-q`: quite running, not showing the learning process.
 
-Define new agent
+Learning Agents
 --------------
 
 For existing agents:
 
 - Q learning agent is defined in qlearningAgents.py.
 - VI learning agent is defined in valueIterationAgents.py.
-- Modular MDP agent is defined in modularAgents.py.
+- Modular Q agent is defined in modularAgents.py.
 
-ModularAgent is derived from ApproximateQAgent - which is a useful base class for creating new types of agent.
-
-Define new gridworld environment
+Environments
 --------------
 
-There are many examples in gridworld.py, such as `getMazeGrid`, `getBookGrid`, `getBridgeGrid`, etc.
+Examples for discrete environments can be found in gridworld.py, such as `getMazeGrid`, `getBookGrid`, `getBridgeGrid`, etc.
 You may add you own by looking at their definitions. Concretely,
 
 - define a get$GridlWorldName$ function in gridworld.py. In which,
@@ -54,12 +50,9 @@ You may add you own by looking at their definitions. Concretely,
 - create a lambda expression, usually called `isFinal`, to decide whether a state is a terminal state. If you want the task terminates upon receiving any reward, use `terminateIfInt`
 - return `Gridworld(grid, isFinal)`
 
+For continuous environments, I have implemented `ContinuousWorld`, `humanWrold`. You can find in corresponding files.
+
 Modular IRL
 --------------
 Please look at the main function of inverseModularRL.py. `scipy.optimize.minimize` is used.
 
-TODO
---------------
-
-- Create a hyper level MDP. The states are the features extracted from sub-MDPs.
-	* features: std of the sub MDP, max-Q value.
