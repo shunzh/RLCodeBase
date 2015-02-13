@@ -1,6 +1,4 @@
 from qlearningAgents import ApproximateQAgent
-from game import Actions
-import util
 import featureExtractors
 
 import math
@@ -122,80 +120,11 @@ class ReducedModularAgent(ModularAgent):
     return ModularAgent.final(self, self.getState(state))
 
 
-def getObsAvoidFuncs(mdp):
-  """
-  Return Q functions for modular mdp for obstacle avoidance behavior
-
-  the environment is passed by mdp
-  """
-  obstacle = {'bias': -0.20931133310480204, 'dis': 0.06742681562641269}
-  target = {'bias': 0.20931133310480204, 'dis': -0.06742681562641269}
-  sidewalk = {'x': 0.06250000371801567}
-
-  def getNext(state, action):
-    x, y = state
-    dx, dy = Actions.directionToVector(action)
-    next_x, next_y = int(x + dx), int(y + dy)
-    if next_x < 0 or next_x >= mdp.grid.width:
-      next_x = x
-    if next_y < 0 or next_y >= mdp.grid.height:
-      next_y = y
-
-    return [next_x, next_y]
-
-  def qWalk(state, action):
-    """
-    QValue of forward walking
-    """
-    next_x, next_y = getNext(state, action)
-    return sidewalk['x'] * next_x
-
-  def radiusBias(state, action, cond, w):
-    """
-    Compute a Q value responding to an object, considering the distance to it.
-    This is used by obstacle avoidance, and target obtaining.
-
-    Args:
-      state, action
-      cond: the lambda expr that given state is the object we want
-      w: weight vector
-    """
-    x, y = state
-    next_x, next_y = getNext(state, action)
-
-    # find the distance to the nearest object
-    minDist = mdp.grid.width * mdp.grid.height
-    for xt in range(mdp.grid.width):
-      for yt in range(mdp.grid.height):
-        cell = mdp.grid[xt][yt] 
-        if cond(cell):
-          # it's an obstacle!
-          dist = math.sqrt((xt - next_x) ** 2 + (yt - next_y) ** 2)
-          if (dist < minDist): minDist = dist
-    return minDist * w['dis'] + 1 * w['bias']
-
-  def qObstacle(state, action):
-    cond = lambda s : (type(s) == int or type(s) == float) and s == -1
-    return radiusBias(state, action, cond, obstacle)
-
-  def qTarget(state, action):
-    cond = lambda s : (type(s) == int or type(s) == float) and s == +1
-    return radiusBias(state, action, cond, target)
-
-  return [qWalk, qObstacle, qTarget]
-
-
 def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLogExtractor):
   """
-  Feature extraction for continuous world.
+  DUMMY these are q functions to test agent's behavior in basic continuous domain.
+  Values are given heuristically.
   """
-  # Raw results
-  """
-  target = {'bias': 0.51638480403475961, 'dist': -0.083742023988640099}
-  obstacle = {'bias': -0.91251246907492323, 'dist': 1.9383664807859244}
-  segment = {'bias': 0.080048736631393835, 'dist': -0.041394412243896173}
-  """
-
   target = {'bias': 1, 'dist': -0.16}
   obstacle = {'bias': -1, 'dist': 0.16}
   segment = {'bias': 0.1, 'dist': -0.05}
@@ -232,7 +161,7 @@ def getHumanWorldDiscreteFuncs():
   # these are util.Counter objects
   tValues = pickle.load(open('learnedValues/humanAgenttargsValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
-  sValues = None
+  sValues = tValues # suppose same as target module
 
   def qTarget(state, action):
     if not (state, action) in tValues.keys():
@@ -245,20 +174,9 @@ def getHumanWorldDiscreteFuncs():
     return oValues[state, action]
 
   def qSegment(state, action):
-    bigQ = 0.2
-    smallQ = 0.1
-
-    # hand-made path following
-    if abs(state[1]) == 0 and action == 'G':
-      return bigQ
-    elif abs(state[1]) == 0:
-      return smallQ
-    elif abs(state[1]) == 1 and action == 'G':
-      return smallQ
-    elif state[1] < 0 and action == 'L' or state[1] > 0 and action == 'R':
-      return bigQ
-    else:
-      return 0
+    if not (state, action) in tValues.keys():
+      raise Exception('Un-learned target ' + str(state) + ' ' + action)
+    return tValues[state, action]
 
   # decouple the state representation, and call corresponding q functions
   """

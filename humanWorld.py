@@ -1,16 +1,13 @@
 import random
 import sys
-import mdp
-import environment
-import util
 import optparse
 import featureExtractors
 import continuousWorld
 import humanWeightReplay
+from gridworld import GridworldEnvironment
+import sarsaLambdaAgents
 
 import numpy as np
-import numpy.linalg
-import warnings
 
 from graphics import *
 
@@ -137,7 +134,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     pause()
     
     # END IF IN A TERMINAL STATE
-    actions = environment.getPossibleActions(state)
     runs -= 1
     if environment.isFinal() or runs == 0:
       print "EPISODE "+str(episode)+" COMPLETE: RETURN WAS "+str(returns)+"\n"
@@ -368,7 +364,6 @@ def main():
     a = sarsaLambdaAgents.SarsaLambdaAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
     extractor = featureExtractors.HumanViewExtractor(mdp, category)
-    continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -379,7 +374,6 @@ def main():
     a.setWeights('learnedValues/humanAgent' + category + 'Weights.pkl')
   elif opts.agent == 'Modular':
     import modularAgents
-    continuousEnv = HumanEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
