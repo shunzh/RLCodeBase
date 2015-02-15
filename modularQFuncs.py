@@ -1,9 +1,9 @@
-import featureExtractors
-
 """
 Q functions that used for continuous world and human world domains.
 These functions are either hard-coded or read from pickle files.
 """
+
+import featureExtractors
 
 def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLogExtractor):
   """
@@ -46,7 +46,7 @@ def getHumanWorldDiscreteFuncs():
   # these are util.Counter objects
   tValues = pickle.load(open('learnedValues/humanAgenttargsValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
-  sValues = tValues # suppose same as target module
+  sValues = None # FIXME not using an RL module
 
   def qTarget(state, action):
     if not (state, action) in tValues.keys():
@@ -59,9 +59,20 @@ def getHumanWorldDiscreteFuncs():
     return oValues[state, action]
 
   def qSegment(state, action):
-    if not (state, action) in tValues.keys():
-      raise Exception('Un-learned target ' + str(state) + ' ' + action)
-    return tValues[state, action]
+    bigQ = 0.2
+    smallQ = 0.1
+
+    # hand-made path following
+    if abs(state[1]) == 0 and action == 'G':
+      return bigQ
+    elif abs(state[1]) == 0:
+      return smallQ
+    elif abs(state[1]) == 1 and action == 'G':
+      return smallQ
+    elif state[1] < 0 and action == 'L' or state[1] > 0 and action == 'R':
+      return bigQ
+    else:
+      return 0
 
   # decouple the state representation, and call corresponding q functions
   """

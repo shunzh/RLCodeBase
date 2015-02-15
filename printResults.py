@@ -1,3 +1,7 @@
+"""
+Print human-readable learning results to std output. 
+"""
+
 import pickle
 
 weights = pickle.load(open('learnedValues/weights.pkl'))

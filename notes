@@ -3,6 +3,8 @@ Path following
 - Generally okay, then for path only module.
 - Still regard waypoint as target?
 
+Q table should be symmetric.
+
 ===
 
 Obstacle size - ok
