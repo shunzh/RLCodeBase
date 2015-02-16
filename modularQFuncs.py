@@ -64,12 +64,17 @@ def getHumanWorldDiscreteFuncs():
 
     # hand-made path following
     if abs(state[1]) == 0 and action == 'G':
+      # good orientation, good action
       return bigQ
     elif abs(state[1]) == 0:
+      # good orientation
+      return bigQ
       return smallQ
     elif abs(state[1]) == 1 and action == 'G':
+      # ok orientation, ok action
       return smallQ
     elif state[1] < 0 and action == 'L' or state[1] > 0 and action == 'R':
+      # ok orientation, good action
       return bigQ
     else:
       return 0
