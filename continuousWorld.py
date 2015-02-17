@@ -14,6 +14,7 @@ import warnings
 from graphics import *
 
 from game import Actions
+import humanInfoParser
 
 class ContinuousWorld(mdp.MarkovDecisionProcess):
   """
@@ -369,10 +370,10 @@ def loadFromMat(filename, domainId, randInit = False):
     ret['objs']['elevators'][0] = (x, y)
 
   # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.1905
+  ret['radius'] = humanInfoParser.radius
 
   # step size of the agent movement
-  ret['step'] = 0.3
+  ret['step'] = humanInfoParser.stepSize
 
   return ret
 

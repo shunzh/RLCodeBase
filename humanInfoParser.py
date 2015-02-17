@@ -1,12 +1,13 @@
-import inverseModularRL
-import modularAgents
 import continuousWorld, humanWorld
 import util
-import sys
-import featureExtractors
 from graphics import *
 
 import numpy as np
+
+# some useful values in human data
+stepSize = 0.3
+radius = 0.1905
+turnAngle = 30/ 180 * np.pi
 
 def plotHuman(plotting, win, subjIdSet, domainId):
   dim = plotting.dim
@@ -30,7 +31,8 @@ def plotHuman(plotting, win, subjIdSet, domainId):
 
 def parseHumanActions(filename, domainId):
   """
-  Parse human behavivors from mat, which includes at which point, take which action.
+  Parse human behavivors from mat, which contains actions and angle changes at all data points.
+  (Action is redundant given change of angles. Just for convenience.)
 
   Args:
     filename: mat file to read

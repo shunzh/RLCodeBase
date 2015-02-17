@@ -1,9 +1,11 @@
 """
 Q functions that used for continuous world and human world domains.
-These functions are either hard-coded or read from pickle files.
+
+These functions return the q functions for different scenarios.
 """
 
 import featureExtractors
+import numpy as np
 
 def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLogExtractor):
   """
@@ -89,6 +91,40 @@ def getHumanWorldDiscreteFuncs():
           lambda s, a: qObstacle(s[2], a), # closest obstacles
           lambda s, a: qSegment(s[4], a)]
 
+def getHumanWorldQPotentialFuncs():
+  """
+  Rather learned from samples, we define the potential functions (a value function) based on reward.
+  Q functions here just reflect the potential functions.
+  """
+  gamma = 0.9
+  
+  def transition(s, a):
+    #FIXME better ways?
+    """
+    Simulate the dynamics dependent on distance, angle to an object, and action taken.
+    By creating an ad-hoc coordinate space and do a one step simulation.
+    """
+    dist, angle = s
+    #TODO
+    return None
+
+  def vTarget(s):
+    dist, orient = s
+    return 1 * np.power(dist, gamma)
+  
+  def vObstacle(s):
+    dist, orient = s
+    return -1 * np.power(dist, gamma)
+
+  def qTarget(s):
+    #TODO
+    return None
+
+  def qObstacle(state, action):
+    return None
+
+  def qSegment(state, action):
+    return None
 
 def getHumanWorldContinuousFuncs():
   """

@@ -69,7 +69,7 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
     loc, orient = state
     newLoc, newOrient = self.mdp.getTransitionStatesAndProbs(state, action)[0][0]
 
-    if label == 'segs':
+    if self.label == 'segs':
       if len(self.mdp.objs['segs']) > 0:
         minObj = self.mdp.objs['segs'][0]
         minDist = numpy.linalg.norm(np.subtract(loc, minObj))
@@ -168,6 +168,8 @@ def getHumanContinuousState(mdp):
     for extractor in extractors:
       feats = extractor.getStateFeatures(state)
       ret.append((feats['dist'], feats['angle']))
+      if not extractor.label == 'segs':
+        ret.append((feats['dist2'], feats['angle2']))
     return ret
 
   return getDistAngelList

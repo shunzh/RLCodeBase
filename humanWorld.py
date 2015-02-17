@@ -3,7 +3,7 @@ import sys
 import optparse
 import featureExtractors
 import continuousWorld
-import humanWeightReplay
+import humanInfoParser
 from gridworld import GridworldEnvironment
 import sarsaLambdaAgents
 
@@ -26,9 +26,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   def __init__(self, init):
     continuousWorld.ContinuousWorld.__init__(self, init)
 
-    self.turnAngle = 30.0 / 180 * np.pi
-    self.slightTurnAngle = 15.0 / 180 * np.pi
-    # this is scaled by the step size in the domain
+    self.turnAngle = humanInfoParser.turnAngle
     self.turnDist = self.step * 0.25
     self.walkDist = self.step * 1
     self.atBorder = False
@@ -336,7 +334,7 @@ def main():
     win = plotting.drawDomain()
     # draw human trajectories
     if 'vr' in opts.grid:
-      humanWeightReplay.plotHuman(plotting, win, range(25, 29), vrDomainId)
+      humanInfoParser.plotHuman(plotting, win, range(25, 29), vrDomainId)
 
   ###########################
   # GET THE AGENT
@@ -385,9 +383,9 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
-    #a.setWeights([0, 0, 1])
-    a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
-    a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
+    #a.setWeights([0, 0, 1]) #DEBUG
+    a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
+    a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs())
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:

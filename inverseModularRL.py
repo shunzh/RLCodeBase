@@ -107,7 +107,6 @@ class InverseModularRL:
     w = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds ,constraints=cons)
     return w
 
-
 def checkPolicyConsistency(states, a, b):
   """
     Check how many policies on the states are consistent with the optimal one.
@@ -184,6 +183,9 @@ def continuousWorldExperiment():
   return w, sln
 
 def getSamplesFromMat(filenames, idxSet):
+  """
+  Get human actions and states from mat files.
+  """
   samples = []
 
   import util
@@ -214,9 +216,8 @@ def getSamplesFromMat(filenames, idxSet):
                  (obstDist[i], obstAngle[i]),
                  (obstDist2[i], obstAngle2[i]),
                  (segDist[i], segAngle[i]))
-        beliefState = [featureExtractors.mapStateToBin((dist, angle), 0.3) for (dist, angle) in state]
         action = actions[i]
-        samples.append((beliefState, action))
+        samples.append((state, action))
 
   return samples
 
