@@ -20,7 +20,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 5):
+  def __init__(self, qFuncs, eta = 50):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -259,7 +259,6 @@ def policyCompare(samples, w):
     Proportion of agreed policies
   """
   # define agent
-  import modularAgents
   import humanWorld
   actionFn = lambda state: humanWorld.HumanWorld.actions
   qLearnOpts = {'gamma': 0.9,
@@ -268,7 +267,7 @@ def policyCompare(samples, w):
                 'actionFn': actionFn}
   a = modularAgents.ModularAgent(**qLearnOpts)
   a.setWeights(w)
-  a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
+  a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs())
 
   # go through samples
   agreedPolicies = 0
@@ -283,8 +282,7 @@ def humanWorldExperiment(filenames, rang):
     rang: load mat with given rang of trials
   """
   print rang, ": Started."
-  #qFuncs = modularAgents.getHumanWorldContinuousFuncs()
-  qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
+  qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
 
   sln = InverseModularRL(qFuncs)
   samples = getSamplesFromMat(filenames, rang)
@@ -297,9 +295,12 @@ def humanWorldExperiment(filenames, rang):
 
   print rang, ": weights are", w
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
+
+  #debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  #print rang, ": weight heatmaps done."
+
   print rang, ": OK."
 
-  debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   return [w, agreedPoliciesRatio] 
 
 if __name__ == '__main__':
@@ -309,7 +310,10 @@ if __name__ == '__main__':
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
+  
+  # run only one experiment for debugging
   #humanWorldExperiment(subjFiles, taskRanges[0])
+
   results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle

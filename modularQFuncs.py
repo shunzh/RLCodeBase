@@ -110,7 +110,7 @@ def getHumanWorldQPotentialFuncs():
 
   def vSegment(s):
     dist, orient = s
-    return 1 * np.power(0.9, dist)
+    return 1 * np.power(0.95, dist)
 
   def qTarget(state, action):
     return vTarget(transition(state, action))

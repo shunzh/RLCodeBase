@@ -6,8 +6,6 @@
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
-"Feature extractors for Pacman game states"
-
 from game import Directions, Actions
 import util
 import math
