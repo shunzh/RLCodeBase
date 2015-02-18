@@ -296,8 +296,8 @@ def humanWorldExperiment(filenames, rang):
   print rang, ": weights are", w
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
-  #debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
-  #print rang, ": weight heatmaps done."
+  debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  print rang, ": weight heatmaps done."
 
   print rang, ": OK."
 

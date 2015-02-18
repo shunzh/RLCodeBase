@@ -179,7 +179,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
       """
 
       # mark touched objects here
-      if display: display.highlight(environment.mdp)
+      #if display: display.highlight(environment.mdp)
 
       agent.final(state)
       return returns
@@ -475,6 +475,8 @@ def main():
         """
         highlight the elements in the list l
         elements of l are (type, id)
+        
+        #FIXME not intuitive using red dots
         """
         for loc in mdp.collectedTargetSet + mdp.touchedObstacleSet:
           cir = Circle(Point(plotting.shift(loc)), 7)

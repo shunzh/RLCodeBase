@@ -360,8 +360,9 @@ def loadFromMat(filename, domainId, randInit = False):
 
   ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators, 'entrance': entrance}
 
-  ret['xBoundary'] = [-3.5, 3.5]
-  ret['yBoundary'] = [-3.5, 3.5]
+  maxCor = 4
+  ret['xBoundary'] = [-maxCor, maxCor]
+  ret['yBoundary'] = [-maxCor, maxCor]
 
   if randInit:
     x = ret['xBoundary'][0] + random.random() * (ret['xBoundary'][1] - ret['xBoundary'][0])
