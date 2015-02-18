@@ -6,6 +6,7 @@ These functions return the q functions for different scenarios.
 
 import featureExtractors
 import numpy as np
+from humanWorld import HumanWorld
 
 def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLogExtractor):
   """
@@ -95,36 +96,39 @@ def getHumanWorldQPotentialFuncs():
   """
   Rather learned from samples, we define the potential functions (a value function) based on reward.
   Q functions here just reflect the potential functions.
+  Simulate the dynamics dependent on distance, angle to an object, and action taken.
   """
-  gamma = 0.9
-  
-  def transition(s, a):
-    #FIXME better ways?
-    """
-    Simulate the dynamics dependent on distance, angle to an object, and action taken.
-    By creating an ad-hoc coordinate space and do a one step simulation.
-    """
-    dist, angle = s
-    #TODO
-    return None
+  transition = HumanWorld.transitionSimulate
 
   def vTarget(s):
     dist, orient = s
-    return 1 * np.power(dist, gamma)
+    return 1 * np.power(0.8, dist)
   
   def vObstacle(s):
     dist, orient = s
-    return -1 * np.power(dist, gamma)
+    return -1 * np.power(0.8, dist)
 
-  def qTarget(s):
-    #TODO
-    return None
+  def vSegment(s):
+    dist, orient = s
+    return 1 * np.power(0.9, dist)
+
+  def qTarget(state, action):
+    return vTarget(transition(state, action))
 
   def qObstacle(state, action):
-    return None
+    return vObstacle(transition(state, action))
 
   def qSegment(state, action):
-    return None
+    return vSegment(transition(state, action))
+
+  """
+  return [lambda s, a: qTarget(s[0], a) + qTarget(s[1], a), # closest targets
+          lambda s, a: qObstacle(s[2], a) + qObstacle(s[3], a), # closest obstacles
+          lambda s, a: qSegment(s[4], a)]
+  """
+  return [lambda s, a: qTarget(s[0], a), # closest targets
+          lambda s, a: qObstacle(s[2], a), # closest obstacles
+          lambda s, a: qSegment(s[4], a)]
 
 def getHumanWorldContinuousFuncs():
   """

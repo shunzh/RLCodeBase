@@ -4,11 +4,6 @@ from graphics import *
 
 import numpy as np
 
-# some useful values in human data
-stepSize = 0.3
-radius = 0.1905
-turnAngle = 30/ 180 * np.pi
-
 def plotHuman(plotting, win, subjIdSet, domainId):
   dim = plotting.dim
 

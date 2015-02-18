@@ -16,19 +16,31 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   An MDP that agrees with Matt's human data.
 
   It is almost the same as ContinuousWorld, but this is in the agent's view.
-  The agent stays in (0, 0) forever, while the distance / angle to the object changes.
+  The agent usese the distance / angle to the object as state.
+  
+  The coordiates: vectors (visually) above the x-axis have negative angles.
+
+      -pi/2
+  -pi   |
+  ------------- 0
+   pi   |
+       pi/2
 
   State: (location, ref to obj)
   Action: L, R, G
   Transition: same as continuousWorld but 
   Reward: same as continuousWorld.
   """
+  # static attributes
+  # FIXME overfit
+  step = 0.3
+  turnAngle = 30.0 / 180 * np.pi
+  turnDist = step * 0.25
+  walkDist = step * 1
+
   def __init__(self, init):
     continuousWorld.ContinuousWorld.__init__(self, init)
 
-    self.turnAngle = humanInfoParser.turnAngle
-    self.turnDist = self.step * 0.25
-    self.walkDist = self.step * 1
     self.atBorder = False
 
   actions = ('L', 'R', 'G')
@@ -87,31 +99,52 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     newState = (newLoc, newOrient)
 
     return [(newState, 1)]
-
-#Environment for human.
-HumanEnvironment = continuousWorld.ContinuousEnvironment
-
-def getUserAction(state, actionFunction):
-  """
-  Get an action from the user (rather than the agent).
   
-  Used for debugging and lecture demos.
-  """
-  import graphicsUtils
-  action = None
-  while True:
-    keys = graphicsUtils.wait_for_keys()
-    if 'Up' in keys: action = 'north'
-    if 'Down' in keys: action = 'south'
-    if 'Left' in keys: action = 'west'
-    if 'Right' in keys: action = 'east'
-    if 'q' in keys: sys.exit(0)
-    if action == None: continue
-    break
-  actions = actionFunction(state)
-  if action not in actions:
-    action = actions[0]
-  return action
+  @staticmethod
+  def transitionSimulate(s, a):
+    """
+    Done by creating an ad-hoc coordinate space and do a one step simulation.
+
+    Args:
+      s: (dist, orient)
+      a: action
+    Return:
+      (newDist, newOrient) after taking a in state s.
+    """
+    # use human world info for simulation
+    # FIXME should put here?
+    turnAngle = HumanWorld.turnAngle
+    turnDist = HumanWorld.turnDist
+    walkDist = HumanWorld.walkDist
+
+    dist, orient = s
+
+    objX = dist * np.cos(orient) 
+    objY = dist * np.sin(orient) 
+    
+    if a == 'G':
+      orient = 0
+      aX = walkDist; aY = 0
+    if a == 'L':
+      orient = -turnAngle
+      aX = turnDist * np.cos(orient) 
+      aY = turnDist * np.sin(orient) 
+    elif a == 'R':
+      orient = turnAngle
+      aX = turnDist * np.cos(orient) 
+      aY = turnDist * np.sin(orient) 
+    
+    # the new state is from (aX, aY) to (objX, objY)
+    vector = np.subtract((objX, objY), (aX, aY))
+    objOrient = np.angle(vector[0] + vector[1] * 1j)
+
+    newDist = np.linalg.norm(vector)
+    newOrient = featureExtractors.adjustAngle(objOrient - orient)
+
+    return (newDist, newOrient)
+
+# The environment is same as the continuousWorld
+HumanEnvironment = continuousWorld.ContinuousEnvironment
 
 def printString(x): print x
 
@@ -383,9 +416,16 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
-    #a.setWeights([0, 0, 1]) #DEBUG
+
+    # way 1: using q tables
+    """
+    a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
+    a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
+    """
+    # way 2: using q functions
     a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
     a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs())
+
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
@@ -457,7 +497,7 @@ def main():
 
   # FIGURE OUT WHETHER THE USER WANTS MANUAL CONTROL (FOR DEBUGGING AND DEMOS)  
   if opts.manual:
-    decisionCallback = lambda state : getUserAction(state, mdp.getPossibleActions)
+    decisionCallback = lambda state : continuousWorld.getUserAction(state, mdp.getPossibleActions)
   else:
     decisionCallback = a.getAction  
     

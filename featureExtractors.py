@@ -113,6 +113,7 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
     def getOrient(f, t):
       """
       Compute the orient from f to t, both are points
+      positive on the right and negative on the left.
       """
       vector = np.subtract(t, f)
       objOrient = np.angle(vector[0] + vector[1] * 1j)
@@ -251,34 +252,7 @@ def getHumanDiscreteState(mdp):
 
   return getDistAngelList
  
-class ObstacleExtractor(FeatureExtractor):
-  """
-  This should use radius extractor.
-  """
-  def getFeatures(self, state, action):
-    feats = util.Counter()
-    feats['bias'] = 1
-
-    x, y = state
-    dx, dy = Actions.directionToVector(action)
-    # distance to obstacle, on x and y
-    disx = x + dx - 2
-    disy = y + dy - 2
-
-    feats['dis'] = math.sqrt(disx*disx + disy*disy)
-    
-    return feats
-	
-class SidewalkExtractor(FeatureExtractor):
-  def getFeatures(self, state, action):
-    feats = util.Counter()
-
-    x, y = state
-    dx, dy = Actions.directionToVector(action)
-    feats['x'] = x + dx
-    
-    return feats
-
+# For Pacman domain 
 def closestFood(pos, food, walls):
   """
   closestFood -- this is similar to the function that we have
