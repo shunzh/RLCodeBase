@@ -100,35 +100,36 @@ def getHumanWorldQPotentialFuncs():
   """
   transition = HumanWorld.transitionSimulate
 
-  def vTarget(s):
+  def vTarget(s, discounter):
     dist, orient = s
-    return 1 * np.power(0.6, dist)
+    return 1 * np.power(discounter, dist)
   
-  def vObstacle(s):
+  def vObstacle(s, discounter):
     dist, orient = s
-    return -1 * np.power(0.6, dist)
+    return -1 * np.power(discounter, dist)
 
-  def vSegment(s):
+  def vSegment(s, discounter):
     dist, orient = s
-    return 1 * np.power(0.6, dist)
+    return 1 * np.power(discounter, dist)
 
-  def qTarget(state, action):
-    return vTarget(transition(state, action))
+  def qTarget(state, action, discounter):
+    return vTarget(transition(state, action), discounter)
 
-  def qObstacle(state, action):
-    return vObstacle(transition(state, action))
+  def qObstacle(state, action, discounter):
+    return vObstacle(transition(state, action), discounter)
 
-  def qSegment(state, action):
-    return vSegment(transition(state, action))
+  def qSegment(state, action, discounter):
+    return vSegment(transition(state, action), discounter)
 
+  # return q functions, which take arguments of state, action and discounter.
   """
   return [lambda s, a: qTarget(s[0], a) + qTarget(s[1], a), # closest targets
           lambda s, a: qObstacle(s[2], a) + qObstacle(s[3], a), # closest obstacles
           lambda s, a: qSegment(s[4], a)]
   """
-  return [lambda s, a: qTarget(s[0], a), # closest targets
-          lambda s, a: qObstacle(s[2], a), # closest obstacles
-          lambda s, a: qSegment(s[4], a)]
+  return [lambda s, a, d: qTarget(s[0], a, d[0]), # closest targets
+          lambda s, a, d: qObstacle(s[2], a, d[1]), # closest obstacles
+          lambda s, a, d: qSegment(s[4], a, d[2])]
 
 def getHumanWorldContinuousFuncs():
   """

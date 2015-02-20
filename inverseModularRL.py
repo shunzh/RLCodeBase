@@ -67,7 +67,9 @@ class InverseModularRL:
       Return:
         the function value
     """
-    w = X
+    n = len(X) / 2
+    w = X[:n] # weights
+    d = X[n:] # discounters
     ret = 0
 
     # replay the process
@@ -75,13 +77,13 @@ class InverseModularRL:
       # Update the weights for each module accordingly.
       for moduleIdx in xrange(len(self.qFuncs)):
         # check whether this module is off
-        ret += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction)
+        ret += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction, d)
 
         # denominator
         denom = 0
         actionSet = self.getActions(state)
         for action in actionSet:
-          denom += np.exp(self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, action))
+          denom += np.exp(self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, action, d))
 
         ret -= np.log(denom)
 
@@ -90,22 +92,22 @@ class InverseModularRL:
 
   def findWeights(self):
     """
-      Find the approporiate weight for each module, by walking through the policy.
+      Find the appropriate weight and discounter for each module, by walking through the policy.
 
       Return:
-        optimal weight
+        optimal weight and discounter, in one vector
     """
     n = len(self.qFuncs)
-    start_pos = np.zeros(n)
+    start_pos = np.zeros(2 * n)
     
-    # range of weights
+    # range of weights and discounter
     bnds = tuple((0, 1) for x in start_pos)
 
-    # constraints: sum to be 1
-    cons = ({'type': 'eq', 'fun': lambda x:  1 - sum(x)})
+    # constraints: weights must sum to 1
+    cons = ({'type': 'eq', 'fun': lambda x:  1 - sum(x[:n])})
 
-    w = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds ,constraints=cons)
-    return w
+    x = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds ,constraints=cons)
+    return x
 
 def checkPolicyConsistency(states, a, b):
   """
@@ -252,6 +254,7 @@ def debugWeight(sln, filename):
 def policyCompare(samples, w):
   """
   Given samples and weights, compare policies of human and our agent.
+  #FIXME discounter not provided!
   Args:
     samples: list of (state, action)
     w: weight learned
@@ -283,21 +286,26 @@ def humanWorldExperiment(filenames, rang):
   """
   print rang, ": Started."
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
+  n = len(qFuncs)
 
   sln = InverseModularRL(qFuncs)
   samples = getSamplesFromMat(filenames, rang)
   sln.setSamples(samples)
 
   output = sln.findWeights()
-  w = output.x.tolist()
-  w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
-  agreedPoliciesRatio = policyCompare(samples, w)
+  x = output.x.tolist()
+  x = map(lambda _: round(_, 5), x) # avoid weird numerical problem
+  w = x[:n]
+  d = x[n:]
+  agreedPoliciesRatio = 0 #policyCompare(samples, w)
 
   print rang, ": weights are", w
-  print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
+  print rang, ": discounters are", d
+  #print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
-  debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
-  print rang, ": weight heatmaps done."
+  # debug weight disabled. computational expensive?
+  #debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  #print rang, ": weight heatmaps done."
 
   print rang, ": OK."
 
