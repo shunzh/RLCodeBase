@@ -342,9 +342,9 @@ def humanWorldExperiment(filenames, rang):
   """
   debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": weight heatmaps done."
+  """
   debugDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": discounter heatmaps done."
-  """
   print rang, ": OK."
 
   return [w, agreedPoliciesRatio] 
@@ -358,9 +358,8 @@ if __name__ == '__main__':
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
   
   # run only one experiment for debugging
-  humanWorldExperiment(subjFiles, taskRanges[2])
+  #humanWorldExperiment(subjFiles, taskRanges[2])
 
-  """
   results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
@@ -374,4 +373,3 @@ if __name__ == '__main__':
   output = open('agreedPolicies.pkl', 'wb')
   pickle.dump(agreedPoliciesRatios, output)
   output.close()
-  """
