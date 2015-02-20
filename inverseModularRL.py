@@ -68,8 +68,14 @@ class InverseModularRL:
         the function value
     """
     n = len(X) / 2
+
     w = X[:n] # weights
+    
+    # enable this if we want to optimize discounters
     d = X[n:] # discounters
+    # enable this if we use static discounters
+    #d = [.6, .6, .6]
+
     ret = 0
 
     # replay the process
@@ -100,8 +106,9 @@ class InverseModularRL:
     n = len(self.qFuncs)
     start_pos = np.zeros(2 * n)
     
-    # range of weights and discounter
-    bnds = tuple((0, 1) for x in start_pos)
+    # range of weights: (0, 1)
+    # range of discounters: (0.01, 0.99)
+    bnds = tuple((0, 1) for _ in range(n)) + tuple((0.01, 0.99) for _ in range(n))
 
     # constraints: weights must sum to 1
     cons = ({'type': 'eq', 'fun': lambda x:  1 - sum(x[:n])})
@@ -226,12 +233,15 @@ def getSamplesFromMat(filenames, idxSet):
 def debugWeight(sln, filename):
   import matplotlib.pyplot as plt
 
+  # need to specify the discounters. We can only plot 2 dimensional graph
+  discounters = [.6, .6, .6] 
+
   data = []
   for i in range(0, 11):
     row = []
     for j in range(0, 11 - i):
       k = 10 - i - j
-      row.append(-sln.obj([0.1 * i, 0.1 * j, 0.1 * k]))
+      row.append(-sln.obj([0.1 * i, 0.1 * j, 0.1 * k] + discounters))
     for j in range(11 - i, 11):
       row.append(0) # will be masked
     data.append(row)
@@ -245,6 +255,31 @@ def debugWeight(sln, filename):
   plt.yticks(range(11), np.arange(0,1.1,0.1))
   plt.xlabel('Obstacle Module Weight');
   plt.ylabel('Target Module Weight');
+
+  plt.jet()
+  plt.colorbar()
+
+  plt.savefig(filename)
+
+def debugDiscounter(sln, filename):
+  import matplotlib.pyplot as plt
+  
+  # fix weights. try different discounters
+  weights = [0.33, 0.33, 0.33]
+
+  data = []
+  for i in range(0, 11):
+    row = []
+    for j in range(0, 11):
+      row.append(-sln.obj(weights + [0.1 * i, 0.1 * j, 0.6]))
+    data.append(row)
+
+  data = np.ma.array(data)
+  plt.imshow(data, interpolation='none')
+  plt.xticks(range(11), np.arange(0,1.1,0.1))
+  plt.yticks(range(11), np.arange(0,1.1,0.1))
+  plt.xlabel('Obstacle Module Discounter');
+  plt.ylabel('Target Module Discounter');
 
   plt.jet()
   plt.colorbar()
@@ -304,9 +339,12 @@ def humanWorldExperiment(filenames, rang):
   #print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
   # debug weight disabled. computational expensive?
-  #debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
-  #print rang, ": weight heatmaps done."
-
+  """
+  debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  print rang, ": weight heatmaps done."
+  debugDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png')
+  print rang, ": discounter heatmaps done."
+  """
   print rang, ": OK."
 
   return [w, agreedPoliciesRatio] 
@@ -320,8 +358,9 @@ if __name__ == '__main__':
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
   
   # run only one experiment for debugging
-  #humanWorldExperiment(subjFiles, taskRanges[0])
+  humanWorldExperiment(subjFiles, taskRanges[2])
 
+  """
   results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
@@ -335,3 +374,4 @@ if __name__ == '__main__':
   output = open('agreedPolicies.pkl', 'wb')
   pickle.dump(agreedPoliciesRatios, output)
   output.close()
+  """

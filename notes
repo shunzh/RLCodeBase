@@ -1,14 +1,16 @@
-Path following
+Path following: using waypoint, potential based
 - Shrinking distance. activate next segment when closer - ok, not working
 - Generally okay, then for path only module.
 - Still regard waypoint as target?
 
-Q table should be symmetric.
-
-===
-
-Obstacle size - ok
+Obstacle size - ok - nm
 
 contacted number of objects - output to stats
 
-fine-grined q table - ok
+fine-grined q table - potential based
+
+discounter learning
+
+===
+
+upenn mail
