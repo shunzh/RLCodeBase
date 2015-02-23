@@ -80,6 +80,7 @@ class InverseModularRL:
 
     # replay the process
     for state, optAction in self.getSamples():
+      #FIXME suspect an error in eq 11. credit to Ruohan
       # Update the weights for each module accordingly.
       for moduleIdx in xrange(len(self.qFuncs)):
         # check whether this module is off
@@ -230,7 +231,7 @@ def getSamplesFromMat(filenames, idxSet):
 
   return samples
 
-def debugWeight(sln, filename):
+def printWeight(sln, filename):
   import matplotlib.pyplot as plt
 
   # need to specify the discounters. We can only plot 2 dimensional graph
@@ -261,7 +262,7 @@ def debugWeight(sln, filename):
 
   plt.savefig(filename)
 
-def debugDiscounter(sln, filename):
+def printDiscounter(sln, filename):
   import matplotlib.pyplot as plt
   
   # fix weights. try different discounters
@@ -340,10 +341,10 @@ def humanWorldExperiment(filenames, rang):
 
   # debug weight disabled. computational expensive?
   """
-  debugWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": weight heatmaps done."
   """
-  debugDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png')
+  printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": discounter heatmaps done."
   print rang, ": OK."
 
