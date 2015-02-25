@@ -37,7 +37,6 @@ def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLo
 
   return [qTarget, qObstacle, qSegment]
 
-
 def getHumanWorldDiscreteFuncs():
   """
   Use to get q functions.
@@ -49,7 +48,7 @@ def getHumanWorldDiscreteFuncs():
   # these are util.Counter objects
   tValues = pickle.load(open('learnedValues/humanAgenttargsValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
-  sValues = None # FIXME not using an RL module
+  sValues = pickle.load(open('learnedValues/humanAgentsegsValues.pkl'))
 
   def qTarget(state, action):
     if not (state, action) in tValues.keys():
@@ -62,35 +61,14 @@ def getHumanWorldDiscreteFuncs():
     return oValues[state, action]
 
   def qSegment(state, action):
-    bigQ = 0.2
-    smallQ = 0.1
+    if not (state, action) in oValues.keys():
+      raise Exception('Un-learned obstacle ' + str(state) + ' ' + action)
+    return oValues[state, action]
 
-    # hand-made path following
-    if abs(state[1]) == 0 and action == 'G':
-      # good orientation, good action
-      return bigQ
-    elif abs(state[1]) == 0:
-      # good orientation
-      return bigQ
-      return smallQ
-    elif abs(state[1]) == 1 and action == 'G':
-      # ok orientation, ok action
-      return smallQ
-    elif state[1] < 0 and action == 'L' or state[1] > 0 and action == 'R':
-      # ok orientation, good action
-      return bigQ
-    else:
-      return 0
-
-  # decouple the state representation, and call corresponding q functions
-  """
-  return [lambda s, a: qTarget(s[0], a) + qTarget(s[1], a), # closest targets
-          lambda s, a: qObstacle(s[2], a) + qObstacle(s[3], a), # closest obstacles
-          lambda s, a: qSegment(s[4], a)]
-  """
-  return [lambda s, a: qTarget(s[0], a), # closest targets
-          lambda s, a: qObstacle(s[2], a), # closest obstacles
-          lambda s, a: qSegment(s[4], a)]
+  # discounter is dropped for these q functions. No way to use different discounters.
+  return [lambda s, a, d: qTarget(s[0], a), # closest targets
+          lambda s, a, d: qObstacle(s[2], a), # closest obstacles
+          lambda s, a, d: qSegment(s[4], a)]
 
 def getHumanWorldQPotentialFuncs():
   """
@@ -121,12 +99,6 @@ def getHumanWorldQPotentialFuncs():
   def qSegment(state, action, discounter):
     return vSegment(transition(state, action), discounter)
 
-  # return q functions, which take arguments of state, action and discounter.
-  """
-  return [lambda s, a: qTarget(s[0], a) + qTarget(s[1], a), # closest targets
-          lambda s, a: qObstacle(s[2], a) + qObstacle(s[3], a), # closest obstacles
-          lambda s, a: qSegment(s[4], a)]
-  """
   return [lambda s, a, d: qTarget(s[0], a, d[0]), # closest targets
           lambda s, a, d: qObstacle(s[2], a, d[1]), # closest obstacles
           lambda s, a, d: qSegment(s[4], a, d[2])]

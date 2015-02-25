@@ -1,6 +1,7 @@
 #!/bin/bash
 mv weights.pkl learnedValues
 
+rm contactStats
 # draw figures
 for i in `seq 0 31`;
 do

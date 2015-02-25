@@ -67,7 +67,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       if dist < self.radius:
         ret.append(('targs', idx))
 
-    # run into a obstacle?
+    # run into an obstacle?
     oLocs = self.objs['obsts']
     for idx in xrange(len(tLocs)):
       dist = numpy.linalg.norm(np.subtract(l, oLocs[idx]))
@@ -86,8 +86,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
         ret.append(('segs', segIdx))
       segIdx += 1
     if len(sLocs) == 1:
-      # remove the last one directly if only one left
-      ret.append(('segs', 0))
+      # if only one left, just approach it
+      distSeg = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
+      if distSeg < self.radius * 2: # larger buffer
+        ret.append(('segs', 0))
 
     # if it's close to nothing
     return ret
@@ -147,22 +149,31 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     less use this convention).
     """
     loc, orient = state
-    nextLoc, newOrient = nextState
+    nextLoc, nextOrient = nextState
     
     reward = 0
 
     # get the list of contacted objects
     objInfoList = self.getReachedObjects(nextLoc)
 
-    # any reached object applies
     for nextStateType, nextObjId in objInfoList:
-      reward += self.rewards[nextStateType]
-      # keep a set of reached objects
-      objLoc = self.objs[nextStateType][nextObjId]
-      if nextStateType == 'obsts' and not objLoc in self.touchedObstacleSet:
-        self.touchedObstacleSet.append(objLoc)
-      elif nextStateType == 'targs':
-        self.collectedTargetSet.append(objLoc)
+      if nextStateType != 'segs':
+        # add rewards for target and obstacles
+        reward += self.rewards[nextStateType]
+
+        # keep a set of reached objects
+        objLoc = self.objs[nextStateType][nextObjId]
+        if nextStateType == 'obsts' and not objLoc in self.touchedObstacleSet:
+          self.touchedObstacleSet.append(objLoc)
+        elif nextStateType == 'targs':
+          self.collectedTargetSet.append(objLoc)
+
+    # give rewards for waypoint segments
+    dist = featureExtractors.getClosestObj(loc, self.objs['segs'])
+    nextDist = featureExtractors.getClosestObj(nextLoc, self.objs['segs'])
+    if nextDist < dist:
+      # reward for shrinking distance
+      reward += self.rewards['segs']
 
     return reward or self.livingReward
       
@@ -192,8 +203,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     loc, orient = state
 
     # have trouble if two elevators are the same
-    #objInfoList = self.getReachedObjects(loc)
-    #return ('elevators', 1) in objInfoLists
     return len(self.objs['segs']) == 0 or len(self.objs['targs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
@@ -252,15 +261,15 @@ def simpleToyDomain(category = 'targs'):
   infPos = (size + 1, size + 1); infPos2 = (size + 3, size + 3)
 
   if category == 'targs':
-    targs = [(size / 2, size / 2)]; obsts = [infPos]; segs = [infPos, infPos2]
+    targs = [(size / 2, size / 2)]; obsts = [infPos]; segs = [infPos]
     # set the starting point to be random for training
     entrance = (random.random() * size, random.random() * size)
   elif category == 'obsts':
-    obsts = [(size / 2, size / 2)]; targs = [infPos]; segs = [infPos, infPos2]
+    obsts = [(size / 2, size / 2)]; targs = [infPos]; segs = [infPos]
     # random entrance point near the center
     entrance = (size * 2 / 5 + random.random() * size / 5, size * 2 / 5 + random.random() * size / 5)
   elif category == 'segs':
-    segs = [(size / 2, size / 2), (random.random() * size, random.random() * size)]
+    segs = [(size / 2, size / 2)]
     obsts = [infPos]; targs = [infPos]
     entrance = (random.random() * size, random.random() * size)
 

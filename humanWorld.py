@@ -296,29 +296,32 @@ def saveValues(values, filename):
   pickle.dump(values, output)
   output.close()
 
-def plotQFuncs(values, filename):
+def plotQFuncs(values, category):
   """
   Print the values of states in heatmap
   """
   import matplotlib.pyplot as plt
 
-  data = []
-  for i in reversed(range(1, 11)): # 1 ~ 10. so that 1 appears at bottom
-    row = []
-    for j in range(-4, 5): # -4 ~ 4.
-      row.append(max([values[(i, j), act] for act in ['L', 'R', 'G']]))
-    data.append(row)
+  for act in ['L', 'R', 'G']:
+    data = []
+    for i in reversed(range(1, 11)): # 1 ~ 10. so that 1 appears at bottom
+      row = []
+      for j in range(-4, 5): # -4 ~ 4.
+        row.append(values[(i, j), act])
+      data.append(row)
 
-  plt.imshow(data, interpolation='none')
-  plt.xticks(range(9), ['-135', '-90', '-45', '-15', '0', '15', '45', '90', '135'])
-  plt.yticks(range(10), ['>10', '10', '5', '4', '3', '2.5', '2', '1.5', '1', '.5'])
-  plt.xlabel('Angle');
-  plt.ylabel('Distance (x steps)');
+    plt.imshow(data, interpolation='none')
+    plt.xticks(range(9), ['-135', '-90', '-45', '-15', '0', '15', '45', '90', '135'])
+    plt.yticks(range(10), ['>10', '10', '5', '4', '3', '2.5', '2', '1.5', '1', '.5'])
+    plt.xlabel('Angle');
+    plt.ylabel('Distance (x steps)');
+    plt.title('Q Table of Module ' + category + ', Action ' + act)
+    
+    plt.jet()
+    plt.colorbar()
 
-  plt.jet()
-  plt.colorbar()
-
-  plt.savefig(filename)
+    plt.savefig(category + 'Q_' + act + '.png')
+    plt.close()
    
 def main(): 
   opts = parseOptions()
@@ -418,14 +421,13 @@ def main():
     a.setWeights(weights)
 
     # way 1: using q tables
-    """
     a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
     a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
     """
     # way 2: using q functions
     a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
     a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs())
-
+    """
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
@@ -527,7 +529,7 @@ def main():
   elif opts.agent == 'q':
     # output learned values to pickle file
     saveValues(a.values, 'humanAgent' + opts.category + 'Values.pkl')
-    plotQFuncs(a.values, 'humanAgent' + opts.category + 'Q.png')
+    plotQFuncs(a.values, opts.category)
 
   # hold window
   if not opts.quiet and 'vr' in opts.grid:

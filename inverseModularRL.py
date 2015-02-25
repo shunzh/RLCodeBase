@@ -1,5 +1,4 @@
 import modularAgents
-import featureExtractors
 
 import numpy as np
 from scipy.optimize import minimize
@@ -67,14 +66,12 @@ class InverseModularRL:
       Return:
         the function value
     """
-    n = len(X) / 2
-
-    w = X[:n] # weights
+    w = X[:self.n] # weights
     
     # enable this if we want to optimize discounters
-    d = X[n:] # discounters
+    #d = X[n:]
     # enable this if we use static discounters
-    #d = [.6, .6, .6]
+    d = [.6, .6, .6]
 
     ret = 0
 
@@ -97,22 +94,24 @@ class InverseModularRL:
     # This is to be minimized, take the negative.
     return - ret
 
-  def findWeights(self):
+  def solve(self):
     """
       Find the appropriate weight and discounter for each module, by walking through the policy.
 
       Return:
         optimal weight and discounter, in one vector
     """
-    n = len(self.qFuncs)
-    start_pos = np.zeros(2 * n)
-    
+    self.n = len(self.qFuncs)
+
     # range of weights: (0, 1)
+    bnds = tuple((0, 1) for _ in range(self.n))
     # range of discounters: (0.01, 0.99)
-    bnds = tuple((0, 1) for _ in range(n)) + tuple((0.01, 0.99) for _ in range(n))
+    #bnds += tuple((0.01, 0.99) for _ in range(n))
+
+    start_pos = np.zeros(len(bnds))
 
     # constraints: weights must sum to 1
-    cons = ({'type': 'eq', 'fun': lambda x:  1 - sum(x[:n])})
+    cons = ({'type': 'eq', 'fun': lambda x:  1 - sum(x[:self.n])})
 
     x = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds ,constraints=cons)
     return x
@@ -174,7 +173,7 @@ def continuousWorldExperiment():
 
   sln = InverseModularRL(qFuncs)
   sln.setSamplesFromMdp(m, a)
-  output = sln.findWeights()
+  output = sln.solve()
   w = output.x.tolist()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
@@ -230,6 +229,18 @@ def getSamplesFromMat(filenames, idxSet):
         samples.append((state, action))
 
   return samples
+
+def discretize(samples):
+  """
+  Map samples to bins
+  """
+  import featureExtractors
+  ret = []
+  for sample in samples:
+    s = map(lambda (d, a): featureExtractors.mapStateToBin((d, a)), sample[0])
+    a = sample[1]
+    ret.append((s, a))
+  return ret
 
 def printWeight(sln, filename):
   import matplotlib.pyplot as plt
@@ -321,14 +332,16 @@ def humanWorldExperiment(filenames, rang):
     rang: load mat with given rang of trials
   """
   print rang, ": Started."
-  qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
+  qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
+  #qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
   sln = InverseModularRL(qFuncs)
   samples = getSamplesFromMat(filenames, rang)
+  samples = discretize(samples)
   sln.setSamples(samples)
 
-  output = sln.findWeights()
+  output = sln.solve()
   x = output.x.tolist()
   x = map(lambda _: round(_, 5), x) # avoid weird numerical problem
   w = x[:n]
@@ -340,12 +353,12 @@ def humanWorldExperiment(filenames, rang):
   #print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
   # debug weight disabled. computational expensive?
-  """
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": weight heatmaps done."
   """
   printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": discounter heatmaps done."
+  """
   print rang, ": OK."
 
   return [w, agreedPoliciesRatio] 
@@ -359,8 +372,9 @@ if __name__ == '__main__':
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
   
   # run only one experiment for debugging
-  #humanWorldExperiment(subjFiles, taskRanges[2])
+  humanWorldExperiment(subjFiles, taskRanges[2])
 
+  """
   results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
@@ -374,3 +388,5 @@ if __name__ == '__main__':
   output = open('agreedPolicies.pkl', 'wb')
   pickle.dump(agreedPoliciesRatios, output)
   output.close()
+
+  """
