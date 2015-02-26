@@ -19,7 +19,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 30):
+  def __init__(self, qFuncs, eta = 1):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -77,19 +77,21 @@ class InverseModularRL:
 
     # replay the process
     for state, optAction in self.getSamples():
-      #FIXME suspect an error in eq 11. credit to Ruohan
-      # Update the weights for each module accordingly.
-      for moduleIdx in xrange(len(self.qFuncs)):
-        # check whether this module is off
-        ret += self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction, d)
+      def computeQValue(state, action):
+        # s, a -> q(s, a)
+        return sum([w[moduleIdx] * self.qFuncs[moduleIdx](state, optAction, d) for moduleIdx in xrange(len(self.qFuncs))])
+      def qToPower(v):
+        # v -> exp(eta * v)
+        return np.exp(self.eta * v)
 
-        # denominator
-        denom = 0
-        actionSet = self.getActions(state)
-        for action in actionSet:
-          denom += np.exp(self.eta * w[moduleIdx] * self.qFuncs[moduleIdx](state, action, d))
+      actionSet = self.getActions(state)
+      qValues = {action: computeQValue(state, action) for action in actionSet}
 
-        ret -= np.log(denom)
+      # both numerator and denominator raise to the power of e
+      # numerator: optimal action
+      ret += qToPower(qValues[optAction])
+      # denominator: all the actions
+      ret -= np.log(sum([qToPower(qValues[action]) for action in actionSet]))
 
     # This is to be minimized, take the negative.
     return - ret
@@ -328,19 +330,18 @@ def policyCompare(samples, w):
 
   return 1.0 * agreedPolicies / len(samples)
 
-def humanWorldExperiment(filenames, rang):
+def humanWorldExperimentDiscrete(filenames, rang):
   """
   Args:
     rang: load mat with given rang of trials
   """
   print rang, ": Started."
-  #qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
-  qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
+  qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
   n = len(qFuncs)
 
   sln = InverseModularRL(qFuncs)
   samples = getSamplesFromMat(filenames, rang)
-  #samples = discretize(samples)
+  samples = discretize(samples)
   sln.setSamples(samples)
 
   output = sln.solve()
@@ -351,7 +352,37 @@ def humanWorldExperiment(filenames, rang):
   agreedPoliciesRatio = policyCompare(samples, w)
 
   print rang, ": weights are", w
-  #print rang, ": discounters are", d
+  print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
+
+  # debug weight disabled. computational expensive?
+  printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  print rang, ": weight heatmaps done."
+  print rang, ": OK."
+
+  return [w, agreedPoliciesRatio] 
+
+def humanWorldExperimentQPotential(filenames, rang):
+  """
+  Args:
+    rang: load mat with given rang of trials
+  """
+  print rang, ": Started."
+  qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
+  n = len(qFuncs)
+
+  sln = InverseModularRL(qFuncs)
+  samples = getSamplesFromMat(filenames, rang)
+  sln.setSamples(samples)
+
+  output = sln.solve()
+  x = output.x.tolist()
+  x = map(lambda _: round(_, 5), x) # avoid weird numerical problem
+  w = x[:n]
+  d = x[n:]
+  agreedPoliciesRatio = policyCompare(samples, w)
+
+  print rang, ": weights are", w
+  print rang, ": discounters are", d
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
   # debug weight disabled. computational expensive?
@@ -372,7 +403,7 @@ if __name__ == '__main__':
   import pickle
   results = []
   for ids in taskRanges:
-    results.append(humanWorldExperiment(subjFiles, ids)) 
+    results.append(humanWorldExperimentQPotential(subjFiles, ids)) 
 
   weights = [r[0] for r in results]
   agreedPoliciesRatios = [r[1] for r in results]
