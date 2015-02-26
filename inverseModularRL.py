@@ -272,6 +272,8 @@ def printWeight(sln, filename):
   plt.colorbar()
 
   plt.savefig(filename)
+  
+  plt.close()
 
 def printDiscounter(sln, filename):
   import matplotlib.pyplot as plt
@@ -317,7 +319,7 @@ def policyCompare(samples, w):
                 'actionFn': actionFn}
   a = modularAgents.ModularAgent(**qLearnOpts)
   a.setWeights(w)
-  a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs())
+  a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
 
   # go through samples
   agreedPolicies = 0
@@ -332,13 +334,13 @@ def humanWorldExperiment(filenames, rang):
     rang: load mat with given rang of trials
   """
   print rang, ": Started."
-  qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
-  #qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
+  #qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
+  qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
   sln = InverseModularRL(qFuncs)
   samples = getSamplesFromMat(filenames, rang)
-  samples = discretize(samples)
+  #samples = discretize(samples)
   sln.setSamples(samples)
 
   output = sln.solve()
@@ -346,11 +348,11 @@ def humanWorldExperiment(filenames, rang):
   x = map(lambda _: round(_, 5), x) # avoid weird numerical problem
   w = x[:n]
   d = x[n:]
-  agreedPoliciesRatio = 0 #policyCompare(samples, w)
+  agreedPoliciesRatio = policyCompare(samples, w)
 
   print rang, ": weights are", w
-  print rang, ": discounters are", d
-  #print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
+  #print rang, ": discounters are", d
+  print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
   # debug weight disabled. computational expensive?
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
@@ -364,22 +366,16 @@ def humanWorldExperiment(filenames, rang):
   return [w, agreedPoliciesRatio] 
 
 if __name__ == '__main__':
-  # run tasks in parallel (mine is quad-core)
-  from multiprocessing import Pool
-  pool = Pool(processes=4)
-
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
-  
-  # run only one experiment for debugging
-  humanWorldExperiment(subjFiles, taskRanges[2])
-
-  """
-  results = [pool.apply_async(humanWorldExperiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
-  weights = [r.get()[0] for r in results]
-  agreedPoliciesRatios = [r.get()[1] for r in results]
+  results = []
+  for ids in taskRanges:
+    results.append(humanWorldExperiment(subjFiles, ids)) 
+
+  weights = [r[0] for r in results]
+  agreedPoliciesRatios = [r[1] for r in results]
 
   output = open('weights.pkl', 'wb')
   pickle.dump(weights, output)
@@ -388,5 +384,3 @@ if __name__ == '__main__':
   output = open('agreedPolicies.pkl', 'wb')
   pickle.dump(agreedPoliciesRatios, output)
   output.close()
-
-  """

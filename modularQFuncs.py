@@ -7,6 +7,7 @@ These functions return the q functions for different scenarios.
 import featureExtractors
 import numpy as np
 from humanWorld import HumanWorld
+import warnings
 
 def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLogExtractor):
   """
@@ -52,23 +53,23 @@ def getHumanWorldDiscreteFuncs():
 
   def qTarget(state, action):
     if not (state, action) in tValues.keys():
-      raise Exception('Un-learned target ' + str(state) + ' ' + action)
+      warnings.warn('Un-learned target ' + str(state) + ' ' + action)
     return tValues[state, action]
 
   def qObstacle(state, action):
     if not (state, action) in oValues.keys():
-      raise Exception('Un-learned obstacle ' + str(state) + ' ' + action)
+      warnings.warn('Un-learned obstacle ' + str(state) + ' ' + action)
     return oValues[state, action]
 
   def qSegment(state, action):
-    if not (state, action) in oValues.keys():
-      raise Exception('Un-learned obstacle ' + str(state) + ' ' + action)
-    return oValues[state, action]
+    if not (state, action) in sValues.keys():
+      warnings.warn('Un-learned segment ' + str(state) + ' ' + action)
+    return sValues[state, action]
 
   # discounter is dropped for these q functions. No way to use different discounters.
-  return [lambda s, a, d: qTarget(s[0], a), # closest targets
-          lambda s, a, d: qObstacle(s[2], a), # closest obstacles
-          lambda s, a, d: qSegment(s[4], a)]
+  return [lambda s, a, d = None: qTarget(s[0], a), # closest targets
+          lambda s, a, d = None: qObstacle(s[2], a), # closest obstacles
+          lambda s, a, d = None: qSegment(s[4], a)]
 
 def getHumanWorldQPotentialFuncs():
   """

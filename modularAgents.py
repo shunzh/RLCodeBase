@@ -25,7 +25,7 @@ class ModularAgent(ApproximateQAgent):
     Get Q value by consulting each module
     """
     # sum over q values from each sub mdp
-    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs)) if self.qFuncs[i](state, action) != None])
+    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
 
   def getSubQValues(self, state, action):
     return [self.qFuncs[i](state, action) for i in xrange(len(self.qFuncs))]

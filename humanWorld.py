@@ -419,6 +419,7 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
+    a.setWeights([0, 0, 1])
 
     # way 1: using q tables
     a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))

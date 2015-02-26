@@ -168,12 +168,13 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
         elif nextStateType == 'targs':
           self.collectedTargetSet.append(objLoc)
 
-    # give rewards for waypoint segments
-    dist = featureExtractors.getClosestObj(loc, self.objs['segs'])
-    nextDist = featureExtractors.getClosestObj(nextLoc, self.objs['segs'])
-    if nextDist < dist:
-      # reward for shrinking distance
-      reward += self.rewards['segs']
+    # give rewards for waypoint segments, except training targets or obstacles
+    if not hasattr(self, 'category') or self.category == 'segs': 
+      dist = featureExtractors.getClosestObj(loc, self.objs['segs'])
+      nextDist = featureExtractors.getClosestObj(nextLoc, self.objs['segs'])
+      if nextDist < dist:
+        # reward for shrinking distance
+        reward += self.rewards['segs']
 
     return reward or self.livingReward
       
@@ -258,7 +259,7 @@ def simpleToyDomain(category = 'targs'):
   size = 3.0
 
   # place that can't be reached
-  infPos = (size + 1, size + 1); infPos2 = (size + 3, size + 3)
+  infPos = (size + 1, size + 1)
 
   if category == 'targs':
     targs = [(size / 2, size / 2)]; obsts = [infPos]; segs = [infPos]
@@ -281,6 +282,8 @@ def simpleToyDomain(category = 'targs'):
 
   ret['radius'] = 0.075
   ret['step'] = 0.1
+  
+  ret['category'] = category
 
   return ret
 
@@ -311,6 +314,8 @@ def toyDomain(category = 'targs'):
 
   # step size of the agent movement
   ret['step'] = 0.1
+
+  ret['category'] = category
 
   return ret
 
