@@ -4,10 +4,10 @@ from inverseModularRL import InverseModularRL
 class Test(unittest.TestCase):
   def test_corridor(self):
     """
-    set some obvious behavior to check the correctness of the algorithm.
+    Two objectives - going to left or going to right in a corridor.
     """
     actions = ['L', 'R']
-    samples = [[(p, actions[0]) for p in range(10)], [(p, actions[1]) for p in range(10)]]
+    samples = [[(p, actions[0]) for p in range(2)], [(p, actions[1]) for p in range(2)]]
     qFuncs = [lambda s, a, d = None: 1 if a == actions[0] else 0,\
               lambda s, a, d = None: 1 if a == actions[1] else 0]
     resultConstraints = [lambda w: w[0] >= 0.99 and w[1] <= 0.01,\
