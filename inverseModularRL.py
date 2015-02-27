@@ -69,9 +69,9 @@ class InverseModularRL:
     w = X[:self.n] # weights
     
     # enable this if we want to optimize discounters
-    #d = X[n:]
+    d = X[self.n:]
     # enable this if we use static discounters
-    d = [.6, .6, .6]
+    #d = [.6, .6, .6]
 
     ret = 0
 
@@ -89,7 +89,7 @@ class InverseModularRL:
 
       # both numerator and denominator raise to the power of e
       # numerator: optimal action
-      ret += qToPower(qValues[optAction])
+      ret += qValues[optAction]
       # denominator: all the actions
       ret -= np.log(sum([qToPower(qValues[action]) for action in actionSet]))
 
@@ -108,7 +108,7 @@ class InverseModularRL:
     # range of weights: (0, 1)
     bnds = tuple((0, 1) for _ in range(self.n))
     # range of discounters: (0.01, 0.99)
-    #bnds += tuple((0.01, 0.99) for _ in range(n))
+    bnds += tuple((0.01, 0.99) for _ in range(self.n))
 
     start_pos = np.zeros(len(bnds))
 
@@ -117,6 +117,17 @@ class InverseModularRL:
 
     x = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds ,constraints=cons)
     return x
+  
+  @staticmethod
+  def unitTest():
+    """
+    set some obvious behavior to check the correctness of the algorithm.
+    """
+    #TODO
+    sln = InverseModularRL()
+    sln.getSamples = lambda : None
+    sln.getActions = lambda : range(3)
+
 
 def checkPolicyConsistency(states, a, b):
   """
@@ -302,7 +313,7 @@ def printDiscounter(sln, filename):
 
   plt.savefig(filename)
 
-def policyCompare(samples, w):
+def policyCompare(samples, qFuncs, w):
   """
   Given samples and weights, compare policies of human and our agent.
   #FIXME discounter not provided!
@@ -321,7 +332,7 @@ def policyCompare(samples, w):
                 'actionFn': actionFn}
   a = modularAgents.ModularAgent(**qLearnOpts)
   a.setWeights(w)
-  a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
+  a.setQFuncs(qFuncs)
 
   # go through samples
   agreedPolicies = 0
@@ -349,7 +360,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
   x = map(lambda _: round(_, 5), x) # avoid weird numerical problem
   w = x[:n]
   d = x[n:]
-  agreedPoliciesRatio = policyCompare(samples, w)
+  agreedPoliciesRatio = policyCompare(samples, qFuncs, w)
 
   print rang, ": weights are", w
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
@@ -379,7 +390,8 @@ def humanWorldExperimentQPotential(filenames, rang):
   x = map(lambda _: round(_, 5), x) # avoid weird numerical problem
   w = x[:n]
   d = x[n:]
-  agreedPoliciesRatio = policyCompare(samples, w)
+  # FIXME
+  agreedPoliciesRatio = 0 #policyCompare(samples, qFuncs, w)
 
   print rang, ": weights are", w
   print rang, ": discounters are", d
@@ -400,10 +412,14 @@ if __name__ == '__main__':
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
 
+  # set experiment here
+  #experiment = humanWorldExperimentDiscrete
+  experiment = humanWorldExperimentQPotential
+
   import pickle
   results = []
   for ids in taskRanges:
-    results.append(humanWorldExperimentQPotential(subjFiles, ids)) 
+    results.append(experiment(subjFiles, ids)) 
 
   weights = [r[0] for r in results]
   agreedPoliciesRatios = [r[1] for r in results]
