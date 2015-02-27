@@ -19,7 +19,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 1):
+  def __init__(self, qFuncs, eta = 5):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -69,9 +69,9 @@ class InverseModularRL:
     w = X[:self.n] # weights
     
     # enable this if we want to optimize discounters
-    d = X[self.n:]
+    #d = X[self.n:]
     # enable this if we use static discounters
-    #d = [.6, .6, .6]
+    d = [.6, .6, .6]
 
     ret = 0
 
@@ -108,7 +108,7 @@ class InverseModularRL:
     # range of weights: (0, 1)
     bnds = tuple((0, 1) for _ in range(self.n))
     # range of discounters: (0.01, 0.99)
-    bnds += tuple((0.01, 0.99) for _ in range(self.n))
+    #bnds += tuple((0.01, 0.99) for _ in range(self.n))
 
     start_pos = np.zeros(len(bnds))
 
@@ -117,16 +117,6 @@ class InverseModularRL:
 
     x = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds ,constraints=cons)
     return x
-  
-  @staticmethod
-  def unitTest():
-    """
-    set some obvious behavior to check the correctness of the algorithm.
-    """
-    #TODO
-    sln = InverseModularRL()
-    sln.getSamples = lambda : None
-    sln.getActions = lambda : range(3)
 
 
 def checkPolicyConsistency(states, a, b):
