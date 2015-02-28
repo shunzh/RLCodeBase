@@ -77,6 +77,11 @@ def getHumanWorldQPotentialFuncs():
   Q functions here just reflect the potential functions.
   Simulate the dynamics dependent on distance, angle to an object, and action taken.
   """
+  # It's true that discounter should not be part of the agent.
+  # We may compute the q value for different discounters. So we need a discounter parameter.
+  # In case we require nothing, use these discounters.
+  defaultD = [0.6] * 3
+
   transition = HumanWorld.transitionSimulate
 
   def vTarget(s, discounter):
@@ -100,9 +105,9 @@ def getHumanWorldQPotentialFuncs():
   def qSegment(state, action, discounter):
     return vSegment(transition(state, action), discounter)
 
-  return [lambda s, a, d: qTarget(s[0], a, d[0]), # closest targets
-          lambda s, a, d: qObstacle(s[2], a, d[1]), # closest obstacles
-          lambda s, a, d: qSegment(s[4], a, d[2])]
+  return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]), # closest targets
+          lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]), # closest obstacles
+          lambda s, a, d = defaultD: qSegment(s[4], a, d[2])]
 
 def getHumanWorldContinuousFuncs():
   """

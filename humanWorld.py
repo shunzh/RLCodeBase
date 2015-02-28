@@ -419,15 +419,16 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
+    a.setWeights([1, 0, 0])
 
     # way 1: using q tables
+    """
     a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
     a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
     """
     # way 2: using q functions
     a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
     a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs())
-    """
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:

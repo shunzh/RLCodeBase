@@ -274,9 +274,9 @@ def humanWorldExperimentQPotential(filenames, rang):
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
   # debug weight disabled. computational expensive?
+  """
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": weight heatmaps done."
-  """
   printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": discounter heatmaps done."
   """
@@ -289,8 +289,8 @@ if __name__ == '__main__':
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
 
   # set experiment here
-  #experiment = humanWorldExperimentDiscrete
-  experiment = humanWorldExperimentQPotential
+  experiment = humanWorldExperimentDiscrete
+  #experiment = humanWorldExperimentQPotential
 
   import pickle
   results = []

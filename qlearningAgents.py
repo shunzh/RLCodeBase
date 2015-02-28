@@ -10,9 +10,6 @@ from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
 
-import random,util,math
-import pickle
-          
 class QLearningAgent(ReinforcementAgent):
   """
     Q(lambda)-Learning Agent
@@ -142,7 +139,7 @@ class QLearningAgent(ReinforcementAgent):
 
 class ReducedQLearningAgent(QLearningAgent):
   """
-  Rewrite Q learning agent.
+  Wrap the Q learning agent with a state filter, which reduce the state space.
   """
   def __init__(self, **args):
     QLearningAgent.__init__(self, **args)
