@@ -1,5 +1,6 @@
 import unittest
 from inverseModularRL import InverseModularRL
+import modularQFuncs
 
 class Test(unittest.TestCase):
   def test_corridor(self):
@@ -27,6 +28,25 @@ class Test(unittest.TestCase):
     resultConstraints = [lambda w: w[0] >= 0.99,\
                          lambda w: w[1] >= 0.99,\
                          lambda w: w[2] >= 0.99]
+    self.checkResult(samples, actions, qFuncs, resultConstraints)
+  
+  def test_human_world_QPotential(self):
+    self.human_world(modularQFuncs.getHumanWorldQPotentialFuncs())
+
+  def test_human_world_discrete(self):
+    self.human_world(modularQFuncs.getHumanWorldDiscreteFuncs())
+
+  def human_world(self, qFuncs):
+    """
+    make some human data, which have clear intentions (to target, or avoid obstacle)
+    """
+    actions = ['L', 'G', 'R']
+    # samples: targest, obstacles, path
+    state = ((2, 2), (3, -2), (3, 2), (4, 2), (3, 0))
+    samples = [[(state, 'R')], [(state, 'L')], [(state, 'G')]]
+    resultConstraints = [lambda w: w[0] >= 0.9,\
+                         lambda w: w[1] >= 0.9,\
+                         lambda w: w[2] >= 0.9]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
 
   def checkResult(self, samples, actions, qFuncs, resultConstraints):

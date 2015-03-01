@@ -267,38 +267,37 @@ def humanWorldExperimentQPotential(filenames, rang):
   w = x[:n]
   d = x[n:]
   # FIXME
-  agreedPoliciesRatio = 0 #policyCompare(samples, qFuncs, w)
+  agreedPoliciesRatio = policyCompare(samples, qFuncs, w)
 
   print rang, ": weights are", w
   print rang, ": discounters are", d
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
   # debug weight disabled. computational expensive?
-  """
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": weight heatmaps done."
   printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": discounter heatmaps done."
-  """
   print rang, ": OK."
 
   return [w, agreedPoliciesRatio] 
 
 if __name__ == '__main__':
-  subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
-  taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
-
   # set experiment here
   experiment = humanWorldExperimentDiscrete
   #experiment = humanWorldExperimentQPotential
+  
+  from multiprocessing import Pool
+  pool = Pool(processes=4)
+
+  subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
+  taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
+  
+  results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
-  results = []
-  for ids in taskRanges:
-    results.append(experiment(subjFiles, ids)) 
-
-  weights = [r[0] for r in results]
-  agreedPoliciesRatios = [r[1] for r in results]
+  weights = [r.get()[0] for r in results]
+  agreedPoliciesRatios = [r.get()[1] for r in results]
 
   output = open('weights.pkl', 'wb')
   pickle.dump(weights, output)

@@ -410,7 +410,8 @@ def main():
                   'extractor': extractor}
     a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
     a.setWeights('learnedValues/humanAgent' + opts.category + 'Weights.pkl')
-  elif opts.agent == 'Modular':
+  elif 'Modular' in opts.agent:
+    # for modular agents
     import modularAgents, modularQFuncs
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
@@ -419,16 +420,17 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
-    a.setWeights([1, 0, 0])
 
-    # way 1: using q tables
-    """
-    a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
-    a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
-    """
-    # way 2: using q functions
-    a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-    a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs())
+    if opts.agent == 'Modular' or opts.agent == 'ModularQ':
+      # way 1: using q tables
+      a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
+      a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
+    elif opts.agent == 'ModularV':
+      # way 2: using q functions
+      a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
+      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs())
+    else:
+      raise Exception("Unknown modular agent.")
   elif opts.agent == 'random':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
