@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 from inverseModularRL import InverseModularRL
 import modularQFuncs
 
@@ -29,24 +30,52 @@ class Test(unittest.TestCase):
                          lambda w: w[1] >= 0.99,\
                          lambda w: w[2] >= 0.99]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
-  
+   
+  def test_human_world_QPotential_two_modules(self):
+    resultConstraints = [lambda w: w[0] >= 0.9,\
+                         lambda w: w[1] >= 0.9,\
+                         lambda w: True]
+    self.human_world_continuous(modularQFuncs.getHumanWorldQPotentialFuncs()[:2], resultConstraints)
+
+  def test_human_world_discrete_two_modules(self):
+    resultConstraints = [lambda w: w[0] >= 0.9,\
+                         lambda w: w[1] >= 0.9,\
+                         lambda w: True]
+    self.human_world_discrete(modularQFuncs.getHumanWorldDiscreteFuncs()[:2], resultConstraints)
+
   def test_human_world_QPotential(self):
-    self.human_world(modularQFuncs.getHumanWorldQPotentialFuncs())
+    resultConstraints = [lambda w: w[0] >= 0.9,\
+                         lambda w: w[1] >= 0.9,\
+                         lambda w: w[2] >= 0.9]
+    self.human_world_continuous(modularQFuncs.getHumanWorldQPotentialFuncs(), resultConstraints)
 
   def test_human_world_discrete(self):
-    self.human_world(modularQFuncs.getHumanWorldDiscreteFuncs())
+    resultConstraints = [lambda w: w[0] >= 0.9,\
+                         lambda w: w[1] >= 0.9,\
+                         lambda w: w[2] >= 0.9]
+    self.human_world_discrete(modularQFuncs.getHumanWorldDiscreteFuncs(), resultConstraints)
 
-  def human_world(self, qFuncs):
+  def human_world_discrete(self, qFuncs, resultConstraints):
     """
     make some human data, which have clear intentions (to target, or avoid obstacle)
     """
     actions = ['L', 'G', 'R']
     # samples: targest, obstacles, path
-    state = ((2, 2), (3, -2), (3, 2), (4, 2), (3, 0))
+    state = ((4, 2), None, (4, 2), None, (4, 0))
+    # samples are: going to target, avoid obstacle, and going to path segment
     samples = [[(state, 'R')], [(state, 'L')], [(state, 'G')]]
-    resultConstraints = [lambda w: w[0] >= 0.9,\
-                         lambda w: w[1] >= 0.9,\
-                         lambda w: w[2] >= 0.9]
+    self.checkResult(samples, actions, qFuncs, resultConstraints)
+
+  def human_world_continuous(self, qFuncs, resultConstraints):
+    """
+    make some human data, which have clear intentions (to target, or avoid obstacle)
+    """
+    actions = ['L', 'G', 'R']
+    # samples: targest, obstacles, path
+    biasAngle = 60.0 / 180 * np.pi
+    state = ((0.6, biasAngle), None, (0.6, biasAngle), None, (0.6, 0))
+    # samples are: going to target, avoid obstacle, and going to path segment
+    samples = [[(state, 'R')], [(state, 'L')], [(state, 'G')]]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
 
   def checkResult(self, samples, actions, qFuncs, resultConstraints):
@@ -57,8 +86,7 @@ class Test(unittest.TestCase):
       output = sln.solve()
       w = output.x.tolist()
       
-      print expIdx, w
-      self.assertTrue(resultConstraints[expIdx](w))
+      self.assertTrue(resultConstraints[expIdx](w), msg="Exp #" + str(expIdx) + " weights: " + str(w))
 
 if __name__ == '__main__':
   unittest.main()
