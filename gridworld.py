@@ -556,7 +556,6 @@ if __name__ == '__main__':
   elif opts.agent == 'q':
     #env.getPossibleActions, opts.discount, opts.learningRate, opts.epsilon
     #simulationFn = lambda agent, state: simulation.GridworldSimulation(agent,state,mdp)
-    gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -564,7 +563,6 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
-    gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
 
     qLearnOpts = {'gamma': opts.discount, 
@@ -575,7 +573,6 @@ if __name__ == '__main__':
     a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
   elif opts.agent == 'Modular':
     import modularAgents
-    gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
