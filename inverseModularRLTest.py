@@ -1,3 +1,7 @@
+"""
+This is the test for modular IRL.
+Try some simple domains, and human world experiments on both discrete and continuous Q functions.
+"""
 import unittest
 import numpy as np
 from inverseModularRL import InverseModularRL

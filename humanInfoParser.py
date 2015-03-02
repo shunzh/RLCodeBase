@@ -24,9 +24,48 @@ def plotHuman(plotting, win, subjIdSet, domainId):
       prevLoc = loc
     prevLoc = None
 
+def getHumanStatesActions(filenames, idxSet):
+  """
+  Get human actions and states from mat files.
+  """
+  samples = []
+
+  import util
+
+  for filename in filenames:
+    mat = util.loadmat(filename)
+
+    for idx in idxSet:
+      obstDist = mat['pRes'][idx].obstDist1
+      obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
+      obstDist2 = mat['pRes'][idx].obstDist2
+      obstAngle2 = mat['pRes'][idx].obstAngle2 / 180.0 * np.pi
+
+      targDist = mat['pRes'][idx].targDist1
+      targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
+      targDist2 = mat['pRes'][idx].targDist2
+      targAngle2 = mat['pRes'][idx].targAngle2 / 180.0 * np.pi
+
+      segDist = mat['pRes'][idx].pathDist
+      segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
+
+      actions = mat['pRes'][idx].action
+
+      # cut the head and tail samples
+      for i in range(5, len(targDist) - 15):
+        state = ((targDist[i], targAngle[i]),
+                 (targDist2[i], targAngle2[i]),
+                 (obstDist[i], obstAngle[i]),
+                 (obstDist2[i], obstAngle2[i]),
+                 (segDist[i], segAngle[i]))
+        action = actions[i]
+        samples.append((state, action))
+
+  return samples
+
 def parseHumanActions(filename, domainId):
   """
-  Parse human behavivors from mat, which contains actions and angle changes at all data points.
+  Parse human behavivors from mat, which contains positions, actions and angle changes at all data points.
   (Action is redundant given change of angles. Just for convenience.)
 
   Args:
