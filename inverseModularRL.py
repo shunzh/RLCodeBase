@@ -68,7 +68,8 @@ class InverseModularRL:
     if self.learnDiscounter:
       d = X[self.n:]
     else:
-      d = [.6, .6, .6]
+      # use default discounters if not learning
+      d = [.8] * self.n
 
     ret = 0
 
@@ -105,7 +106,7 @@ class InverseModularRL:
     # range of weights: (0, 1)
     bnds = tuple((0, 1) for _ in range(self.n))
     if self.learnDiscounter:
-      # range of discounters: (0.01, 0.99)
+      # range of discounters
       bnds += tuple((0.01, 0.99) for _ in range(self.n))
 
     start_pos = np.zeros(len(bnds))

@@ -6,6 +6,7 @@ import unittest
 import numpy as np
 from inverseModularRL import InverseModularRL
 import modularQFuncs
+import InverseModularRLExperiments
 
 class Test(unittest.TestCase):
   def test_corridor(self):
@@ -22,7 +23,7 @@ class Test(unittest.TestCase):
     
   def test_three_way(self):
     """
-    One state and three actions
+    One state and three actions. One module for taking each action.
     """
     actions = range(3)
 
@@ -35,18 +36,6 @@ class Test(unittest.TestCase):
                          lambda w: w[2] >= 0.99]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
    
-  def test_human_world_QPotential_two_modules(self):
-    resultConstraints = [lambda w: w[0] >= 0.9,\
-                         lambda w: w[1] >= 0.9,\
-                         lambda w: True]
-    self.human_world_continuous(modularQFuncs.getHumanWorldQPotentialFuncs()[:2], resultConstraints)
-
-  def test_human_world_discrete_two_modules(self):
-    resultConstraints = [lambda w: w[0] >= 0.9,\
-                         lambda w: w[1] >= 0.9,\
-                         lambda w: True]
-    self.human_world_discrete(modularQFuncs.getHumanWorldDiscreteFuncs()[:2], resultConstraints)
-
   def test_human_world_QPotential(self):
     resultConstraints = [lambda w: w[0] >= 0.9,\
                          lambda w: w[1] >= 0.9,\
@@ -73,25 +62,36 @@ class Test(unittest.TestCase):
   def human_world_continuous(self, qFuncs, resultConstraints):
     """
     make some human data, which have clear intentions (to target, or avoid obstacle)
+    
+    This test assumes correctness of human world transition simulation, which is tested in humanWorldTest. 
     """
     actions = ['L', 'G', 'R']
     # samples: targest, obstacles, path
     step = 0.6
     biasAngle = 60.0 / 180 * np.pi
-    state = ((step, biasAngle), None, (step, biasAngle), None, (0.6, 0))
+    state = ((step, biasAngle), None, (step, biasAngle), None, (step, 0))
     # samples are: going to target, avoid obstacle, and going to path segment
     samples = [[(state, 'R')], [(state, 'L')], [(state, 'G')]]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
 
   def checkResult(self, samples, actions, qFuncs, resultConstraints):
+    n = len(qFuncs)
+
     for expIdx in range(len(samples)):
       sln = InverseModularRL(qFuncs)
       sln.getSamples = lambda: samples[expIdx]
       sln.getActions = lambda s: actions
       output = sln.solve()
-      w = output.x.tolist()
-      
-      self.assertTrue(resultConstraints[expIdx](w), msg="Exp #" + str(expIdx) + " weights: " + str(w))
+      x = output.x.tolist()
+      w = x[:n]
+      d = x[n:]
+
+      judge = resultConstraints[expIdx](x)
+      if judge == False:
+        # plot weights upon failure
+        InverseModularRLExperiments.printWeight(sln, unittest.TestCase.id(self) + '_' + str(expIdx) + '.png', d)
+
+      self.assertTrue(judge, msg="Exp #" + str(expIdx) + " weights: " + str(x))
 
 if __name__ == '__main__':
   unittest.main()
