@@ -93,11 +93,8 @@ def discretize(samples):
     ret.append((s, a))
   return ret
 
-def printWeight(sln, filename):
+def printWeight(sln, filename, discounters = []):
   import matplotlib.pyplot as plt
-
-  # need to specify the discounters. We can only plot 2 dimensional graph
-  discounters = [.6, .6, .6] 
 
   data = []
   for i in range(0, 11):
@@ -126,12 +123,9 @@ def printWeight(sln, filename):
   
   plt.close()
 
-def printDiscounter(sln, filename):
+def printDiscounter(sln, filename, weights = []):
   import matplotlib.pyplot as plt
   
-  # fix weights. try different discounters
-  weights = [0.33, 0.33, 0.33]
-
   data = []
   for i in range(0, 11):
     row = []
@@ -236,9 +230,9 @@ def humanWorldExperimentQPotential(filenames, rang):
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
   # debug weight disabled. computational expensive?
-  printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
+  printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png', d)
   print rang, ": weight heatmaps done."
-  printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png')
+  printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png', w)
   print rang, ": discounter heatmaps done."
   print rang, ": OK."
 

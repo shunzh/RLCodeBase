@@ -17,7 +17,7 @@ class Test(unittest.TestCase):
     qFuncs = [lambda s, a, d = None: 1 if a == actions[0] else 0,\
               lambda s, a, d = None: 1 if a == actions[1] else 0]
     resultConstraints = [lambda w: w[0] >= 0.99 and w[1] <= 0.01,\
-                        lambda w: w[1] >= 0.99 and w[0] <= 0.01]
+                         lambda w: w[1] >= 0.99 and w[0] <= 0.01]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
     
   def test_three_way(self):
@@ -76,8 +76,9 @@ class Test(unittest.TestCase):
     """
     actions = ['L', 'G', 'R']
     # samples: targest, obstacles, path
+    step = 0.6
     biasAngle = 60.0 / 180 * np.pi
-    state = ((0.6, biasAngle), None, (0.6, biasAngle), None, (0.6, 0))
+    state = ((step, biasAngle), None, (step, biasAngle), None, (0.6, 0))
     # samples are: going to target, avoid obstacle, and going to path segment
     samples = [[(state, 'R')], [(state, 'L')], [(state, 'G')]]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
@@ -85,7 +86,7 @@ class Test(unittest.TestCase):
   def checkResult(self, samples, actions, qFuncs, resultConstraints):
     for expIdx in range(len(samples)):
       sln = InverseModularRL(qFuncs)
-      sln.getSamples = lambda : samples[expIdx]
+      sln.getSamples = lambda: samples[expIdx]
       sln.getActions = lambda s: actions
       output = sln.solve()
       w = output.x.tolist()
