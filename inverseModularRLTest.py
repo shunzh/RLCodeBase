@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 from inverseModularRL import InverseModularRL
 import modularQFuncs
-import InverseModularRLExperiments
+import inverseModularRLExperiments
 
 class Test(unittest.TestCase):
   def test_corridor(self):
@@ -36,42 +36,58 @@ class Test(unittest.TestCase):
                          lambda w: w[2] >= 0.99]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
    
-  def test_human_world_QPotential(self):
-    resultConstraints = [lambda w: w[0] >= 0.9,\
-                         lambda w: w[1] >= 0.9,\
-                         lambda w: w[2] >= 0.9]
-    self.human_world_continuous(modularQFuncs.getHumanWorldQPotentialFuncs(), resultConstraints)
-
-  def test_human_world_discrete(self):
-    resultConstraints = [lambda w: w[0] >= 0.9,\
-                         lambda w: w[1] >= 0.9,\
-                         lambda w: w[2] >= 0.9]
-    self.human_world_discrete(modularQFuncs.getHumanWorldDiscreteFuncs(), resultConstraints)
-
-  def human_world_discrete(self, qFuncs, resultConstraints):
-    """
-    make some human data, which have clear intentions (to target, or avoid obstacle)
-    """
+  def test_human_world_object_aside(self):
     actions = ['L', 'G', 'R']
-    # samples: targest, obstacles, path
-    state = ((4, 2), None, (4, 2), None, (4, 0))
-    # samples are: going to target, avoid obstacle, and going to path segment
-    samples = [[(state, 'R')], [(state, 'L')], [(state, 'G')]]
-    self.checkResult(samples, actions, qFuncs, resultConstraints)
 
-  def human_world_continuous(self, qFuncs, resultConstraints):
-    """
-    make some human data, which have clear intentions (to target, or avoid obstacle)
-    
-    This test assumes correctness of human world transition simulation, which is tested in humanWorldTest. 
-    """
-    actions = ['L', 'G', 'R']
     # samples: targest, obstacles, path
     step = 0.6
     biasAngle = 60.0 / 180 * np.pi
     state = ((step, biasAngle), None, (step, biasAngle), None, (step, 0))
     # samples are: going to target, avoid obstacle, and going to path segment
     samples = [[(state, 'R')], [(state, 'L')], [(state, 'G')]]
+    qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
+
+    resultConstraints = [lambda w: w[0] >= 0.9,\
+                         lambda w: w[1] >= 0.9,\
+                         lambda w: w[2] >= 0.9]
+    self.checkResult(samples, actions, qFuncs, resultConstraints)
+
+  def test_human_world_object_aside_discrete(self):
+    # samples: targest, obstacles, path
+    actions = ['L', 'G', 'R']
+    state = ((4, 2), None, (4, 2), None, (4, 0))
+    # samples are: going to target, avoid obstacle, and going to path segment
+    samples = [[(state, 'R')], [(state, 'L')], [(state, 'G')]]
+    qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
+
+    resultConstraints = [lambda w: w[0] >= 0.9,\
+                         lambda w: w[1] >= 0.9,\
+                         lambda w: w[2] >= 0.9]
+    self.checkResult(samples, actions, qFuncs, resultConstraints)
+
+  def test_human_world_object_ahead(self):
+    """
+    Test whether multiple samples are interpreted correctly.
+    """
+    actions = ['L', 'G', 'R']
+    states = [((0.3 * unit, 0), None, (0.3 * unit, 0), None, (100, np.pi / 2)) for unit in xrange(3, 4)]
+    samples = [[(state, 'G') for state in states], [(state, 'L') for state in states]]
+    qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
+
+    resultConstraints = [lambda w: w[0] >= 0.9,\
+                         lambda w: w[1] >= 0.9]
+    self.checkResult(samples, actions, qFuncs, resultConstraints)
+
+  def test_human_world_confusing_samples(self):
+    """
+    Make sure IRL doesn't give high weights on any module, if the agent performs inconsistently.
+    """
+    actions = ['L', 'G', 'R']
+    state = ((1, 0), None, (1, 0), None, (1, 0))
+    samples = [[(state, 'L'), (state, 'R'), (state, 'G')]]
+    qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
+    
+    resultConstraints = [lambda w: w[0] < 0.9 and w[1] < 0.9 and w[2] < 0.9]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
 
   def checkResult(self, samples, actions, qFuncs, resultConstraints):
@@ -89,7 +105,8 @@ class Test(unittest.TestCase):
       judge = resultConstraints[expIdx](x)
       if judge == False:
         # plot weights upon failure
-        InverseModularRLExperiments.printWeight(sln, unittest.TestCase.id(self) + '_' + str(expIdx) + '.png', d)
+        inverseModularRLExperiments.printWeight(sln, unittest.TestCase.id(self) + '_' + str(expIdx) + '_w.png', d)
+        inverseModularRLExperiments.printDiscounter(sln, unittest.TestCase.id(self) + '_' + str(expIdx) + '_d.png', w)
 
       self.assertTrue(judge, msg="Exp #" + str(expIdx) + " weights: " + str(x))
 

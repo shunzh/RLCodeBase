@@ -22,6 +22,7 @@ class InverseModularRL:
     self.qFuncs = qFuncs
 
     # enable if learning discounters as well
+    #self.learnDiscounter = False
     self.learnDiscounter = True
     # confidence
     self.eta = eta
@@ -69,7 +70,7 @@ class InverseModularRL:
       d = X[self.n:]
     else:
       # use default discounters if not learning
-      d = [.8] * self.n
+      d = [.8, .8, .8]
 
     ret = 0
 
@@ -103,7 +104,7 @@ class InverseModularRL:
     """
     self.n = len(self.qFuncs)
 
-    # range of weights: (0, 1)
+    # range of weights
     bnds = tuple((0, 1) for _ in range(self.n))
     if self.learnDiscounter:
       # range of discounters

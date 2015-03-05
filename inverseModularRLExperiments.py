@@ -96,23 +96,24 @@ def discretize(samples):
 def printWeight(sln, filename, discounters = []):
   import matplotlib.pyplot as plt
 
+  stepSize = 2
   data = []
-  for i in range(0, 11):
+  for i in range(0, 11, stepSize):
     row = []
-    for j in range(0, 11 - i):
+    for j in range(0, 11 - i, stepSize):
       k = 10 - i - j
       row.append(-sln.obj([0.1 * i, 0.1 * j, 0.1 * k] + discounters))
-    for j in range(11 - i, 11):
+    for j in range(11 - i, 11, stepSize):
       row.append(0) # will be masked
     data.append(row)
 
-  mask = np.tri(11, k=-1)
+  mask = np.tri(10 / stepSize + 1, k=-1)
   mask = np.fliplr(mask)
   data = np.ma.array(data, mask=mask)
 
   plt.imshow(data, interpolation='none')
-  plt.xticks(range(11), np.arange(0,1.1,0.1))
-  plt.yticks(range(11), np.arange(0,1.1,0.1))
+  plt.xticks(range(6), np.arange(0,1.1,0.1 * stepSize))
+  plt.yticks(range(6), np.arange(0,1.1,0.1 * stepSize))
   plt.xlabel('Obstacle Module Weight');
   plt.ylabel('Target Module Weight');
 
@@ -126,17 +127,18 @@ def printWeight(sln, filename, discounters = []):
 def printDiscounter(sln, filename, weights = []):
   import matplotlib.pyplot as plt
   
+  stepSize = 2
   data = []
-  for i in range(0, 11):
+  for i in range(0, 11, stepSize):
     row = []
-    for j in range(0, 11):
-      row.append(-sln.obj(weights + [0.1 * i, 0.1 * j, 0.6]))
+    for j in range(0, 11, stepSize):
+      row.append(-sln.obj(weights + [0.1 * i, 0.1 * j, 0.8]))
     data.append(row)
 
   data = np.ma.array(data)
   plt.imshow(data, interpolation='none')
-  plt.xticks(range(11), np.arange(0,1.1,0.1))
-  plt.yticks(range(11), np.arange(0,1.1,0.1))
+  plt.xticks(range(6), np.arange(0,1.1,0.1 * stepSize))
+  plt.yticks(range(6), np.arange(0,1.1,0.1 * stepSize))
   plt.xlabel('Obstacle Module Discounter');
   plt.ylabel('Target Module Discounter');
 
@@ -144,6 +146,8 @@ def printDiscounter(sln, filename, weights = []):
   plt.colorbar()
 
   plt.savefig(filename)
+  
+  plt.close()
 
 def policyCompare(samples, qFuncs, w):
   """
@@ -244,7 +248,9 @@ if __name__ == '__main__':
   experiment = humanWorldExperimentQPotential
   
   from multiprocessing import Pool
-  pool = Pool(processes=4)
+  # change the number of processors used here.
+  # use 1 for sequential execution.
+  pool = Pool(processes=1)
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
