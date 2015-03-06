@@ -97,8 +97,7 @@ class Test(unittest.TestCase):
       sln = InverseModularRL(qFuncs)
       sln.getSamples = lambda: samples[expIdx]
       sln.getActions = lambda s: actions
-      output = sln.solve()
-      x = output.x.tolist()
+      x = sln.solve()
       w = x[:n]
       d = x[n:]
 
