@@ -22,8 +22,8 @@ class InverseModularRL:
     self.qFuncs = qFuncs
 
     # enable if learning discounters as well
-    #self.learnDiscounter = False
-    self.learnDiscounter = True
+    self.learnDiscounter = False
+    self.constraintsOn = False
     # confidence
     self.eta = eta
 
@@ -104,16 +104,20 @@ class InverseModularRL:
     """
     self.n = len(self.qFuncs)
 
-    # range of weights
-    bnds = tuple((0, 1) for _ in range(self.n))
-    if self.learnDiscounter:
-      # range of discounters
-      bnds += tuple((0.01, 0.99) for _ in range(self.n))
+    start_pos = np.zeros(self.n)
 
-    start_pos = np.zeros(len(bnds))
-
-    # constraints: weights must sum to 1
-    cons = ({'type': 'eq', 'fun': lambda x:  1 - sum(x[:self.n])})
+    if self.constraintsOn:
+      # constraints: weights must sum to 1
+      cons = ({'type': 'eq', 'fun': lambda x:  1 - sum(x[:self.n])})
+      # range of weights
+      bnds = tuple((0, 1) for _ in range(self.n))
+      if self.learnDiscounter:
+        # range of discounters
+        bnds += tuple((0.01, 0.99) for _ in range(self.n))
+        start_pos += np.zeros(self.n)
+    else:
+      cons = ()
+      bnds = ()
 
     x = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds ,constraints=cons)
     return x
