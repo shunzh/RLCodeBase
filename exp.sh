@@ -5,7 +5,7 @@ rm contactStats
 # draw figures
 for i in `seq 0 31`;
 do
-  python humanWorld.py -a Modular -g vr$i
+  python humanWorld.py -a ModularV -g vr$i
 done
 
 # convert to png

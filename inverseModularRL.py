@@ -23,7 +23,6 @@ class InverseModularRL:
 
     # enable if learning discounters as well
     self.learnDiscounter = False
-    self.constraintsOn = False
     # confidence
     self.eta = eta
 
@@ -106,18 +105,14 @@ class InverseModularRL:
 
     start_pos = np.zeros(self.n)
 
-    if self.constraintsOn:
-      # constraints: weights must sum to 1
-      cons = ({'type': 'eq', 'fun': lambda x:  1 - sum(x[:self.n])})
-      # range of weights
-      bnds = tuple((0, 1) for _ in range(self.n))
-      if self.learnDiscounter:
-        # range of discounters
-        bnds += tuple((0.01, 0.99) for _ in range(self.n))
-        start_pos += np.zeros(self.n)
-    else:
-      cons = ()
-      bnds = ()
+    # make sure the range of weights are positive
+    bnds = tuple((0, 1000) for _ in range(self.n))
+    if self.learnDiscounter:
+      # range of discounters
+      bnds += tuple((0.001, 0.999) for _ in range(self.n))
+      start_pos += np.zeros(self.n)
 
-    x = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds ,constraints=cons)
+    result = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds)
+    x = result.x.tolist()
+    x = [xi / sum(x) for xi in x]
     return x

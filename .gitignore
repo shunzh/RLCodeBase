@@ -56,3 +56,6 @@ docs/_build/
 *.mat
 *.eps
 *.png
+
+# experiments should be ignored
+eval_*

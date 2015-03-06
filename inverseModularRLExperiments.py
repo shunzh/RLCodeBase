@@ -191,9 +191,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
   samples = discretize(samples)
   sln.setSamples(samples)
 
-  output = sln.solve()
-  x = output.x.tolist()
-  x = map(lambda _: round(_, 5), x) # avoid weird numerical problem
+  x = sln.solve()
   w = x[:n]
   d = x[n:]
   agreedPoliciesRatio = policyCompare(samples, qFuncs, w)
@@ -221,9 +219,7 @@ def humanWorldExperimentQPotential(filenames, rang):
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
   sln.setSamples(samples)
 
-  output = sln.solve()
-  x = output.x.tolist()
-  x = map(lambda _: round(_, 5), x) # avoid weird numerical problem
+  x = sln.solve()
   w = x[:n]
   d = x[n:]
   # FIXME
@@ -234,9 +230,8 @@ def humanWorldExperimentQPotential(filenames, rang):
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
   # debug weight disabled. computational expensive?
-  if sln.constraintsOn:
-    printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png', d)
-    print rang, ": weight heatmaps done."
+  printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png', d)
+  print rang, ": weight heatmaps done."
   if sln.learnDiscounter:
     printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png', w)
     print rang, ": discounter heatmaps done."

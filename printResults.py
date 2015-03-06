@@ -13,6 +13,6 @@ print
 
 for idx in range(4):
   print taskNames[idx]
-  print 'Weights:', weights[idx]
-  print 'Proportion of agreed policies:', "%.3f" % agreedPolicies[idx]
+  print 'Weights:', [round(x, 4) for x in weights[idx]]
+  print 'Proportion of agreed policies:', "%.4f" % agreedPolicies[idx]
   print
