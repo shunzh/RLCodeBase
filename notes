@@ -7,4 +7,5 @@ contacted number of objects - output to stats
 - fine-grined q table
 - potential based
 
+for better debugging: highlight objects the agent is looking at.
 sanity check: weights and discounters

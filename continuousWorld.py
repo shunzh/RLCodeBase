@@ -1,7 +1,6 @@
 import random
 import sys
 import mdp
-import environment
 import mdpEnvironment
 import util
 import optparse
@@ -9,11 +8,9 @@ import featureExtractors
 
 import numpy as np
 import numpy.linalg
-import warnings
-
-from graphics import *
 
 from game import Actions
+import continuousWorldPlot
 
 class ContinuousWorld(mdp.MarkovDecisionProcess):
   """
@@ -247,152 +244,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     if y < self.yBoundary[0] or y >= self.yBoundary[1]: return False
     return True
 
-def simpleToyDomain(category = 'targs'):
-  """
-  This domain can be configed using the category argument,
-  so that we only have one target / obstacle for training.
-
-  We put irrelevant objects in infPos that beyond the border,
-  so that the agent cannot reach.
-  """
-  ret = {}
-
-  size = 3.0
-
-  # place that can't be reached
-  infPos = (size + 1, size + 1)
-
-  if category == 'targs':
-    targs = [(size / 2, size / 2)]; obsts = [infPos]; segs = [infPos]
-    # set the starting point to be random for training
-    entrance = (random.random() * size, random.random() * size)
-  elif category == 'obsts':
-    obsts = [(size / 2, size / 2)]; targs = [infPos]; segs = [infPos]
-    # random entrance point near the center
-    entrance = (size * 2 / 5 + random.random() * size / 5, size * 2 / 5 + random.random() * size / 5)
-  elif category == 'segs':
-    segs = [(size / 2, size / 2)]
-    obsts = [infPos]; targs = [infPos]
-    entrance = (random.random() * size, random.random() * size)
-
-  elevators = []
-  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators, 'entrance': entrance}
-
-  ret['xBoundary'] = [0, size]
-  ret['yBoundary'] = [0, size]
-
-  ret['radius'] = 0.075
-  ret['step'] = 0.1
-  
-  ret['category'] = category
-
-  return ret
-
-def toyDomain(category = 'targs'):
-  """
-  Similar to the simple toy domain, but with multiple (same) objects.
-  """
-  ret = {}
-
-  layout = [(0.3 + 0.4 * x, 0.3 + 0.4 * y) for x in xrange(0, 2) for y in xrange(0, 2) ]
-  infPos = (2, 2)
-
-  if category == 'targs':
-    targs = layout; obsts = [infPos]
-  elif category == 'obsts':
-    obsts = layout; targs = [infPos]
-  segs = [infPos]
-
-  elevators = [(1, 1)]
-  entrance = (0, 0)
-  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators, 'entrance': entrance}
-
-  ret['xBoundary'] = [-0.1, 1.1]
-  ret['yBoundary'] = [-0.1, 1.1]
-
-  # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.075
-
-  # step size of the agent movement
-  ret['step'] = 0.1
-
-  ret['category'] = category
-
-  return ret
-
-def loadFromMat(filename, domainId, randInit = False):
-  """
-  Load from mat file that provided by Matt.
-
-  Args:
-    filename: name of the mat file, presumebaly in the same directory.
-    domainId: there should be multiple configurations of rooms in this file,
-              indicate which room to use.
-  Return:
-    no return, but add an obj attribute to self.
-  """
-  # read layout from source file
-  s = util.loadmat(filename)
-
-  ret = {}
-
-  numObj = len(s['newRes']['all_objs']['id'])
-
-  targs = []
-  obsts = []
-  segs = []
-  elevators = []
-
-  for idx in xrange(numObj):
-    name = s['newRes']['all_objs']['id'][idx]
-
-    x = s['newRes']['all_objs']['object_location']['x'][domainId][idx]
-    y = s['newRes']['all_objs']['object_location']['z'][domainId][idx]
-
-    if 'targ' in name:
-      targs.append((x, y))
-    elif 'obst' in name:
-      obsts.append((x, y))
-    elif 'seg' in name:
-      # FIXME just guesses
-      # drop far located segments
-      if numpy.linalg.norm((x, y)) < 10:
-        segs.append((x, y))
-    elif 'elevator' in name:
-      elevators.append((x, y))
-    else:
-      warnings.warn("Dropped unkown object typed '" + name + "' indexed at " + str(idx))
-
-  # FIXME segs need to be reversed for even numbered rooms
-  if domainId % 2 == 0:
-    segs.reverse()
-
-  if len(elevators) == 0:
-    raise Exception("Elevators cannot be undefined.")
-
-  # entrance is always the position symmetric to the elevator wrt the origin
-  entrance = (-elevators[0][0], -elevators[0][1])
-
-  ret['objs'] = {'targs': targs, 'obsts': obsts, 'segs': segs, 'elevators': elevators, 'entrance': entrance}
-
-  maxCor = 4
-  ret['xBoundary'] = [-maxCor, maxCor]
-  ret['yBoundary'] = [-maxCor, maxCor]
-
-  if randInit:
-    x = ret['xBoundary'][0] + random.random() * (ret['xBoundary'][1] - ret['xBoundary'][0])
-    y = ret['yBoundary'][0] + random.random() * (ret['yBoundary'][1] - ret['yBoundary'][0])
-    ret['objs']['elevators'][0] = (x, y)
-
-  # FIXME overfit
-  # radius of an object (so the object doesn't appear as a point)
-  ret['radius'] = 0.1905
-  # step size of the agent movement
-  ret['step'] = 0.3
-
-  return ret
-
-
 class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
   def step(self, state, action, nextState, reward):
     # remove objects if necessary
@@ -551,75 +402,7 @@ def parseOptions():
       
     return opts
 
-class Plotting:
-  def __init__(self, mdp, dim = 800):
-    self.mdp = mdp
-    self.size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
-    self.radius = mdp.radius / self.size * dim
-    self.dim = dim
 
-    def shift(loc):
-      """
-      shift to the scale of the GraphWin
-      """
-      return (1.0 * (loc[0] - mdp.xBoundary[0]) / self.size * dim, 1.0 * (loc[1] - mdp.yBoundary[0]) / self.size * dim)
-
-    self.shift = shift
- 
-  def drawDomain(self):
-    """
-    Args:
-      mdp: parsed from mat file.
-
-    Return:
-      win object
-    """
-    win = GraphWin('Domain', self.dim, self.dim) # give title and dimensions
-
-    rect = Rectangle(Point(0, 0), Point(self.dim, self.dim))
-    rect.setFill('grey')
-    rect.draw(win)
-   
-    def drawObjects(label, color):
-      """
-      Plot the objects as separate dots.
-      """
-      for obj in self.mdp.objs[label]:
-        # graphically increase the radius
-        cir = Circle(Point(self.shift(obj)), self.radius)
-        cir.setFill(color)
-        cir.draw(win)
-
-    def drawSegments(label, color):
-      """
-      Plot the adjacent objects as segments.
-      """
-      prevObj = None
-      for obj in self.mdp.objs[label]:
-        if prevObj:
-          # draw segments between waypoints
-          line = Line(Point(self.shift(prevObj)), Point(self.shift(obj)))
-          line.setWidth(3)
-          line.setFill(color)
-          line.draw(win)
-
-          # draw a small circle at the waypoints
-          cir = Circle(Point(self.shift(prevObj)), 5)
-          cir.setFill(color)
-          cir.draw(win)
-        prevObj = obj
-      
-    targColor = color_rgb(80, 77, 157)
-    obstColor = color_rgb(153, 77, 79)
-    pathColor = color_rgb(200, 200, 200)
-    drawObjects('targs', targColor)
-    drawObjects('obsts', obstColor)
-    drawSegments('segs', pathColor)
-    drawObjects('elevators', pathColor)
-
-    return win
-
- 
 def main():
   opts = parseOptions()
 
@@ -627,10 +410,11 @@ def main():
   # GET THE GRIDWORLD
   ###########################
 
+  import continuousWorldDomains
   if opts.grid == 'vr':
-    init = loadFromMat('miniRes25.mat', 0)
+    init = continuousWorldDomains.loadFromMat('miniRes25.mat', 0)
   elif opts.grid == 'toy':
-    init = toyDomain()
+    init = continuousWorldDomains.toyDomain()
   else:
     raise Exception("Unknown environment!")
 
@@ -646,7 +430,7 @@ def main():
   # FIXME repeated here.
   if not opts.quiet:
     dim = 800
-    plotting = Plotting(mdp, dim)
+    plotting = continuousWorldPlot.Plotting(mdp, dim)
     win = plotting.drawDomain()
 
   ###########################
@@ -715,21 +499,7 @@ def main():
 
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
   if not opts.quiet:
-    def displayCallback(x):
-      # display the corresponding state in graphics
-      if displayCallback.prevState != None:
-        # only draw lines, so ignore the first state
-        loc, orient = displayCallback.prevState
-        newLoc, newOrient = x
-
-        line = Line(Point(plotting.shift(loc)), Point(plotting.shift(newLoc)))
-        line.setWidth(3)
-        line.setFill('green')
-        line.draw(win)
-
-      displayCallback.prevState = x
-
-    displayCallback.prevState = None
+    displayCallback = plotting.plotHumanPath
   else:
     displayCallback = lambda x : None
 

@@ -10,6 +10,8 @@ import sarsaLambdaAgents
 import numpy as np
 
 from graphics import *
+import continuousWorldDomains
+import continuousWorldPlot
 
 class HumanWorld(continuousWorld.ContinuousWorld):
   """
@@ -161,7 +163,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
 
     # DISPLAY CURRENT STATE
     state = environment.getCurrentState()
-    if display: display.drawPath(state)
+    display(state)
     pause()
     
     # END IF IN A TERMINAL STATE
@@ -177,9 +179,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
       stats.write(str(targsNum) + ' ' + str(obstsNum) + '\n')
       stats.close()
       """
-
-      # mark touched objects here
-      #if display: display.highlight(environment.mdp)
 
       agent.final(state)
       return returns
@@ -334,7 +333,7 @@ def main():
 
   if 'vr' in opts.grid:
     vrDomainId = int(opts.grid[2:])
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', vrDomainId)
+    init = lambda: continuousWorldDomains.loadFromMat('miniRes25.mat', vrDomainId)
 
     import pickle
     valueTable = pickle.load(open('learnedValues/values.pkl'))
@@ -345,15 +344,15 @@ def main():
 
     print "init using domain #", vrDomainId, "with values", weights, "and discounters", disconters
   elif opts.grid == 'vrTrain':
-    init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0, randInit = True)
+    init = lambda: continuousWorldDomains.loadFromMat('miniRes25.mat', 0, randInit = True)
   elif opts.grid == 'toy':
     if not opts.category in possibleCategories:
       raise Exception('Unexpected category ' + opts.category)
-    init = lambda: continuousWorld.toyDomain(opts.category)
+    init = lambda: continuousWorldDomains.toyDomain(opts.category)
   elif opts.grid == 'simple':
     if not opts.category in possibleCategories:
       raise Exception('Unexpected category ' + opts.category)
-    init = lambda: continuousWorld.simpleToyDomain(opts.category)
+    init = lambda: continuousWorldDomains.simpleToyDomain(opts.category)
   else:
     raise Exception("Unknown environment!")
 
@@ -369,7 +368,7 @@ def main():
 
   if not opts.quiet:
     dim = 800
-    plotting = continuousWorld.Plotting(mdp, dim)
+    plotting = continuousWorldPlot.Plotting(mdp, dim)
     # draw the environment -- path, targets, etc.
     win = plotting.drawDomain()
     # draw human trajectories
@@ -457,44 +456,9 @@ def main():
     
   # FIGURE OUT WHAT TO DISPLAY EACH TIME STEP (IF ANYTHING)
   if not opts.quiet:
-    class DisplayCallback:
-      """
-      The class that plots the behavior of the agent on the fly.
-      """
-      def __init__(self):
-        self.prevState = None
-
-      def drawPath(self, x):
-        """
-        display the corresponding state in graphics
-        """
-        if self.prevState != None:
-          # only draw lines, so ignore the first state
-          loc, orient = self.prevState
-          newLoc, orient = x
-
-          line = Line(Point(plotting.shift(loc)), Point(plotting.shift(newLoc)))
-          line.setWidth(5)
-          line.setFill(color_rgb(0, 255, 0))
-          line.draw(win)
-
-        self.prevState = x
-
-      def highlight(self, mdp):
-        """
-        highlight the elements in the list l
-        elements of l are (type, id)
-        
-        #FIXME not intuitive using red dots
-        """
-        for loc in mdp.collectedTargetSet + mdp.touchedObstacleSet:
-          cir = Circle(Point(plotting.shift(loc)), 7)
-          cir.setFill(color_rgb(255, 0, 0))
-          cir.draw(win)
-
-    displayCallback = DisplayCallback()
+    displayCallback = plotting.plotHumanPath
   else:
-    displayCallback = None
+    displayCallback = lambda x: None
 
   if not opts.quiet:
     messageCallback = lambda x: printString(x)
