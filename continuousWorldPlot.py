@@ -1,13 +1,24 @@
 from graphics import *
 
 class Plotting:
+  # rgb values of colors
+  colorsValues = {'targs': (80, 77, 157), 'obsts': (153, 77, 79), 'segs': (200, 200, 200)}
+
   def __init__(self, mdp, dim = 800):
     self.mdp = mdp
     self.size = max(mdp.xBoundary[1] - mdp.xBoundary[0], mdp.yBoundary[1] - mdp.yBoundary[0])
     self.radius = mdp.radius / self.size * dim
     self.dim = dim
     # for plot human trajectory, keep the previous state here
+
+    hColorsValues = {label: (r + 40, g + 40, b + 40) for label, (r, g, b) in self.colorsValues.items()}
+    # object colors
+    self.colors = {label: color_rgb(r, g, b) for label, (r, g, b) in self.colorsValues.items()}
+    self.hColors = {label: color_rgb(r, g, b) for label, (r, g, b) in hColorsValues.items()}
+
     self.prevState = None
+    # keep previous highlights here, redraw if un-highlighted
+    self.prevHighlight = []
 
     def shift(loc):
       """
@@ -31,21 +42,22 @@ class Plotting:
     rect.setFill('grey')
     rect.draw(self.win)
    
-    def drawObjects(label, color):
+    def drawObjects(label):
       """
       Plot the objects as separate dots.
       """
       for obj in self.mdp.objs[label]:
         # graphically increase the radius
         cir = Circle(Point(self.shift(obj)), self.radius)
-        cir.setFill(color)
+        cir.setFill(self.colors[label])
         cir.draw(self.win)
 
-    def drawSegments(label, color):
+    def drawSegments(label):
       """
       Plot the adjacent objects as segments.
       """
       prevObj = None
+      color = self.colors['segs']
       for obj in self.mdp.objs[label]:
         if prevObj:
           # draw segments between waypoints
@@ -60,13 +72,9 @@ class Plotting:
           cir.draw(self.win)
         prevObj = obj
       
-    targColor = color_rgb(80, 77, 157)
-    obstColor = color_rgb(153, 77, 79)
-    pathColor = color_rgb(200, 200, 200)
-    drawObjects('targs', targColor)
-    drawObjects('obsts', obstColor)
-    drawSegments('segs', pathColor)
-    drawObjects('elevators', pathColor)
+    drawObjects('targs')
+    drawObjects('obsts')
+    drawSegments('segs')
 
     return self.win
 
@@ -83,3 +91,16 @@ class Plotting:
       line.draw(self.win)
 
     self.prevState = x
+
+  def plotHighlightedObjects(self, l):
+    for obj, label in self.prevHighlight:
+      # clear previous highlights
+      cir = Circle(Point(self.shift(obj)), self.radius)
+      cir.setFill(self.colors[label])
+      cir.draw(self.win)
+    
+    for obj, label in l:
+      # draw new objects  
+      cir = Circle(Point(self.shift(obj)), self.radius)
+      cir.setFill(self.hColors[label])
+      cir.draw(self.win)
