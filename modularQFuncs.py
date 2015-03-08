@@ -71,17 +71,17 @@ def getHumanWorldDiscreteFuncs():
           lambda s, a, d = None: qObstacle(s[2], a), # closest obstacles
           lambda s, a, d = None: qSegment(s[4], a)]
 
-def getHumanWorldQPotentialFuncs():
+def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
   """
   Rather learned from samples, we define the potential functions (a value function) based on reward.
   Q functions here just reflect the potential functions.
   Simulate the dynamics dependent on distance, angle to an object, and action taken.
+  
+  Args:
+    defaultD: default discounters.
+              It's true that discounter should not be part of the agent.
+              We may compute the q value for different discounters. So we need a discounter parameter.
   """
-  # It's true that discounter should not be part of the agent.
-  # We may compute the q value for different discounters. So we need a discounter parameter.
-  # In case we require nothing, use these discounters.
-  defaultD = [0.6] * 3
-
   transition = HumanWorld.transitionSimulate
 
   def vTarget(s, discounter):

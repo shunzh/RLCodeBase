@@ -326,6 +326,7 @@ def plotQFuncs(values, category):
 def main(): 
   opts = parseOptions()
   possibleCategories = ['targs', 'obsts', 'segs']
+  nModules = len(possibleCategories)
 
   ###########################
   # GET THE ENVIRONMENT
@@ -336,10 +337,13 @@ def main():
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', vrDomainId)
 
     import pickle
-    weightTable = pickle.load(open('learnedValues/weights.pkl'))
-    weights = weightTable[vrDomainId / 8] # 8 domains per task
+    valueTable = pickle.load(open('learnedValues/values.pkl'))
+    values = valueTable[vrDomainId / 8] # 8 domains per task
+    
+    weights = values[:nModules]
+    disconters = None if len(values) == nModules else values[nModules:]
 
-    print "init using domain #", vrDomainId, "with weights", weights
+    print "init using domain #", vrDomainId, "with values", weights, "and discounters", disconters
   elif opts.grid == 'vrTrain':
     init = lambda: continuousWorld.loadFromMat('miniRes25.mat', 0, randInit = True)
   elif opts.grid == 'toy':
@@ -428,7 +432,7 @@ def main():
     elif opts.agent == 'ModularV':
       # way 2: using q functions
       a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs())
+      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(disconters))
     else:
       raise Exception("Unknown modular agent.")
   elif opts.agent == 'random':

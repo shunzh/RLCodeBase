@@ -204,7 +204,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
   print rang, ": weight heatmaps done."
   print rang, ": OK."
 
-  return [w, agreedPoliciesRatio] 
+  return [w + d, agreedPoliciesRatio] 
 
 def humanWorldExperimentQPotential(filenames, rang):
   """
@@ -237,7 +237,7 @@ def humanWorldExperimentQPotential(filenames, rang):
     print rang, ": discounter heatmaps done."
   print rang, ": OK."
 
-  return [w, agreedPoliciesRatio] 
+  return [w + d, agreedPoliciesRatio] 
 
 if __name__ == '__main__':
   # set experiment here

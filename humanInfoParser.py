@@ -30,8 +30,6 @@ def getHumanStatesActions(filenames, idxSet):
   """
   samples = []
 
-  import util
-
   for filename in filenames:
     mat = util.loadmat(filename)
 

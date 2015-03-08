@@ -1,15 +1,10 @@
 Path following
 - reward by shrinking distance to next waypoint, potential based
-
-Obstacle size - ok - nm
+- switch between waypoints consecutively
 
 contacted number of objects - output to stats
 
-fine-grined q table - potential based
+- fine-grined q table
+- potential based
 
-discounter learning - done, but not correct
-
-unit tests for
-*. q agent - ok
-*. irl - ok
-*. human data, with multiple samples.
+sanity check: weights and discounters
