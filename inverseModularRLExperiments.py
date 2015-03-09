@@ -258,7 +258,7 @@ if __name__ == '__main__':
   weights = [r.get()[0] for r in results]
   agreedPoliciesRatios = [r.get()[1] for r in results]
 
-  output = open('weights.pkl', 'wb')
+  output = open('values.pkl', 'wb')
   pickle.dump(weights, output)
   output.close()
 
