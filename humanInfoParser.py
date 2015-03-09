@@ -3,6 +3,8 @@ import util
 from graphics import *
 
 import numpy as np
+import continuousWorldDomains
+import continuousWorldPlot
 
 def plotHuman(plotting, win, subjIdSet, domainId):
   dim = plotting.dim
@@ -96,10 +98,10 @@ if __name__ == '__main__':
     domainId = sys.argv[2]
 
     # create plotting canvas, load room configuration
-    init = continuousWorld.loadFromMat('miniRes25.mat', int(domainId))
+    init = continuousWorldDomains.loadFromMat('miniRes25.mat', int(domainId))
     mdp = humanWorld.HumanWorld(init)
     dim = 800
-    plotting = continuousWorld.Plotting(mdp, dim)
+    plotting = continuousWorldPlot.Plotting(mdp, dim)
     win = plotting.drawDomain()
 
     plotHuman(plotting, win, [subjId], domainId)

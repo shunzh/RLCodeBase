@@ -59,17 +59,17 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     # get a target?
     tLocs = self.objs['targs']
-    for idx in xrange(len(tLocs)):
-      dist = numpy.linalg.norm(np.subtract(l, tLocs[idx]))
+    for targIdx in xrange(len(tLocs)):
+      dist = numpy.linalg.norm(np.subtract(l, tLocs[targIdx]))
       if dist < self.radius:
-        ret.append(('targs', idx))
+        ret.append(('targs', targIdx))
 
     # run into an obstacle?
     oLocs = self.objs['obsts']
-    for idx in xrange(len(tLocs)):
-      dist = numpy.linalg.norm(np.subtract(l, oLocs[idx]))
+    for obstIdx in xrange(len(tLocs)):
+      dist = numpy.linalg.norm(np.subtract(l, oLocs[obstIdx]))
       if dist < self.radius * 2: # larger buffer
-        ret.append(('obsts', idx))
+        ret.append(('obsts', obstIdx))
 
     # close to the next segment?
     sLocs = self.objs['segs']
@@ -78,6 +78,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       # when get closer to the next one
       distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
       distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx + 1]))
+      print distSeg1, distSeg2
       if distSeg1 > distSeg2 :
         ret.append(('segs', segIdx))
         segIdx += 1
@@ -90,6 +91,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
         ret.append(('segs', 0))
 
     # if it's close to nothing
+    print ret
     return ret
 
   def getClosestTarget(self, l):

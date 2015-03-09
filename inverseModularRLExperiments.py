@@ -5,6 +5,7 @@ from inverseModularRL import InverseModularRL
 import modularAgents
 import modularQFuncs
 import humanInfoParser
+import continuousWorldDomains
 
 def checkPolicyConsistency(states, a, b):
   """
@@ -38,7 +39,7 @@ def continuousWorldExperiment():
     Can be called to run pre-specified agent and domain.
   """
   import continuousWorld as cw
-  init = cw.loadFromMat('miniRes25.mat', 0)
+  init = continuousWorldDomains.loadFromMat('miniRes25.mat', 0)
   #init = cw.toyDomain()
   m = cw.ContinuousWorld(init)
   env = cw.ContinuousEnvironment(m)
