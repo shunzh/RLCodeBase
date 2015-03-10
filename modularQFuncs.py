@@ -83,7 +83,6 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
               We may compute the q value for different discounters. So we need a discounter parameter.
   """
   transition = HumanWorld.transitionSimulate
-  pathWidth = 2
 
   def vTarget(s, discounter):
     dist, orient = s
@@ -95,10 +94,7 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
 
   def vSegment(s, discounter):
     dist, orient = s
-    if dist > pathWidth:
-      return -10
-    else:
-      return 1 * np.power(discounter, dist)
+    return -1 + 2 * np.power(discounter, dist)
 
   def qTarget(state, action, discounter):
     return vTarget(transition(state, action), discounter)

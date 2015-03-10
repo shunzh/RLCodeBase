@@ -28,7 +28,8 @@ class ModularAgent(ApproximateQAgent):
     return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
 
   def getSubQValues(self, state, action):
-    return [self.qFuncs[i](state, action) for i in xrange(len(self.qFuncs))]
+    return {'sum': self.getQValue(state, action),\
+            'subs': [self.qFuncs[i](state, action) for i in xrange(len(self.qFuncs))]}
 
   def getSoftmaxQValue(self, state, action):
     actions = self.getLegalActions(state)
@@ -107,6 +108,9 @@ class ReducedModularAgent(ModularAgent):
     The default one is an identity function.
     """
     self.getState = extractor
+
+  def getSubQValues(self, state, action):
+    return ModularAgent.getSubQValues(self, self.getState(state), action)
 
   def getAction(self, state):
     return ModularAgent.getAction(self, self.getState(state))

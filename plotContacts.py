@@ -3,11 +3,10 @@ Bar chart demo with pairs of bars grouped for easy comparison.
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from humanWorld import HumanEnvironment
 
 n_groups = 2
 
-def plot(mean_targs, std_targs, mean_obsts, std_obsts, filename):
+def plot(mean_targs, std_targs, mean_obsts, std_obsts, title, filename):
   """
   Plot a figure with given stats
   """
@@ -32,6 +31,7 @@ def plot(mean_targs, std_targs, mean_obsts, std_obsts, filename):
   plt.xticks(index + bar_width, ('Human', 'Model'))
   plt.axis([0, 0.5, 0, 12])
   plt.legend()
+  plt.title(title)
   plt.gcf().set_size_inches(4,4)
 
   plt.savefig(filename)
@@ -45,14 +45,18 @@ h_std_targs = [1.49, 1.47, 0.95, 1.33]
 h_std_obsts = [1.29, 0.29, 1.20, 0.09]
 
 # model data
-#FIXME should read from data file
-m_mean_targs = [1.25, 4.13, 6.00, 8.88]
-m_mean_obsts = [1.63, 1.38, 2.75, 1.25]
+stats = np.loadtxt(open('stats'))
+taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
+titles = ['Path Only', 'Obstacle + Path', 'Target + Path', 'Target + Obstacle + Path']
 
-m_std_targs = [1.39, 1.89, 1.51, 1.36]
-m_std_obsts = [0.92, 0.92, 0.89, 1.49]
+m_mean_targs = [np.mean(stats[taskRange, 0]) for taskRange in taskRanges]
+m_mean_obsts = [np.mean(stats[taskRange, 1]) for taskRange in taskRanges]
+
+m_std_targs = [np.std(stats[taskRange, 0]) for taskRange in taskRanges]
+m_std_obsts = [np.std(stats[taskRange, 1]) for taskRange in taskRanges]
 
 for i in range(4):
   plot((h_mean_targs[i], m_mean_targs[i]), (h_std_targs[i], m_std_targs[i]),
        (h_mean_obsts[i], m_mean_obsts[i]), (h_std_obsts[i], m_std_obsts[i]),
+       titles[i],
        'contact' + str(i + 1) + '.png')

@@ -88,7 +88,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       # when get closer to the next one
       distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
       distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx + 1]))
-      print distSeg1, distSeg2
       if distSeg1 > distSeg2 :
         ret.append(('segs', segIdx))
         segIdx += 1
@@ -266,7 +265,6 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
 
     for nextStateType, nextObjId in objInfoLists:
       if nextStateType == 'targs' or nextStateType == 'segs':
-        print nextStateType, self.mdp.objs[nextStateType][nextObjId]
         self.mdp.clearObj(nextStateType, nextObjId)
 
 

@@ -12,6 +12,7 @@ import math
 
 import numpy.linalg
 import numpy as np
+from humanWorld import HumanWorld
 
 class FeatureExtractor:  
   def getFeatures(self, state, action):    
@@ -188,7 +189,7 @@ def adjustAngle(angle):
     angle -= 2 * np.pi
   return angle
 
-def mapStateToBin((dist, angle), step = 0.3):
+def mapStateToBin((dist, angle), step = HumanWorld.step):
   # FIXME OVERFIT
   if dist < step * 0.5:
     distBin = 1
