@@ -260,6 +260,7 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
 
     for nextStateType, nextObjId in objInfoLists:
       if nextStateType == 'targs' or nextStateType == 'segs':
+        print "clear", nextStateType, nextObjId
         self.mdp.clearObj(nextStateType, nextObjId)
 
 

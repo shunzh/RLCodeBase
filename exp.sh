@@ -1,5 +1,5 @@
 #!/bin/bash
-mv weights.pkl learnedValues
+mv values.pkl learnedValues
 
 rm contactStats
 # draw figures

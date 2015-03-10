@@ -230,12 +230,14 @@ def humanWorldExperimentQPotential(filenames, rang):
   print rang, ": discounters are", d
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
+  """
   # debug weight disabled. computational expensive?
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png', d)
   print rang, ": weight heatmaps done."
   if sln.learnDiscounter:
     printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png', w)
     print rang, ": discounter heatmaps done."
+  """
   print rang, ": OK."
 
   return [w + d, agreedPoliciesRatio] 
