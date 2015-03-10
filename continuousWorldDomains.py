@@ -144,6 +144,6 @@ def loadFromMat(filename, domainId, randInit = False):
   # radius of an object (so the object doesn't appear as a point)
   ret['radius'] = 0.1905
   # step size of the agent movement
-  ret['step'] = 0.3
+  ret['step'] = 0.2
 
   return ret

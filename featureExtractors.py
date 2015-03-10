@@ -118,6 +118,7 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
       return adjustAngle(objOrient - orient)
 
     if self.label == 'segs':
+      # rubber band
       # get features for waypoints
       if len(self.mdp.objs['segs']) > 1:
         minObj = self.mdp.objs['segs'][1] # look at the NEXT waypoint
@@ -127,6 +128,13 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
         minDist = numpy.linalg.norm(np.subtract(loc, minObj))
       else:
         minObj = loc; minDist = np.inf
+      """
+      if len(self.mdp.objs['segs']) > 0:
+        minObj = self.mdp.objs['segs'][0]
+        minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+      else:
+        minObj = loc; minDist = np.inf
+      """
 
       feats['dist'] = minDist
       feats['angle'] = getOrient(loc, minObj)

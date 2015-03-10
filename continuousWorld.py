@@ -68,13 +68,23 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     oLocs = self.objs['obsts']
     for obstIdx in xrange(len(tLocs)):
       dist = numpy.linalg.norm(np.subtract(l, oLocs[obstIdx]))
-      if dist < self.radius * 2: # larger buffer
+      if dist < self.radius:
         ret.append(('obsts', obstIdx))
 
     # close to the next segment?
     sLocs = self.objs['segs']
     segIdx = 0
-    while len(sLocs) > segIdx + 1:
+    """
+    while segIdx < len(sLocs):
+      dist = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
+      if dist < self.radius * 2: # larger buffer
+        ret.append(('segs', segIdx))
+        segIdx += 1
+      else:
+        break
+    """
+    # rubber band
+    if len(sLocs) > segIdx + 1:
       # when get closer to the next one
       distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
       distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx + 1]))
@@ -82,16 +92,12 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       if distSeg1 > distSeg2 :
         ret.append(('segs', segIdx))
         segIdx += 1
-      else:
-        break
-    if len(sLocs) == 1:
+    elif len(sLocs) == 1:
       # if only one left, just approach it
       distSeg = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
       if distSeg < self.radius * 2: # larger buffer
         ret.append(('segs', 0))
 
-    # if it's close to nothing
-    print ret
     return ret
 
   def getClosestTarget(self, l):
@@ -203,8 +209,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     loc, orient = state
 
-    # have trouble if two elevators are the same
-    return len(self.objs['segs']) == 0 or len(self.objs['targs']) == 0
+    #return len(self.objs['segs']) == 0 or len(self.objs['targs']) == 0
+    return len(self.objs['segs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -260,7 +266,7 @@ class ContinuousEnvironment(mdpEnvironment.MDPEnvironment):
 
     for nextStateType, nextObjId in objInfoLists:
       if nextStateType == 'targs' or nextStateType == 'segs':
-        print "clear", nextStateType, nextObjId
+        print nextStateType, self.mdp.objs[nextStateType][nextObjId]
         self.mdp.clearObj(nextStateType, nextObjId)
 
 

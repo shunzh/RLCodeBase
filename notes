@@ -1,5 +1,5 @@
 Path following
-- reward by shrinking distance to next waypoint, potential based
+- reward by shrinking distance to next waypoint
 - switch between waypoints consecutively
 
 contacted number of objects - output to stats
