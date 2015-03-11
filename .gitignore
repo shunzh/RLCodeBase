@@ -59,3 +59,4 @@ docs/_build/
 
 # experiments should be ignored
 eval_*
+stats
