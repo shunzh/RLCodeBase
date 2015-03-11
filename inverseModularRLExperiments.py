@@ -253,7 +253,7 @@ if __name__ == '__main__':
   pool = Pool(processes=1)
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
-  taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 31)]
+  taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
   
   results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 

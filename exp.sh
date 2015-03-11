@@ -1,7 +1,7 @@
 #!/bin/bash
 mv values.pkl learnedValues
 
-rm contactStats
+rm stats
 # draw figures
 for i in `seq 0 31`;
 do
@@ -15,3 +15,5 @@ done
 
 python plotContacts.py
 python printResults.py
+
+rm *.eps

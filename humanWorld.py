@@ -35,9 +35,9 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   """
   # static attributes
   # FIXME overfit
-  step = 0.2
+  step = 0.3
   turnAngle = 30.0 / 180 * np.pi
-  turnDist = step * 0.5
+  turnDist = step * 0.25
   walkDist = step * 1
 
   def __init__(self, init):
