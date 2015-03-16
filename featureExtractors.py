@@ -49,6 +49,24 @@ def getClosestObj(loc, l):
   return [minObj, minDist]
 
 
+def getProjectionToSegment(loc, segs):
+  """
+  Return the distance from loc to the segment with vertices of seg0 and seg1
+  """
+  if len(segs) == 0:
+    return [loc, np.inf]
+  elif len(segs) == 1:
+    seg = segs[0]
+    return [seg, numpy.linalg.norm(np.subtract(loc, seg))]
+  else:
+    from shapely.geometry import LineString, Point
+    line = LineString(segs[:2])
+    p = Point(loc)
+    interceptPoint = line.interpolate(line.project(p))
+    intercept = (interceptPoint.x, interceptPoint.y)
+    return [intercept, numpy.linalg.norm(np.subtract(loc, intercept))]
+
+
 def getSortedObjs(loc, l):
   """
   Sort l out-of-place wrt the distance to loc

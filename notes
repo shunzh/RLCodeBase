@@ -11,7 +11,7 @@ q
 
 sanity check: weights and discounters TODO
 
-For Matt, run path module training in this way:
+From Matt, run path module training in this way:
 if the agent takes a step that makes progress towards its goal (d_2 < d_1) AND
 it is not too far from the actual path (dist_to_path < threshold), it gets
 rewarded.  I think the amount of reward should fall off with increasing
@@ -20,3 +20,7 @@ from the path should have little penalty while being close to past threshold
 should be about as bad as past it. Definitely multiple ways to alter the
 reward, but this seemed a decent first approximation. I can think of other
 things to try.
+
+From Ruohan:
+consider all the module instances.
+big target at the final dest.
