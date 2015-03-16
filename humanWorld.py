@@ -181,10 +181,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
       agent.final(state)
       return returns
     
-    # GET ACTION (USUALLY FROM AGENT)
-    for act in HumanWorld.actions:
-      print act, agent.getSubQValues(state, act)
-
     action = decision(state)
     if action == None:
       raise 'Error: Agent returned None action'

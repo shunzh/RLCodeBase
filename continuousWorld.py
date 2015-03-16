@@ -175,11 +175,11 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     # give rewards for waypoint segments, except training targets or obstacles
     if not hasattr(self, 'category') or self.category == 'segs': 
-      segDist = featureExtractors.getClosestObj(loc, self.objs['segs'])
-      nextSegDist = featureExtractors.getClosestObj(nextLoc, self.objs['segs'])
-      pathDist = featureExtractors.getDistanceToSegment(nextLoc, self.objs['segs'])
+      dist = featureExtractors.getClosestObj(loc, self.objs['segs'])
+      nextStepDist = featureExtractors.getClosestObj(nextLoc, self.objs['segs'])
+      [pathIntercept, pathDist] = featureExtractors.getProjectionToSegment(nextLoc, self.objs['segs'])
 
-      if nextSegDist < segDist and pathDist < 1:
+      if nextStepDist < dist and pathDist < 1:
         # reward for shrinking distance
         reward += self.rewards['segs']
 
