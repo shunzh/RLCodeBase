@@ -94,7 +94,11 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
 
   def vSegment(s, discounter):
     dist, orient = s
-    return -1 + 2 * np.power(discounter, dist)
+    return 1 + np.power(discounter, dist)
+  
+  def vPath(s, discounter):
+    dist, orient = s
+    return -np.power(discounter, dist)
 
   def qTarget(state, action, discounter):
     return vTarget(transition(state, action), discounter)
@@ -105,9 +109,13 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
   def qSegment(state, action, discounter):
     return vSegment(transition(state, action), discounter)
 
-  return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]), # closest targets
-          lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]), # closest obstacles
-          lambda s, a, d = defaultD: qSegment(s[4], a, d[2])]
+  def qPath(state, action, discounter):
+    return qPath(transition(state, action), discounter)
+
+  return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]), # closest target(s)
+          lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]), # closest obstacle(s)
+          lambda s, a, d = defaultD: qSegment(s[4], a, d[2]), # closest seg point
+          lambda s, a, d = defaultD: qPath(s[5], a, d[2])] # closest path
 
 def getHumanWorldContinuousFuncs():
   """
