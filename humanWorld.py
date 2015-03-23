@@ -337,9 +337,9 @@ def main():
     values = valueTable[vrDomainId / 8] # 8 domains per task
     
     weights = values[:nModules]
-    disconters = None if len(values) == nModules else values[nModules:]
+    discounters = None if len(values) == nModules else values[nModules:]
 
-    print "init using domain #", vrDomainId, "with values", weights, "and discounters", disconters
+    print "init using domain #", vrDomainId, "with values", weights, "and discounters", discounters
   elif opts.grid == 'vrTrain':
     init = lambda: continuousWorldDomains.loadFromMat('miniRes25.mat', 0, randInit = True)
   elif opts.grid == 'toy':
@@ -420,6 +420,7 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
+    #a.setWeights([0, 1, 0, 0]) # TEST
 
     if opts.agent == 'Modular' or opts.agent == 'ModularQ':
       # way 1: using q tables
@@ -428,7 +429,8 @@ def main():
     elif opts.agent == 'ModularV':
       # way 2: using q functions
       a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(disconters))
+      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(discounters))
+      #a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs()) # TEST
     else:
       raise Exception("Unknown modular agent.")
   elif opts.agent == 'random':

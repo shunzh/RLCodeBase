@@ -1,4 +1,4 @@
-import continuousWorld, humanWorld
+import humanWorld
 import util
 from graphics import *
 
@@ -46,8 +46,12 @@ def getHumanStatesActions(filenames, idxSet):
       targDist2 = mat['pRes'][idx].targDist2
       targAngle2 = mat['pRes'][idx].targAngle2 / 180.0 * np.pi
 
+      # the next segment, already provided.
       segDist = mat['pRes'][idx].pathDist
       segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
+      
+      # the *current* segment is not provided, need to be computed.
+      nextSegIdx = mat['pRes'][idx].curSeg
 
       actions = mat['pRes'][idx].action
 

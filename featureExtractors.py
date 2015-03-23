@@ -12,7 +12,6 @@ import math
 
 import numpy.linalg
 import numpy as np
-from humanWorld import HumanWorld
 
 class FeatureExtractor:  
   def getFeatures(self, state, action):    
@@ -51,7 +50,7 @@ def getClosestObj(loc, l):
 
 def getProjectionToSegment(loc, segs):
   """
-  Return the distance from loc to the segment with vertices of seg0 and seg1
+  Compute the projection from loc to the segment with vertices of seg0 and seg1
   """
   if len(segs) == 0:
     return [loc, np.inf]
@@ -65,6 +64,16 @@ def getProjectionToSegment(loc, segs):
     interceptPoint = line.interpolate(line.project(p))
     intercept = (interceptPoint.x, interceptPoint.y)
     return [intercept, numpy.linalg.norm(np.subtract(loc, intercept))]
+
+def getProjectionToSegmentLocalView(s0, s1):
+  """
+  If we only have distance, angle to the segments, use this function.
+  This will call getProjectionToSegment
+  """
+  loc = (0, 0)
+  segs = [(dist * np.cos(orient), dist * np.sin(orient)) for (dist, orient) in [s0, s1]]
+  obj, dist = getProjectionToSegment(loc, segs)
+  return (dist, np.angle(obj[0] + obj[1] * 1j))
 
 
 def getSortedObjs(loc, l):
@@ -140,23 +149,20 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
       # rubber band
       # get features for waypoints
       if len(self.mdp.objs['segs']) > 1:
-        minObj = self.mdp.objs['segs'][1] # look at the NEXT waypoint
-        minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+        nextObj = self.mdp.objs['segs'][1] # look at the NEXT waypoint
+        nextDist = numpy.linalg.norm(np.subtract(loc, nextObj))
+        curObj = self.mdp.objs['segs'][0]
+        curDist = numpy.linalg.norm(np.subtract(loc, curObj))
       elif len(self.mdp.objs['segs']) == 1:
-        minObj = self.mdp.objs['segs'][0] # this is the last segment
-        minDist = numpy.linalg.norm(np.subtract(loc, minObj))
+        nextObj = curObj = self.mdp.objs['segs'][0] # this is the last segment
+        nextDist = curDist = numpy.linalg.norm(np.subtract(loc, nextObj))
       else:
-        minObj = loc; minDist = np.inf
-      """
-      if len(self.mdp.objs['segs']) > 0:
-        minObj = self.mdp.objs['segs'][0]
-        minDist = numpy.linalg.norm(np.subtract(loc, minObj))
-      else:
-        minObj = loc; minDist = np.inf
-      """
+        nextObj = curObj = loc; nextDist = curDist = np.inf
 
-      feats['dist'] = minDist
-      feats['angle'] = getOrient(loc, minObj)
+      feats['dist'] = nextDist
+      feats['angle'] = getOrient(loc, nextObj)
+      feats['curDist'] = curDist
+      feats['curAngle'] = getOrient(loc, curObj)
     else:
       # get features for targets / objects
       # get both closest and the second closest -- may not be both used though
@@ -185,7 +191,7 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
 
 def getHumanContinuousState(mdp):
   """
-  Return ((targDist, targAngle), (obstDist, obstAngle), (segDist, segAngle))
+  Return ((targDist, targAngle)*2, (obstDist, obstAngle)*2, (segDist, segAngle)*2)
   """
   extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
 
@@ -194,8 +200,11 @@ def getHumanContinuousState(mdp):
     for extractor in extractors:
       feats = extractor.getStateFeatures(state)
       ret.append((feats['dist'], feats['angle']))
-      if not extractor.label == 'segs':
+
+      if extractor.label != 'segs':
         ret.append((feats['dist2'], feats['angle2']))
+      else:
+        ret.append((feats['curDist'], feats['curAngle']))
     return ret
 
   return getDistAngelList
@@ -207,7 +216,7 @@ def adjustAngle(angle):
     angle -= 2 * np.pi
   return angle
 
-def mapStateToBin((dist, angle), step = HumanWorld.step):
+def mapStateToBin((dist, angle), step = 0.3):
   # FIXME OVERFIT
   if dist < step * 0.5:
     distBin = 1

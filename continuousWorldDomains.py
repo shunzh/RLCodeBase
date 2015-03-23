@@ -81,11 +81,11 @@ def loadFromMat(filename, domainId, randInit = False):
   Load from mat file that provided by Matt.
 
   Args:
-    filename: name of the mat file, presumebaly in the same directory.
+    filename: name of the mat file, presumably in the same directory.
     domainId: there should be multiple configurations of rooms in this file,
               indicate which room to use.
   Return:
-    no return, but add an obj attribute to self.
+    A dictionary with necessary keys.
   """
   # read layout from source file
   s = util.loadmat(filename)
