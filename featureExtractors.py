@@ -68,12 +68,18 @@ def getProjectionToSegment(loc, segs):
 def getProjectionToSegmentLocalView(s0, s1):
   """
   If we only have distance, angle to the segments, use this function.
-  This will call getProjectionToSegment
+  This will call getProjectionToSegment.
   """
   loc = (0, 0)
   segs = [(dist * np.cos(orient), dist * np.sin(orient)) for (dist, orient) in [s0, s1]]
   obj, dist = getProjectionToSegment(loc, segs)
   return (dist, np.angle(obj[0] + obj[1] * 1j))
+
+def getDistAngle(f, t, orient):
+  vector = np.subtract(t, f)
+  dist = numpy.linalg.norm(vector)
+  objOrient = np.angle(vector[0] + vector[1] * 1j)
+  return [dist, adjustAngle(objOrient - orient)]
 
 
 def getSortedObjs(loc, l):
@@ -136,54 +142,36 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
 
     loc, orient = state
 
-    def getOrient(f, t):
-      """
-      Compute the orient from f to t, both are points
-      positive on the right and negative on the left.
-      """
-      vector = np.subtract(t, f)
-      objOrient = np.angle(vector[0] + vector[1] * 1j)
-      return adjustAngle(objOrient - orient)
-
     if self.label == 'segs':
       # rubber band
       # get features for waypoints
       if len(self.mdp.objs['segs']) > 1:
         nextObj = self.mdp.objs['segs'][1] # look at the NEXT waypoint
-        nextDist = numpy.linalg.norm(np.subtract(loc, nextObj))
         curObj = self.mdp.objs['segs'][0]
-        curDist = numpy.linalg.norm(np.subtract(loc, curObj))
       elif len(self.mdp.objs['segs']) == 1:
         nextObj = curObj = self.mdp.objs['segs'][0] # this is the last segment
-        nextDist = curDist = numpy.linalg.norm(np.subtract(loc, nextObj))
       else:
-        nextObj = curObj = loc; nextDist = curDist = np.inf
+        nextObj = curObj = loc
 
-      feats['dist'] = nextDist
-      feats['angle'] = getOrient(loc, nextObj)
-      feats['curDist'] = curDist
-      feats['curAngle'] = getOrient(loc, curObj)
+      feats['dist'], feats['angle'] = getDistAngle(loc, nextObj, orient)
+      feats['curDist'], feats['curAngle'] = getDistAngle(loc, curObj, orient)
     else:
       # get features for targets / objects
       # get both closest and the second closest -- may not be both used though
       l = getSortedObjs(loc, self.mdp.objs[self.label])
       if len(l) > 0:
         minObj = l[0]
-        minDist = numpy.linalg.norm(np.subtract(loc, minObj))
       else:
-        minObj = loc; minDist = np.inf
+        minObj = loc
 
       if len(l) > 1:
         # if there are more than two objects
         secMinObj = l[1]
-        secMinDist = numpy.linalg.norm(np.subtract(loc, secMinObj))
       else:
-        secMinObj = loc; secMinDist = np.inf
+        secMinObj = loc
 
-      feats['dist'] = minDist
-      feats['angle'] = getOrient(loc, minObj)
-      feats['dist2'] = secMinDist
-      feats['angle2'] = getOrient(loc, secMinObj)
+      feats['dist'], feats['angle'] = getDistAngle(loc, minObj, orient)
+      feats['dist2'], feats['angle2'] = getDistAngle(loc, secMinObj)
 
     feats['bias'] = 1
 

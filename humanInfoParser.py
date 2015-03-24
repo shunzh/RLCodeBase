@@ -5,6 +5,7 @@ from graphics import *
 import numpy as np
 import continuousWorldDomains
 import continuousWorldPlot
+import featureExtractors
 
 def plotHuman(plotting, win, subjIdSet, domainId):
   dim = plotting.dim
@@ -36,6 +37,10 @@ def getHumanStatesActions(filenames, idxSet):
     mat = util.loadmat(filename)
 
     for idx in idxSet:
+      x = mat['pRes'][idx].agentX
+      y = mat['pRes'][idx].agentZ
+      orient = mat['pRes'][idx].agentAngle / 180.0 * np.pi
+
       obstDist = mat['pRes'][idx].obstDist1
       obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
       obstDist2 = mat['pRes'][idx].obstDist2
@@ -50,18 +55,34 @@ def getHumanStatesActions(filenames, idxSet):
       segDist = mat['pRes'][idx].pathDist
       segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
       
-      # the *current* segment is not provided, need to be computed.
-      nextSegIdx = mat['pRes'][idx].curSeg
-
+      # the current segment needs to be read from the domain files
+      domain = continuousWorldDomains.loadFromMat("miniRes25.mat", idx)
+      nextSegIdx = mat['pRes'][idx].curSeg.tolist()
+      minSegIdx = 0; maxSegIdx = max(nextSegIdx)
+      if idx % 2 == 0:
+        # segments order is inverted in even domains
+        curSegIdx = [min(i + 1, maxSegIdx) for i in nextSegIdx]
+        nextSeg = [domain['objs']['segs'][-(i+1)] for i in nextSegIdx]
+        curSeg = [domain['objs']['segs'][-(i+1)] for i in curSegIdx]
+      else:
+        curSegIdx = [max(i - 1, minSegIdx) for i in nextSegIdx]
+        nextSeg = [domain['objs']['segs'][i] for i in nextSegIdx]
+        curSeg = [domain['objs']['segs'][i] for i in curSegIdx]
+        
       actions = mat['pRes'][idx].action
 
       # cut the head and tail samples
       for i in range(5, len(targDist) - 15):
+        curSegDistInstance, curSegAngleInstance = featureExtractors.getDistAngle((x[i], y[i]), curSeg[i], orient[i])
+        nextSegDistInstance, nextSegAngleInstance = featureExtractors.getDistAngle((x[i], y[i]), nextSeg[i], orient[i])
+        print nextSegDistInstance, segDist[i]
+
         state = ((targDist[i], targAngle[i]),
                  (targDist2[i], targAngle2[i]),
                  (obstDist[i], obstAngle[i]),
                  (obstDist2[i], obstAngle2[i]),
-                 (segDist[i], segAngle[i]))
+                 (segDist[i], segAngle[i]),
+                 (curSegDistInstance, curSegAngleInstance))
         action = actions[i]
         samples.append((state, action))
 
@@ -84,7 +105,7 @@ def parseHumanActions(filename, domainId):
   samples = []
 
   agentXs = mat['pRes'][domainId].agentX
-  agentZs= mat['pRes'][domainId].agentZ
+  agentZs = mat['pRes'][domainId].agentZ
   agentAngles = mat['pRes'][domainId].agentAngle / 180 * np.pi
   moveAngles = mat['pRes'][domainId].agentMoveAngle / 180 * np.pi
   actions = mat['pRes'][domainId].action

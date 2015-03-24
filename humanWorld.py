@@ -136,12 +136,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
       aX = turnDist * np.cos(orient) 
       aY = turnDist * np.sin(orient) 
     
-    # the new state is from (aX, aY) to (objX, objY)
-    vector = np.subtract((objX, objY), (aX, aY))
-    objOrient = np.angle(vector[0] + vector[1] * 1j)
-
-    newDist = np.linalg.norm(vector)
-    newOrient = featureExtractors.adjustAngle(objOrient - orient)
+    # the new state is from (aX, aY) to (objX, objY
+    newDist, newOrient = featureExtractors.getDistAngle((aX, aY), (objX, objY), orient)
 
     return (newDist, newOrient)
 
@@ -419,8 +415,8 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
-    a.setWeights(weights)
-    #a.setWeights([0, 1, 0, 0]) # TEST
+    #a.setWeights(weights)
+    a.setWeights([0.6, 0, 0.3, 0.1]) # TEST
 
     if opts.agent == 'Modular' or opts.agent == 'ModularQ':
       # way 1: using q tables
@@ -429,8 +425,8 @@ def main():
     elif opts.agent == 'ModularV':
       # way 2: using q functions
       a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(discounters))
-      #a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs()) # TEST
+      #a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(discounters))
+      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs()) # TEST
     else:
       raise Exception("Unknown modular agent.")
   elif opts.agent == 'random':

@@ -255,6 +255,8 @@ if __name__ == '__main__':
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
   
+  experiment(subjFiles, [1]) # TEST
+  """
   results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
@@ -268,3 +270,4 @@ if __name__ == '__main__':
   output = open('agreedPolicies.pkl', 'wb')
   pickle.dump(agreedPoliciesRatios, output)
   output.close()
+  """
