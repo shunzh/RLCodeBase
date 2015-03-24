@@ -167,12 +167,14 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     if environment.isFinal() or runs == 0:
       print "EPISODE "+str(episode)+" COMPLETE: RETURN WAS "+str(returns)+"\n"
 
+      """
       # write number of contact objects into a stat file
       targsNum = len(environment.mdp.collectedTargetSet)
       obstsNum = len(environment.mdp.touchedObstacleSet)
       stats = open('stats','a')
       stats.write(str(targsNum) + ' ' + str(obstsNum) + '\n')
       stats.close()
+      """
 
       agent.final(state)
       return returns
