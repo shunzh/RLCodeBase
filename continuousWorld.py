@@ -175,7 +175,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     # give rewards for waypoint segments, except training targets or obstacles
     if not hasattr(self, 'category') or self.category == 'segs': 
-      nextSeg = self.objs['segs'][1] if len(self.objs['segs'] > 1) else self.objs['segs'][0]
+      nextSeg = self.objs['segs'][1] if len(self.objs['segs']) > 1 else self.objs['segs'][0]
+
       dist, angle = featureExtractors.getDistAngle(loc, nextSeg, orient)
       nextStepDist, nextStepAngle = featureExtractors.getDistAngle(nextLoc, nextSeg, orient)
       [pathIntercept, pathDist] = featureExtractors.getProjectionToSegment(nextLoc, self.objs['segs'])
@@ -211,8 +212,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     loc, orient = state
 
-    #return len(self.objs['segs']) == 0 or len(self.objs['targs']) == 0
-    return len(self.objs['segs']) == 0
+    return len(self.objs['segs']) == 0 or len(self.objs['targs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
     """

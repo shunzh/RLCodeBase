@@ -241,8 +241,8 @@ def humanWorldExperimentQPotential(filenames, rang):
 
 if __name__ == '__main__':
   # set experiment here
-  #experiment = humanWorldExperimentDiscrete
-  experiment = humanWorldExperimentQPotential
+  experiment = humanWorldExperimentDiscrete
+  #experiment = humanWorldExperimentQPotential
   
   from multiprocessing import Pool
   # change the number of processors used here.
@@ -251,10 +251,9 @@ if __name__ == '__main__':
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
-  #trialTaskRange = [range(0, 2), range(8, 10), range(16, 18), range(24, 26)]
+  trialTaskRange = [range(0, 2), range(8, 10), range(16, 18), range(24, 26)]
   
-  experiment(subjFiles, range(0, 2)) # TEST
-  """
+  #experiment(subjFiles, range(0, 2)) # TEST
   results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in trialTaskRange] # TEST
   #results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 
@@ -269,4 +268,3 @@ if __name__ == '__main__':
   output = open('agreedPolicies.pkl', 'wb')
   pickle.dump(agreedPoliciesRatios, output)
   output.close()
-  """
