@@ -71,7 +71,7 @@ def getHumanWorldDiscreteFuncs():
           lambda s, a, d = None: qObstacle(s[2], a), # closest obstacles
           lambda s, a, d = None: qSegment(s[4], a)]
 
-def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 4):
+def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
   """
   Rather learned from samples, we define the potential functions (a value function) based on reward.
   Q functions here just reflect the potential functions.

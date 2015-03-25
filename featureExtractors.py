@@ -58,12 +58,13 @@ def getProjectionToSegment(loc, segs):
     seg = segs[0]
     return [seg, numpy.linalg.norm(np.subtract(loc, seg))]
   else:
+    # FIXME better way to compute projection?
     from shapely.geometry import LineString, Point
-    line = LineString(segs[:2])
+    segVec = np.subtract(segs[1], segs[0])
+    line = LineString([np.add(segs[0], - 100 * segVec), np.add(segs[0], 100 * segVec)])
     p = Point(loc)
     interceptPoint = line.interpolate(line.project(p))
     intercept = (interceptPoint.x, interceptPoint.y)
-    print 'intercept', intercept
     return intercept
 
 def getProjectionToSegmentLocalView(s0, s1):
@@ -147,14 +148,14 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
       # rubber band
       # get features for waypoints
       if len(self.mdp.objs['segs']) > 1:
-        nextObj = self.mdp.objs['segs'][1] # look at the NEXT waypoint
+        obj = self.mdp.objs['segs'][1] # look at the NEXT waypoint
         curObj = self.mdp.objs['segs'][0]
       elif len(self.mdp.objs['segs']) == 1:
-        nextObj = curObj = self.mdp.objs['segs'][0] # this is the last segment
+        obj = curObj = self.mdp.objs['segs'][0] # this is the last segment
       else:
-        nextObj = curObj = loc
+        obj = curObj = loc
 
-      feats['dist'], feats['angle'] = getDistAngle(loc, nextObj, orient)
+      feats['dist'], feats['angle'] = getDistAngle(loc, obj, orient)
       feats['curDist'], feats['curAngle'] = getDistAngle(loc, curObj, orient)
     else:
       # get features for targets / objects

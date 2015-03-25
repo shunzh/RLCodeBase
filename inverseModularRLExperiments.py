@@ -223,12 +223,9 @@ def humanWorldExperimentQPotential(filenames, rang):
   x = sln.solve()
   w = x[:n]
   d = x[n:]
-  # FIXME
-  agreedPoliciesRatio = policyCompare(samples, qFuncs, w)
 
   print rang, ": weights are", w
   print rang, ": discounters are", d
-  print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
 
   """
   # debug weight disabled. computational expensive?
@@ -240,7 +237,7 @@ def humanWorldExperimentQPotential(filenames, rang):
   """
   print rang, ": OK."
 
-  return [w + d, agreedPoliciesRatio] 
+  return [w + d, None] 
 
 if __name__ == '__main__':
   # set experiment here
@@ -254,10 +251,12 @@ if __name__ == '__main__':
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
+  #trialTaskRange = [range(0, 2), range(8, 10), range(16, 18), range(24, 26)]
   
   experiment(subjFiles, range(0, 2)) # TEST
   """
-  results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
+  results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in trialTaskRange] # TEST
+  #results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
   weights = [r.get()[0] for r in results]

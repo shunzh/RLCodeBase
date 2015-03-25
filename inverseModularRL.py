@@ -69,7 +69,7 @@ class InverseModularRL:
       d = X[self.n:]
     else:
       # use default discounters if not learning
-      d = [.8, .8, .8]
+      d = [.8] * self.n
 
     ret = 0
 

@@ -416,8 +416,8 @@ def main():
                   'epsilon': opts.epsilon,
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
-    #a.setWeights(weights)
-    a.setWeights([0, 0, 0.5, 0.5]) # TEST
+    a.setWeights(weights)
+    #a.setWeights([0.2, 0, 1]) # TEST
 
     if opts.agent == 'Modular' or opts.agent == 'ModularQ':
       # way 1: using q tables
@@ -426,8 +426,8 @@ def main():
     elif opts.agent == 'ModularV':
       # way 2: using q functions
       a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-      #a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(discounters))
-      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs()) # TEST
+      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(discounters))
+      #a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs()) # TEST
     else:
       raise Exception("Unknown modular agent.")
   elif opts.agent == 'random':
