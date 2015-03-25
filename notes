@@ -9,7 +9,9 @@ q
 - potential based
   - decompose path module to be two seperate ones? - go for it
 
-sanity check: weights and discounters, forward then backward - TODO
+sanity check
+- weights and discounters, forward then backward - TODO
+- agent orients - URGENT - done
 
 From Matt, run path module training in this way:
 if the agent takes a step that makes progress towards its goal (d_2 < d_1) AND

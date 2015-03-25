@@ -17,13 +17,24 @@ def plotHuman(plotting, win, subjIdSet, domainId):
     prevLoc = None
     for sample in humanSamples:
       loc = plotting.shift((sample['x'], sample['y']))
+      orient = sample['orient']
       loc = (dim - loc[0], dim - loc[1]) # need 180 degree rotation
 
       if prevLoc:
+        # a solid line indicates trajectory
         line = Line(Point(prevLoc), Point(loc))
         line.setWidth(5)
         line.setFill(color_rgb(0, 0, 0))
         line.draw(win)
+        
+        # a tiny line indicates orient
+        arrowLength = 15
+        dx = arrowLength * np.cos(orient)
+        dy = arrowLength * np.sin(orient)
+        arrow = Line(Point(loc), Point(loc[0] + dx, loc[1] + dy))
+        arrow.setWidth(2)
+        arrow.setFill(color_rgb(100, 100, 100))
+        arrow.draw(win)
       prevLoc = loc
     prevLoc = None
 
@@ -37,9 +48,9 @@ def getHumanStatesActions(filenames, idxSet):
     mat = util.loadmat(filename)
 
     for idx in idxSet:
-      x = mat['pRes'][idx].agentX
-      y = mat['pRes'][idx].agentZ
-      orient = mat['pRes'][idx].agentAngle / 180.0 * np.pi
+      x = - mat['pRes'][idx].agentX
+      y = - mat['pRes'][idx].agentZ
+      orient = [featureExtractors.adjustAngle(- angle / 180.0 * np.pi - np.pi / 2) for angle in mat['pRes'][idx].agentAngle] 
 
       obstDist = mat['pRes'][idx].obstDist1
       obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
@@ -59,17 +70,20 @@ def getHumanStatesActions(filenames, idxSet):
 
       # the current segment needs to be read from the domain files
       domain = continuousWorldDomains.loadFromMat("miniRes25.mat", idx)
-
       # cut the head and tail samples
       for i in range(5, len(targDist) - 15):
-        # find the path seg in the mat file, then get the one before it
+        # find the path seg in the mat file
         segList = domain['objs']['segs']
         for segIdx in xrange(len(segList)):
           dist, angle = featureExtractors.getDistAngle((x[i], y[i]), segList[segIdx], orient[i])
-          print segDist[i], dist
-          if abs(segDist[i] - dist) < 0.01:
+          angle = -angle
+          if abs(segDist[i] - dist) < 0.001 and abs(segAngle[i] - angle) < 0.001:
+            # then get the one before it
             curSegDistInstance, curSegAngleInstance = featureExtractors.getDistAngle((x[i], y[i]), segList[segIdx - 1], orient[i])
             break
+
+        if not 'curSegDistInstance' in locals():
+          raise Exception('Fail to find the current segment from mat file')
 
         state = ((targDist[i], targAngle[i]),
                  (targDist2[i], targAngle2[i]),
@@ -100,7 +114,7 @@ def parseHumanActions(filename, domainId):
 
   agentXs = mat['pRes'][domainId].agentX
   agentZs = mat['pRes'][domainId].agentZ
-  agentAngles = mat['pRes'][domainId].agentAngle / 180 * np.pi
+  agentAngles = - mat['pRes'][domainId].agentAngle / 180 * np.pi - np.pi  / 2
   moveAngles = mat['pRes'][domainId].agentMoveAngle / 180 * np.pi
   actions = mat['pRes'][domainId].action
 

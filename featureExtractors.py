@@ -171,7 +171,7 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
         secMinObj = loc
 
       feats['dist'], feats['angle'] = getDistAngle(loc, minObj, orient)
-      feats['dist2'], feats['angle2'] = getDistAngle(loc, secMinObj)
+      feats['dist2'], feats['angle2'] = getDistAngle(loc, secMinObj, orient)
 
     feats['bias'] = 1
 

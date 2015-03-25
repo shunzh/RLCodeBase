@@ -1,5 +1,4 @@
 import random
-import sys
 import optparse
 import featureExtractors
 import continuousWorld
@@ -320,7 +319,7 @@ def plotQFuncs(values, category):
 def main(): 
   opts = parseOptions()
   possibleCategories = ['targs', 'obsts', 'segs']
-  nModules = len(possibleCategories)
+  nModules = 4
 
   ###########################
   # GET THE ENVIRONMENT
@@ -418,7 +417,7 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     #a.setWeights(weights)
-    a.setWeights([0.6, 0, 0.3, 0.1]) # TEST
+    a.setWeights([0, 0, 0.5, 0.5]) # TEST
 
     if opts.agent == 'Modular' or opts.agent == 'ModularQ':
       # way 1: using q tables
