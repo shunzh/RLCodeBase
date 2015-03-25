@@ -63,7 +63,8 @@ def getProjectionToSegment(loc, segs):
     p = Point(loc)
     interceptPoint = line.interpolate(line.project(p))
     intercept = (interceptPoint.x, interceptPoint.y)
-    return [intercept, numpy.linalg.norm(np.subtract(loc, intercept))]
+    print 'intercept', intercept
+    return intercept
 
 def getProjectionToSegmentLocalView(s0, s1):
   """
@@ -72,8 +73,8 @@ def getProjectionToSegmentLocalView(s0, s1):
   """
   loc = (0, 0)
   segs = [(dist * np.cos(orient), dist * np.sin(orient)) for (dist, orient) in [s0, s1]]
-  obj, dist = getProjectionToSegment(loc, segs)
-  return (dist, np.angle(obj[0] + obj[1] * 1j))
+  obj = getProjectionToSegment(loc, segs)
+  return getDistAngle(loc, obj, 0)
 
 def getDistAngle(f, t, orient):
   vector = np.subtract(t, f)

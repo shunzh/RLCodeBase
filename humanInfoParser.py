@@ -74,12 +74,17 @@ def getHumanStatesActions(filenames, idxSet):
       for i in range(5, len(targDist) - 15):
         # find the path seg in the mat file
         segList = domain['objs']['segs']
+        print 'agent', (x[i], y[i]), orient[i]
+        print 'parsed seg', segDist[i], segAngle[i]
         for segIdx in xrange(len(segList)):
           dist, angle = featureExtractors.getDistAngle((x[i], y[i]), segList[segIdx], orient[i])
+          # right-ward is negative
           angle = -angle
+          print 'seg', segList[segIdx], 'dist', dist, 'angle', angle
           if abs(segDist[i] - dist) < 0.001 and abs(segAngle[i] - angle) < 0.001:
             # then get the one before it
             curSegDistInstance, curSegAngleInstance = featureExtractors.getDistAngle((x[i], y[i]), segList[segIdx - 1], orient[i])
+            curSegAngleInstance = -curSegAngleInstance
             break
 
         if not 'curSegDistInstance' in locals():
@@ -91,6 +96,8 @@ def getHumanStatesActions(filenames, idxSet):
                  (obstDist2[i], obstAngle2[i]),
                  (segDist[i], segAngle[i]),
                  (curSegDistInstance, curSegAngleInstance))
+        print featureExtractors.getProjectionToSegmentLocalView(state[4], state[5])
+        raw_input("wait")
         action = actions[i]
         samples.append((state, action))
 
