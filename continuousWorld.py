@@ -73,27 +73,17 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
     # close to the next segment?
     sLocs = self.objs['segs']
-    segIdx = 0
-    """
-    while segIdx < len(sLocs):
-      dist = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
-      if dist < self.radius * 2: # larger buffer
-        ret.append(('segs', segIdx))
-        segIdx += 1
-      else:
-        break
-    """
+
     # rubber band
-    if len(sLocs) > segIdx + 1:
+    if len(sLocs) > 1:
       # when get closer to the next one
-      distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
-      distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx + 1]))
+      distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[0]))
+      distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[1]))
       if distSeg1 > distSeg2 :
-        ret.append(('segs', segIdx))
-        segIdx += 1
+        ret.append(('segs', 0))
     elif len(sLocs) == 1:
       # if only one left, just approach it
-      distSeg = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
+      distSeg = numpy.linalg.norm(np.subtract(l, sLocs[0]))
       if distSeg < self.radius * 2: # larger buffer
         ret.append(('segs', 0))
 
@@ -183,7 +173,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
 
       if nextStepDist < dist and pathDist < 1:
         # reward for shrinking distance
-        reward += self.rewards['segs']
+        # give unit reward
+        #reward += self.rewards['segs']
+        # or give discounted reward
+        reward += self.rewards['segs'] * np.exp(0.9, pathDist)
 
     return reward or self.livingReward
       
