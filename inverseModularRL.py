@@ -14,7 +14,7 @@ class InverseModularRL:
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
 
-  def __init__(self, qFuncs, eta = 1):
+  def __init__(self, qFuncs, eta = 1, learnDiscounter = True):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -22,7 +22,7 @@ class InverseModularRL:
     self.qFuncs = qFuncs
 
     # enable if learning discounters as well
-    self.learnDiscounter = True
+    self.learnDiscounter = learnDiscounter
     # confidence
     self.eta = eta
 

@@ -187,14 +187,13 @@ def humanWorldExperimentDiscrete(filenames, rang):
   qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
   n = len(qFuncs)
 
-  sln = InverseModularRL(qFuncs)
+  sln = InverseModularRL(qFuncs, learnDiscounter = False)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
   samples = discretize(samples)
   sln.setSamples(samples)
 
   x = sln.solve()
   w = x[:n]
-  d = x[n:]
   agreedPoliciesRatio = policyCompare(samples, qFuncs, w)
 
   print rang, ": weights are", w
@@ -205,7 +204,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
   print rang, ": weight heatmaps done."
   print rang, ": OK."
 
-  return [w + d, agreedPoliciesRatio] 
+  return [w, agreedPoliciesRatio] 
 
 def humanWorldExperimentQPotential(filenames, rang):
   """
@@ -253,9 +252,10 @@ if __name__ == '__main__':
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
   trialTaskRange = [range(0, 2), range(8, 10), range(16, 18), range(24, 26)]
   
-  #experiment(subjFiles, range(0, 2)) # TEST
-  results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in trialTaskRange] # TEST
-  #results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
+  experiment(subjFiles, taskRanges[0]) # TEST
+  """
+  #results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in trialTaskRange] # TEST
+  results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
   weights = [r.get()[0] for r in results]
@@ -268,3 +268,4 @@ if __name__ == '__main__':
   output = open('agreedPolicies.pkl', 'wb')
   pickle.dump(agreedPoliciesRatios, output)
   output.close()
+  """

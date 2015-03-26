@@ -49,7 +49,8 @@ def getHumanWorldDiscreteFuncs():
   # these are util.Counter objects
   tValues = pickle.load(open('learnedValues/humanAgenttargsValues.pkl'))
   oValues = pickle.load(open('learnedValues/humanAgentobstsValues.pkl'))
-  sValues = pickle.load(open('learnedValues/humanAgentsegsValues.pkl'))
+  #sValues = pickle.load(open('learnedValues/humanAgentsegsValues.pkl'))
+  sValues = tValues
 
   def qTarget(state, action):
     if not (state, action) in tValues.keys():
