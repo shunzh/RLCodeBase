@@ -252,8 +252,6 @@ if __name__ == '__main__':
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
   trialTaskRange = [range(0, 2), range(8, 10), range(16, 18), range(24, 26)]
   
-  experiment(subjFiles, taskRanges[0]) # TEST
-  """
   #results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in trialTaskRange] # TEST
   results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 
@@ -268,4 +266,3 @@ if __name__ == '__main__':
   output = open('agreedPolicies.pkl', 'wb')
   pickle.dump(agreedPoliciesRatios, output)
   output.close()
-  """

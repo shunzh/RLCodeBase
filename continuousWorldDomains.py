@@ -13,7 +13,7 @@ def simpleToyDomain(category = 'targs'):
   """
   ret = {}
 
-  size = 3.0
+  size = 4.0
 
   # place that can't be reached
   infPos = (size + 1, size + 1)
@@ -37,8 +37,8 @@ def simpleToyDomain(category = 'targs'):
   ret['xBoundary'] = [0, size]
   ret['yBoundary'] = [0, size]
 
-  ret['radius'] = 0.075
-  ret['step'] = 0.1
+  ret['radius'] = 0.1905
+  ret['step'] = 0.3
   
   ret['category'] = category
 
