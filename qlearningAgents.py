@@ -42,6 +42,9 @@ class QLearningAgent(ReinforcementAgent):
     # default value for lambda
     self.lambdaValue = 0
     self.replace = True
+    
+    # a list of temporal difference errors
+    self.deltas = []
   
   def setLambdaValue(self, lambdaValue):
     self.lambdaValue = lambdaValue
@@ -85,8 +88,6 @@ class QLearningAgent(ReinforcementAgent):
       return random.choice(optActions)
     else:
       return None
-
-    #util.raiseNotDefined()
     
   def getAction(self, state):
     """
@@ -131,10 +132,12 @@ class QLearningAgent(ReinforcementAgent):
     for state, action in self.e:
       self.values[state, action] += self.alpha * delta * self.e[state, action]
       self.e[state, action] *= self.gamma * self.lambdaValue
+    
+    self.deltas.append(abs(delta))
 
   def final(self, state):
-    "Called at the end of each game."
-    pass
+    # clear deltas after an episode
+    self.deltas = []
 
 
 class ReducedQLearningAgent(QLearningAgent):

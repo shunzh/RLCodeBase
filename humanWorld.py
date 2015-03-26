@@ -11,6 +11,7 @@ import numpy as np
 from graphics import *
 import continuousWorldDomains
 import continuousWorldPlot
+from numpy import average
 
 class HumanWorld(continuousWorld.ContinuousWorld):
   """
@@ -174,6 +175,9 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
       stats.write(str(targsNum) + ' ' + str(obstsNum) + '\n')
       stats.close()
       """
+      deltas = open('deltas','a')
+      deltas.write(str(np.average(agent.deltas)) + '\n')
+      deltas.close()
 
       agent.final(state)
       return returns
