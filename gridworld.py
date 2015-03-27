@@ -40,7 +40,6 @@ class Gridworld(mdp.MarkovDecisionProcess):
     The probability of moving in an unintended direction.
     """
     self.noise = noise
-        
                                     
   def getPossibleActions(self, state):
     """

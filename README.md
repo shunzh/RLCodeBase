@@ -28,35 +28,49 @@ See all possible arguments:
 
 Example:
 
-``python humanWorld.py -a q -g simple -c obsts -k 10 -q``
+``python humanWorldExperiment.py -a Modular -g vr0 -k 10``
 
-- `-a q`: use Q-learning agent
-- `-g simple`: in the simple domain.
-- `-k 10`: run 10 iterations.
-- `-q`: quite running, not showing the learning process.
+- `-a Modular`: use the modular agent.
+- `-g simple`: in the virtual reality domain #0.
+- `-k 10`: run 10 episodes.
+
+Experiments
+--------------
+
+Experiments are written in shell scripts, which run some python files
+sequentially.
+
+Related files:
+- [humanModularIRLExperiment.sh](humanModularIRLExperiment.sh). Please see inline
+  comments for details. To run this, you need to have human data {miniRes25.mat,
+  subj[25-28].parsed.mat} in your checked-out folder, which are not included in
+  this repo.
 
 Learning Agents
 --------------
 
-For existing agents:
+Related files:
 
-- Q learning agent is defined in qlearningAgents.py.
-- VI learning agent is defined in valueIterationAgents.py.
-- Modular Q agent is defined in modularAgents.py.
+- [qlearningAgents.py](qlearningAgents.py) Q learning agent.
+- [valueIterationAgents.py](valueIterationAgents.py) Value iteration learning agent.
+- [modularAgents.py](modularAgents.py) Modular agent, derived from Q learning
+  agent.
 
 Environments
 --------------
 
-Naming conventions:
-
-\*World.py specifies the domains.
-\*WorldExperiment.py can be used to run the experiment on the corresponding domain.
-\*WorldPlot.py contains graphic supports.
-\*WorldTest.py contains unit tests. 
 ### Discrete domains
 
-Examples for discrete environments can be found in gridworld.py, such as `getMazeGrid`, `getBookGrid`, `getBridgeGrid`, etc.
-You may add you own by looking at their definitions. Concretely,
+Related files:
+- [gridworld.py](gridworld.py) A gridworld domain.
+
+Discrete environments are used to do some basic evaluation for modular RL
+algorithms. The locations of objects and the agent are represented by grid
+positions.
+
+Examples for discrete environments can be found in gridworld.py, such as
+`getMazeGrid`, `getBookGrid`, `getBridgeGrid`, etc.  You may add you own by
+looking at their definitions. Concretely,
 
 - define a get$GridlWorldName$ function in gridworld.py. In which,
 - create a two-dimensional list, usually called `grid`, specified as follows.
@@ -65,12 +79,27 @@ You may add you own by looking at their definitions. Concretely,
   * '#': obstacles that the agent cannot reach, i.e. P('#'|s, a) = 0.
   * A number: the reward upon reaching this state.
 
-- create a lambda expression, usually called `isFinal`, to decide whether a state is a terminal state. If you want the task terminates upon receiving any reward, use `terminateIfInt`
+- create a lambda expression, usually called `isFinal`, to decide whether a
+  state is a terminal state. If you want the task terminates upon receiving any
+  reward, use `terminateIfInt`
 - return `Gridworld(grid, isFinal)`
 
 ### Continuous domains
 
-For continuous environments, I have implemented `ContinuousWorld`, `humanWrold`. You can find in corresponding files.
+Related files:
+- [continuousWorld.py](continuousWorld.py) The continuous world domain.
+- [humanWorld.py](humanWorld.py) The human world domain, derived from
+  continuousWorld.
+
+ContinuousWorld is a world that objects are represented by continuous
+coordinates, as opposed to discrete domains where objects are located in grid
+positions. The agent can move in eight directions (every 45 degrees). The
+objects are targets, obstacles and path waypoints. These are parsed from
+miniRes25.mat.
+
+HumanWorld is revised from ContinuousWorld. The major difference is that the
+agent has an orientation and can only go straight ahead, turn slightly left or
+right.
 
 Modular IRL
 --------------

@@ -27,68 +27,10 @@ class IdentityExtractor(FeatureExtractor):
     feats[(state,action)] = 1.0
     return feats
 
-def getClosestObj(loc, l):
-  """
-  Args:
-    loc: location of the agent
-    l: list of objects
-  """
-  minDist = np.inf
-  minObj = loc
-
-  for obj in l:
-    dist = numpy.linalg.norm(np.subtract(loc, obj))
-    if dist < minDist:
-      minDist = dist
-      minObj = obj
-
-  return [minObj, minDist]
-
-def getProjectionToSegment(loc, segs):
-  """
-  Compute the projection from loc to the segment with vertices of seg0 and seg1
-  """
-  if len(segs) == 0:
-    return [loc, np.inf]
-  elif len(segs) == 1:
-    seg = segs[0]
-    return [seg, numpy.linalg.norm(np.subtract(loc, seg))]
-  else:
-    # FIXME better way to compute projection?
-    from shapely.geometry import LineString, Point
-    segVec = np.subtract(segs[1], segs[0])
-    line = LineString([np.add(segs[0], - 100 * segVec), np.add(segs[0], 100 * segVec)])
-    p = Point(loc)
-    interceptPoint = line.interpolate(line.project(p))
-    intercept = (interceptPoint.x, interceptPoint.y)
-    return intercept
-
-def getProjectionToSegmentLocalView(s0, s1):
-  """
-  If we only have distance, angle to the segments, use this function.
-  This will call getProjectionToSegment.
-  """
-  loc = (0, 0)
-  segs = [(dist * np.cos(orient), dist * np.sin(orient)) for (dist, orient) in [s0, s1]]
-  obj = getProjectionToSegment(loc, segs)
-  return getDistAngle(loc, obj, 0)
-
-def getDistAngle(f, t, orient):
-  vector = np.subtract(t, f)
-  dist = numpy.linalg.norm(vector)
-  objOrient = np.angle(vector[0] + vector[1] * 1j)
-  return [dist, adjustAngle(objOrient - orient)]
-
-def getSortedObjs(loc, l):
-  """
-  Sort l out-of-place wrt the distance to loc
-  """
-  newl = list(l)
-  newl.sort(key = lambda obj : numpy.linalg.norm(np.subtract(loc, obj)))
-  return newl
-
-
 class ContinousRadiusLogExtractor(FeatureExtractor):
+  """
+  An feature extractor for the ContinuousWorld
+  """
   def __init__(self, mdp, label):
     self.mdp = mdp
     self.label = label
@@ -115,10 +57,9 @@ class ContinousRadiusLogExtractor(FeatureExtractor):
 
     return feats
 
-
 class HumanViewExtractor(ContinousRadiusLogExtractor):
   """
-  From human's view
+  Feature extractors for the HumanWorld
   """
   def __init__(self, mdp, label):
     ContinousRadiusLogExtractor.__init__(self, mdp, label)
@@ -193,7 +134,90 @@ def getHumanContinuousState(mdp):
     return ret
 
   return getDistAngelList
-  
+
+def getHumanDiscreteState(mdp):
+  """
+  Return ((targDist, targAngle)_1^2, (obstDist, obstAngle)_1^2, (segDist, segAngle))
+  """
+  extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
+
+  def getDistAngelList(state):
+    ret = []
+    for extractor in extractors:
+      feats = extractor.getStateFeatures(state)
+      ret.append(mapStateToBin((feats['dist'], feats['angle']), mdp.step))
+      if not extractor.label == 'segs':
+        # add second closest objects
+        ret.append(mapStateToBin((feats['dist2'], feats['angle2']), mdp.step))
+
+    return ret
+
+  return getDistAngelList
+
+"""
+Some util functions for feature extraction.
+"""
+def getClosestObj(loc, l):
+  """
+  Args:
+    loc: location of the agent
+    l: list of objects
+  """
+  minDist = np.inf
+  minObj = loc
+
+  for obj in l:
+    dist = numpy.linalg.norm(np.subtract(loc, obj))
+    if dist < minDist:
+      minDist = dist
+      minObj = obj
+
+  return [minObj, minDist]
+
+def getProjectionToSegment(loc, segs):
+  """
+  Compute the projection from loc to the segment with vertices of seg0 and seg1
+  """
+  if len(segs) == 0:
+    return [loc, np.inf]
+  elif len(segs) == 1:
+    seg = segs[0]
+    return [seg, numpy.linalg.norm(np.subtract(loc, seg))]
+  else:
+    # FIXME better way to compute projection?
+    from shapely.geometry import LineString, Point
+    segVec = np.subtract(segs[1], segs[0])
+    line = LineString([np.add(segs[0], - 100 * segVec), np.add(segs[0], 100 * segVec)])
+    p = Point(loc)
+    interceptPoint = line.interpolate(line.project(p))
+    intercept = (interceptPoint.x, interceptPoint.y)
+    return intercept
+
+def getProjectionToSegmentLocalView(s0, s1):
+  """
+  If we only have distance, angle to the segments, use this function.
+  This will call getProjectionToSegment.
+  """
+  loc = (0, 0)
+  segs = [(dist * np.cos(orient), dist * np.sin(orient)) for (dist, orient) in [s0, s1]]
+  obj = getProjectionToSegment(loc, segs)
+  return getDistAngle(loc, obj, 0)
+
+def getDistAngle(f, t, orient):
+  vector = np.subtract(t, f)
+  dist = numpy.linalg.norm(vector)
+  objOrient = np.angle(vector[0] + vector[1] * 1j)
+  return [dist, adjustAngle(objOrient - orient)]
+
+def getSortedObjs(loc, l):
+  """
+  Sort l out-of-place wrt the distance to loc
+  """
+  newl = list(l)
+  newl.sort(key = lambda obj : numpy.linalg.norm(np.subtract(loc, obj)))
+  return newl
+
+ 
 def adjustAngle(angle):
   while angle < - np.pi:
     angle += 2 * np.pi
@@ -251,22 +275,3 @@ def getHumanViewBins(mdp, label):
     return mapStateToBin((feats['dist'], feats['angle']), mdp.step)
 
   return getBins
-
-def getHumanDiscreteState(mdp):
-  """
-  Return ((targDist, targAngle)_1^2, (obstDist, obstAngle)_1^2, (segDist, segAngle))
-  """
-  extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
-
-  def getDistAngelList(state):
-    ret = []
-    for extractor in extractors:
-      feats = extractor.getStateFeatures(state)
-      ret.append(mapStateToBin((feats['dist'], feats['angle']), mdp.step))
-      if not extractor.label == 'segs':
-        # add second closest objects
-        ret.append(mapStateToBin((feats['dist2'], feats['angle2']), mdp.step))
-
-    return ret
-
-  return getDistAngelList
