@@ -8,36 +8,12 @@ import featureExtractors
 import numpy as np
 from humanWorld import HumanWorld
 import warnings
+from game import Actions
+import math
 
-def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLogExtractor):
-  """
-  DUMMY these are q functions to test agent's behavior in basic continuous domain.
-  Values are given heuristically.
-  """
-  target = {'bias': 1, 'dist': -0.16}
-  obstacle = {'bias': -1, 'dist': 0.16}
-  segment = {'bias': 0.1, 'dist': -0.05}
-  
-  def radiusBias(state, action, label, w):
-    extractor = Extractor(mdp, label)
-    feats = extractor.getFeatures(state, action)
-
-    if feats != None:
-      return feats['bias'] * w['bias'] + feats['dist'] * w['dist']
-    else:
-      return None
-
-  def qTarget(state, action):
-    return radiusBias(state, action, 'targs', target)
-
-  def qObstacle(state, action):
-    return radiusBias(state, action, 'obsts', obstacle)
-
-  def qSegment(state, action):
-    return radiusBias(state, action, 'segs', segment)
-
-  return [qTarget, qObstacle, qSegment]
-
+"""
+Human world functions
+"""
 def getHumanWorldDiscreteFuncs():
   """
   Use to get q functions.
@@ -152,3 +128,97 @@ def getHumanWorldContinuousFuncs():
     return qValue(segState, action, sWeights)
 
   return [qTarget, qObstacle, qSegment]
+
+"""
+Continuous world functions
+"""
+def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLogExtractor):
+  """
+  DUMMY these are q functions to test agent's behavior in basic continuous domain.
+  Values are given heuristically.
+  """
+  target = {'bias': 1, 'dist': -0.16}
+  obstacle = {'bias': -1, 'dist': 0.16}
+  segment = {'bias': 0.1, 'dist': -0.05}
+  
+  def radiusBias(state, action, label, w):
+    extractor = Extractor(mdp, label)
+    feats = extractor.getFeatures(state, action)
+
+    if feats != None:
+      return feats['bias'] * w['bias'] + feats['dist'] * w['dist']
+    else:
+      return None
+
+  def qTarget(state, action):
+    return radiusBias(state, action, 'targs', target)
+
+  def qObstacle(state, action):
+    return radiusBias(state, action, 'obsts', obstacle)
+
+  def qSegment(state, action):
+    return radiusBias(state, action, 'segs', segment)
+
+  return [qTarget, qObstacle, qSegment]
+
+def getObsAvoidFuncs(mdp):
+  """
+  Return Q functions for modular mdp for obstacle avoidance behavior
+
+  the environment is passed by mdp
+  """
+  obstacle = {'bias': -0.20931133310480204, 'dis': 0.06742681562641269}
+  target = {'bias': 0.20931133310480204, 'dis': -0.06742681562641269}
+  sidewalk = {'x': 0.06250000371801567}
+
+  def getNext(state, action):
+    x, y = state
+    dx, dy = Actions.directionToVector(action)
+    next_x, next_y = int(x + dx), int(y + dy)
+    if next_x < 0 or next_x >= mdp.grid.width:
+      next_x = x
+    if next_y < 0 or next_y >= mdp.grid.height:
+      next_y = y
+
+    return [next_x, next_y]
+
+  def qWalk(state, action):
+    """
+    QValue of forward walking
+    """
+    next_x, next_y = getNext(state, action)
+    return sidewalk['x'] * next_x
+
+  def radiusBias(state, action, cond, w):
+    """
+    Compute a Q value responding to an object, considering the distance to it.
+    This is used by obstacle avoidance, and target obtaining.
+
+    Args:
+      state, action
+      cond: the lambda expr that given state is the object we want
+      w: weight vector
+    """
+    x, y = state
+    next_x, next_y = getNext(state, action)
+
+    # find the distance to the nearest object
+    minDist = mdp.grid.width * mdp.grid.height
+    for xt in range(mdp.grid.width):
+      for yt in range(mdp.grid.height):
+        cell = mdp.grid[xt][yt] 
+        if cond(cell):
+          # it's an obstacle!
+          dist = math.sqrt((xt - next_x) ** 2 + (yt - next_y) ** 2)
+          if (dist < minDist): minDist = dist
+    return minDist * w['dis'] + 1 * w['bias']
+
+  def qObstacle(state, action):
+    cond = lambda s : (type(s) == int or type(s) == float) and s == -1
+    return radiusBias(state, action, cond, obstacle)
+
+  def qTarget(state, action):
+    cond = lambda s : (type(s) == int or type(s) == float) and s == +1
+    return radiusBias(state, action, cond, target)
+
+  return [qWalk, qObstacle, qTarget]

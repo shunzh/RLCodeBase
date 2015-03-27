@@ -171,7 +171,6 @@ def main():
                   'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
-    #a.setWeights([0.2, 0, 1]) # TEST
 
     if opts.agent == 'ModularDiscrete':
       # way 1: using q tables
@@ -181,7 +180,6 @@ def main():
       # way 2: using q functions
       a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
       a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(discounters))
-      #a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs()) # TEST
     else:
       raise Exception("Unknown modular agent.")
   elif opts.agent == 'random':

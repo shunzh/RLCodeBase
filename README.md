@@ -47,6 +47,12 @@ For existing agents:
 Environments
 --------------
 
+Naming conventions:
+
+\*World.py specifies the domains.
+\*WorldExperiment.py can be used to run the experiment on the corresponding domain.
+\*WorldPlot.py contains graphic supports.
+\*WorldTest.py contains unit tests. 
 ### Discrete domains
 
 Examples for discrete environments can be found in gridworld.py, such as `getMazeGrid`, `getBookGrid`, `getBridgeGrid`, etc.
@@ -70,9 +76,10 @@ Modular IRL
 --------------
 
 Related files:
-[inverseModularRLExperiments.py](inverseModularRLExperiments.py)
-[inverseModularRL.py](inverseModularRL.py)
-[inverseModularRLTest.py](inverseModularRLTest.py)
+
+- [inverseModularRL.py](inverseModularRL.py) implementation of the modular IRL algorithm.
+- [inverseModularRLExperiments.py](inverseModularRLExperiments.py) to run IRL on humanWorld domains.
+- [inverseModularRLTest.py](inverseModularRLTest.py) unit tests.
 
 Inverse modular reinforcement learning is implemented according to
 

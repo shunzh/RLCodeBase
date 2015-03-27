@@ -79,7 +79,6 @@ def getDistAngle(f, t, orient):
   objOrient = np.angle(vector[0] + vector[1] * 1j)
   return [dist, adjustAngle(objOrient - orient)]
 
-
 def getSortedObjs(loc, l):
   """
   Sort l out-of-place wrt the distance to loc

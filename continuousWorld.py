@@ -164,7 +164,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
         # give unit reward
         #reward += self.rewards['segs']
         # or give discounted reward
-        reward += self.rewards['segs'] * np.exp(0.9, pathDist)
+        reward += self.rewards['segs'] * (1 - pathDist ** 2)
 
     return reward or self.livingReward
       
