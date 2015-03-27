@@ -104,3 +104,30 @@ class Plotting:
       cir = Circle(Point(self.shift(obj)), self.radius)
       cir.setFill(self.hColors[label])
       cir.draw(self.win)
+
+def plotHumanWorldQFuncs(values, category):
+  """
+  Print the values of states in heatmap
+  """
+  import matplotlib.pyplot as plt
+
+  for act in ['L', 'R', 'G']:
+    data = []
+    for i in reversed(range(1, 11)): # 1 ~ 10. so that 1 appears at bottom
+      row = []
+      for j in range(-4, 5): # -4 ~ 4.
+        row.append(values[(i, j), act])
+      data.append(row)
+
+    plt.imshow(data, interpolation='none')
+    plt.xticks(range(9), ['-135', '-90', '-45', '-15', '0', '15', '45', '90', '135'])
+    plt.yticks(range(10), ['>10', '10', '5', '4', '3', '2.5', '2', '1.5', '1', '.5'])
+    plt.xlabel('Angle');
+    plt.ylabel('Distance (x steps)');
+    plt.title('Q Table of Module ' + category + ', Action ' + act)
+    
+    plt.jet()
+    plt.colorbar()
+
+    plt.savefig(category + 'Q_' + act + '.png')
+    plt.close()

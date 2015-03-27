@@ -142,7 +142,10 @@ class QLearningAgent(ReinforcementAgent):
 
 class ReducedQLearningAgent(QLearningAgent):
   """
-  Wrap the Q learning agent with a state filter, which reduce the state space.
+  Wrap the Q learning agent with a state filter, which reduces the state space.
+  
+  State: S -> S', where S' is significantly smaller.
+  One usage is mapping continuous state space into discrete bins.
   """
   def __init__(self, **args):
     QLearningAgent.__init__(self, **args)
@@ -180,40 +183,7 @@ class ReducedQLearningAgent(QLearningAgent):
     # TODO print values here?
     return QLearningAgent.final(self, self.getState(state))
 
-
-class PacmanQAgent(QLearningAgent):
-  "Exactly the same as QLearningAgent, but with different default parameters"
-  
-  def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.1, numTraining=0, **args):
-    """
-    These default parameters can be changed from the pacman.py command line.
-    For example, to change the exploration rate, try:
-        python pacman.py -p PacmanQLearningAgent -a epsilon=0.1
-    
-    alpha    - learning rate
-    epsilon  - exploration rate
-    gamma    - discount factor
-    numTraining - number of training episodes, i.e. no learning after these many episodes
-    """
-    args['epsilon'] = epsilon
-    args['gamma'] = gamma
-    args['alpha'] = alpha
-    args['numTraining'] = numTraining
-    self.index = 0  # This is always Pacman
-    QLearningAgent.__init__(self, **args)
-
-  def getAction(self, state):
-    """
-    Simply calls the getAction method of QLearningAgent and then
-    informs parent of action for Pacman.  Do not change or remove this
-    method.
-    """
-    action = QLearningAgent.getAction(self,state)
-    self.doAction(state,action)
-    return action
-
-    
-class ApproximateQAgent(PacmanQAgent):
+class ApproximateQAgent(QLearningAgent):
   """
      ApproximateQLearningAgent
      
@@ -223,7 +193,7 @@ class ApproximateQAgent(PacmanQAgent):
   """
   def __init__(self, extractor = IdentityExtractor(), **args):
     self.featExtractor = extractor
-    PacmanQAgent.__init__(self, **args)
+    QLearningAgent.__init__(self, **args)
 
     # You might want to initialize weights here.
     "*** YOUR CODE HERE ***"

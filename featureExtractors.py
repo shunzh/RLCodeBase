@@ -21,6 +21,11 @@ class FeatureExtractor:
     """
     util.raiseNotDefined()
 
+class IdentityExtractor(FeatureExtractor):
+  def getFeatures(self, state, action):
+    feats = util.Counter()
+    feats[(state,action)] = 1.0
+    return feats
 
 def getClosestObj(loc, l):
   """
@@ -38,7 +43,6 @@ def getClosestObj(loc, l):
       minObj = obj
 
   return [minObj, minDist]
-
 
 def getProjectionToSegment(loc, segs):
   """

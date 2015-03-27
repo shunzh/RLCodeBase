@@ -3,7 +3,7 @@ import random
 
 class MDPEnvironment(environment.Environment):
   """
-  which holds a mdp object.
+  Environment for an MDP.
   """
   def __init__(self, mdp):
     self.mdp = mdp

@@ -15,12 +15,12 @@ reinforcement learning methods, and domains for evaluation. The codebase is
 written in Python. This is for the research in Prof. Dana Ballard's group at
 the University of Texas at Austin.
 
+Useful Commands
+--------------
+
 Make sure you have python-tk installed for GUI display. You may do it by running
 
 ``sudo apt-get install python-tk``
-
-Useful Commands
---------------
 
 See all possible arguments:
 
