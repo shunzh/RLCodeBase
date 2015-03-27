@@ -120,9 +120,10 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
 
 def getHumanWorldContinuousFuncs():
   """
-  Q value is a continuous approximator of the features.
-  The state given here is belief state. Need use featureExtractor if having only raw states.
+  NOTE: this method doesn't work well for humanWorld.
 
+  Assume the q values are linear combination of state features (distance, angle, etc.)
+  The state given here is belief state. Need use featureExtractor if having only raw states.
   weights: Action x Feature -> Value
   """
   import pickle

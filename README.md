@@ -1,4 +1,4 @@
-Maze and Pacman environments for Modular MDP
+Modular Reinforcement Learning Codebase
 ==============
 
 **Licensing Information: Please do not distribute or publish solutions to this
@@ -7,7 +7,17 @@ purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
 John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html**
 
-Make sure you have python-tk installed for GUI display. You may do it by `sudo apt-get install python-tk`.
+Introduction
+--------------
+
+The goal of this codebase is to provide reinforcement learning, inverse
+reinforcement learning methods, and domains for evaluation. The codebase is
+written in Python. This is for the research in Prof. Dana Ballard's group at
+the University of Texas at Austin.
+
+Make sure you have python-tk installed for GUI display. You may do it by running
+
+``sudo apt-get install python-tk``
 
 Useful Commands
 --------------
@@ -37,6 +47,8 @@ For existing agents:
 Environments
 --------------
 
+### Discrete domains
+
 Examples for discrete environments can be found in gridworld.py, such as `getMazeGrid`, `getBookGrid`, `getBridgeGrid`, etc.
 You may add you own by looking at their definitions. Concretely,
 
@@ -50,9 +62,22 @@ You may add you own by looking at their definitions. Concretely,
 - create a lambda expression, usually called `isFinal`, to decide whether a state is a terminal state. If you want the task terminates upon receiving any reward, use `terminateIfInt`
 - return `Gridworld(grid, isFinal)`
 
+### Continuous domains
+
 For continuous environments, I have implemented `ContinuousWorld`, `humanWrold`. You can find in corresponding files.
 
 Modular IRL
 --------------
-Please look at the main function of inverseModularRL.py. `scipy.optimize.minimize` is used.
+
+Related files:
+[inverseModularRLExperiments.py](inverseModularRLExperiments.py)
+[inverseModularRL.py](inverseModularRL.py)
+[inverseModularRLTest.py](inverseModularRLTest.py)
+
+Inverse modular reinforcement learning is implemented according to
+
+C. A. Rothkopf and Ballard, D. H.(2013), Modular inverse reinforcement
+learning for visuomotor behavior, Biological Cybernetics,
+107(4),477-490
+http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
 

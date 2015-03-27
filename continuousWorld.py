@@ -9,7 +9,6 @@ import featureExtractors
 import numpy as np
 import numpy.linalg
 
-from game import Actions
 import continuousWorldPlot
 
 class ContinuousWorld(mdp.MarkovDecisionProcess):

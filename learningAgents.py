@@ -6,8 +6,6 @@
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
-from game import Directions, Agent, Actions
-
 import random,util,time
 
 class ValueEstimationAgent(Agent):

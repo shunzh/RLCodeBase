@@ -4,7 +4,6 @@ import featureExtractors
 import continuousWorld
 import humanInfoParser
 from gridworld import GridworldEnvironment
-import sarsaLambdaAgents
 
 import numpy as np
 
@@ -18,9 +17,9 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   An MDP that agrees with Matt's human data.
 
   It is almost the same as ContinuousWorld, but this is in the agent's view.
-  The agent usese the distance / angle to the object as state.
+  The agent uses the distance / angle to the object as state.
   
-  The coordiates: vectors (visually) above the x-axis have negative angles.
+  The coordinates: vectors (visually) above the x-axis have negative angles.
 
       -pi/2
   -pi   |
@@ -28,7 +27,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
    pi   |
        pi/2
 
-  State: (location, ref to obj)
+  State: (distance, orient) for targ, obst, seg, respectively
   Action: L, R, G
   Transition: same as continuousWorld but 
   Reward: same as continuousWorld.
@@ -36,7 +35,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   # static attributes
   # FIXME overfit
   step = 0.3
-  turnAngle = 30.0 / 180 * np.pi
+  turnAngle = 15.0 / 180 * np.pi
   turnDist = step * 0.25
   walkDist = step * 1
 
@@ -48,20 +47,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   actions = ('L', 'R', 'G')
     
   def getPossibleActions(self, state):
-    """
-    L: Turn left 30 degrees and walk ahead 0.05m.
-    R: Turn right 30 degrees and walk ahead 0.05m.
-    G: Go ahead 0.2m.
-    """
     return HumanWorld.actions
-
-  def getReward(self, state, action, nextState):
-    reward = continuousWorld.ContinuousWorld.getReward(self, state, action, nextState)
-
-    if self.atBorder and 'borderReward' in self.__dict__.keys():
-      reward += self.borderReward
-
-    return reward
 
   def isFinal(self, state):
     return continuousWorld.ContinuousWorld.isFinal(self, state) or self.atBorder
@@ -105,7 +91,11 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   @staticmethod
   def transitionSimulate(s, a):
     """
-    Done by creating an ad-hoc coordinate space and do a one step simulation.
+    In some cases, we need to get the next state given the current state and action.
+    Because the current state is represented by distance and angle to an object,
+    it's a bit tricky to get the distance and angle to the object after taking an action.
+
+    This is done by creating an ad-hoc coordinate space and do a one step simulation.
 
     Args:
       s: (dist, orient)
@@ -359,11 +349,7 @@ def main():
   mdp.setNoise(opts.noise)
   env = HumanEnvironment(mdp)
 
-  
-  ###########################
-  # GET THE DISPLAY ADAPTER
-  ###########################
-
+  # plot the environment
   if not opts.quiet:
     dim = 800
     plotting = continuousWorldPlot.Plotting(mdp, dim)
@@ -373,12 +359,7 @@ def main():
     if 'vr' in opts.grid:
       humanInfoParser.plotHuman(plotting, win, range(25, 29), vrDomainId)
 
-  ###########################
-  # GET THE AGENT
-  ###########################
-
-  # SHOULD BE IMPOSSIBLE TO USE Q OR VALUE ITERATION WITHOUT FUNCTION APPROXIMATION!
-  # THE STATE SPACE WOULD BE THE RAW STATE SPACE, WHICH SPANNED BY THE AGENT'S SMALL STEPS!
+  # get the learning agent
   import valueIterationAgents, qlearningAgents
   a = None
   if opts.agent == 'value':
@@ -394,6 +375,7 @@ def main():
     a.setValues('learnedValues/humanAgent' + opts.category + 'Values.pkl')
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, opts.category))
   elif opts.agent == 'sarsa':
+    import sarsaLambdaAgents
     gridWorldEnv = GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 

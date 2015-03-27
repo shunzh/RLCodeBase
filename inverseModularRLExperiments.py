@@ -240,8 +240,8 @@ def humanWorldExperimentQPotential(filenames, rang):
 
 if __name__ == '__main__':
   # set experiment here
-  experiment = humanWorldExperimentDiscrete
-  #experiment = humanWorldExperimentQPotential
+  #experiment = humanWorldExperimentDiscrete
+  experiment = humanWorldExperimentQPotential
   
   from multiprocessing import Pool
   # change the number of processors used here.

@@ -304,7 +304,7 @@ def wrap_always(text, width):
 if __name__ == '__main__':
   import gridworld, util
 
-  grid = gridworld.getCliffGrid3()
+  grid = gridworld.getCliffGrid()
   print grid.getStates()
   
   policy = dict([(state,'east') for state in grid.getStates()])
