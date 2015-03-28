@@ -88,6 +88,8 @@ looking at their definitions. Concretely,
 
 Related files:
 - [continuousWorld.py](continuousWorld.py) The continuous world domain.
+- [continuousWorldDomains.py](continuousWorldDomains.py) Concrete continuous
+  world domain configurations. VR domains are parsed here.
 - [humanWorld.py](humanWorld.py) The human world domain, derived from
   continuousWorld.
 
@@ -110,10 +112,11 @@ Related files:
 - [inverseModularRLExperiments.py](inverseModularRLExperiments.py) to run IRL on humanWorld domains.
 - [inverseModularRLTest.py](inverseModularRLTest.py) unit tests.
 
-Inverse modular reinforcement learning is implemented according to
+Inverse modular reinforcement learning is basically implemented according to
 
 C. A. Rothkopf and Ballard, D. H.(2013), Modular inverse reinforcement
 learning for visuomotor behavior, Biological Cybernetics,
 107(4),477-490
 http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
 
+[Place holder: details of the algorithm will be described in my thesis]

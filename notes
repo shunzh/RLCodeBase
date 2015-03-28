@@ -1,29 +1,27 @@
 Path following
+transition:
 - reward by shrinking distance to next waypoint
 - switch between waypoints consecutively
-
-contacted number of objects - output to stats
+reward:
+- potential based - using
+- Matt's way - implemented
 
 q
-- fine-grained q table
+- fine-grained q table - try it
 - potential based
-  - decompose path module to be two seperate ones? - go for it
+  - decompose path module to be two seperate ones? - go for it - done
 
 sanity check
 - weights and discounters, forward then backward - TODO
 - agent orients - URGENT - done
 
-From Matt, run path module training in this way:
-if the agent takes a step that makes progress towards its goal (d_2 < d_1) AND
-it is not too far from the actual path (dist_to_path < threshold), it gets
-rewarded.  I think the amount of reward should fall off with increasing
-dist_to_path - I used 1-dist_to_path^2 as my threshold was 1 - small breaks
-from the path should have little penalty while being close to past threshold
-should be about as bad as past it. Definitely multiple ways to alter the
-reward, but this seemed a decent first approximation. I can think of other
-things to try.
-- Will this oscillate?
-
 From Ruohan:
-consider all the module instances - makes sense
-big target at the final dest - ?
+consider all the module instances - makes sense, go for it
+big target at the final dest - ??
+
+TODO
+- reflex agent as baseline
+- 15 degrees
+- multiple objects
+- evaluation
+  - probability of observing human data given model.
