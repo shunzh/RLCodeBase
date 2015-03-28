@@ -158,7 +158,8 @@ def policyCompare(samples, qFuncs, w):
     samples: list of (state, action)
     w: weight learned
   Return:
-    Proportion of agreed policies
+    proportion of agreed policies
+    log of probability of observing the samples
   """
   # define agent
   import humanWorld
@@ -173,10 +174,17 @@ def policyCompare(samples, qFuncs, w):
 
   # go through samples
   agreedPolicies = 0
+  posteriorProb = 0
   for state, action in samples:
+    # add 1 if policy agreed by human subjects
     agreedPolicies += a.getPolicy(state) == action 
-
-  return 1.0 * agreedPolicies / len(samples)
+    
+    # add log of the probability of choosing such action by the model
+    actionSelectProb = a.getSoftmaxQValue(state) 
+    posteriorProb += np.log(actionSelectProb(action))
+  propAgreedPolicies = 1.0 * agreedPolicies / len(samples)
+  
+  return [propAgreedPolicies, posteriorProb]
 
 def humanWorldExperimentDiscrete(filenames, rang):
   """
@@ -194,7 +202,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   x = sln.solve()
   w = x[:n]
-  agreedPoliciesRatio = policyCompare(samples, qFuncs, w)
+  [agreedPoliciesRatio, posteriorProb] = policyCompare(samples, qFuncs, w)
 
   print rang, ": weights are", w
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
@@ -222,9 +230,12 @@ def humanWorldExperimentQPotential(filenames, rang):
   x = sln.solve()
   w = x[:n]
   d = x[n:]
+  [agreedPoliciesRatio, posteriorProb] = policyCompare(samples, qFuncs, w)
 
   print rang, ": weights are", w
   print rang, ": discounters are", d
+  print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
+  print rang, ": log of probability of observing the samples ", posteriorProb 
 
   """
   # debug weight disabled. computational expensive?

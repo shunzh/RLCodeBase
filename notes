@@ -15,13 +15,12 @@ sanity check
 - weights and discounters, forward then backward - TODO
 - agent orients - URGENT - done
 
-From Ruohan:
-consider all the module instances - makes sense, go for it
-big target at the final dest - ??
+- consider all the module instances - makes sense, go for it
+- big target at the final dest - ??
+- reflex agent as baseline - OK
+- 15 degrees - OK (enable/disable)
 
 TODO
-- reflex agent as baseline
-- 15 degrees (enable/disable)
 - multiple objects
 - evaluation
   - probability of observing human data given model.

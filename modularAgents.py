@@ -31,25 +31,16 @@ class ModularAgent(ApproximateQAgent):
     return {'sum': self.getQValue(state, action),\
             'subs': [self.qFuncs[i](state, action) for i in xrange(self.nModules)]}
 
-  def getSoftmaxQValue(self, state, action):
+  def getSoftmaxQValue(self, state):
+    """
+    return a function:
+      arg: action
+      return: the probability of choosing such action
+              e^Q(s, a) / sum(e^Q(s, b) for all b)
+    """
     actions = self.getLegalActions(state)
-    j = actions.index(action)
-
-    # q value matrix
-    # vMat(i, j) is for i-th module and j-th action
-    vMat = []
-
-    # iterate through all the modules
-    for qFunc in self.qFuncs:
-      # list of exp^q
-      exps = [math.exp(qFunc(state, action)) for action in actions]
-
-      # Normalize
-      sumExps = sum(exps)
-      vMat.append([exp / sumExps for exp in exps])
-
-    # sum over j-th column (j-th action)
-    return sum([vMat[i][j] for i in xrange(self.nModules)])
+    exps = {action: math.exp(self.getQValue(state, action)) for action in actions}
+    return lambda action: exps[action] / sum(exps.values())
 
   def setQFuncs(self, qFuncs):
     """
