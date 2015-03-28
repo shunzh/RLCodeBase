@@ -183,8 +183,8 @@ def main():
     else:
       raise Exception("Unknown modular agent.")
   elif opts.agent == 'random':
-    import randomAgent
-    a = randomAgent.RandomAgent()
+    import baselineAgents
+    a = baselineAgents.RandomAgent()
   else:
     if not opts.manual: raise 'Unknown agent type: '+opts.agent
     

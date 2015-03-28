@@ -21,7 +21,7 @@ big target at the final dest - ??
 
 TODO
 - reflex agent as baseline
-- 15 degrees
+- 15 degrees (enable/disable)
 - multiple objects
 - evaluation
   - probability of observing human data given model.

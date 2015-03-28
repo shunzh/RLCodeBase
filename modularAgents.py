@@ -25,11 +25,11 @@ class ModularAgent(ApproximateQAgent):
     Get Q value by consulting each module
     """
     # sum over q values from each sub mdp
-    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(len(self.qFuncs))])
+    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(self.nModules)])
 
   def getSubQValues(self, state, action):
     return {'sum': self.getQValue(state, action),\
-            'subs': [self.qFuncs[i](state, action) for i in xrange(len(self.qFuncs))]}
+            'subs': [self.qFuncs[i](state, action) for i in xrange(self.nModules)]}
 
   def getSoftmaxQValue(self, state, action):
     actions = self.getLegalActions(state)
@@ -49,13 +49,14 @@ class ModularAgent(ApproximateQAgent):
       vMat.append([exp / sumExps for exp in exps])
 
     # sum over j-th column (j-th action)
-    return sum([vMat[i][j] for i in range(len(self.qFuncs))])
+    return sum([vMat[i][j] for i in xrange(self.nModules)])
 
   def setQFuncs(self, qFuncs):
     """
     Set QFuncs from the environment. getQValue will use this.
     """
     self.qFuncs = qFuncs
+    self.nModules = len(self.qFuncs)
 
   def setWeights(self, weights):
     """
