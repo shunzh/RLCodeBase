@@ -1,17 +1,16 @@
 #!/bin/bash
 
-# run module IRL first
-python inverseModularRLExperiments.py
-
-# move learned values of weights and discounters
-mv values.pkl learnedValues
+# run module IRL first (I usually run separately)
+#python inverseModularRLExperiments.py
+#mv values.pkl learnedValues
 
 # clear previous recorded stats
 rm stats
 # draw figures
 for i in `seq 0 31`;
 do
-  python humanWorld.py -a Modular -g vr$i
+  python humanWorldExperiment.py -a ModularDiscrete -g vr$i
+  #python humanWorldExperiment.py -a Modular -g vr$i
 done
 
 # convert from eps to png

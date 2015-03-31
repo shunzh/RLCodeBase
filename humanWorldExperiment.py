@@ -92,6 +92,7 @@ def saveValues(values, filename):
 def main(): 
   opts = parseOptions()
   possibleCategories = ['targs', 'obsts', 'segs']
+  nModules = 3
 
   ###########################
   # GET THE ENVIRONMENT
@@ -105,9 +106,8 @@ def main():
     valueTable = pickle.load(open('learnedValues/values.pkl'))
     values = valueTable[vrDomainId / 8] # 8 domains per task
     
-    nModules = len(values) / 2 # weights and discounters
     weights = values[:nModules]
-    discounters = None if len(values) == nModules else values[nModules:]
+    discounters = [] if len(values) == nModules else values[nModules:]
 
     print "init using domain #", vrDomainId, "with values", weights, "and discounters", discounters
   elif opts.grid == 'vrTrain':

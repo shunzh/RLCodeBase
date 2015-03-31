@@ -11,7 +11,7 @@ taskNames = ['Path only', 'Obstacle + Path', 'Target + Path', 'All']
 print "The values for the four tasks are, given in the form of [target, obstacle, path]:"
 print
 
-moduleNum = len(values[0]) / 2
+moduleNum = 3
 for idx in range(4):
   print taskNames[idx]
   print 'Weights:', [round(x, 4) for x in values[idx][:moduleNum]]

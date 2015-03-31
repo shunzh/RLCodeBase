@@ -27,6 +27,7 @@ def plotHuman(plotting, win, subjIdSet, domainId):
         line.setFill(color_rgb(0, 0, 0))
         line.draw(win)
         
+        """
         # a tiny line indicates orient
         arrowLength = 15
         dx = arrowLength * np.cos(orient)
@@ -35,6 +36,7 @@ def plotHuman(plotting, win, subjIdSet, domainId):
         arrow.setWidth(2)
         arrow.setFill(color_rgb(100, 100, 100))
         arrow.draw(win)
+        """
       prevLoc = loc
     prevLoc = None
 
