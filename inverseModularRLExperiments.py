@@ -130,16 +130,16 @@ def printDiscounter(sln, filename, weights = []):
   
   stepSize = 2
   data = []
-  for i in range(0, 11, stepSize):
+  for i in range(0, 9, stepSize):
     row = []
-    for j in range(0, 11, stepSize):
+    for j in range(0, 9, stepSize):
       row.append(-sln.obj(weights + [0.1 * i, 0.1 * j, 0.8]))
     data.append(row)
 
   data = np.ma.array(data)
   plt.imshow(data, interpolation='none')
-  plt.xticks(range(6), np.arange(0,1.1,0.1 * stepSize))
-  plt.yticks(range(6), np.arange(0,1.1,0.1 * stepSize))
+  plt.xticks(range(5), np.arange(0,0.9,0.1 * stepSize))
+  plt.yticks(range(5), np.arange(0,0.9,0.1 * stepSize))
   plt.xlabel('Obstacle Module Discounter');
   plt.ylabel('Target Module Discounter');
 
@@ -150,7 +150,7 @@ def printDiscounter(sln, filename, weights = []):
   
   plt.close()
 
-def policyCompare(samples, qFuncs, w):
+def policyCompare(samples, qFuncs, w, d = None):
   """
   Given samples and weights, compare policies of human and our agent.
   #FIXME discounter not provided!
@@ -171,6 +171,7 @@ def policyCompare(samples, qFuncs, w):
                 'actionFn': actionFn}
   a = modularAgents.ModularAgent(**qLearnOpts)
   a.setWeights(w)
+  if d != None: a.setDiscounters(d)
   a.setQFuncs(qFuncs)
 
   # go through samples
@@ -231,29 +232,26 @@ def humanWorldExperimentQPotential(filenames, rang):
   x = sln.solve()
   w = x[:n]
   d = x[n:]
-  [agreedPoliciesRatio, posteriorProb] = policyCompare(samples, qFuncs, w)
+  [agreedPoliciesRatio, posteriorProb] = policyCompare(samples, qFuncs, w, d)
 
   print rang, ": weights are", w
   print rang, ": discounters are", d
   print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
   print rang, ": log of probability of observing the samples ", posteriorProb 
 
-  """
-  # debug weight disabled. computational expensive?
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png', d)
   print rang, ": weight heatmaps done."
   if sln.learnDiscounter:
     printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png', w)
     print rang, ": discounter heatmaps done."
-  """
   print rang, ": OK."
 
   return [w + d, None] 
 
 if __name__ == '__main__':
-  # set experiment here
   import config
   
+  # set experiment here
   if config.DISCRETE_Q:
     experiment = humanWorldExperimentDiscrete
   else:
@@ -267,7 +265,8 @@ if __name__ == '__main__':
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
   trialTaskRange = [range(0, 2), range(8, 10), range(16, 18), range(24, 26)]
-  
+
+  #experiment(subjFiles, [0]) #TEST
   #results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in trialTaskRange] # TEST
   results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 

@@ -16,16 +16,16 @@ class ModularAgent(ApproximateQAgent):
   def __init__(self, **args):
     ApproximateQAgent.__init__(self, **args)
 
-    # assume the weights are not dynamically learned, intialize them here.
+    # weights and discounters should be set later after learning
     self.weights = [0, 0, 1]
-    self.learningWeights = False
+    self.discounters = [0.6] * 3
  
   def getQValue(self, state, action):
     """
     Get Q value by consulting each module
     """
     # sum over q values from each sub mdp
-    return sum([self.qFuncs[i](state, action) * self.weights[i] for i in xrange(self.nModules)])
+    return sum([self.qFuncs[i](state, action, self.discounters) * self.weights[i] for i in xrange(self.nModules)])
 
   def getSubQValues(self, state, action):
     return {'sum': self.getQValue(state, action),\
@@ -50,24 +50,19 @@ class ModularAgent(ApproximateQAgent):
     self.nModules = len(self.qFuncs)
 
   def setWeights(self, weights):
-    """
-    If this is set, then the agent simply follows the weights.
-    """
-    self.learningWeights = False
     self.weights = weights
+  
+  def setDiscounters(self, discounters):
+    self.discounters = discounters
 
   def getWeights(self):
-    """
-    Get weights.
-    """
     return self.weights
   
   def update(self, state, action, nextState, reward):
-    if not self.learningWeights:
-      pass
-    else:
-      # TODO
-      raise Exception("calling unimplemented method: update for learning weight.")
+    """
+    there is no learning here
+    """
+    pass
 
   def getSignificance(self, state):
     """

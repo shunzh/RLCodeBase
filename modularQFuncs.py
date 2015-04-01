@@ -93,8 +93,8 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3, twoObjects = config.TWO_O
 
   if twoObjects:
     return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]) + qTarget(s[1], a, d[0]), # closest target(s)
-            lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]) + qObstacle(s[3], a, d[0]), # closest obstacle(s)
-            lambda s, a, d = defaultD: qSegment(s[4], a, d[2]) + qSegment(s[5], a, d[0])] # next seg point
+            lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]) + qObstacle(s[3], a, d[1]), # closest obstacle(s)
+            lambda s, a, d = defaultD: qSegment(s[4], a, d[2]) + qSegment(s[5], a, d[2])] # next seg point
             #lambda s, a, d = defaultD: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
   else:
     return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]), # closest target(s)

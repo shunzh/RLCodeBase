@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python inverseModularRLExperiments.py
+#python inverseModularRLExperiments.py
 mv values.pkl learnedValues
 
 # clear previous recorded stats

@@ -89,10 +89,11 @@ def saveValues(values, filename):
   pickle.dump(values, output)
   output.close()
   
+nModules = 3
+
 def main(): 
   opts = parseOptions()
   possibleCategories = ['targs', 'obsts', 'segs']
-  nModules = 3
 
   ###########################
   # GET THE ENVIRONMENT

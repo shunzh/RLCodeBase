@@ -109,7 +109,8 @@ class InverseModularRL:
     bnds = tuple((0, 1000) for _ in range(self.n))
     if self.learnDiscounter:
       # range of discounters
-      bnds += tuple((0.1, 0.9) for _ in range(self.n))
+      margin = 0.15
+      bnds += tuple((0 + margin, 1 - margin) for _ in range(self.n))
       start_pos += [0.5] * self.n
 
     result = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds)
