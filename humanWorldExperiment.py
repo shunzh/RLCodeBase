@@ -164,7 +164,7 @@ def main():
     a.setWeights('learnedValues/humanAgent' + opts.category + 'Weights.pkl')
   elif 'Modular' in opts.agent:
     # for modular agents
-    import modularAgents, modularQFuncs
+    import modularAgents, modularQFuncs, config
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -173,16 +173,14 @@ def main():
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
 
-    if opts.agent == 'ModularDiscrete':
+    if config.DISCRETE_Q:
       # way 1: using q tables
       a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
       a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
-    elif opts.agent == 'Modular':
+    else:
       # way 2: using q functions
       a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
       a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(discounters))
-    else:
-      raise Exception("Unknown modular agent.")
   elif opts.agent == 'random':
     import baselineAgents
     a = baselineAgents.RandomAgent()

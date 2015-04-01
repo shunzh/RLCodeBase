@@ -10,6 +10,7 @@ from humanWorld import HumanWorld
 import warnings
 from game import Actions
 import math
+import config
 
 """
 Human world functions
@@ -48,7 +49,7 @@ def getHumanWorldDiscreteFuncs():
           lambda s, a, d = None: qObstacle(s[2], a), # closest obstacles
           lambda s, a, d = None: qSegment(s[4], a)]
 
-def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
+def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3, twoObjects = config.TWO_OBJECTS):
   """
   Rather learned from samples, we define the potential functions (a value function) based on reward.
   Q functions here just reflect the potential functions.
@@ -58,24 +59,25 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
     defaultD: default discounters.
               It's true that discounter should not be part of the agent.
               We may compute the q value for different discounters. So we need a discounter parameter.
+    twoObjects: look at two closest objects.
   """
   transition = HumanWorld.transitionSimulate
 
   def vTarget(s, discounter):
     dist, orient = s
-    return 1 * np.power(discounter, dist)
+    return 1 * discounter ** dist
   
   def vObstacle(s, discounter):
     dist, orient = s
-    return -1 * np.power(discounter, dist)
+    return -1 * discounter ** dist
 
   def vSegment(s, discounter):
     dist, orient = s
-    return 1 * np.power(discounter, dist)
+    return 1 * discounter ** dist
   
   def vPath(s, curS, discounter):
     dist, orient = featureExtractors.getProjectionToSegmentLocalView(s, curS)
-    return 1 * np.power(discounter, dist)
+    return 1 * discounter ** dist
 
   def qTarget(state, action, discounter):
     return vTarget(transition(state, action), discounter)
@@ -89,10 +91,16 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3):
   def qPath(state, currentState, action, discounter):
     return vPath(transition(state, action), transition(currentState, action), discounter)
 
-  return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]), # closest target(s)
-          lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]), # closest obstacle(s)
-          lambda s, a, d = defaultD: qSegment(s[4], a, d[2])] # next seg point
-          #lambda s, a, d = defaultD: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
+  if twoObjects:
+    return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]) + qTarget(s[1], a, d[0]), # closest target(s)
+            lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]) + qObstacle(s[3], a, d[0]), # closest obstacle(s)
+            lambda s, a, d = defaultD: qSegment(s[4], a, d[2]) + qSegment(s[5], a, d[0])] # next seg point
+            #lambda s, a, d = defaultD: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
+  else:
+    return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]), # closest target(s)
+            lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]), # closest obstacle(s)
+            lambda s, a, d = defaultD: qSegment(s[4], a, d[2])] # next seg point
+            #lambda s, a, d = defaultD: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
 
 def getHumanWorldContinuousFuncs():
   """

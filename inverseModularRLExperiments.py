@@ -252,13 +252,17 @@ def humanWorldExperimentQPotential(filenames, rang):
 
 if __name__ == '__main__':
   # set experiment here
-  experiment = humanWorldExperimentDiscrete
-  #experiment = humanWorldExperimentQPotential
+  import config
+  
+  if config.DISCRETE_Q:
+    experiment = humanWorldExperimentDiscrete
+  else:
+    experiment = humanWorldExperimentQPotential
   
   from multiprocessing import Pool
   # change the number of processors used here.
   # use 1 for sequential execution.
-  pool = Pool(processes=1)
+  pool = Pool(processes=4)
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]

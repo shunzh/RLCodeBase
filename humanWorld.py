@@ -27,7 +27,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   # static attributes
   # FIXME overfit
   step = 0.3
-  turnAngle = 30.0 / 180 * np.pi
+  turnAngle = 15.0 / 180 * np.pi
   turnDist = step * 0.25
   walkDist = step * 1
 

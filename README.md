@@ -41,6 +41,7 @@ Experiments are written in shell scripts, which run some python files
 sequentially.
 
 Related files:
+- [config.py](config.py) Some global configurations.
 - [moduleTraining.sh](moduleTraining.sh) Code to train target, obstacle, path
   modules using q learning.
 - [humanModularIRLExperiment.sh](humanModularIRLExperiment.sh) Please see inline
