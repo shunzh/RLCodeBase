@@ -9,18 +9,13 @@ reward:
 q
 - fine-grained q table - try it
 - potential based
-  - decompose path module to be two seperate ones? - go for it - done
 
 sanity check
 - weights and discounters, forward then backward - TODO
-- agent orients - URGENT - done
 
+==============
 - consider all the module instances - makes sense, go for it
-- big target at the final dest - ??
-- reflex agent as baseline - OK
-- 15 degrees - OK (enable/disable)
-
-TODO
-- multiple objects
 - evaluation
-  - probability of observing human data given model.
+  - probability of observing human data given model - done
+  - Ng's IRL
+  - baselines: reflex, round-robin - done

@@ -109,7 +109,7 @@ class InverseModularRL:
     bnds = tuple((0, 1000) for _ in range(self.n))
     if self.learnDiscounter:
       # range of discounters
-      margin = 0.15
+      margin = 0.1
       bnds += tuple((0 + margin, 1 - margin) for _ in range(self.n))
       start_pos += [0.5] * self.n
 
