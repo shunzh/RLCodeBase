@@ -41,7 +41,9 @@ Experiments are written in shell scripts, which run some python files
 sequentially.
 
 Related files:
-- [humanModularIRLExperiment.sh](humanModularIRLExperiment.sh). Please see inline
+- [moduleTraining.sh](moduleTraining.sh) Code to train target, obstacle, path
+  modules using q learning.
+- [humanModularIRLExperiment.sh](humanModularIRLExperiment.sh) Please see inline
   comments for details. To run this, you need to have human data {miniRes25.mat,
   subj[25-28].parsed.mat} in your checked-out folder, which are not included in
   this repo.

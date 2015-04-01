@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# run module IRL first (I usually run separately)
-#python inverseModularRLExperiments.py
-#mv values.pkl learnedValues
+python inverseModularRLExperiments.py
+mv values.pkl learnedValues
 
 # clear previous recorded stats
 rm stats
