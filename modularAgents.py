@@ -22,25 +22,17 @@ class ModularAgent(ApproximateQAgent):
  
   def getQValue(self, state, action):
     """
-    Get Q value by consulting each module
+    Get Q value by consulting each module.
     """
     # sum over q values from each sub mdp
     return sum([self.qFuncs[i](state, action, self.discounters) * self.weights[i] for i in xrange(self.nModules)])
 
   def getSubQValues(self, state, action):
+    """
+    Return decomposed Q value for debugging.
+    """
     return {'sum': self.getQValue(state, action),\
             'subs': [self.qFuncs[i](state, action) for i in xrange(self.nModules)]}
-
-  def getSoftmaxQValue(self, state):
-    """
-    return a function:
-      arg: action
-      return: the probability of choosing such action
-              e^Q(s, a) / sum(e^Q(s, b) for all b)
-    """
-    actions = self.getLegalActions(state)
-    exps = {action: math.exp(self.getQValue(state, action)) for action in actions}
-    return lambda action: exps[action] / sum(exps.values())
 
   def setQFuncs(self, qFuncs):
     """

@@ -15,6 +15,7 @@ sanity check
 
 ==============
 - consider all the module instances - makes sense, go for it
+- check path constraint module again
 - evaluation
   - probability of observing human data given model - done
   - Ng's IRL

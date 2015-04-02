@@ -6,6 +6,7 @@ import modularAgents
 import modularQFuncs
 import humanInfoParser
 import continuousWorldDomains
+import baselineAgents
 
 def checkPolicyConsistency(states, a, b):
   """
@@ -150,17 +151,15 @@ def printDiscounter(sln, filename, weights = []):
   
   plt.close()
 
-def policyCompare(samples, qFuncs, w, d = None):
+def evaluateAssumption(samples, qFuncs, w, d = None):
   """
-  Given samples and weights, compare policies of human and our agent.
-  #FIXME discounter not provided!
+  Given samples and weights, compare policies of human and our agents.
   Args:
     samples: list of (state, action)
-    w: weight learned
+    w: learned weight
+    d: learned discounters
   Return:
-    proportion of agreed policies
-    log of probability of observing the samples
-      (use logarithm of it, otherwise easily underflow)
+    A dictionary {agent: {criteria: value}}
   """
   # define agent
   import humanWorld
@@ -169,24 +168,34 @@ def policyCompare(samples, qFuncs, w, d = None):
                 'alpha': 0.5,
                 'epsilon': 0,
                 'actionFn': actionFn}
-  a = modularAgents.ModularAgent(**qLearnOpts)
-  a.setWeights(w)
-  if d != None: a.setDiscounters(d)
-  a.setQFuncs(qFuncs)
 
-  # go through samples
-  agreedPolicies = 0
-  posteriorProb = 0
-  for state, action in samples:
-    # add 1 if policy agreed by human subjects
-    agreedPolicies += a.getPolicy(state) == action 
-    
-    # add log of the probability of choosing such action by the model
-    actionSelectProb = a.getSoftmaxQValue(state) 
-    posteriorProb += np.log(actionSelectProb(action))
-  propAgreedPolicies = 1.0 * agreedPolicies / len(samples)
+  def evaluate(agentType):
+    """
+    Arg:
+      class of agent.
+    Return:
+      dict of evaluation results this agent.
+      {key: value}
+    """
+    agent = agentType(**qLearnOpts)
+    agent.setWeights(w)
+    if d != None: agent.setDiscounters(d)
+    agent.setQFuncs(qFuncs)
+
+    # go through samples
+    agreedPolicies = 0
+    posteriorProb = 0
+    for state, action in samples:
+      # add 1 if policy agreed by human subjects
+      agreedPolicies += agent.getPolicy(state) == action 
+      # add log of the probability of choosing such action by the model
+      posteriorProb += np.log(agent.getPolicyProbability(state, action))
+    propAgreedPolicies = 1.0 * agreedPolicies / len(samples)
+    return {'propAgreedPolicies': propAgreedPolicies,\
+            'posteriorProb': posteriorProb}
   
-  return [propAgreedPolicies, posteriorProb]
+  candidates = [modularAgents.ModularAgent, baselineAgents.ReflexAgent, baselineAgents.RoundRobinAgent]
+  return {candidate.__name__: evaluate(candidate) for candidate in candidates}
 
 def humanWorldExperimentDiscrete(filenames, rang):
   """
@@ -204,17 +213,16 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   x = sln.solve()
   w = x[:n]
-  [agreedPoliciesRatio, posteriorProb] = policyCompare(samples, qFuncs, w)
+  evaluation = evaluateAssumption(samples, qFuncs, w)
 
   print rang, ": weights are", w
-  print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
+  print rang, ": evaluation", evaluation 
 
-  # debug weight disabled. computational expensive?
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
   print rang, ": weight heatmaps done."
   print rang, ": OK."
 
-  return [w, agreedPoliciesRatio] 
+  return [w, evaluation] 
 
 def humanWorldExperimentQPotential(filenames, rang):
   """
@@ -232,12 +240,11 @@ def humanWorldExperimentQPotential(filenames, rang):
   x = sln.solve()
   w = x[:n]
   d = x[n:]
-  [agreedPoliciesRatio, posteriorProb] = policyCompare(samples, qFuncs, w, d)
+  evaluation = evaluateAssumption(samples, qFuncs, w, d)
 
   print rang, ": weights are", w
   print rang, ": discounters are", d
-  print rang, ": proportion of agreed policies ", agreedPoliciesRatio 
-  print rang, ": log of probability of observing the samples ", posteriorProb 
+  print rang, ": evaluation ", evaluation 
 
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png', d)
   print rang, ": weight heatmaps done."
@@ -266,18 +273,16 @@ if __name__ == '__main__':
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
   trialTaskRange = [range(0, 2), range(8, 10), range(16, 18), range(24, 26)]
 
-  #experiment(subjFiles, [0]) #TEST
-  #results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in trialTaskRange] # TEST
+  if config.DEBUG:
+    experiment(subjFiles, [0])
+    exit(0)
+    
   results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
   weights = [r.get()[0] for r in results]
-  agreedPoliciesRatios = [r.get()[1] for r in results]
+  evaluations = [r.get()[1] for r in results]
 
   output = open('values.pkl', 'wb')
   pickle.dump(weights, output)
-  output.close()
-
-  output = open('agreedPolicies.pkl', 'wb')
-  pickle.dump(agreedPoliciesRatios, output)
   output.close()
