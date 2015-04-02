@@ -115,12 +115,12 @@ def plotHumanWorldQFuncs(values, category):
     data = []
     for i in reversed(range(1, 11)): # 1 ~ 10. so that 1 appears at bottom
       row = []
-      for j in range(-4, 5): # -4 ~ 4.
+      for j in range(-6, 7): # -6 ~ 6.
         row.append(values[(i, j), act])
       data.append(row)
 
     plt.imshow(data, interpolation='none')
-    plt.xticks(range(9), ['-135', '-90', '-45', '-15', '0', '15', '45', '90', '135'])
+    plt.xticks(range(13), ['-135', '-90', '-60', '-30', '-20', '-10', '0', '10', '20', '30', '60', '90', '135'])
     plt.yticks(range(10), ['>10', '10', '5', '4', '3', '2.5', '2', '1.5', '1', '.5'])
     plt.xlabel('Angle');
     plt.ylabel('Distance (x steps)');

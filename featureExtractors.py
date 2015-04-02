@@ -248,16 +248,20 @@ def mapStateToBin((dist, angle), step = 0.3):
   else:
     distBin = 10
 
-  if abs(angle) < 15.0 / 180 * np.pi:
+  if abs(angle) < 10.0 / 180 * np.pi:
     angleBin = 0
-  elif abs(angle) < 45.0 / 180 * np.pi:
+  elif abs(angle) < 20.0 / 180 * np.pi:
     angleBin = int(1 * np.sign(angle))
-  elif abs(angle) < 90.0 / 180 * np.pi:
+  elif abs(angle) < 30.0 / 180 * np.pi:
     angleBin = int(2 * np.sign(angle))
-  elif abs(angle) < 135.0 / 180 * np.pi:
+  elif abs(angle) < 60.0 / 180 * np.pi:
     angleBin = int(3 * np.sign(angle))
-  else:
+  elif abs(angle) < 90.0 / 180 * np.pi:
     angleBin = int(4 * np.sign(angle))
+  elif abs(angle) < 135.0 / 180 * np.pi:
+    angleBin = int(5 * np.sign(angle))
+  else:
+    angleBin = int(6 * np.sign(angle))
 
   return (distBin, angleBin)
 

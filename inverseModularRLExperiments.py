@@ -213,7 +213,8 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   x = sln.solve()
   w = x[:n]
-  evaluation = evaluateAssumption(samples, qFuncs, w)
+  # TODO test evaluation
+  evaluation = None #evaluateAssumption(samples, qFuncs, w)
 
   print rang, ": weights are", w
   print rang, ": evaluation", evaluation 
@@ -267,7 +268,7 @@ if __name__ == '__main__':
   from multiprocessing import Pool
   # change the number of processors used here.
   # use 1 for sequential execution.
-  pool = Pool(processes=4)
+  pool = Pool(processes=1)
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
