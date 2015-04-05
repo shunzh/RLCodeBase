@@ -68,8 +68,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       if dist < self.radius:
         ret.append(('obsts', obstIdx))
 
-    # close to the next segment? remove the current one
     sLocs = self.objs['segs']
+    # close to the next segment then remove the current one
     if len(sLocs) > 1:
       # when get closer to the next one
       distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[0]))
@@ -81,6 +81,12 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       distSeg = numpy.linalg.norm(np.subtract(l, sLocs[0]))
       if distSeg < self.radius * 2: # larger buffer
         ret.append(('segs', 0))
+    """
+    # see it as waypoint collection
+    distSeg = numpy.linalg.norm(np.subtract(l, sLocs[0]))
+    if distSeg < self.radius * 2: # larger buffer
+      ret.append(('segs', 0))
+    """
 
     return ret
 
@@ -159,11 +165,9 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       nextStepDist, nextStepAngle = featureExtractors.getDistAngle(nextLoc, nextSeg, orient)
       [pathIntercept, pathDist] = featureExtractors.getProjectionToSegment(nextLoc, self.objs['segs'])
 
+      # discounted reward for shrinking distance and not far from the path
+      # proposed by Matt
       if nextStepDist < dist and pathDist < 1:
-        # reward for shrinking distance
-        # give unit reward
-        #reward += self.rewards['segs']
-        # or give discounted reward
         reward += self.rewards['segs'] * (1 - pathDist ** 2)
 
     return reward or self.livingReward

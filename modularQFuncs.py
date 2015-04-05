@@ -65,19 +65,19 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3, twoObjects = config.TWO_O
 
   def vTarget(s, discounter):
     dist, orient = s
-    return 1 * discounter ** dist
+    return 1 * np.power(discounter, dist)
   
   def vObstacle(s, discounter):
     dist, orient = s
-    return -1 * discounter ** dist
+    return -1 * np.power(discounter, dist)
 
   def vSegment(s, discounter):
     dist, orient = s
-    return 1 * discounter ** dist
+    return 1 * np.power(discounter, dist)
   
   def vPath(s, curS, discounter):
     dist, orient = featureExtractors.getProjectionToSegmentLocalView(s, curS)
-    return 1 * discounter ** dist
+    return 1 * np.power(discounter, dist)
 
   def qTarget(state, action, discounter):
     return vTarget(transition(state, action), discounter)

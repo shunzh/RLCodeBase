@@ -3,6 +3,7 @@ import optparse
 import featureExtractors
 import modularQFuncs
 import random
+import baselineAgents
 
 def getUserAction(state, actionFunction):
   """
@@ -209,19 +210,7 @@ if __name__ == '__main__':
     # # No reason to use the random agent without episodes
     if opts.episodes == 0:
       opts.episodes = 10
-    class RandomAgent:
-      def getAction(self, state):
-        return random.choice(mdp.getPossibleActions(state))
-      def getValue(self, state):
-        return 0.0
-      def getQValue(self, state, action):
-        return 0.0
-      def getPolicy(self, state):
-        "NOTE: 'random' is a special policy value; don't use it in your code."
-        return 'random'
-      def update(self, state, action, nextState, reward):
-        pass      
-    a = RandomAgent()
+    a = baselineAgents.RandomAgent(mdp)
   else:
     if not opts.manual: raise 'Unknown agent type: '+opts.agent
     

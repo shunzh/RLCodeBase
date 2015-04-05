@@ -100,6 +100,7 @@ def main():
   ###########################
 
   if 'vr' in opts.grid:
+    # in the format of vr*
     vrDomainId = int(opts.grid[2:])
     init = lambda: continuousWorldDomains.loadFromMat('miniRes25.mat', vrDomainId)
 
@@ -177,12 +178,18 @@ def main():
 
     if config.DISCRETE_Q:
       # way 1: using q tables
-      a.setStateFilter(featureExtractors.getHumanDiscreteState(mdp))
-      a.setQFuncs(modularQFuncs.getHumanWorldDiscreteFuncs())
+      qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
+      stateFilter = featureExtractors.getHumanDiscreteState(mdp)
     else:
       # way 2: using q functions
-      a.setStateFilter(featureExtractors.getHumanContinuousState(mdp))
-      a.setQFuncs(modularQFuncs.getHumanWorldQPotentialFuncs(discounters))
+      qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs(discounters)
+      stateFilter = featureExtractors.getHumanContinuousState(mdp)
+
+    if len(qFuncs) != nModules:
+      raise Exception('the number of q functions' + len(qFuncs) + 'does not match the number of modules' + nModules +'!')
+
+    a.setStateFilter(stateFilter)
+    a.setQFuncs(qFuncs)
   elif opts.agent == 'random':
     import baselineAgents
     a = baselineAgents.RandomAgent()

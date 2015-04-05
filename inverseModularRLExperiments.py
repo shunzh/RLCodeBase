@@ -7,6 +7,7 @@ import modularQFuncs
 import humanInfoParser
 import continuousWorldDomains
 import baselineAgents
+import humanWorld
 
 def checkPolicyConsistency(states, a, b):
   """
@@ -194,7 +195,7 @@ def evaluateAssumption(samples, qFuncs, w, d = None):
     return {'propAgreedPolicies': propAgreedPolicies,\
             'posteriorProb': posteriorProb}
   
-  candidates = [modularAgents.ModularAgent, baselineAgents.ReflexAgent, baselineAgents.RoundRobinAgent]
+  candidates = [modularAgents.ModularAgent, baselineAgents.RandomAgent, baselineAgents.ReflexAgent]
   return {candidate.__name__: evaluate(candidate) for candidate in candidates}
 
 def humanWorldExperimentDiscrete(filenames, rang):
@@ -209,12 +210,12 @@ def humanWorldExperimentDiscrete(filenames, rang):
   sln = InverseModularRL(qFuncs, learnDiscounter = False)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
   samples = discretize(samples)
-  sln.setSamples(samples)
+  sln.setSamples(samples, humanWorld.HumanWorld.actions)
 
   x = sln.solve()
   w = x[:n]
   # TODO test evaluation
-  evaluation = None #evaluateAssumption(samples, qFuncs, w)
+  evaluation = evaluateAssumption(samples, qFuncs, w)
 
   print rang, ": weights are", w
   print rang, ": evaluation", evaluation 
@@ -236,7 +237,7 @@ def humanWorldExperimentQPotential(filenames, rang):
 
   sln = InverseModularRL(qFuncs)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
-  sln.setSamples(samples)
+  sln.setSamples(samples, humanWorld.HumanWorld.actions)
 
   x = sln.solve()
   w = x[:n]

@@ -37,15 +37,14 @@ class InverseModularRL:
     self.getSamples = lambda : [(state, agent.getPolicy(state)) for state in states]
     self.getActions = lambda s : mdp.getPossibleActions(s)
 
-  def setSamples(self, samples):
+  def setSamples(self, samples, actions):
     """
     Read from subj*.parsed.mat file.
 
     Set self.getSamples and self.getActions here.
     """
     self.getSamples = lambda : samples
-    # FIXME overfit
-    self.getActions = lambda s : ['L', 'R', 'G']
+    self.getActions = lambda s : actions
 
   def printSamples(self):
     samples = self.getSamples()

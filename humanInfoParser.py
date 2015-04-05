@@ -6,6 +6,7 @@ import numpy as np
 import continuousWorldDomains
 import continuousWorldPlot
 import featureExtractors
+import config
 
 def plotHuman(plotting, win, subjIdSet, domainId):
   dim = plotting.dim
@@ -27,16 +28,15 @@ def plotHuman(plotting, win, subjIdSet, domainId):
         line.setFill(color_rgb(0, 0, 0))
         line.draw(win)
         
-        """
-        # a tiny line indicates orient
-        arrowLength = 15
-        dx = arrowLength * np.cos(orient)
-        dy = arrowLength * np.sin(orient)
-        arrow = Line(Point(loc), Point(loc[0] + dx, loc[1] + dy))
-        arrow.setWidth(2)
-        arrow.setFill(color_rgb(100, 100, 100))
-        arrow.draw(win)
-        """
+        if config.DEBUG:
+          # a tiny line indicates orient
+          arrowLength = 15
+          dx = arrowLength * np.cos(orient)
+          dy = arrowLength * np.sin(orient)
+          arrow = Line(Point(loc), Point(loc[0] + dx, loc[1] + dy))
+          arrow.setWidth(2)
+          arrow.setFill(color_rgb(100, 100, 100))
+          arrow.draw(win)
       prevLoc = loc
     prevLoc = None
 
@@ -68,8 +68,13 @@ def getHumanStatesActions(filenames, idxSet):
       segDist = mat['pRes'][idx].pathDist
       segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
       
-      actions = mat['pRes'][idx].action
+      # figure out its action
+      moveAngle = mat['pRes'][idx].agentMoveAngle / 180.0 * np.pi
 
+      # FIXME
+      # here are the code to get the SECOND waypoint from the source files.
+      # they are not included in the parsed files, so they have to be obtained from the maps.
+      
       # the current segment needs to be read from the domain files
       domain = continuousWorldDomains.loadFromMat("miniRes25.mat", idx)
       # cut the head and tail samples
@@ -98,7 +103,8 @@ def getHumanStatesActions(filenames, idxSet):
                  (obstDist2[i], obstAngle2[i]),
                  (segDist[i], segAngle[i]),
                  (curSegDistInstance, curSegAngleInstance))
-        action = actions[i]
+        action = humanWorld.HumanWorld.angleToAction(moveAngle[i])
+        
         samples.append((state, action))
         #print (state, action)
         #print featureExtractors.getProjectionToSegmentLocalView(state[4], state[5])

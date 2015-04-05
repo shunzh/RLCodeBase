@@ -1,23 +1,13 @@
 import random
 from modularAgents import ModularAgent
-from qlearningAgents import QLearningAgent
 
-class RandomAgent(QLearningAgent):
-  def __init__(self, mdp):
-    self.mdp = mdp
-
+class RandomAgent(ModularAgent):
   def getValue(self, state):
     return 0.0
 
   def getQValue(self, state, action):
     return 0.0
   
-  def getPolicy(self, state):
-    return random.choice(self.mdp.getPossibleActions(state))
-
-  def update(self, state, action, nextState, reward):
-    pass      
-
 
 class ReflexAgent(ModularAgent):
   """
@@ -27,33 +17,15 @@ class ReflexAgent(ModularAgent):
   """
   def getQValue(self, state, action):
     """
-    Override so that max q value is returned.
+    Override so that q value with the largest magnitude is returned.
     Policy hereby reflects the module with the largest q value.
     """
-    return max([self.qFuncs[i](state, action) for i in xrange(self.nModules)])
-
-
-class RoundRobinAgent(ModularAgent):
-  """
-  Same setting as modular agent.
-  Selecting module in a Round-Robin way. 
-  """
-  def __init__(self, **args):
-    ModularAgent.__init__(self, **args)
-    
-    # policy is time-dependent, need to record the time
-    self.timer = 0
-    # how long we keep one module on
-    self.timePerModule = 5
-  
-  def getPolicy(self, state):
-    moduleId = (self.timer / self.timePerModule) % self.nModules
-    actions = self.getLegalActions(state)
-
-    q_value_func = lambda action: self.getSubQValues(state, action)['subs'][moduleId]
-    maxQValue = max([q_value_func(action) for action in actions])
-    optActions = [action for action in actions if q_value_func(action) == maxQValue]
-    return random.choice(optActions)
-  
-    # update the timer here
-    self.timer += 1
+    maxMagnitude = 0
+    maxIdx = -1
+    for i in xrange(self.nModules):
+      magnitude = abs(self.qFuncs[i](state, action))
+      if magnitude > maxMagnitude:
+        maxMagnitude = magnitude
+        maxIdx = i
+        
+    return self.qFuncs[maxIdx](state, action)
