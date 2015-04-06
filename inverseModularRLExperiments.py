@@ -257,6 +257,11 @@ def humanWorldExperimentQPotential(filenames, rang):
 
   return [w + d, None] 
 
+def saveToFile(filename, obj):
+  output = open(filename, 'wb')
+  pickle.dump(obj, output)
+  output.close()
+
 if __name__ == '__main__':
   import config
   
@@ -282,9 +287,8 @@ if __name__ == '__main__':
   results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 
   import pickle
-  weights = [r.get()[0] for r in results]
+  values = [r.get()[0] for r in results]
   evaluations = [r.get()[1] for r in results]
 
-  output = open('values.pkl', 'wb')
-  pickle.dump(weights, output)
-  output.close()
+  saveToFile('values.pkl', values)
+  saveToFile('evaluation.pkl', evaluations)

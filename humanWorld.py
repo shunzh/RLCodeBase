@@ -20,14 +20,16 @@ class HumanWorld(continuousWorld.ContinuousWorld):
        pi/2
 
   State: (distance, orient) for targ, obst, seg, respectively
-  Action: SL, SR, L, R, G
+  Action: L, R, G
   Transition: same as continuousWorld but 
   Reward: same as continuousWorld.
   """
   # static attributes
   step = 0.3
-  turnSlightAngle = 15.0 / 180 * np.pi
-  turnAngle = 45.0 / 180 * np.pi
+  # angles smaller than turnAngleThreshold classified as G
+  turnAngleThreshold = 15.0 / 180 * np.pi
+  # angles for turning actions
+  turnAngle = 30.0 / 180 * np.pi
   turnDist = step * 0.25
   walkDist = step * 1
 
@@ -36,7 +38,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
 
     self.atBorder = False
 
-  actions = ('SL', 'SR', 'L', 'R', 'G')
+  actions = ('L', 'R', 'G')
     
   def getPossibleActions(self, state):
     return HumanWorld.actions
@@ -63,12 +65,6 @@ class HumanWorld(continuousWorld.ContinuousWorld):
       d = self.turnDist
     elif action == 'R':
       newOrient = orient + self.turnAngle
-      d = self.turnDist
-    elif action == 'SL':
-      newOrient = orient - self.turnSlightAngle
-      d = self.turnDist
-    elif action == 'SR':
-      newOrient = orient + self.turnSlightAngle
       d = self.turnDist
     elif action == 'G':
       newOrient = orient
@@ -97,14 +93,10 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     """
     from move angle to action
     """
-    if moveAngle < -HumanWorld.turnAngle:
+    if moveAngle < -HumanWorld.turnAngleThreshold:
       action = 'L'
-    elif moveAngle < -HumanWorld.turnSlightAngle:
-      action = 'SL'
-    elif moveAngle < HumanWorld.turnSlightAngle:
+    elif moveAngle < HumanWorld.turnAngleThreshold:
       action = 'G'
-    elif moveAngle < HumanWorld.turnAngle:
-      action = 'SR'
     else:
       action = 'R'
     
@@ -127,7 +119,6 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     """
     # use human world info for simulation
     turnAngle = HumanWorld.turnAngle
-    turnSlightAngle = HumanWorld.turnSlightAngle
     turnDist = HumanWorld.turnDist
     walkDist = HumanWorld.walkDist
 
@@ -144,10 +135,6 @@ class HumanWorld(continuousWorld.ContinuousWorld):
         orient = -turnAngle
       elif a == 'R':
         orient = turnAngle
-      elif a == 'SL':
-        orient = -turnSlightAngle
-      elif a == 'SR':
-        orient = turnSlightAngle
 
       aX = turnDist * np.cos(orient) 
       aY = turnDist * np.sin(orient) 

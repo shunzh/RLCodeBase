@@ -70,32 +70,15 @@ def getHumanStatesActions(filenames, idxSet):
       
       # figure out its action
       moveAngle = mat['pRes'][idx].agentMoveAngle / 180.0 * np.pi
+      actions = mat['pRes'][idx].action
 
-      # FIXME
-      # here are the code to get the SECOND waypoint from the source files.
-      # they are not included in the parsed files, so they have to be obtained from the maps.
-      
-      # the current segment needs to be read from the domain files
-      domain = continuousWorldDomains.loadFromMat("miniRes25.mat", idx)
       # cut the head and tail samples
       for i in range(5, len(targDist) - 15):
-        # find the path seg in the mat file
-        segList = domain['objs']['segs']
-        #print 'agent', (x[i], y[i]), orient[i]
-        #print 'parsed seg', segDist[i], segAngle[i]
-        for segIdx in xrange(len(segList)):
-          dist, angle = featureExtractors.getDistAngle((x[i], y[i]), segList[segIdx], orient[i])
-          # right-ward is negative
-          angle = -angle
-          #print 'seg', segList[segIdx], 'dist', dist, 'angle', angle
-          if abs(segDist[i] - dist) < 0.001 and abs(segAngle[i] - angle) < 0.001:
-            # then get the one before it or after it
-            curSegDistInstance, curSegAngleInstance = featureExtractors.getDistAngle((x[i], y[i]), segList[segIdx - 1], orient[i])
-            curSegAngleInstance = -curSegAngleInstance
-            break
-
-        if not 'curSegDistInstance' in locals():
-          raise Exception('Fail to find the current segment from mat file')
+        if config.TWO_OBJECTS:
+          (curSegDistInstance, curSegAngleInstance) = continuousWorldDomains.getPreviousWaypoint\
+                                                      (idx, x[i], y[i], orient[i], segDist[i], segAngle[i])
+        else:
+          curSegAngleInstance = curSegDistInstance = None
 
         state = ((targDist[i], targAngle[i]),
                  (targDist2[i], targAngle2[i]),
@@ -103,12 +86,9 @@ def getHumanStatesActions(filenames, idxSet):
                  (obstDist2[i], obstAngle2[i]),
                  (segDist[i], segAngle[i]),
                  (curSegDistInstance, curSegAngleInstance))
-        action = humanWorld.HumanWorld.angleToAction(moveAngle[i])
+        action = actions[i]
         
         samples.append((state, action))
-        #print (state, action)
-        #print featureExtractors.getProjectionToSegmentLocalView(state[4], state[5])
-        #raw_input("wait")
 
   return samples
 

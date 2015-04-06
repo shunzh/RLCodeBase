@@ -10,6 +10,7 @@ import os
 from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
+import numpy as np
 
 class QLearningAgent(ReinforcementAgent):
   """
@@ -100,7 +101,7 @@ class QLearningAgent(ReinforcementAgent):
             e^Q(s, a) / sum(e^Q(s, b) for all b)
     """
     actions = self.getLegalActions(state)
-    exps = {action: math.exp(self.getQValue(state, action)) for action in actions}
+    exps = {action: np.exp(self.getQValue(state, action)) for action in actions}
     return exps[action] / sum(exps.values())
 
   def getAction(self, state):

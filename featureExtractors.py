@@ -7,7 +7,6 @@
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
 import util
-import math
 
 import numpy.linalg
 import numpy as np

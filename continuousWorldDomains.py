@@ -2,6 +2,7 @@ import random
 import util
 import numpy
 import warnings
+import featureExtractors
 
 def simpleToyDomain(category = 'targs'):
   """
@@ -147,3 +148,27 @@ def loadFromMat(filename, domainId, randInit = False):
   ret['step'] = 0.3
 
   return ret
+
+def getPreviousWaypoint(idx, agentX, agentY, agentOrient, segDist, segAngle):
+  #FIXME
+  """
+  here are the code to get the SECOND waypoint from the source files.
+  they are not included in the parsed files, so they have to be obtained from the maps.
+  too low efficient, so only run when TWO_OBJECTS required
+  """
+  domain = loadFromMat("miniRes25.mat", idx)
+  segList = domain['objs']['segs']
+  for segIdx in xrange(len(segList)):
+    dist, angle = featureExtractors.getDistAngle((agentX, agentY), segList[segIdx], agentOrient)
+    # right-ward is negative
+    angle = -angle
+    if abs(segDist - dist) < 0.001 and abs(segAngle - angle) < 0.001:
+      # then get the one before it or after it
+      curSegDist, curSegAngle = featureExtractors.getDistAngle((agentX, agentY), segList[segIdx - 1], agentOrient)
+      curSegAngle = -curSegAngle
+      break
+
+  if not 'curSegDistInstance' in locals():
+    raise Exception('Fail to find the current segment from mat file')
+  
+  return (curSegAngle, curSegAngle)
