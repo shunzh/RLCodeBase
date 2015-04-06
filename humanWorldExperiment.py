@@ -142,37 +142,30 @@ def main():
       humanInfoParser.plotHuman(plotting, win, range(25, 29), vrDomainId)
 
   a = None
+  actionFn = lambda state: mdp.getPossibleActions(state)
+  qLearnOpts = {'gamma': opts.discount, 
+                'alpha': opts.learningRate, 
+                'epsilon': opts.epsilon,
+                'actionFn': actionFn}
+
   if opts.agent == 'value':
     import valueIterationAgents
     a = valueIterationAgents.ValueIterationAgent(mdp, opts.discount, opts.iters)
   elif opts.agent == 'q':
     import qlearningAgents
     actionFn = lambda state: mdp.getPossibleActions(state)
-    qLearnOpts = {'gamma': opts.discount, 
-                  'alpha': opts.learningRate, 
-                  'epsilon': opts.epsilon,
-                  'actionFn': actionFn}
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
     a.setValues('learnedValues/humanAgent' + opts.category + 'Values.pkl')
     a.setStateFilter(featureExtractors.getHumanViewBins(mdp, opts.category))
   elif opts.agent == 'Approximate':
     extractor = featureExtractors.HumanViewExtractor(mdp, opts.category)
-    actionFn = lambda state: mdp.getPossibleActions(state)
-    qLearnOpts = {'gamma': opts.discount, 
-                  'alpha': opts.learningRate, 
-                  'epsilon': opts.epsilon,
-                  'actionFn': actionFn,
-                  'extractor': extractor}
+    qLearnOpts['extractor']  = extractor
     a = qlearningAgents.ApproximateVAgent(**qLearnOpts)
     a.setWeights('learnedValues/humanAgent' + opts.category + 'Weights.pkl')
-  elif 'Modular' in opts.agent:
+  elif opts.agent == 'Modular':
     # for modular agents
     import modularAgents, modularQFuncs, config
     actionFn = lambda state: mdp.getPossibleActions(state)
-    qLearnOpts = {'gamma': opts.discount, 
-                  'alpha': opts.learningRate, 
-                  'epsilon': opts.epsilon,
-                  'actionFn': actionFn}
     a = modularAgents.ReducedModularAgent(**qLearnOpts)
     a.setWeights(weights)
 
@@ -192,7 +185,7 @@ def main():
     a.setQFuncs(qFuncs)
   elif opts.agent == 'random':
     import baselineAgents
-    a = baselineAgents.RandomAgent()
+    a = baselineAgents.RandomAgent(**qLearnOpts)
   else:
     if not opts.manual: raise 'Unknown agent type: '+opts.agent
     

@@ -248,14 +248,16 @@ def humanWorldExperimentQPotential(filenames, rang):
   print rang, ": discounters are", d
   print rang, ": evaluation ", evaluation 
 
+  """
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png', d)
   print rang, ": weight heatmaps done."
   if sln.learnDiscounter:
     printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png', w)
     print rang, ": discounter heatmaps done."
   print rang, ": OK."
+  """
 
-  return [w + d, None] 
+  return [w + d, evaluation] 
 
 def saveToFile(filename, obj):
   output = open(filename, 'wb')

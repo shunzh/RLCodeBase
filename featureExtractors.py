@@ -88,7 +88,7 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
       elif len(self.mdp.objs['segs']) == 1:
         obj = curObj = self.mdp.objs['segs'][0] # this is the last segment
       else:
-        obj = curObj = loc
+        obj = curObj = None
 
       feats['dist'], feats['angle'] = getDistAngle(loc, obj, orient)
       feats['curDist'], feats['curAngle'] = getDistAngle(loc, curObj, orient)
@@ -99,13 +99,13 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
       if len(l) > 0:
         minObj = l[0]
       else:
-        minObj = loc
+        minObj = None
 
       if len(l) > 1:
         # if there are more than two objects
         secMinObj = l[1]
       else:
-        secMinObj = loc
+        secMinObj = None
 
       feats['dist'], feats['angle'] = getDistAngle(loc, minObj, orient)
       feats['dist2'], feats['angle2'] = getDistAngle(loc, secMinObj, orient)
@@ -203,10 +203,13 @@ def getProjectionToSegmentLocalView(s0, s1):
   return getDistAngle(loc, obj, 0)
 
 def getDistAngle(f, t, orient):
-  vector = np.subtract(t, f)
-  dist = numpy.linalg.norm(vector)
-  objOrient = np.angle(vector[0] + vector[1] * 1j)
-  return [dist, adjustAngle(objOrient - orient)]
+  if t == None:
+    return (None, None)
+  else:
+    vector = np.subtract(t, f)
+    dist = numpy.linalg.norm(vector)
+    objOrient = np.angle(vector[0] + vector[1] * 1j)
+    return [dist, adjustAngle(objOrient - orient)]
 
 def getSortedObjs(loc, l):
   """
@@ -225,6 +228,8 @@ def adjustAngle(angle):
   return angle
 
 def mapStateToBin((dist, angle), step = 0.3):
+  if dist == None or angle == None:
+    return (dist, angle)
   # FIXME OVERFIT
   if dist < step * 0.5:
     distBin = 1

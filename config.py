@@ -10,4 +10,4 @@ TWO_OBJECTS = False
 
 # use discrete q tables
 # use potential based q functions if false
-DISCRETE_Q = False
+DISCRETE_Q = True

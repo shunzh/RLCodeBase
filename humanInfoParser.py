@@ -78,7 +78,8 @@ def getHumanStatesActions(filenames, idxSet):
           (curSegDistInstance, curSegAngleInstance) = continuousWorldDomains.getPreviousWaypoint\
                                                       (idx, x[i], y[i], orient[i], segDist[i], segAngle[i])
         else:
-          curSegAngleInstance = curSegDistInstance = None
+          # this field will be dummy
+          (curSegAngleInstance, curSegDistInstance) = (segDist[i], segAngle[i])
 
         state = ((targDist[i], targAngle[i]),
                  (targDist2[i], targAngle2[i]),

@@ -18,7 +18,7 @@ Human world functions
 def getHumanWorldDiscreteFuncs():
   """
   Use to get q functions.
-  Note that the blief states are provided here - ((targDist[i], targAngle[i]), (objDist[i], objAngle[i]))
+  Note that the blief states are provided here - ((dist, angle)*)
   These are further mapped to be bins.
   """
   import pickle
@@ -63,21 +63,20 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3, twoObjects = config.TWO_O
   """
   transition = HumanWorld.transitionSimulate
 
-  def vTarget(s, discounter):
-    dist, orient = s
-    return 1 * np.power(discounter, dist)
+  def vFuncGenerator(reward):
+    def vFunc(s, discounter):
+      dist, orient = s
+      if dist == None or orient == None:
+        # in which case no such object left in the domain
+        return 0
+      else:
+        return reward * np.power(discounter, dist)
+    return vFunc
   
-  def vObstacle(s, discounter):
-    dist, orient = s
-    return -1 * np.power(discounter, dist)
-
-  def vSegment(s, discounter):
-    dist, orient = s
-    return 1 * np.power(discounter, dist)
-  
-  def vPath(s, curS, discounter):
-    dist, orient = featureExtractors.getProjectionToSegmentLocalView(s, curS)
-    return 1 * np.power(discounter, dist)
+  vTarget = vFuncGenerator(1)
+  vObstacle = vFuncGenerator(-1)
+  vSegment = vFuncGenerator(1)
+  vPath = vFuncGenerator(1)
 
   def qTarget(state, action, discounter):
     return vTarget(transition(state, action), discounter)
@@ -89,7 +88,10 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3, twoObjects = config.TWO_O
     return vSegment(transition(state, action), discounter)
 
   def qPath(state, currentState, action, discounter):
-    return vPath(transition(state, action), transition(currentState, action), discounter)
+    s = transition(state, action)
+    curS = transition(currentState, action)
+    project = featureExtractors.getProjectionToSegmentLocalView(s, curS)
+    return vPath(project, discounter)
 
   if twoObjects:
     return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]) + qTarget(s[1], a, d[0]), # closest target(s)
