@@ -1,6 +1,10 @@
 #!/bin/bash
 
+# usually I run IRL separately before this script to check the weights first.
+# uncomment this if you want to run it together.
 #python inverseModularRLExperiments.py
+
+# overwrite the previously learned results
 mv values.pkl learnedValues
 
 # clear previous recorded stats
