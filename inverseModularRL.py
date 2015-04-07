@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 
-class InverseModularRL:
+class InverseModularRL():
   """
     Inverse Reinforcement Learning. From a trained modular agent, find the weights given
     - Q tables of modules
@@ -12,8 +12,9 @@ class InverseModularRL:
     learning for visuomotor behavior, Biological Cybernetics,
     107(4),477-490
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
+    
+    For now, there is no point to make this as a derived class of inverseRL.
   """
-
   def __init__(self, qFuncs, eta = 1, learnDiscounter = True):
     """
       Args:
@@ -52,7 +53,7 @@ class InverseModularRL:
     for state, action in samples:
       print state
       print action
-    
+ 
   def obj(self, X):
     """
       The objective function to be minimized.
@@ -95,6 +96,7 @@ class InverseModularRL:
 
   def solve(self):
     """
+      Overrides IRL's solver.
       Find the appropriate weight and discounter for each module, by walking through the policy.
 
       Return:

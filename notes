@@ -19,4 +19,4 @@ sanity check
 - evaluation
   - probability of observing human data given model - done
   - Ng's IRL
-  - baselines: reflex, round-robin - done
+  - baselines: reflex - done
