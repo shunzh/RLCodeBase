@@ -2,7 +2,6 @@ import sys
 import optparse
 import featureExtractors
 import modularQFuncs
-import random
 import baselineAgents
 
 def getUserAction(state, actionFunction):
@@ -206,11 +205,6 @@ if __name__ == '__main__':
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules
     a.setQFuncs(modularQFuncs.getObsAvoidFuncs(mdp))
-  elif opts.agent == 'random':
-    # # No reason to use the random agent without episodes
-    if opts.episodes == 0:
-      opts.episodes = 10
-    a = baselineAgents.RandomAgent(mdp)
   else:
     if not opts.manual: raise 'Unknown agent type: '+opts.agent
     
@@ -239,7 +233,6 @@ if __name__ == '__main__':
     if opts.manual and opts.agent == None: 
       displayCallback = lambda state: display.displayNullValues(state)
     else:
-      if opts.agent == 'random': displayCallback = lambda state: display.displayValues(a, state, "CURRENT VALUES")
       if opts.agent == 'value': displayCallback = lambda state: display.displayValues(a, state, "CURRENT VALUES")
       if opts.agent == 'q' or opts.agent == 'Approximate' or opts.agent == 'Modular': displayCallback = lambda state: display.displayQValues(a, state, "CURRENT Q-VALUES")
 

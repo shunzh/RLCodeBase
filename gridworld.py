@@ -261,6 +261,12 @@ def makeGrid(gridString):
 def terminateIfInt(grid):
 	return lambda state : type(grid[state[1]][state[0]]) == int
 
+def getDiscountedRewardPathGrid():
+  grid = [[.9 ** dist] * 5 for dist in reversed(range(5))]
+  grid[0][0] = 'S'
+  isFinal = lambda state: state[1] == 4
+  return Gridworld(makeGrid(grid), isFinal)
+
 def getCliffGrid():
   grid = [[' ',' ',' ',' ',' '],
           ['S',' ',' ',' ',10],
