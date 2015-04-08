@@ -168,7 +168,7 @@ def getPreviousWaypoint(idx, agentX, agentY, agentOrient, segDist, segAngle):
       curSegAngle = -curSegAngle
       break
 
-  if not 'curSegDistInstance' in locals():
+  if not 'curSegDist' in locals():
     raise Exception('Fail to find the current segment from mat file')
   
   return (curSegAngle, curSegAngle)

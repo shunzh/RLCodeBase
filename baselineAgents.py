@@ -23,9 +23,9 @@ class ReflexAgent(ModularAgent):
     maxMagnitude = 0
     maxIdx = -1
     for i in xrange(self.nModules):
-      magnitude = abs(self.qFuncs[i](state, action))
+      magnitude = abs(self.qFuncs[i](state, action, self.discounters))
       if magnitude > maxMagnitude:
         maxMagnitude = magnitude
         maxIdx = i
         
-    return self.qFuncs[maxIdx](state, action)
+    return self.qFuncs[maxIdx](state, action, self.discounters)

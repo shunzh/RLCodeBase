@@ -7,6 +7,7 @@ import continuousWorldDomains
 import continuousWorldPlot
 import featureExtractors
 import config
+import humanWorldExperiment
 
 def plotHuman(plotting, win, subjIdSet, domainId):
   dim = plotting.dim
@@ -74,7 +75,7 @@ def getHumanStatesActions(filenames, idxSet):
 
       # cut the head and tail samples
       for i in range(5, len(targDist) - 15):
-        if config.TWO_OBJECTS:
+        if config.TWO_OBJECTS or humanWorldExperiment.nModules == 4:
           (curSegDistInstance, curSegAngleInstance) = continuousWorldDomains.getPreviousWaypoint\
                                                       (idx, x[i], y[i], orient[i], segDist[i], segAngle[i])
         else:

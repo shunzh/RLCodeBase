@@ -11,6 +11,7 @@ import warnings
 from game import Actions
 import math
 import config
+import humanWorldExperiment
 
 """
 Human world functions
@@ -49,7 +50,7 @@ def getHumanWorldDiscreteFuncs():
           lambda s, a, d = None: qObstacle(s[2], a), # closest obstacles
           lambda s, a, d = None: qSegment(s[4], a)]
 
-def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3, twoObjects = config.TWO_OBJECTS):
+def getHumanWorldQPotentialFuncs(twoObjects = config.TWO_OBJECTS):
   """
   Rather learned from samples, we define the potential functions (a value function) based on reward.
   Q functions here just reflect the potential functions.
@@ -94,15 +95,15 @@ def getHumanWorldQPotentialFuncs(defaultD = [0.6] * 3, twoObjects = config.TWO_O
     return vPath(project, discounter)
 
   if twoObjects:
-    return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]) + qTarget(s[1], a, d[0]), # closest target(s)
-            lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]) + qObstacle(s[3], a, d[1]), # closest obstacle(s)
-            lambda s, a, d = defaultD: qSegment(s[4], a, d[2]) + qSegment(s[5], a, d[2])] # next seg point
+    return [lambda s, a, d: qTarget(s[0], a, d[0]) + qTarget(s[1], a, d[0]), # closest target(s)
+            lambda s, a, d: qObstacle(s[2], a, d[1]) + qObstacle(s[3], a, d[1]), # closest obstacle(s)
+            lambda s, a, d: qSegment(s[4], a, d[2]) + qSegment(s[5], a, d[2])] # next seg point
             #lambda s, a, d = defaultD: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
   else:
-    return [lambda s, a, d = defaultD: qTarget(s[0], a, d[0]), # closest target(s)
-            lambda s, a, d = defaultD: qObstacle(s[2], a, d[1]), # closest obstacle(s)
-            lambda s, a, d = defaultD: qSegment(s[4], a, d[2])] # next seg point
-            #lambda s, a, d = defaultD: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
+    return [lambda s, a, d: qTarget(s[0], a, d[0]), # closest target(s)
+            lambda s, a, d: qObstacle(s[2], a, d[1]), # closest obstacle(s)
+            lambda s, a, d: qSegment(s[4], a, d[2])] # next seg point
+            #lambda s, a, d: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
 
 def getHumanWorldContinuousFuncs():
   """

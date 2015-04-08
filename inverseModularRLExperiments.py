@@ -163,7 +163,6 @@ def evaluateAssumption(samples, qFuncs, w, d = None):
     A dictionary {agent: {criteria: value}}
   """
   # define agent
-  import humanWorld
   actionFn = lambda state: humanWorld.HumanWorld.actions
   qLearnOpts = {'gamma': 0.9,
                 'alpha': 0.5,
