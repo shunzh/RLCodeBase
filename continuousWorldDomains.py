@@ -28,7 +28,7 @@ def simpleToyDomain(category = 'targs'):
     # random entrance point near the center
     entrance = (size * 2 / 5 + random.random() * size / 5, size * 2 / 5 + random.random() * size / 5)
   elif category == 'segs':
-    segs = [(lambda: (random.random() * size, random.random() * size))() for _ in xrange(2)]
+    segs = [(lambda: (random.random() * size, random.random() * size))() for _ in xrange(3)]
     obsts = [infPos]; targs = [infPos]
     entrance = (random.random() * size, random.random() * size)
 

@@ -114,13 +114,13 @@ class HumanViewExtractor(ContinousRadiusLogExtractor):
 
     return feats
 
-def getHumanContinuousState(mdp):
+def getHumanContinuousMapper(mdp):
   """
   Return ((targDist, targAngle)*2, (obstDist, obstAngle)*2, (segDist, segAngle)*2)
   """
   extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
 
-  def getDistAngelList(state):
+  def getDistAngelList(state, action):
     ret = []
     for extractor in extractors:
       feats = extractor.getStateFeatures(state)
@@ -130,26 +130,40 @@ def getHumanContinuousState(mdp):
         ret.append((feats['dist2'], feats['angle2']))
       else:
         ret.append((feats['curDist'], feats['curAngle']))
-    return ret
+    return (ret, action)
 
   return getDistAngelList
 
-def getHumanDiscreteState(mdp):
+def getHumanDiscreteMapper(mdp):
   """
-  Return ((targDist, targAngle)_1^2, (obstDist, obstAngle)_1^2, (segDist, segAngle))
+  Return ((targDist, targAngle)_1^2, (obstDist, obstAngle)_1^2, (segDist, segAngle)) and action
   """
   extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
 
-  def getDistAngelList(state):
+  def getDistAngelList(state, action):
     ret = []
     for extractor in extractors:
       feats = extractor.getStateFeatures(state)
-      ret.append(mapStateToBin((feats['dist'], feats['angle']), mdp.step))
+      
+      newAction = action
+      if action == 'G':
+        angleMap = lambda angle: abs(angle)
+      elif action == 'L':
+        angleMap = lambda angle: -angle
+        newAction = 'R'
+      elif action == 'R':
+        angleMap = lambda angle: angle
+      else:
+        raise Exception('Unobserved action ' + action)
+        
+      state = (feats['dist'], angleMap(feats['angle']))
+      ret.append(mapStateToBin(state))
       if not extractor.label == 'segs':
         # add second closest objects
-        ret.append(mapStateToBin((feats['dist2'], feats['angle2']), mdp.step))
+        state = (feats['dist2'], feats['angle2'])
+        ret.append(mapStateToBin(state))
 
-    return ret
+    return (ret, newAction)
 
   return getDistAngelList
 
@@ -227,42 +241,42 @@ def adjustAngle(angle):
     angle -= 2 * np.pi
   return angle
 
-def mapStateToBin((dist, angle), step = 0.3):
+def mapStateToBin((dist, angle)):
   if dist == None or angle == None:
     return (dist, angle)
   # FIXME OVERFIT
-  if dist < step * 0.5:
+  if dist < 0.1:
     distBin = 1
-  elif dist < step * 1:
+  elif dist < 0.2:
     distBin = 2
-  elif dist < step * 1.5:
+  elif dist < 0.3:
     distBin = 3
-  elif dist < step * 2:
+  elif dist < 0.5:
     distBin = 4
-  elif dist < step * 2.5:
+  elif dist < 0.75:
     distBin = 5
-  elif dist < step * 3:
+  elif dist < 1:
     distBin = 6
-  elif dist < step * 4:
+  elif dist < 1.5:
     distBin = 7
-  elif dist < step * 5:
+  elif dist < 2:
     distBin = 8
-  elif dist < step * 10:
+  elif dist < 2.5:
     distBin = 9
   else:
     distBin = 10
 
-  if abs(angle) < 10.0 / 180 * np.pi:
+  if abs(angle) < 2.0 / 180 * np.pi:
     angleBin = 0
-  elif abs(angle) < 20.0 / 180 * np.pi:
+  elif abs(angle) < 5.0 / 180 * np.pi:
     angleBin = int(1 * np.sign(angle))
-  elif abs(angle) < 30.0 / 180 * np.pi:
+  elif abs(angle) < 10.0 / 180 * np.pi:
     angleBin = int(2 * np.sign(angle))
-  elif abs(angle) < 60.0 / 180 * np.pi:
+  elif abs(angle) < 30.0 / 180 * np.pi:
     angleBin = int(3 * np.sign(angle))
-  elif abs(angle) < 90.0 / 180 * np.pi:
+  elif abs(angle) < 60.0 / 180 * np.pi:
     angleBin = int(4 * np.sign(angle))
-  elif abs(angle) < 135.0 / 180 * np.pi:
+  elif abs(angle) < 90.0 / 180 * np.pi:
     angleBin = int(5 * np.sign(angle))
   else:
     angleBin = int(6 * np.sign(angle))
@@ -280,6 +294,6 @@ def getHumanViewBins(mdp, label):
     if feats == []:
       return ()
 
-    return mapStateToBin((feats['dist'], feats['angle']), mdp.step)
+    return mapStateToBin((feats['dist'], feats['angle']))
 
   return getBins

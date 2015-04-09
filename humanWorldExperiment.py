@@ -156,7 +156,7 @@ def main():
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
     a.setValues('learnedValues/humanAgent' + opts.category + 'Values.pkl')
-    a.setStateFilter(featureExtractors.getHumanViewBins(mdp, opts.category))
+    a.setMapper(featureExtractors.getHumanViewBins(mdp, opts.category))
   elif opts.agent == 'Approximate':
     extractor = featureExtractors.HumanViewExtractor(mdp, opts.category)
     qLearnOpts['extractor']  = extractor
@@ -172,16 +172,16 @@ def main():
     if config.DISCRETE_Q:
       # way 1: using q tables
       qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
-      stateFilter = featureExtractors.getHumanDiscreteState(mdp)
+      mapper = featureExtractors.getHumanDiscreteMapper(mdp)
     else:
       # way 2: using q functions
       qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs(discounters)
-      stateFilter = featureExtractors.getHumanContinuousState(mdp)
+      mapper = featureExtractors.getHumanContinuousMapper(mdp)
 
     if len(qFuncs) != nModules:
       raise Exception('the number of q functions' + len(qFuncs) + 'does not match the number of modules' + nModules +'!')
 
-    a.setStateFilter(stateFilter)
+    a.setMapper(mapper)
     a.setQFuncs(qFuncs)
   elif opts.agent == 'random':
     import baselineAgents

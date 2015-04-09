@@ -181,22 +181,22 @@ class ReducedQLearningAgent(QLearningAgent):
       warnings.warn("Unknown file " + filename + ". No initial values set.")
       raw_input("Confirm this message to continue:")
 
-  def setStateFilter(self, extractor):
+  def setMapper(self, extractor):
     """
     Set the state filter here, which returns the state representation for learning.
     The default one is an identity function.
     """
-    self.getState = extractor
+    self.mapper = extractor
 
-  def getAction(self, state):
-    return QLearningAgent.getAction(self, self.getState(state))
+  def getQValue(self, state, action):
+    newState, newAction = self.mapper(state, action)
+    return QLearningAgent.getQValue(self, newState, newAction)
 
   def update(self, state, action, nextState, reward):
-    return QLearningAgent.update(self, self.getState(state), action, self.getState(nextState), reward)
+    newState, newAction = self.mapper(state, action)
+    newNextState, _ = self.mapper(nextState, action)
+    return QLearningAgent.update(self, newState, newAction, newNextState, reward)
 
-  def final(self, state):
-    # TODO print values here?
-    return QLearningAgent.final(self, self.getState(state))
 
 class ApproximateQAgent(QLearningAgent):
   """

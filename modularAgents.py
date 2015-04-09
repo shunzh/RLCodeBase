@@ -81,22 +81,22 @@ class ReducedModularAgent(ModularAgent):
     # By default, it is an identity function
     self.getState = lambda x : x
 
-  def setStateFilter(self, extractor):
+  def setMapper(self, extractor):
     """
     Set the state filter here, which returns the state representation for learning.
     The default one is an identity function.
     """
-    self.getState = extractor
+    self.mapper = extractor
 
   def getSubQValues(self, state, action):
-    return ModularAgent.getSubQValues(self, self.getState(state), action)
+    newState, newAction = self.mapper(state, action)
+    return ModularAgent.getSubQValues(self, newState, newAction)
 
-  def getAction(self, state):
-    return ModularAgent.getAction(self, self.getState(state))
+  def getQValue(self, state, action):
+    newState, newAction = self.mapper(state, action)
+    return ModularAgent.getQValue(self, newState, newAction)
 
   def update(self, state, action, nextState, reward):
-    return ModularAgent.update(self, self.getState(state), action, self.getState(nextState), reward)
-
-  def final(self, state):
-    return ModularAgent.final(self, self.getState(state))
-
+    newState, newAction = self.mapper(state, action)
+    newNextState, _ = self.mapper(nextState, action)
+    return ModularAgent.update(self, newState, newAction, newNextState, reward)

@@ -21,3 +21,11 @@ sanity check
   - probability of observing human data given model - done
   - Ng's IRL
   - baselines: reflex - done
+
+- symmetric q tables (in G; L and R) - overwrote state mapper
+- q learning: decrease learning rate
+  - trying 0.1 rather than 0.5 first. decreasing learning rate may not reach
+    the optimum (while constant learning rate may overshoot).
+- bin sizes at center - OK
+- path module: more waypoints - OK, using 3
+- larger obstacle
