@@ -60,9 +60,8 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
             "\nTook action: "+str(action)+
             "\nEnded in state: "+str(nextState)+
             "\nGot reward: "+str(reward)+"\n")    
-    if 'getState' in dir(agent):
-      message("Started in belief state: " + str(agent.getState(state)) + 
-              "\nEnded in belief state: " + str(agent.getState(nextState)) + "\n")
+    if 'mapper' in dir(agent):
+      message("Started in belief: " + str(agent.mapper(state, action)))
 
     # UPDATE LEARNER
     if 'observeTransition' in dir(agent): 
@@ -154,7 +153,7 @@ def main():
   elif opts.agent == 'q':
     import qlearningAgents
     actionFn = lambda state: mdp.getPossibleActions(state)
-    a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
+    a = qlearningAgents.QLearningAgent(**qLearnOpts)
     a.setValues('learnedValues/humanAgent' + opts.category + 'Values.pkl')
 
     uncoupleState = lambda (s, a): (s[0], a)
@@ -171,7 +170,7 @@ def main():
     # for modular agents
     import modularAgents, modularQFuncs, config
     actionFn = lambda state: mdp.getPossibleActions(state)
-    a = modularAgents.ReducedModularAgent(**qLearnOpts)
+    a = modularAgents.ModularAgent(**qLearnOpts)
     a.setWeights(weights)
 
     if config.DISCRETE_Q:
@@ -240,7 +239,7 @@ def main():
   elif opts.agent == 'q':
     # output learned values to pickle file
     saveValues(a.values, 'humanAgent' + opts.category + 'Values.pkl')
-    continuousWorldPlot.plotHumanWorldQFuncs(a.values, opts.category)
+    continuousWorldPlot.plotHumanWorldQFuncs(a.getQValue, opts.category)
 
   # hold window
   if not opts.quiet and 'vr' in opts.grid:

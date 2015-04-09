@@ -105,23 +105,26 @@ class Plotting:
       cir.setFill(self.hColors[label])
       cir.draw(self.win)
 
-def plotHumanWorldQFuncs(values, category):
+def plotHumanWorldQFuncs(qFunc, category):
   """
   Print the values of states in heatmap
   """
   import matplotlib.pyplot as plt
 
+  angles = [-90, -60, -30, -10, -5, -2, 0, 2, 5, 10, 30, 60, 90]
+  distances = [3, 2.5, 2, 1.5, 1, .75, .5, .3, .2, .1]
+
   for act in ['L', 'R', 'G']:
     data = []
-    for i in reversed(range(1, 11)): # 1 ~ 10. so that 1 appears at bottom
+    for distance in distances: # 1 ~ 10. so that 1 appears at bottom
       row = []
-      for j in range(-6, 7): # -6 ~ 6.
-        row.append(values[(i, j), act])
+      for angle in angles: # -6 ~ 6.
+        row.append(qFunc([(distance, angle)], act))
       data.append(row)
 
     plt.imshow(data, interpolation='none')
-    plt.xticks(range(13), ['-90', '-60', '-30', '-10', '-5', '-2', '0', '2', '5', '10', '30', '60', '90'])
-    plt.yticks(range(10), ['2.5', '2', '1.5', '1', '.75', '.5', '.3', '.2', '.1', '0'])
+    plt.xticks(range(len(angles)), map(str, angles))
+    plt.yticks(range(len(distances)), map(str, distances))
     plt.xlabel('Angle');
     plt.ylabel('Distance (meters)');
     plt.title('Q Table of Module ' + category + ', Action ' + act)

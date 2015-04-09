@@ -158,7 +158,7 @@ def getHumanDiscreteMapper(mdp, category = None):
       elif action == 'R':
         angleMap = lambda angle: angle
       else:
-        raise Exception('Unobserved action ' + action)
+        raise Exception('Unknown action ' + action)
         
       state = (feats['dist'], angleMap(feats['angle']))
       ret.append(mapStateToBin(state))

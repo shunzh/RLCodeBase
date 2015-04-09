@@ -14,24 +14,12 @@ import numpy as np
 
 class QLearningAgent(ReinforcementAgent):
   """
-    Q(lambda)-Learning Agent
+    Q(lambda)-Learning Agent.
     
-    Functions you should fill in:
-      - getQValue
-      - getAction
-      - getValue
-      - getPolicy
-      - update
-      
-    Instance variables you have access to
-      - self.epsilon (exploration prob)
-      - self.alpha (learning rate)
-      - self.gamma (discount rate)
-    
-    Functions you should use
-      - self.getLegalActions(state) 
-        which returns legal actions
-        for a state
+    You can define a new state representation from the external state
+    by calling setMapper.
+    self.mapper: external state -> internal state
+    self.mapper is an identity function by default.
   """
   def __init__(self, **args):
     "You can initialize Q-values here..."
@@ -45,21 +33,46 @@ class QLearningAgent(ReinforcementAgent):
     self.lambdaValue = 0
     self.replace = True
     
+    # default mapper
+    self.mapper = lambda s, a: (s, a)
+
     # a list of temporal difference errors
     self.deltas = []
   
+  def setMapper(self, mapper):
+    self.mapper = mapper
+
   def setLambdaValue(self, lambdaValue):
     self.lambdaValue = lambdaValue
 
+  def setValues(self, filename):
+    """
+      Set initial weights, if we have it
+    """
+    if os.path.isfile(filename):
+      import pickle
+      self.values = pickle.load(open(filename))
+    else:
+      import warnings
+      warnings.warn("Unknown file " + filename + ". No initial values set.")
+      raw_input("Confirm this message to continue:")
+
   def getQValue(self, state, action):
     """
-      Returns Q(state,action)    
+      Returns Q(mapper(state,action))
       Should return 0.0 if we never seen
       a state or (state,action) tuple 
     """
     "*** YOUR CODE HERE ***"
-    return self.values[state, action]
- 
+    return self.values[self.mapper(state, action)]
+
+  def updateTemporalDifference(self, state, action, diff):
+    """
+      Update Q value to q-table.
+      Wrap this since mapper may be used.
+    """
+    self.values[self.mapper(state, action)] += self.alpha * diff * self.e[state, action]
+
   def getValue(self, state):
     """
       Returns max_action Q(state,action)        
@@ -73,7 +86,6 @@ class QLearningAgent(ReinforcementAgent):
       return self.getQValue(state, bestAction)
     else: 
       return 0.0
-   #util.raiseNotDefined()
     
   def getPolicy(self, state):
     """
@@ -145,7 +157,7 @@ class QLearningAgent(ReinforcementAgent):
       self.e[state, action] += 1
 
     for state, action in self.e:
-      self.values[state, action] += self.alpha * delta * self.e[state, action]
+      self.updateTemporalDifference(state, action, delta)
       self.e[state, action] *= self.gamma * self.lambdaValue
     
     self.deltas.append(abs(delta))
@@ -153,49 +165,6 @@ class QLearningAgent(ReinforcementAgent):
   def final(self, state):
     # clear deltas after an episode
     self.deltas = []
-
-
-class ReducedQLearningAgent(QLearningAgent):
-  """
-  Wrap the Q learning agent with a state filter, which reduces the state space.
-  
-  State: S -> S', where S' is significantly smaller.
-  One usage is mapping continuous state space into discrete bins.
-  """
-  def __init__(self, **args):
-    QLearningAgent.__init__(self, **args)
-
-    # Set get state function here.
-    # By default, it is an identity function
-    self.getState = lambda x : x
-
-  def setValues(self, filename):
-    """
-      Set initial weights, if we have it
-    """
-    if os.path.isfile(filename):
-      import pickle
-      self.values = pickle.load(open(filename))
-    else:
-      import warnings
-      warnings.warn("Unknown file " + filename + ". No initial values set.")
-      raw_input("Confirm this message to continue:")
-
-  def setMapper(self, extractor):
-    """
-    Set the state filter here, which returns the state representation for learning.
-    The default one is an identity function.
-    """
-    self.mapper = extractor
-
-  def getQValue(self, state, action):
-    newState, newAction = self.mapper(state, action)
-    return QLearningAgent.getQValue(self, newState, newAction)
-
-  def update(self, state, action, nextState, reward):
-    newState, newAction = self.mapper(state, action)
-    newNextState, _ = self.mapper(nextState, action)
-    return QLearningAgent.update(self, newState, newAction, newNextState, reward)
 
 
 class ApproximateQAgent(QLearningAgent):

@@ -52,7 +52,8 @@ class ModularAgent(ApproximateQAgent):
   
   def update(self, state, action, nextState, reward):
     """
-    there is no learning here
+    There is no learning here.
+    Don't even run the update in base class.
     """
     pass
 
@@ -69,34 +70,3 @@ class ModularAgent(ApproximateQAgent):
     values = [self.getQValue(state, action) for action in actions]
     return np.std(values)
 
-
-class ReducedModularAgent(ModularAgent):
-  """
-  Modular agent, which first maps state to an inner representation (so the state space reduced).
-  """
-  def __init__(self, **args):
-    ModularAgent.__init__(self, **args)
-
-    # Set get state function here.
-    # By default, it is an identity function
-    self.getState = lambda x : x
-
-  def setMapper(self, extractor):
-    """
-    Set the state filter here, which returns the state representation for learning.
-    The default one is an identity function.
-    """
-    self.mapper = extractor
-
-  def getSubQValues(self, state, action):
-    newState, newAction = self.mapper(state, action)
-    return ModularAgent.getSubQValues(self, newState, newAction)
-
-  def getQValue(self, state, action):
-    newState, newAction = self.mapper(state, action)
-    return ModularAgent.getQValue(self, newState, newAction)
-
-  def update(self, state, action, nextState, reward):
-    newState, newAction = self.mapper(state, action)
-    newNextState, _ = self.mapper(nextState, action)
-    return ModularAgent.update(self, newState, newAction, newNextState, reward)
