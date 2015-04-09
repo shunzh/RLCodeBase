@@ -195,8 +195,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     loc, orient = state
 
-    # cleared the targets or the waypoints.
-    return len(self.objs['segs']) == 0
+    #FIXME termination conditions differ for training and testing.
+    return len(self.objs['segs']) == 0 or len(self.objs['targs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
     """

@@ -121,7 +121,7 @@ def plotHumanWorldQFuncs(values, category):
 
     plt.imshow(data, interpolation='none')
     plt.xticks(range(13), ['-90', '-60', '-30', '-10', '-5', '-2', '0', '2', '5', '10', '30', '60', '90'])
-    plt.yticks(range(10), ['>2.5', '2.5', '2', '1.5', '1', '.75', '.5', '.3', '.2', '.1'])
+    plt.yticks(range(10), ['2.5', '2', '1.5', '1', '.75', '.5', '.3', '.2', '.1', '0'])
     plt.xlabel('Angle');
     plt.ylabel('Distance (meters)');
     plt.title('Q Table of Module ' + category + ', Action ' + act)

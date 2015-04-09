@@ -134,11 +134,15 @@ def getHumanContinuousMapper(mdp):
 
   return getDistAngelList
 
-def getHumanDiscreteMapper(mdp):
+def getHumanDiscreteMapper(mdp, category = None):
   """
   Return ((targDist, targAngle)_1^2, (obstDist, obstAngle)_1^2, (segDist, segAngle)) and action
   """
-  extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
+  if category == None:
+    # assume need all the classes 
+    extractors = [HumanViewExtractor(mdp, label) for label in ['targs', 'obsts', 'segs']]
+  else:
+    extractors = [HumanViewExtractor(mdp, category)]
 
   def getDistAngelList(state, action):
     ret = []
@@ -282,18 +286,3 @@ def mapStateToBin((dist, angle)):
     angleBin = int(6 * np.sign(angle))
 
   return (distBin, angleBin)
-
-def getHumanViewBins(mdp, label):
-  """
-  Get bins extracted from continuous features.
-  """
-  extractor = HumanViewExtractor(mdp, label)
-
-  def getBins(state):
-    feats = extractor.getStateFeatures(state)
-    if feats == []:
-      return ()
-
-    return mapStateToBin((feats['dist'], feats['angle']))
-
-  return getBins

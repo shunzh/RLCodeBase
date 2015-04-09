@@ -156,7 +156,12 @@ def main():
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = qlearningAgents.ReducedQLearningAgent(**qLearnOpts)
     a.setValues('learnedValues/humanAgent' + opts.category + 'Values.pkl')
-    a.setMapper(featureExtractors.getHumanViewBins(mdp, opts.category))
+
+    uncoupleState = lambda (s, a): (s[0], a)
+    extractor = featureExtractors.getHumanDiscreteMapper(mdp, opts.category)
+    # returned state in extractor is a list of only one modular state
+    # so only pick that modular state as the state representation for convenience
+    a.setMapper(lambda s, a: uncoupleState(extractor(s, a)))
   elif opts.agent == 'Approximate':
     extractor = featureExtractors.HumanViewExtractor(mdp, opts.category)
     qLearnOpts['extractor']  = extractor
