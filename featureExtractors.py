@@ -145,31 +145,42 @@ def getHumanDiscreteMapper(mdp, category = None):
     extractors = [HumanViewExtractor(mdp, category)]
 
   def getDistAngelList(state, action):
-    ret = []
+    states = []
     for extractor in extractors:
       feats = extractor.getStateFeatures(state)
       
-      newAction = action
-      if action == 'G':
-        angleMap = lambda angle: abs(angle)
-      elif action == 'L':
-        angleMap = lambda angle: -angle
-        newAction = 'R'
-      elif action == 'R':
-        angleMap = lambda angle: angle
-      else:
-        raise Exception('Unknown action ' + action)
-        
-      state = (feats['dist'], angleMap(feats['angle']))
-      ret.append(mapStateToBin(state))
+      state, action = discreteQTableCompressor((feats['dist'], feats['angle']), action)
+      states.append(mapStateToBin(state))
       if not extractor.label == 'segs':
         # add second closest objects
-        state = (feats['dist2'], feats['angle2'])
-        ret.append(mapStateToBin(state))
+        if feats['dist2'] != None and feats['angle2'] != None:
+          state, action = discreteQTableCompressor((feats['dist2'], feats['angle2']), action)
+          states.append(mapStateToBin(state))
+        else:
+          states.append((None, None))
 
-    return (ret, newAction)
+    return (states, action)
 
   return getDistAngelList
+
+def discreteQTableCompressor(state, action):
+  dist, angle = state
+
+  newAction = action
+  if action == 'G':
+    # force table to be symmetric
+    angle = abs(angle)
+  elif action == 'L':
+    # use R table
+    angle = -angle
+    newAction = 'R'
+  elif action == 'R':
+    angle = angle
+  else:
+    raise Exception('Unknown action ' + action)
+  
+  newState = mapStateToBin((dist, angle))
+  return (newState, newAction)
 
 """
 Some util functions for feature extraction.
@@ -245,44 +256,23 @@ def adjustAngle(angle):
     angle -= 2 * np.pi
   return angle
 
+distances = [.1, .2, .3, .5, .75, 1, 1.5, 2, 2.5]
+angles = [-90, -60, -30, -10, -5, -2, 0, 2, 5, 10, 30, 60, 90]
+
 def mapStateToBin((dist, angle)):
   if dist == None or angle == None:
     return (dist, angle)
-  # FIXME OVERFIT
-  if dist < 0.1:
-    distBin = 1
-  elif dist < 0.2:
-    distBin = 2
-  elif dist < 0.3:
-    distBin = 3
-  elif dist < 0.5:
-    distBin = 4
-  elif dist < 0.75:
-    distBin = 5
-  elif dist < 1:
-    distBin = 6
-  elif dist < 1.5:
-    distBin = 7
-  elif dist < 2:
-    distBin = 8
-  elif dist < 2.5:
-    distBin = 9
-  else:
-    distBin = 10
 
-  if abs(angle) < 2.0 / 180 * np.pi:
-    angleBin = 0
-  elif abs(angle) < 5.0 / 180 * np.pi:
-    angleBin = int(1 * np.sign(angle))
-  elif abs(angle) < 10.0 / 180 * np.pi:
-    angleBin = int(2 * np.sign(angle))
-  elif abs(angle) < 30.0 / 180 * np.pi:
-    angleBin = int(3 * np.sign(angle))
-  elif abs(angle) < 60.0 / 180 * np.pi:
-    angleBin = int(4 * np.sign(angle))
-  elif abs(angle) < 90.0 / 180 * np.pi:
-    angleBin = int(5 * np.sign(angle))
-  else:
-    angleBin = int(6 * np.sign(angle))
+  distBin = len(distances)
+  for idx in xrange(len(distances)):
+    if dist < distances[idx]:
+      distBin = idx
+      break
+    
+  angleBin = len(angles)
+  for idx in xrange(len(angles)):
+    if angle < angles[idx]:
+      angleBin = idx
+      break
 
   return (distBin, angleBin)

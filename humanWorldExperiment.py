@@ -239,7 +239,9 @@ def main():
   elif opts.agent == 'q':
     # output learned values to pickle file
     saveValues(a.values, 'humanAgent' + opts.category + 'Values.pkl')
-    continuousWorldPlot.plotHumanWorldQFuncs(a.getQValue, opts.category)
+    # need to reset the mapper inside, so do a deep copy
+    import copy
+    continuousWorldPlot.plotHumanWorldQFuncs(copy.deepcopy(a), opts.category)
 
   # hold window
   if not opts.quiet and 'vr' in opts.grid:

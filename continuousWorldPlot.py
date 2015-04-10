@@ -105,21 +105,25 @@ class Plotting:
       cir.setFill(self.hColors[label])
       cir.draw(self.win)
 
-def plotHumanWorldQFuncs(qFunc, category):
+def plotHumanWorldQFuncs(agent, category):
   """
   Print the values of states in heatmap
   """
   import matplotlib.pyplot as plt
+  import featureExtractors
 
-  angles = [-90, -60, -30, -10, -5, -2, 0, 2, 5, 10, 30, 60, 90]
-  distances = [3, 2.5, 2, 1.5, 1, .75, .5, .3, .2, .1]
+  distances = featureExtractors.distances
+  angles = featureExtractors.angles
+
+  # here, reset the mapper so we can easily iterate over state, actions
+  agent.setMapper(featureExtractors.discreteQTableCompressor)
 
   for act in ['L', 'R', 'G']:
     data = []
-    for distance in distances: # 1 ~ 10. so that 1 appears at bottom
+    for distance in distances:
       row = []
-      for angle in angles: # -6 ~ 6.
-        row.append(qFunc([(distance, angle)], act))
+      for angle in angles:
+        row.append(agent.getQValue((distance, angle), act))
       data.append(row)
 
     plt.imshow(data, interpolation='none')
