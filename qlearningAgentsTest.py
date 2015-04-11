@@ -1,6 +1,7 @@
 import unittest
 import qlearningAgents
 import numpy as np
+import gridworldExperiment
 
 class Test(unittest.TestCase):
   def test_sidewalk(self):
@@ -22,7 +23,7 @@ class Test(unittest.TestCase):
     pauseCallback = lambda: None
 
     for episode in xrange(500):
-      gridworld.runEpisode(a, env, gamma, a.getAction, displayCallback, messageCallback, pauseCallback, episode)
+      gridworldExperiment.runEpisode(a, env, gamma, a.getAction, displayCallback, messageCallback, pauseCallback, episode)
     
     for state in mdp.getStates():
       if state[0] < 4:

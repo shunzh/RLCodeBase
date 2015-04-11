@@ -130,7 +130,7 @@ def plotHumanWorldQFuncs(agent, category):
     plt.xticks(range(len(angles)), map(str, angles))
     plt.yticks(range(len(distances)), map(str, distances))
     plt.xlabel('Angle');
-    plt.ylabel('Distance (meters)');
+    plt.ylabel('Distance (meter)');
     plt.title('Q Table of Module ' + category + ', Action ' + act)
     
     plt.jet()

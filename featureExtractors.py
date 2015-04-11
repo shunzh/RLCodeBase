@@ -150,23 +150,30 @@ def getHumanDiscreteMapper(mdp, category = None):
       feats = extractor.getStateFeatures(state)
       
       state, action = discreteQTableCompressor((feats['dist'], feats['angle']), action)
-      states.append(mapStateToBin(state))
+      states.append(state)
       if not extractor.label == 'segs':
         # add second closest objects
         if feats['dist2'] != None and feats['angle2'] != None:
           state, action = discreteQTableCompressor((feats['dist2'], feats['angle2']), action)
-          states.append(mapStateToBin(state))
+          states.append(state)
         else:
           states.append((None, None))
 
     return (states, action)
+  
+  if category != None:
+    uncoupleState = lambda (s, a): (s[0], a) 
+    ret = lambda s, a: uncoupleState(getDistAngelList(s, a))
+  else:
+    ret = getDistAngelList
 
-  return getDistAngelList
+  return ret
 
 def discreteQTableCompressor(state, action):
   dist, angle = state
 
   newAction = action
+  """
   if action == 'G':
     # force table to be symmetric
     angle = abs(angle)
@@ -176,8 +183,7 @@ def discreteQTableCompressor(state, action):
     newAction = 'R'
   elif action == 'R':
     angle = angle
-  else:
-    raise Exception('Unknown action ' + action)
+  """
   
   newState = mapStateToBin((dist, angle))
   return (newState, newAction)
@@ -256,22 +262,26 @@ def adjustAngle(angle):
     angle -= 2 * np.pi
   return angle
 
-distances = [.1, .2, .3, .5, .75, 1, 1.5, 2, 2.5]
-angles = [-90, -60, -30, -10, -5, -2, 0, 2, 5, 10, 30, 60, 90]
+distances = [.1, .2, .3, .5, .75, 1, 1.5, 2, 2.5, 5]
+angles = [-90, -60, -30, -10, -5, -2, 0, 2, 5, 10, 30, 60, 90, 181]
 
 def mapStateToBin((dist, angle)):
   if dist == None or angle == None:
     return (dist, angle)
 
-  distBin = len(distances)
+  if dist > distances[-1]:
+    raise Exception('observing unexpected distance of ' + str(dist))
+  if angle > angles[-1]:
+    raise Exception('observing unexpected angle of ' + str(angle))
+
   for idx in xrange(len(distances)):
     if dist < distances[idx]:
       distBin = idx
       break
     
-  angleBin = len(angles)
-  for idx in xrange(len(angles)):
-    if angle < angles[idx]:
+  anglesArc = map(lambda x: 1.0 * x / 180 * np.pi, angles)
+  for idx in xrange(len(anglesArc)):
+    if angle < anglesArc[idx]:
       angleBin = idx
       break
 
