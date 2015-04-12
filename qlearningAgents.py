@@ -14,7 +14,7 @@ import numpy as np
 
 class QLearningAgent(ReinforcementAgent):
   """
-    Q(lambda)-Learning Agent.
+    Q-Learning Agent.
     
     You can define a new state representation from the external state
     by calling setMapper.
@@ -27,11 +27,6 @@ class QLearningAgent(ReinforcementAgent):
 
     "*** YOUR CODE HERE ***"
     self.values = util.Counter()
-    # initialize e_t
-    self.e = util.Counter()
-    # default value for lambda
-    self.lambdaValue = 0
-    self.replace = True
     
     # default mapper
     self.mapper = lambda s, a: (s, a)
@@ -41,9 +36,6 @@ class QLearningAgent(ReinforcementAgent):
   
   def setMapper(self, mapper):
     self.mapper = mapper
-
-  def setLambdaValue(self, lambdaValue):
-    self.lambdaValue = lambdaValue
 
   def setValues(self, filename):
     """
@@ -71,7 +63,7 @@ class QLearningAgent(ReinforcementAgent):
       Update Q value to q-table.
       Wrap this since mapper may be used.
     """
-    self.values[self.mapper(state, action)] += self.alpha * diff * self.e[state, action]
+    self.values[self.mapper(state, action)] += self.alpha * diff
 
   def getValue(self, state):
     """
@@ -150,15 +142,7 @@ class QLearningAgent(ReinforcementAgent):
     """
     "*** YOUR CODE HERE ***"
     delta = reward + self.gamma * self.getValue(nextState) - self.getQValue(state, action)
-
-    if self.replace:
-      self.e[state, action] = 1
-    else:
-      self.e[state, action] += 1
-
-    for state, action in self.e:
-      self.updateTemporalDifference(state, action, delta)
-      self.e[state, action] *= self.gamma * self.lambdaValue
+    self.updateTemporalDifference(state, action, delta)
     
     self.deltas.append(abs(delta))
 

@@ -112,8 +112,11 @@ def plotHumanWorldQFuncs(agent, category):
   import matplotlib.pyplot as plt
   import featureExtractors
 
-  distances = featureExtractors.distances
-  angles = featureExtractors.angles
+  distances = featureExtractors.distances[:-1]
+  anglesArc = featureExtractors.anglesArc[:-1]
+  angles = featureExtractors.angles[:-1]
+  
+  distances.reverse() # largest distance appears at top
 
   # here, reset the mapper so we can easily iterate over state, actions
   agent.setMapper(featureExtractors.discreteQTableCompressor)
@@ -122,7 +125,7 @@ def plotHumanWorldQFuncs(agent, category):
     data = []
     for distance in distances:
       row = []
-      for angle in angles:
+      for angle in anglesArc:
         row.append(agent.getQValue((distance, angle), act))
       data.append(row)
 

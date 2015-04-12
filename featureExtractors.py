@@ -10,6 +10,7 @@ import util
 
 import numpy.linalg
 import numpy as np
+import humanWorld
 
 class FeatureExtractor:  
   def getFeatures(self, state, action):    
@@ -173,7 +174,6 @@ def discreteQTableCompressor(state, action):
   dist, angle = state
 
   newAction = action
-  """
   if action == 'G':
     # force table to be symmetric
     angle = abs(angle)
@@ -183,7 +183,8 @@ def discreteQTableCompressor(state, action):
     newAction = 'R'
   elif action == 'R':
     angle = angle
-  """
+  else:
+    raise Exception('Unexpected action ' + action)
   
   newState = mapStateToBin((dist, angle))
   return (newState, newAction)
@@ -262,8 +263,16 @@ def adjustAngle(angle):
     angle -= 2 * np.pi
   return angle
 
-distances = [.1, .2, .3, .5, .75, 1, 1.5, 2, 2.5, 5]
-angles = [-90, -60, -30, -10, -5, -2, 0, 2, 5, 10, 30, 60, 90, 181]
+distances = [.1, .2, .3, .5, .75, 1, 1.5, 2, 2.5, 10]
+angles = [-90, -60, -30, -10, -5, -2, 0, 2, 5, 10, 30, 60, 90, 181] # human readable
+
+# original setting
+"""
+distances = map(lambda _: _ * humanWorld.HumanWorld.step, [.5, 1, 1.5, 2, 2.5, 3, 4, 10])
+angles = [-135, -90, -60, -30, -20, -10, 0, 10, 20, 30, 60, 90, 135, 180]
+"""
+
+anglesArc = map(lambda x: 1.0 * x / 180 * np.pi, angles)
 
 def mapStateToBin((dist, angle)):
   if dist == None or angle == None:
@@ -279,7 +288,6 @@ def mapStateToBin((dist, angle)):
       distBin = idx
       break
     
-  anglesArc = map(lambda x: 1.0 * x / 180 * np.pi, angles)
   for idx in xrange(len(anglesArc)):
     if angle < anglesArc[idx]:
       angleBin = idx

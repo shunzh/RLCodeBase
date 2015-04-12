@@ -11,7 +11,6 @@ import warnings
 from game import Actions
 import math
 import config
-import humanWorldExperiment
 
 """
 Human world functions
@@ -30,17 +29,20 @@ def getHumanWorldDiscreteFuncs():
   #sValues = pickle.load(open('learnedValues/humanAgentsegsValues.pkl'))
   sValues = tValues # FOR DEBUGING PATH MODULE
 
-  def qTarget(state, action):
+  def qTarget(s, a):
+    state, action = featureExtractors.discreteQTableCompressor(s, a)
     if not (state, action) in tValues.keys():
       warnings.warn('Un-learned target ' + str(state) + ' ' + action)
     return tValues[state, action]
 
-  def qObstacle(state, action):
+  def qObstacle(s, a):
+    state, action = featureExtractors.discreteQTableCompressor(s, a)
     if not (state, action) in oValues.keys():
       warnings.warn('Un-learned obstacle ' + str(state) + ' ' + action)
     return oValues[state, action]
 
-  def qSegment(state, action):
+  def qSegment(s, a):
+    state, action = featureExtractors.discreteQTableCompressor(s, a)
     if not (state, action) in sValues.keys():
       warnings.warn('Un-learned segment ' + str(state) + ' ' + action)
     return sValues[state, action]

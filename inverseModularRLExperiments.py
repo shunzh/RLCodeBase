@@ -84,18 +84,6 @@ def continuousWorldExperiment():
 
   return w, sln
 
-def discretize(samples):
-  """
-  Map samples to bins
-  """
-  import featureExtractors
-  ret = []
-  for sample in samples:
-    s = map(lambda (d, a): featureExtractors.mapStateToBin((d, a)), sample[0])
-    a = sample[1]
-    ret.append((s, a))
-  return ret
-
 def printWeight(sln, filename, discounters = []):
   import matplotlib.pyplot as plt
 
@@ -208,7 +196,6 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   sln = InverseModularRL(qFuncs, learnDiscounter = False)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
-  samples = discretize(samples)
   sln.setSamples(samples, humanWorld.HumanWorld.actions)
 
   x = sln.solve()
