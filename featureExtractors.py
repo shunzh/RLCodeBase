@@ -11,6 +11,7 @@ import util
 import numpy.linalg
 import numpy as np
 import humanWorld
+import warnings
 
 class FeatureExtractor:  
   def getFeatures(self, state, action):    
@@ -278,19 +279,21 @@ def mapStateToBin((dist, angle)):
   if dist == None or angle == None:
     return (dist, angle)
 
-  if dist > distances[-1]:
-    raise Exception('observing unexpected distance of ' + str(dist))
-  if angle > angles[-1]:
-    raise Exception('observing unexpected angle of ' + str(angle))
-
+  distBin = len(distances)
   for idx in xrange(len(distances)):
     if dist < distances[idx]:
       distBin = idx
       break
     
+  angleBin = len(distances)
   for idx in xrange(len(anglesArc)):
     if angle < anglesArc[idx]:
       angleBin = idx
       break
+
+  if distBin == len(distances):
+    warnings.warn("distance too long: " + str(dist))
+  if angleBin == len(angles):
+    raise Exception('observing unexpected angle of ' + str(angle))
 
   return (distBin, angleBin)

@@ -156,6 +156,7 @@ def main():
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
     a.setValues('learnedValues/humanAgent' + opts.category + 'Values.pkl')
 
+    # use discrete mapper. no way to save continuous q table.
     extractor = featureExtractors.getHumanDiscreteMapper(mdp, opts.category)
     a.setMapper(extractor)
   elif opts.agent == 'Approximate':
@@ -173,15 +174,16 @@ def main():
     if config.DISCRETE_Q:
       # way 1: using q tables
       qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
-      mapper = featureExtractors.getHumanDiscreteMapper(mdp)
     else:
       # way 2: using q functions
       qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs(discounters)
-      mapper = featureExtractors.getHumanContinuousMapper(mdp)
 
     if len(qFuncs) != nModules:
       raise Exception('the number of q functions' + len(qFuncs) + 'does not match the number of modules' + nModules +'!')
 
+    # use continuous mapper for both. q functions will take care the rest
+    # mapper: (location, orient) -> [(distance to object, angle to object) for all closest objects]
+    mapper = featureExtractors.getHumanContinuousMapper(mdp)
     a.setMapper(mapper)
     a.setQFuncs(qFuncs)
   elif opts.agent == 'random':
