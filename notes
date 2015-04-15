@@ -7,7 +7,7 @@ reward:
 - Matt's way - implemented
 
 q
-- fine-grained q table - try it
+- fine-grained q table - tried it
   - even smaller bins around the center
 - potential based
 
@@ -17,6 +17,7 @@ sanity check
   - probability of observing human data given model - done
   - baselines: reflex - done
 
+From Matt
 - symmetric q tables (in G; L and R) - overwrote state mapper
 - q learning: decrease learning rate
   - trying 0.1 rather than 0.5 first. decreasing learning rate may not reach
@@ -28,6 +29,6 @@ sanity check
 ==============
 TODO
 
-- Ng's IRL
+- Evaluation: Ng's IRL
 - weights and discounters, forward then backward
 - consider all the module instances - makes sense, go for it

@@ -65,7 +65,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     oLocs = self.objs['obsts']
     for obstIdx in xrange(len(tLocs)):
       dist = numpy.linalg.norm(np.subtract(l, oLocs[obstIdx]))
-      if dist < self.radius:
+      # using larger obstacle when training?
+      if dist < self.radius: 
         ret.append(('obsts', obstIdx))
 
     sLocs = self.objs['segs']
