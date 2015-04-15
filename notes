@@ -12,14 +12,9 @@ q
 - potential based
 
 sanity check
-- weights and discounters, forward then backward - TODO
-
-==============
-- consider all the module instances - makes sense, go for it
 - check path constraint module again
 - evaluation
   - probability of observing human data given model - done
-  - Ng's IRL
   - baselines: reflex - done
 
 - symmetric q tables (in G; L and R) - overwrote state mapper
@@ -28,4 +23,11 @@ sanity check
     the optimum (while constant learning rate may overshoot).
 - bin sizes at center - OK
 - path module: more waypoints - OK, using 3
-- larger obstacle
+- larger obstacle - See Apr.12 notes
+
+==============
+TODO
+
+- Ng's IRL
+- weights and discounters, forward then backward
+- consider all the module instances - makes sense, go for it

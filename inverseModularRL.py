@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.optimize import minimize
+from inverseRL import InverseRL
 
-class InverseModularRL():
+class InverseModularRL(InverseRL):
   """
     Inverse Reinforcement Learning. From a trained modular agent, find the weights given
     - Q tables of modules
@@ -12,8 +13,6 @@ class InverseModularRL():
     learning for visuomotor behavior, Biological Cybernetics,
     107(4),477-490
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
-    
-    For now, there is no point to make this as a derived class of inverseRL.
   """
   def __init__(self, qFuncs, eta = 1, learnDiscounter = True):
     """
@@ -27,39 +26,12 @@ class InverseModularRL():
     # confidence
     self.eta = eta
 
-  def setSamplesFromMdp(self, mdp, agent):
-    """
-    One way to set the samples.
-    Read form mdp and get the policies of states.
-
-    Set self.getSamples and self.getActions here.
-    """
-    states = mdp.getStates()
-    self.getSamples = lambda : [(state, agent.getPolicy(state)) for state in states]
-    self.getActions = lambda s : mdp.getPossibleActions(s)
-
-  def setSamples(self, samples, actions):
-    """
-    Read from subj*.parsed.mat file.
-
-    Set self.getSamples and self.getActions here.
-    """
-    self.getSamples = lambda : samples
-    self.getActions = lambda s : actions
-
-  def printSamples(self):
-    samples = self.getSamples()
-
-    for state, action in samples:
-      print state
-      print action
- 
   def obj(self, X):
     """
       The objective function to be minimized.
 
       Args:
-        X: parameter vector.
+        X: parameter vector, weights and discounters.
       Return:
         the function value
     """
@@ -71,28 +43,11 @@ class InverseModularRL():
       # use default discounters if not learning
       d = [.8] * self.n
 
-    ret = 0
-
-    # replay the process
-    for state, optAction in self.getSamples():
-      def computeQValue(state, action):
-        # s, a -> q(s, a)
-        return sum([w[moduleIdx] * self.qFuncs[moduleIdx](state, action, d) for moduleIdx in xrange(len(self.qFuncs))])
-      def qToPower(v):
-        # v -> exp(eta * v)
-        return np.exp(self.eta * v)
-
-      actionSet = self.getActions(state)
-      qValues = {action: computeQValue(state, action) for action in actionSet}
-
-      # both numerator and denominator raise to the power of e
-      # numerator: optimal action
-      ret += qValues[optAction]
-      # denominator: all the actions
-      ret -= np.log(sum([qToPower(qValues[action]) for action in actionSet]))
-
-    # This is to be minimized, take the negative.
-    return - ret
+    def computeQValue(state, action):
+      # s, a -> q(s, a)
+      return sum([w[moduleIdx] * self.qFuncs[moduleIdx](state, action, d) for moduleIdx in xrange(len(self.qFuncs))])
+    
+    return self.softMaxSum(computeQValue)
 
   def solve(self):
     """
