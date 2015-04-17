@@ -182,10 +182,10 @@ def discreteQTableCompressor(state, action):
     # use R table
     angle = -angle
     newAction = 'R'
-  elif action == 'R':
-    angle = angle
-  else:
-    raise Exception('Unexpected action ' + action)
+  elif action == 'SL':
+    # use SR table
+    angle = -angle
+    newAction = 'SR'
   
   newState = mapStateToBin((dist, angle))
   return (newState, newAction)

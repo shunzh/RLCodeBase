@@ -71,7 +71,6 @@ def getHumanStatesActions(filenames, idxSet):
       
       # figure out its action
       moveAngle = mat['pRes'][idx].agentMoveAngle / 180.0 * np.pi
-      actions = mat['pRes'][idx].action
 
       # cut the head and tail samples
       for i in range(5, len(targDist) - 15):
@@ -88,7 +87,7 @@ def getHumanStatesActions(filenames, idxSet):
                  (obstDist2[i], obstAngle2[i]),
                  (segDist[i], segAngle[i]),
                  (curSegDistInstance, curSegAngleInstance))
-        action = actions[i]
+        action = humanWorld.HumanWorld.angleToAction(moveAngle[i])
         
         samples.append((state, action))
 

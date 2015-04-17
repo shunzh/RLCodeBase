@@ -10,7 +10,6 @@ import os
 from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
-import numpy as np
 
 class QLearningAgent(ReinforcementAgent):
   """

@@ -1,4 +1,3 @@
-import random
 from modularAgents import ModularAgent
 
 class RandomAgent(ModularAgent):
