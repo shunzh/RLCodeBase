@@ -85,10 +85,16 @@ class Plotting:
       loc, orient = self.prevState
       newLoc, newOrient = x
 
+      humanColor = color_rgb(0, 255, 0)
+
       line = Line(Point(self.shift(loc)), Point(self.shift(newLoc)))
       line.setWidth(5)
-      line.setFill(color_rgb(0, 255, 0))
+      line.setFill(humanColor)
       line.draw(self.win)
+
+      cir = Circle(Point(self.shift(newLoc)), 5)
+      cir.setFill(humanColor)
+      cir.draw(self.win)
 
     self.prevState = x
 
@@ -121,7 +127,7 @@ def plotHumanWorldQFuncs(agent, category):
   # here, reset the mapper so we can easily iterate over state, actions
   agent.setMapper(featureExtractors.discreteQTableCompressor)
 
-  for act in ['L', 'R', 'G']:
+  for act in ['L', 'R', 'SL', 'SR', 'G']:
     data = []
     for distance in distances:
       row = []

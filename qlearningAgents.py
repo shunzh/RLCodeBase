@@ -21,10 +21,8 @@ class QLearningAgent(ReinforcementAgent):
     self.mapper is an identity function by default.
   """
   def __init__(self, **args):
-    "You can initialize Q-values here..."
     ReinforcementAgent.__init__(self, **args)
 
-    "*** YOUR CODE HERE ***"
     self.values = util.Counter()
     
     # default mapper

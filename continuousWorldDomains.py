@@ -14,7 +14,7 @@ def simpleToyDomain(category = 'targs'):
   """
   ret = {}
 
-  size = 4.0
+  size = 6.0
 
   # place that can't be reached
   infPos = (size + 1, size + 1)

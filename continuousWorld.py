@@ -166,10 +166,11 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
       nextStepDist, nextStepAngle = featureExtractors.getDistAngle(nextLoc, nextSeg, orient)
       [pathIntercept, pathDist] = featureExtractors.getProjectionToSegment(nextLoc, self.objs['segs'])
 
-      # discounted reward for shrinking distance and not far from the path
       # proposed by Matt
-      if nextStepDist < dist and pathDist < 1:
-        reward += self.rewards['segs'] * (1 - pathDist ** 2)
+      # discounted reward for shrinking distance and not far from the path
+      # don't punish it. return at least 0.
+      if nextStepDist < dist:
+        reward += max(self.rewards['segs'] * (1 - 2 * pathDist ** 2), 0)
 
     return reward or self.livingReward
       
@@ -197,7 +198,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     loc, orient = state
 
     #FIXME termination conditions differ for training and testing.
-    return len(self.objs['segs']) == 0 or len(self.objs['targs']) == 0
+    return len(self.objs['segs']) == 0# or len(self.objs['targs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
     """
