@@ -173,6 +173,9 @@ def getHumanDiscreteMapper(mdp, category = None):
 
 def discreteQTableCompressor(state, action):
   dist, angle = state
+  
+  if dist == None or angle == None:
+    return state
 
   newAction = action
   if action == 'G':
@@ -297,3 +300,29 @@ def mapStateToBin((dist, angle)):
     raise Exception('observing unexpected angle of ' + str(angle))
 
   return (distBin, angleBin)
+
+def binsGaussianKernel(key):
+  """
+  Discrete approximation of gausian kernel.
+  
+  key -> {key : weight}
+  """
+  (distBin, angleBin), action = key
+
+  retSet = util.Counter()
+  retSet[key] = 4
+  # don't worry about edges
+  if distBin > 0 and distBin < len(distances) - 1 and angleBin > 0 and angleBin < len(angles) - 1:
+    retSet[(distBin - 1, angleBin), action] = 2
+    retSet[(distBin + 1, angleBin), action] = 2
+    retSet[(distBin, angleBin - 1), action] = 2
+    retSet[(distBin, angleBin + 1), action] = 2
+
+    retSet[(distBin - 1, angleBin - 1), action] = 1
+    retSet[(distBin - 1, angleBin + 1), action] = 1
+    retSet[(distBin + 1, angleBin - 1), action] = 1
+    retSet[(distBin + 1, angleBin + 1), action] = 1
+  
+  normalizer = sum(retSet.values()) 
+  normedRetSet = {key: 1.0 * value / normalizer for key, value in retSet.items()}
+  return normedRetSet

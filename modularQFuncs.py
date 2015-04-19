@@ -32,19 +32,19 @@ def getHumanWorldDiscreteFuncs():
   def qTarget(s, a):
     state, action = featureExtractors.discreteQTableCompressor(s, a)
     if not (state, action) in tValues.keys():
-      warnings.warn('Un-learned target ' + str(state) + ' ' + action)
+      warnings.warn('Un-learned target')
     return tValues[state, action]
 
   def qObstacle(s, a):
     state, action = featureExtractors.discreteQTableCompressor(s, a)
     if not (state, action) in oValues.keys():
-      warnings.warn('Un-learned obstacle ' + str(state) + ' ' + action)
+      warnings.warn('Un-learned obstacle')
     return oValues[state, action]
 
   def qSegment(s, a):
     state, action = featureExtractors.discreteQTableCompressor(s, a)
     if not (state, action) in sValues.keys():
-      warnings.warn('Un-learned segment ' + str(state) + ' ' + action)
+      warnings.warn('Un-learned segment ')
     return sValues[state, action]
 
   # discounter is dropped for these q functions. No way to use different discounters.

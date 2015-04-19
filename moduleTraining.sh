@@ -1,7 +1,7 @@
 #!/bin/bash
 
-iterations="10000"
-exploration='0.5'
+iterations="5000"
+exploration='0.1'
 
 # train each modules using discrete q tables
 # -a q: q learning

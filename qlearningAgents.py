@@ -24,6 +24,8 @@ class QLearningAgent(ReinforcementAgent):
     ReinforcementAgent.__init__(self, **args)
 
     self.values = util.Counter()
+    self.e = util.Counter()
+    self.lmd = 0.8
     
     # default mapper
     self.mapper = lambda s, a: (s, a)
@@ -31,6 +33,9 @@ class QLearningAgent(ReinforcementAgent):
     # a list of temporal difference errors
     self.deltas = []
   
+  def setLmd(self, lmd):
+    self.lmd = lmd
+
   def setMapper(self, mapper):
     self.mapper = mapper
 
@@ -52,7 +57,6 @@ class QLearningAgent(ReinforcementAgent):
       Should return 0.0 if we never seen
       a state or (state,action) tuple 
     """
-    "*** YOUR CODE HERE ***"
     return self.values[self.mapper(state, action)]
 
   def updateTemporalDifference(self, state, action, diff):
@@ -60,7 +64,12 @@ class QLearningAgent(ReinforcementAgent):
       Update Q value to q-table.
       Wrap this since mapper may be used.
     """
-    self.values[self.mapper(state, action)] += self.alpha * diff
+    idx = self.mapper(state, action)
+    self.e[idx] += 1
+    
+    for idx in self.values.keys():
+      self.values[idx] += self.alpha * diff * self.e[idx]
+      self.e[idx] = self.e[idx] * self.lmd
 
   def getValue(self, state):
     """
@@ -69,7 +78,6 @@ class QLearningAgent(ReinforcementAgent):
       there are no legal actions, which is the case at the
       terminal state, you should return a value of 0.0.
     """
-    "*** YOUR CODE HERE ***"
     bestAction = self.getPolicy(state)
     if bestAction: 
       return self.getQValue(state, bestAction)
@@ -82,7 +90,6 @@ class QLearningAgent(ReinforcementAgent):
       are no legal actions, which is the case at the terminal state,
       you should return None.
     """
-    "*** YOUR CODE HERE ***"
     actions = self.getLegalActions(state)
     if actions: 
       q_value_func = lambda action: self.getQValue(state, action)
@@ -119,7 +126,6 @@ class QLearningAgent(ReinforcementAgent):
     # Pick Action
     legalActions = self.getLegalActions(state)
     action = None
-    "*** YOUR CODE HERE ***"
    
     if util.flipCoin(self.epsilon): 
       action = random.choice(legalActions)
@@ -137,11 +143,20 @@ class QLearningAgent(ReinforcementAgent):
       NOTE: You should never call this function,
       it will be called on your behalf
     """
-    "*** YOUR CODE HERE ***"
     delta = reward + self.gamma * self.getValue(nextState) - self.getQValue(state, action)
     self.updateTemporalDifference(state, action, delta)
     
     self.deltas.append(abs(delta))
+  
+  def smoothQ(self, kernel):
+    """
+      Smooth out q funcitons using the given kernel.
+    """
+    newValues = util.Counter()
+    for idx in self.values.keys():
+      idxSet = kernel(idx)
+      newValues[idx] = sum([self.values[i] * weight for i, weight in idxSet.items()])
+    self.values = newValues
 
   def final(self, state):
     # clear deltas after an episode
