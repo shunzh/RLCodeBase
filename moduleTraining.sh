@@ -1,6 +1,6 @@
 #!/bin/bash
 
-iterations="5000"
+iterations="1000"
 exploration='0.1'
 
 # train each modules using discrete q tables

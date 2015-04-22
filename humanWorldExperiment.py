@@ -159,7 +159,7 @@ def main():
     # use discrete mapper. no way to save continuous q table.
     extractor = featureExtractors.getHumanDiscreteMapper(mdp, opts.category)
     a.setMapper(extractor)
-    a.setLmd(.5) # eligibility traces
+    a.setLmd(0.5) # eligibility traces
   elif opts.agent == 'Approximate':
     extractor = featureExtractors.HumanViewExtractor(mdp, opts.category)
     qLearnOpts['extractor']  = extractor
@@ -229,7 +229,7 @@ def main():
     returns += runEpisode(a, env, opts.discount, decisionCallback, displayCallback, messageCallback, pauseCallback, episode)
   
   # smooth out q tables
-  a.smoothQ(featureExtractors.binsGaussianKernel)
+  #a.smoothQ(featureExtractors.binsGaussianKernel)
   
   if opts.episodes > 0:
     print

@@ -25,7 +25,7 @@ class QLearningAgent(ReinforcementAgent):
 
     self.values = util.Counter()
     self.e = util.Counter()
-    self.lmd = 0.8
+    self.lmd = 0
     
     # default mapper
     self.mapper = lambda s, a: (s, a)
@@ -49,7 +49,6 @@ class QLearningAgent(ReinforcementAgent):
     else:
       import warnings
       warnings.warn("Unknown file " + filename + ". No initial values set.")
-      raw_input("Confirm this message to continue:")
 
   def getQValue(self, state, action):
     """
@@ -228,7 +227,6 @@ class ApproximateVAgent(ApproximateQAgent):
     else:
       import warnings
       warnings.warn("Unknown file " + filename + ". No initial weight set.")
-      raw_input("Confirm this message to continue:")
 
   def getQValue(self, state, action):
     """
