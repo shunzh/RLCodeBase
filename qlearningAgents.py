@@ -13,7 +13,7 @@ from featureExtractors import *
 
 class QLearningAgent(ReinforcementAgent):
   """
-    Q-Learning Agent.
+    Q(lambda)-Learning Agent.
     
     You can define a new state representation from the external state
     by calling setMapper.
@@ -68,7 +68,7 @@ class QLearningAgent(ReinforcementAgent):
     
     for idx in self.values.keys():
       self.values[idx] += self.alpha * diff * self.e[idx]
-      self.e[idx] = self.e[idx] * self.lmd
+      self.e[idx] = self.e[idx] * self.lmd * self.gamma
 
   def getValue(self, state):
     """

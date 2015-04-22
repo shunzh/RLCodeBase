@@ -85,6 +85,9 @@ def parseOptions():
     optParser.add_option('-r', '--livingReward',action='store',
                          type='float',dest='livingReward',default=0.0,
                          metavar="R", help='Reward for living for a time step (default %default)')
+    optParser.add_option('-t', '--eligibilityTraces',action='store',
+                         type='float',dest='lmd',default=0.0,
+                         metavar="R", help='Eligibility traces (default %default)')
     optParser.add_option('-n', '--noise',action='store',
                          type='float',dest='noise',default=0,
                          metavar="P", help='How often action results in ' +

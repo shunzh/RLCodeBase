@@ -7,6 +7,7 @@ import featureExtractors
 
 import numpy as np
 import numpy.linalg
+import config
 
 class ContinuousWorld(mdp.MarkovDecisionProcess):
   """
@@ -66,7 +67,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     for obstIdx in xrange(len(tLocs)):
       dist = numpy.linalg.norm(np.subtract(l, oLocs[obstIdx]))
       # using larger obstacle when training?
-      if dist < self.radius * 2: 
+      if dist < self.radius * config.OBSTACLE_SCALE: 
         ret.append(('obsts', obstIdx))
 
     sLocs = self.objs['segs']
