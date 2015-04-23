@@ -160,6 +160,8 @@ class QLearningAgent(ReinforcementAgent):
   def final(self, state):
     # clear deltas after an episode
     self.deltas = []
+    # eligibility traces shouldn't be brought to the next episode
+    self.e = util.Counter()
 
 
 class ApproximateQAgent(QLearningAgent):

@@ -73,9 +73,6 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     returns += reward * totalDiscount
     totalDiscount *= discount
 
-  if 'stopEpisode' in dir(agent):
-    agent.stopEpisode()
-
 parseOptions = continuousWorldExperiment.parseOptions
 
 def saveValues(values, filename):
