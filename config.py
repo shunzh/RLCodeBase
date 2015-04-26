@@ -10,7 +10,7 @@ TWO_OBJECTS = False
 
 # use discrete q tables
 # use potential based q functions if false
-DISCRETE_Q = True
+DISCRETE_Q = False
 
 # scale the obstacle here
 OBSTACLE_SCALE = 1

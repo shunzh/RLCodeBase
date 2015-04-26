@@ -35,6 +35,7 @@ From Matt
 ==============
 TODO
 
-- Evaluation: Ng's IRL
-- weights and discounters, forward then backward
-- consider all the module instances - makes sense, go for it
+- convert to convext opt problem
+- Evaluation: Ng's IRL / Bayesian IRL
+- weights and discounters, forward then backward - necessary?
+- consider all the module instances - necessary?

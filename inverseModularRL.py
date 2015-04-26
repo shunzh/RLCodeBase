@@ -14,17 +14,29 @@ class InverseModularRL(InverseRL):
     107(4),477-490
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
-  def __init__(self, qFuncs, eta = 1, learnDiscounter = True):
+  def __init__(self, qFuncs, eta = 1, learnDiscounter = False):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
+        eta: consistency factor
+        learnDiscounter: put discounter as part of X to solve.
+                         Currently not doing in this way - would be nonconvex. 
     """
     self.qFuncs = qFuncs
+    self.n = len(self.qFuncs)
 
     # enable if learning discounters as well
     self.learnDiscounter = learnDiscounter
     # confidence
     self.eta = eta
+    # default discounters
+    self.d = [.8] * self.n
+  
+  def setDiscounters(self, d):
+    # make sure the length of discounters is correct
+    assert len(d) == self.n
+    # set discounters here
+    self.d = d
 
   def obj(self, X):
     """
@@ -38,14 +50,11 @@ class InverseModularRL(InverseRL):
     w = X[:self.n] # weights
     
     if self.learnDiscounter:
-      d = X[self.n:]
-    else:
-      # use default discounters if not learning
-      d = [.8] * self.n
+      self.d = X[self.n:]
 
     def computeQValue(state, action):
       # s, a -> q(s, a)
-      return sum([w[moduleIdx] * self.qFuncs[moduleIdx](state, action, d) for moduleIdx in xrange(len(self.qFuncs))])
+      return sum([w[moduleIdx] * self.qFuncs[moduleIdx](state, action, self.d) for moduleIdx in xrange(len(self.qFuncs))])
     
     return self.softMaxSum(computeQValue)
 
@@ -57,8 +66,6 @@ class InverseModularRL(InverseRL):
       Return:
         optimal weight and discounter, in one vector
     """
-    self.n = len(self.qFuncs)
-
     start_pos = [0] * self.n
 
     # make sure the range of weights are positive
@@ -73,6 +80,8 @@ class InverseModularRL(InverseRL):
     x = result.x.tolist()
     w = [x[idx] / sum(x[:self.n]) for idx in xrange(self.n)]
     d = x[self.n:]
+    
+    self.objValue = result.fun
 
     # concatenate weights and discounter (could be [])
     return w + d

@@ -194,7 +194,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
   qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
   n = len(qFuncs)
 
-  sln = InverseModularRL(qFuncs, learnDiscounter = False)
+  sln = InverseModularRL(qFuncs)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
   sln.setSamples(samples, humanWorld.HumanWorld.actions)
 
@@ -214,6 +214,8 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
 def humanWorldExperimentQPotential(filenames, rang):
   """
+  THIS ONE SHOULD BE DUMMY NOW. THE OBJECTIVE FUNCTION IS NOT CONVEX.
+
   Args:
     rang: load mat with given rang of trials
   """
@@ -221,7 +223,7 @@ def humanWorldExperimentQPotential(filenames, rang):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
-  sln = InverseModularRL(qFuncs)
+  sln = InverseModularRL(qFuncs, learnDiscounter=True)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
   sln.setSamples(samples, humanWorld.HumanWorld.actions)
 
@@ -234,16 +236,41 @@ def humanWorldExperimentQPotential(filenames, rang):
   print rang, ": discounters are", d
   print rang, ": evaluation ", evaluation 
 
-  """
-  printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png', d)
-  print rang, ": weight heatmaps done."
-  if sln.learnDiscounter:
-    printDiscounter(sln, 'discounterTask' + str(rang[0] / len(rang) + 1) + '.png', w)
-    print rang, ": discounter heatmaps done."
-  print rang, ": OK."
-  """
-
   return [w + d, evaluation] 
+
+def humanWorldExperimentQPotentialGridSearch(filenames, rang):
+  """
+  """
+  print rang, ": Started."
+  qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
+  n = len(qFuncs)
+
+  sln = InverseModularRL(qFuncs)
+  samples = humanInfoParser.getHumanStatesActions(filenames, rang)
+  sln.setSamples(samples, humanWorld.HumanWorld.actions)
+
+  discounterRange = map(lambda x: x *.1,  range(1, 10))
+  optD = []
+  optFunValue = 0 # values are to be minimized, must be positive
+  # FIXME overfit length of q
+  for d1 in discounterRange:
+    for d2 in discounterRange:
+      for d3 in discounterRange:
+        d = [d1, d2, d3]
+        sln.setDiscounters(d)
+        x = sln.solve()
+        
+        if sln.objValue > optFunValue:
+          optW = x[:n]
+          optD = d
+
+  evaluation = evaluateAssumption(samples, qFuncs, optW, optD)
+
+  print rang, ": weights are", optW
+  print rang, ": discounters are", optD
+  print rang, ": evaluation ", evaluation 
+
+  return [optW + optD, evaluation] 
 
 def saveToFile(filename, obj):
   output = open(filename, 'wb')
@@ -257,7 +284,7 @@ if __name__ == '__main__':
   if config.DISCRETE_Q:
     experiment = humanWorldExperimentDiscrete
   else:
-    experiment = humanWorldExperimentQPotential
+    experiment = humanWorldExperimentQPotentialGridSearch
   
   from multiprocessing import Pool
   # change the number of processors used here.
