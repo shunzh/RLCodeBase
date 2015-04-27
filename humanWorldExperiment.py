@@ -1,11 +1,9 @@
 import numpy as np
 import continuousWorldDomains
 from humanWorld import HumanWorld, HumanEnvironment
-import continuousWorldPlot
 import humanInfoParser
 import featureExtractors
 import continuousWorldExperiment
-from graphics import *
 
 def printString(x): print x
 
@@ -129,6 +127,7 @@ def main():
 
   # plot the environment
   if not opts.quiet:
+    import continuousWorldPlot
     dim = 800
     plotting = continuousWorldPlot.Plotting(mdp, dim)
     # draw the environment -- path, targets, etc.

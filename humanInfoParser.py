@@ -1,15 +1,15 @@
 import humanWorld
 import util
-from graphics import *
+import sys
 
 import numpy as np
 import continuousWorldDomains
-import continuousWorldPlot
 import featureExtractors
 import config
 import humanWorldExperiment
 
 def plotHuman(plotting, win, subjIdSet, domainId):
+  from graphics import Line, Point, color_rgb
   dim = plotting.dim
 
   # parse human positions and actions
@@ -124,6 +124,7 @@ if __name__ == '__main__':
   if len(sys.argv) < 3:
     print 'args: subjId domainId'
   else:
+    import continuousWorldPlot
     subjId = sys.argv[1]
     domainId = sys.argv[2]
 

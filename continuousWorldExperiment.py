@@ -1,8 +1,7 @@
 import optparse
 from continuousWorld import ContinuousWorld, ContinuousEnvironment
-import continuousWorldPlot
 import featureExtractors
-from graphics import *
+import sys
 
 def getUserAction(state, actionFunction):
   """
@@ -171,6 +170,7 @@ def main():
   ###########################
   # FIXME repeated here.
   if not opts.quiet:
+    import continuousWorldPlot
     dim = 800
     plotting = continuousWorldPlot.Plotting(mdp, dim)
     win = plotting.drawDomain()
