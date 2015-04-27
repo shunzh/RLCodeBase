@@ -14,3 +14,6 @@ DISCRETE_Q = False
 
 # scale the obstacle here
 OBSTACLE_SCALE = 1
+
+# enable to add slight turns
+SLIGHT_TURNS = True

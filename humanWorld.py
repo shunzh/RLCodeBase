@@ -29,26 +29,32 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   step = 0.3
 
   # angles for turning actions
-  slightTurnAngle = 15.0 / 180 * np.pi
-  turnAngle = 45.0 / 180 * np.pi
-  slightTurnDist = step * 2 / 3
+  turnAngle = 30.0 / 180 * np.pi
   turnDist = step / 3
   walkDist = step * 1
-
   # angles smaller than turnAngleThreshold classified as G
-  turnAngleThreshold = slightTurnAngle / 2
-  slightTurnAngleThreshold = (slightTurnAngle + turnAngle) / 2
+  turnAngleThreshold = turnAngle / 2
+
+  actions = ('L', 'R', 'G')
+
+  if config.SLIGHT_TURNS:
+    turnAngle = 45.0 / 180 * np.pi
+    slightTurnAngle = 15.0 / 180 * np.pi
+    slightTurnDist = step * 2 / 3
+
+    slightTurnAngleThreshold = slightTurnAngle / 2
+    turnAngleThreshold = (slightTurnAngle + turnAngle) / 2
+
+    actions += ('SL', 'SR')
+    
+  def getPossibleActions(self, state):
+    return HumanWorld.actions
 
   def __init__(self, init):
     continuousWorld.ContinuousWorld.__init__(self, init)
 
     self.atBorder = False
-
-  actions = ('SL', 'SR', 'L', 'R', 'G')
-    
-  def getPossibleActions(self, state):
-    return HumanWorld.actions
-
+  
   def isFinal(self, state):
     """
     The transition at the border may be unexpected, which may cause the q values updated incorrectly.
@@ -72,7 +78,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     elif action == 'R':
       newOrient = orient + self.turnAngle
       d = self.turnDist
-    # SL and SR may exist
+    # slight turns may not be enabled
     elif action == 'SL':
       newOrient = orient - self.slightTurnAngle
       d = self.turnDist
@@ -109,12 +115,16 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     """
     if moveAngle < -HumanWorld.turnAngleThreshold:
       action = 'L'
-    elif moveAngle < -HumanWorld.slightTurnAngleThreshold:
-      action = 'SL'
-    elif moveAngle < HumanWorld.slightTurnAngleThreshold:
-      action = 'G'
     elif moveAngle < HumanWorld.turnAngleThreshold:
-      action = 'SR'
+      if config.SLIGHT_TURNS:
+        if moveAngle < -HumanWorld.slightTurnAngleThreshold:
+          action = 'SL'
+        elif moveAngle < HumanWorld.slightTurnAngleThreshold:
+          action = 'G'
+        else:
+          action = 'SR'
+      else:
+        action = 'G'
     else:
       action = 'R'
     
