@@ -9,6 +9,7 @@ import continuousWorldDomains
 import baselineAgents
 import humanWorld
 import pickle
+import util
 
 def checkPolicyConsistency(states, a, b):
   """
@@ -278,11 +279,6 @@ def humanWorldExperimentQPotentialGridSearchHelper(sln, d):
   
   return [sln.objValue, x]
 
-def saveToFile(filename, obj):
-  output = open(filename, 'wb')
-  pickle.dump(obj, output)
-  output.close()
-
 def main():
   import config
   
@@ -307,12 +303,11 @@ def main():
     
   results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
 
-  import pickle
   values = [r.get()[0] for r in results]
   evaluations = [r.get()[1] for r in results]
 
-  saveToFile('values.pkl', values)
-  saveToFile('evaluation.pkl', evaluations)
+  util.saveToFile('values.pkl', values)
+  util.saveToFile('evaluation.pkl', evaluations)
 
 if __name__ == '__main__':
   main()

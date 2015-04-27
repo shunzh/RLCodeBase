@@ -12,6 +12,15 @@ import heapq, random
 # for load mat file and squeeze
 import scipy.io as spio
 
+import pickle
+
+def saveToFile(filename, obj):
+  """
+  Save an object to a pickle file
+  """
+  output = open(filename, 'wb')
+  pickle.dump(obj, output)
+  output.close()
 
 """
  Data structures useful for implementing SearchAgents

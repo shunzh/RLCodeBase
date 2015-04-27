@@ -2,6 +2,7 @@ import featureExtractors
 import continuousWorld
 
 import numpy as np
+import config
 
 class HumanWorld(continuousWorld.ContinuousWorld):
   """
@@ -71,6 +72,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     elif action == 'R':
       newOrient = orient + self.turnAngle
       d = self.turnDist
+    # SL and SR may exist
     elif action == 'SL':
       newOrient = orient - self.slightTurnAngle
       d = self.turnDist
@@ -105,13 +107,13 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     Move angle is parsed from mat files.
     Classify angles into actions according to our thresholds
     """
-    if moveAngle < -HumanWorld.turnAngle:
+    if moveAngle < -HumanWorld.turnAngleThreshold:
       action = 'L'
-    elif moveAngle < -HumanWorld.slightTurnAngle:
+    elif moveAngle < -HumanWorld.slightTurnAngleThreshold:
       action = 'SL'
-    elif moveAngle < HumanWorld.slightTurnAngle:
+    elif moveAngle < HumanWorld.slightTurnAngleThreshold:
       action = 'G'
-    elif moveAngle < HumanWorld.turnAngle:
+    elif moveAngle < HumanWorld.turnAngleThreshold:
       action = 'SR'
     else:
       action = 'R'
