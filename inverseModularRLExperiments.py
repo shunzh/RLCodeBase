@@ -8,6 +8,7 @@ import humanInfoParser
 import continuousWorldDomains
 import baselineAgents
 import humanWorld
+import pickle
 
 def checkPolicyConsistency(states, a, b):
   """
@@ -257,9 +258,8 @@ def humanWorldExperimentQPotentialGridSearch(filenames, rang):
     for d2 in discounterRange:
       for d3 in discounterRange:
         d = [d1, d2, d3]
-        sln.setDiscounters(d)
-        x = sln.solve()
-        
+        objValue, x = humanWorldExperimentQPotentialGridSearchHelper(sln, d)
+       
         if sln.objValue > optFunValue:
           optW = x[:n]
           optD = d
@@ -272,12 +272,18 @@ def humanWorldExperimentQPotentialGridSearch(filenames, rang):
 
   return [optW + optD, evaluation] 
 
+def humanWorldExperimentQPotentialGridSearchHelper(sln, d):
+  sln.setDiscounters(d)
+  x = sln.solve()
+  
+  return [sln.objValue, x]
+
 def saveToFile(filename, obj):
   output = open(filename, 'wb')
   pickle.dump(obj, output)
   output.close()
 
-if __name__ == '__main__':
+def main():
   import config
   
   # set experiment here
@@ -307,3 +313,6 @@ if __name__ == '__main__':
 
   saveToFile('values.pkl', values)
   saveToFile('evaluation.pkl', evaluations)
+
+if __name__ == '__main__':
+  main()
