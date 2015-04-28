@@ -147,7 +147,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     """
     # use human world info for simulation
     turnAngle = HumanWorld.turnAngle
-    slightTurnAngle = HumanWorld.slightTurnAngle
+    if config.SLIGHT_TURNS: slightTurnAngle = HumanWorld.slightTurnAngle
     turnDist = HumanWorld.turnDist
     walkDist = HumanWorld.walkDist
 

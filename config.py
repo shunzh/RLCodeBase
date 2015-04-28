@@ -16,4 +16,4 @@ DISCRETE_Q = False
 OBSTACLE_SCALE = 1
 
 # enable to add slight turns
-SLIGHT_TURNS = True
+SLIGHT_TURNS = False

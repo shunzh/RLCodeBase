@@ -35,7 +35,7 @@ From Matt
 ==============
 TODO
 
-- convert to convext opt problem
+- convert to convext opt problem - OK
 - Evaluation: Ng's IRL / Bayesian IRL
 - weights and discounters, forward then backward - necessary?
 - consider all the module instances - necessary?
