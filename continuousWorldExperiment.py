@@ -79,7 +79,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
 def parseOptions():
     optParser = optparse.OptionParser()
     optParser.add_option('-d', '--discount',action='store',
-                         type='float',dest='discount',default=0.9,
+                         type='float',dest='discount',default=0.5,
                          help='Discount on future (default %default)')
     optParser.add_option('-r', '--livingReward',action='store',
                          type='float',dest='livingReward',default=0.0,

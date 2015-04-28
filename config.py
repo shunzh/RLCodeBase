@@ -10,10 +10,10 @@ TWO_OBJECTS = False
 
 # use discrete q tables
 # use potential based q functions if false
-DISCRETE_Q = False
+DISCRETE_Q = True
 
-# scale the obstacle here
-OBSTACLE_SCALE = 1
+# in training phase
+TRAINING = True
 
 # enable to add slight turns
 SLIGHT_TURNS = False

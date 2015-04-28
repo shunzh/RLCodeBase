@@ -240,7 +240,7 @@ def main():
     # output learned values to pickle file
     saveValues(a.values, 'humanAgent' + opts.category + 'Values.pkl')
     # need to reset the mapper inside, so do a deep copy
-    import copy
+    import copy, continuousWorldPlot
     continuousWorldPlot.plotHumanWorldQFuncs(copy.deepcopy(a), opts.category)
 
   # hold window

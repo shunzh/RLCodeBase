@@ -127,7 +127,7 @@ def plotHumanWorldQFuncs(agent, category):
   # here, reset the mapper so we can easily iterate over state, actions
   agent.setMapper(featureExtractors.discreteQTableCompressor)
 
-  for act in ['L', 'R', 'SL', 'SR', 'G']:
+  for act in ['L', 'R', 'G']:
     data = []
     for distance in distances:
       row = []

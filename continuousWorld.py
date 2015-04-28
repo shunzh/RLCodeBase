@@ -67,7 +67,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     for obstIdx in xrange(len(tLocs)):
       dist = numpy.linalg.norm(np.subtract(l, oLocs[obstIdx]))
       # using larger obstacle when training?
-      if dist < self.radius * config.OBSTACLE_SCALE: 
+      scale = 2 if config.TRAINING else 1
+      if dist < self.radius * scale:
         ret.append(('obsts', obstIdx))
 
     sLocs = self.objs['segs']
@@ -198,8 +199,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     """
     loc, orient = state
 
-    #FIXME termination conditions differ for training and testing.
-    return len(self.objs['segs']) == 0# or len(self.objs['targs']) == 0
+    if config.TRAINING:
+      return len(self.objs['segs']) == 0 or len(self.objs['targs']) == 0
+    else:
+      return len(self.objs['segs']) == 0
 
   def getTransitionStatesAndProbs(self, state, action):
     """
