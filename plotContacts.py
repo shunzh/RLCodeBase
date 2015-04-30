@@ -29,7 +29,8 @@ def plot(mean_targs, std_targs, mean_obsts, std_obsts, title, filename):
 
   plt.ylabel('Number of Objects Contacted')
   plt.xticks(index + bar_width, ('Human', 'Model'))
-  plt.axis([0, 0.5, 0, 12])
+  # fix the length of the vertical axis, so easy to compare between figures
+  plt.axis([0, 0.5, 0, 15])
   plt.legend()
   plt.title(title)
   plt.gcf().set_size_inches(4,4)
