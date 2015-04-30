@@ -78,7 +78,13 @@ class InverseModularRL(InverseRL):
 
     result = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds)
     x = result.x.tolist()
-    w = [x[idx] / sum(x[:self.n]) for idx in xrange(self.n)]
+    sumX = sum(x[:self.n])
+    try:
+      w = [x[idx] / sumX for idx in xrange(self.n)]
+    except:
+      w = x[:self.n]
+      print "all 0 weights. weird"
+      
     d = x[self.n:]
     
     self.objValue = result.fun

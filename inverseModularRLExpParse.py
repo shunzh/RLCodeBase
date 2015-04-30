@@ -46,12 +46,15 @@ def getOptimalWeightDiscounter(taskId, getObjValue):
   for i in range(1, 10, stepSize):
     for j in range(1, 10, stepSize):
       for k in range(1, 10, stepSize):
-        objV, w = getObjValue(taskId, i, j, k)
+        try:
+          objV, w = getObjValue(taskId, i, j, k)
         
-        if objV < minObjV:
-          minObjV = objV
-          optW = w
-          optD = map(lambda x: x * .1, [i, j, k])
+          if objV < minObjV:
+            minObjV = objV
+            optW = w
+            optD = map(lambda x: x * .1, [i, j, k])
+        except:
+          print "parsing fails for ", taskId, i, j, k
   
   return [optW, optD]
 

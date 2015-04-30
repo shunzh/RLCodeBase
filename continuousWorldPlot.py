@@ -1,4 +1,5 @@
 from graphics import *
+from humanWorld import HumanWorld
 
 class Plotting:
   # rgb values of colors
@@ -92,9 +93,12 @@ class Plotting:
       line.setFill(humanColor)
       line.draw(self.win)
 
+      """
+      # draw a small circle at one step
       cir = Circle(Point(self.shift(newLoc)), 5)
       cir.setFill(humanColor)
       cir.draw(self.win)
+      """
 
     self.prevState = x
 
@@ -127,7 +131,9 @@ def plotHumanWorldQFuncs(agent, category):
   # here, reset the mapper so we can easily iterate over state, actions
   agent.setMapper(featureExtractors.discreteQTableCompressor)
 
-  for act in ['L', 'R', 'G']:
+  actionSet = HumanWorld.actions
+
+  for act in actionSet:
     data = []
     for distance in distances:
       row = []

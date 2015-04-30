@@ -8,6 +8,9 @@ import featureExtractors
 import config
 import humanWorldExperiment
 
+HEAD_CUTOFF = 5
+TAIL_CUTOFF = 15
+
 def plotHuman(plotting, win, subjIdSet, domainId):
   from graphics import Line, Point, color_rgb
   dim = plotting.dim
@@ -73,7 +76,7 @@ def getHumanStatesActions(filenames, idxSet):
       moveAngle = mat['pRes'][idx].agentMoveAngle / 180.0 * np.pi
 
       # cut the head and tail samples
-      for i in range(5, len(targDist) - 15):
+      for i in range(HEAD_CUTOFF, len(targDist) - TAIL_CUTOFF):
         if config.TWO_OBJECTS or humanWorldExperiment.nModules == 4:
           (curSegDistInstance, curSegAngleInstance) = continuousWorldDomains.getPreviousWaypoint\
                                                       (idx, x[i], y[i], orient[i], segDist[i], segAngle[i])
@@ -115,7 +118,7 @@ def parseHumanActions(filename, domainId):
   moveAngles = mat['pRes'][domainId].agentMoveAngle / 180 * np.pi
   actions = mat['pRes'][domainId].action
 
-  for i in range(len(agentXs)):
+  for i in range(HEAD_CUTOFF, len(agentXs) - TAIL_CUTOFF):
     samples.append({'x': agentXs[i], 'y': agentZs[i], 'orient': agentAngles[i], 'action': actions[i], 'moveAngle': moveAngles[i]})
 
   return samples

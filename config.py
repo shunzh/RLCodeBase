@@ -16,4 +16,4 @@ DISCRETE_Q = True
 TRAINING = True
 
 # enable to add slight turns
-SLIGHT_TURNS = False
+SLIGHT_TURNS = True

@@ -3,7 +3,7 @@
 iterations="8000"
 exploration='0.5'
 eligibilityTraces='0.1'
-discounter='0.5'
+discounter='0.9'
 learningRate='0.1'
 
 # train each modules using discrete q tables

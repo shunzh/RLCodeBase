@@ -15,25 +15,6 @@ reinforcement learning methods, and domains for evaluation. The codebase is
 written in Python. This is for the research in Prof. Dana Ballard's group at
 the University of Texas at Austin.
 
-Useful Commands
---------------
-
-Make sure you have python-tk installed for GUI display. You may do it by running
-
-``sudo apt-get install python-tk``
-
-See all possible arguments:
-
-``python humanWorld.py -h``
-
-Example:
-
-``python humanWorldExperiment.py -a Modular -g vr0 -k 10``
-
-- `-a Modular`: use the modular agent.
-- `-g simple`: in the virtual reality domain #0.
-- `-k 10`: run 10 episodes.
-
 Experiments
 --------------
 
@@ -41,11 +22,13 @@ Experiments are written in shell scripts, which run some python files
 sequentially.
 
 Related files:
-- [config.py](config.py) Some global configurations.
+- [config.py](config.py) Some global configurations. This is very likely to be
+  the only file you want to modify if you just want to run the existing
+  experiments.
 - [moduleTraining.sh](moduleTraining.sh) Code to train target, obstacle, path
   modules using q learning.
 - [humanModularIRLExperiment.sh](humanModularIRLExperiment.sh) Please see inline
-  comments for details. To run this, you need to have human data {miniRes25.mat,
+  comments for details. To run this, you need to have the human data {miniRes25.mat,
   subj[25-28].parsed.mat} in your checked-out folder, which are not included in
   this repo.
 
