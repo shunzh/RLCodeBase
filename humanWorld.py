@@ -26,11 +26,11 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   Reward: same as continuousWorld.
   """
   # static attributes
-  step = 0.2
+  step = 0.3
 
   # angles for turning actions
   turnAngle = 60.0 / 180 * np.pi
-  turnDist = step * 2 / 3
+  turnDist = step * 1 / 3
   walkDist = step * 1
   # angles smaller than turnAngleThreshold classified as G
   turnAngleThreshold = turnAngle / 2
@@ -39,7 +39,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
 
   if config.SLIGHT_TURNS:
     slightTurnAngle = 30.0 / 180 * np.pi
-    slightTurnDist = step * 1 / 3
+    slightTurnDist = step * 2 / 3
 
     slightTurnAngleThreshold = slightTurnAngle / 2
     turnAngleThreshold = (slightTurnAngle + turnAngle) / 2
@@ -148,6 +148,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     turnAngle = HumanWorld.turnAngle
     if config.SLIGHT_TURNS: slightTurnAngle = HumanWorld.slightTurnAngle
     turnDist = HumanWorld.turnDist
+    if config.SLIGHT_TURNS: slightTurnDist = HumanWorld.slightTurnDist
     walkDist = HumanWorld.walkDist
 
     dist, orient = s
@@ -164,15 +165,19 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     else:
       if a == 'L':
         orient = -turnAngle
+        dist = turnDist
       elif a == 'R':
         orient = turnAngle
+        dist = turnDist
       elif a == 'SL':
         orient = -slightTurnAngle
+        dist = slightTurnAngle
       elif a == 'SR':
         orient = slightTurnAngle
+        dist = slightTurnAngle
 
-      aX = turnDist * np.cos(orient) 
-      aY = turnDist * np.sin(orient) 
+      aX = dist * np.cos(orient) 
+      aY = dist * np.sin(orient) 
     
     # the new state is from (aX, aY) to (objX, objY
     newDist, newOrient = featureExtractors.getDistAngle((aX, aY), (objX, objY), orient)
@@ -181,4 +186,3 @@ class HumanWorld(continuousWorld.ContinuousWorld):
 
 # The environment is same as the continuousWorld
 HumanEnvironment = continuousWorld.ContinuousEnvironment
-

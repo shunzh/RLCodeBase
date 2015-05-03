@@ -166,6 +166,7 @@ def main():
     import modularAgents, modularQFuncs, config
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = modularAgents.ModularAgent(**qLearnOpts)
+    weights = [.5, 0, .5]; discounters = [.7] * 3
     a.setWeights(weights)
 
     if config.DISCRETE_Q:
