@@ -74,7 +74,6 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     sLocs = self.objs['segs']
     segIdx = 0
     # close to the next segment then remove the current one
-    """
     while (segIdx < len(sLocs)):
       if segIdx < len(sLocs) - 1:
         # when get closer to the next one
@@ -101,6 +100,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
         segIdx += 1
       else:
         break
+    """
 
     return ret
 

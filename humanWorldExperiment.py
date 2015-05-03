@@ -166,15 +166,17 @@ def main():
     import modularAgents, modularQFuncs, config
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = modularAgents.ModularAgent(**qLearnOpts)
-    weights = [.5, 0, .5]; discounters = [.7] * 3
+    
+    #weights = [0, 0, 1]; discounters = [.1] * 3
     a.setWeights(weights)
+    a.setDiscounters(discounters)
 
     if config.DISCRETE_Q:
       # way 1: using q tables
       qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
     else:
       # way 2: using q functions
-      qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs(discounters)
+      qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
 
     if len(qFuncs) != nModules:
       raise Exception('the number of q functions' + len(qFuncs) + 'does not match the number of modules' + nModules +'!')
