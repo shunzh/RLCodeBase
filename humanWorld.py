@@ -26,11 +26,11 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   Reward: same as continuousWorld.
   """
   # static attributes
-  step = 0.3
+  step = 0.2
 
   # angles for turning actions
-  turnAngle = 30.0 / 180 * np.pi
-  turnDist = step / 3
+  turnAngle = 60.0 / 180 * np.pi
+  turnDist = step * 2 / 3
   walkDist = step * 1
   # angles smaller than turnAngleThreshold classified as G
   turnAngleThreshold = turnAngle / 2
@@ -38,9 +38,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   actions = ('L', 'R', 'G')
 
   if config.SLIGHT_TURNS:
-    turnAngle = 45.0 / 180 * np.pi
-    slightTurnAngle = 15.0 / 180 * np.pi
-    slightTurnDist = step * 2 / 3
+    slightTurnAngle = 30.0 / 180 * np.pi
+    slightTurnDist = step * 1 / 3
 
     slightTurnAngleThreshold = slightTurnAngle / 2
     turnAngleThreshold = (slightTurnAngle + turnAngle) / 2
@@ -152,6 +151,9 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     walkDist = HumanWorld.walkDist
 
     dist, orient = s
+    
+    if dist == None or orient == None:
+      return (None, None)
 
     objX = dist * np.cos(orient) 
     objY = dist * np.sin(orient) 

@@ -10,7 +10,13 @@ if os.path.isfile('values.pkl'):
   values = pickle.load(open('values.pkl'))
 else:
   values = pickle.load(open('learnedValues/values.pkl'))
-evaluation = pickle.load(open('evaluation.pkl'))
+
+try:
+  evaluation = pickle.load(open('evaluation.pkl'))
+  evaluationExists = True
+except:
+  evaluationExists = False
+
 taskNames = ['Path only', 'Obstacle + Path', 'Target + Path', 'All']
 
 print
@@ -22,5 +28,5 @@ for idx in range(4):
   print 'Weights:', [round(x, 4) for x in values[idx][:moduleNum]]
   print 'Discounters:', [round(x, 4) for x in values[idx][moduleNum:]]
   print 'Evaluation:'
-  pprint(evaluation[idx]) # print the dictionary structure of the evaluation results
+  if evaluationExists: pprint(evaluation[idx]) # print the dictionary structure of the evaluation results
   print

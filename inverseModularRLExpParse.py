@@ -16,7 +16,8 @@ def plotGridOfDiscounters(taskId, getObjValue):
     row = []
     for j in range(1, 10, stepSize):
       # add value as a grid
-      row.append(getObjValue(taskId, i, j, 6)[0])
+      # take the negation to recover the original function value
+      row.append(- getObjValue(taskId, i, j, 6)[0])
     data.append(row)
 
   data = np.ma.array(data)

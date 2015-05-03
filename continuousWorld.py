@@ -72,24 +72,35 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
         ret.append(('obsts', obstIdx))
 
     sLocs = self.objs['segs']
+    segIdx = 0
     # close to the next segment then remove the current one
-    if len(sLocs) > 1:
-      # when get closer to the next one
-      distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[0]))
-      distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[1]))
-      if distSeg1 > distSeg2 :
-        ret.append(('segs', 0))
-    elif len(sLocs) == 1:
-      # if only one left, just approach it
-      distSeg = numpy.linalg.norm(np.subtract(l, sLocs[0]))
-      if distSeg < self.radius * 2: # larger buffer
-        ret.append(('segs', 0))
+    """
+    while (segIdx < len(sLocs)):
+      if segIdx < len(sLocs) - 1:
+        # when get closer to the next one
+        distSeg1 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
+        distSeg2 = numpy.linalg.norm(np.subtract(l, sLocs[segIdx + 1]))
+        if distSeg1 > distSeg2 :
+          ret.append(('segs', segIdx))
+        else:
+          break
+      else:
+        # if only one left, just approach it
+        distSeg = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
+        if distSeg < self.radius * 2: # larger buffer
+          ret.append(('segs', segIdx))
+          break
+      
+      segIdx += 1
     """
     # see it as waypoint collection
-    distSeg = numpy.linalg.norm(np.subtract(l, sLocs[0]))
-    if distSeg < self.radius * 2: # larger buffer
-      ret.append(('segs', 0))
-    """
+    while (segIdx < len(sLocs)):
+      distSeg = numpy.linalg.norm(np.subtract(l, sLocs[segIdx]))
+      if distSeg < self.radius * 3.5: # larger buffer
+        ret.append(('segs', segIdx))
+        segIdx += 1
+      else:
+        break
 
     return ret
 

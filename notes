@@ -32,10 +32,14 @@ From Matt
 - 5 actions - OK
   15 deg (2/3), 45 deg (1/3).
 
+- convert to convext opt problem - OK
+
+DOUBTS
+- weights and discounters, forward then backward - necessary?
+- consider all the module instances - necessary?
+
 ==============
 TODO
 
-- convert to convext opt problem - OK
 - Evaluation: Ng's IRL / Bayesian IRL
-- weights and discounters, forward then backward - necessary?
-- consider all the module instances - necessary?
+- Try mar.10 setting. if not working. change actions
