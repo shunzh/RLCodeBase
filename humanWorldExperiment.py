@@ -167,7 +167,7 @@ def main():
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = modularAgents.ModularAgent(**qLearnOpts)
     
-    #weights = [0, 0, 1]; discounters = [.1] * 3
+    #weights = [1, 0, 0]; discounters = [.1] * 3
     a.setWeights(weights)
     a.setDiscounters(discounters)
 
@@ -244,7 +244,7 @@ def main():
     saveValues(a.values, 'humanAgent' + opts.category + 'Values.pkl')
     # need to reset the mapper inside, so do a deep copy
     import copy, continuousWorldPlot
-    continuousWorldPlot.plotHumanWorldQFuncs(copy.deepcopy(a), opts.category)
+    continuousWorldPlot.plotHumanWorldQFuncs(copy.deepcopy(a), mdp.getPossibleActions(), opts.category)
 
   # hold window
   if not opts.quiet and 'vr' in opts.grid:

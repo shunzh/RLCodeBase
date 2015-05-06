@@ -115,7 +115,7 @@ class Plotting:
       cir.setFill(self.hColors[label])
       cir.draw(self.win)
 
-def plotHumanWorldQFuncs(agent, category):
+def plotHumanWorldQFuncs(agent, actionSet, category):
   """
   Print the values of states in heatmap
   """
@@ -130,8 +130,6 @@ def plotHumanWorldQFuncs(agent, category):
 
   # here, reset the mapper so we can easily iterate over state, actions
   agent.setMapper(featureExtractors.discreteQTableCompressor)
-
-  actionSet = HumanWorld.actions
 
   for act in actionSet:
     data = []

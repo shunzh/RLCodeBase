@@ -3,6 +3,7 @@ import continuousWorld
 
 import numpy as np
 import config
+import humanActions
 
 class HumanWorld(continuousWorld.ContinuousWorld):
   """
@@ -25,29 +26,11 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   Transition: same as continuousWorld but 
   Reward: same as continuousWorld.
   """
-  # static attributes
   step = 0.3
+  actions = humanActions.getNarrowedHumanActions(step)
 
-  # angles for turning actions
-  turnAngle = 60.0 / 180 * np.pi
-  turnDist = step * 1 / 3
-  walkDist = step * 1
-  # angles smaller than turnAngleThreshold classified as G
-  turnAngleThreshold = turnAngle / 2
-
-  actions = ('L', 'R', 'G')
-
-  if config.SLIGHT_TURNS:
-    slightTurnAngle = 30.0 / 180 * np.pi
-    slightTurnDist = step * 2 / 3
-
-    slightTurnAngleThreshold = slightTurnAngle / 2
-    turnAngleThreshold = (slightTurnAngle + turnAngle) / 2
-
-    actions += ('SL', 'SR')
-    
-  def getPossibleActions(self, state):
-    return HumanWorld.actions
+  def getPossibleActions(self, state = None):
+    return HumanWorld.actions.getActions()
 
   def __init__(self, init):
     continuousWorld.ContinuousWorld.__init__(self, init)
@@ -71,24 +54,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     """
     loc, orient = state
 
-    if action == 'L':
-      newOrient = orient - self.turnAngle
-      d = self.turnDist
-    elif action == 'R':
-      newOrient = orient + self.turnAngle
-      d = self.turnDist
-    # slight turns may not be enabled
-    elif action == 'SL':
-      newOrient = orient - self.slightTurnAngle
-      d = self.turnDist
-    elif action == 'SR':
-      newOrient = orient + self.slightTurnAngle
-      d = self.turnDist
-    elif action == 'G':
-      newOrient = orient
-      d = self.walkDist
-    else:
-      raise Exception("Unknown action.")
+    d, turnAngle = HumanWorld.actions.getExpectedDistAngle(action)
+    newOrient = orient + turnAngle
   
     newOrient = featureExtractors.adjustAngle(newOrient)
 
@@ -107,29 +74,6 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     return [(newState, 1)]
   
   @staticmethod
-  def angleToAction(moveAngle):
-    """
-    Move angle is parsed from mat files.
-    Classify angles into actions according to our thresholds
-    """
-    if moveAngle < -HumanWorld.turnAngleThreshold:
-      action = 'L'
-    elif moveAngle < HumanWorld.turnAngleThreshold:
-      if config.SLIGHT_TURNS:
-        if moveAngle < -HumanWorld.slightTurnAngleThreshold:
-          action = 'SL'
-        elif moveAngle < HumanWorld.slightTurnAngleThreshold:
-          action = 'G'
-        else:
-          action = 'SR'
-      else:
-        action = 'G'
-    else:
-      action = 'R'
-    
-    return action
-    
-  @staticmethod
   def transitionSimulate(s, a):
     """
     In some cases, we need to get the next state given the current state and action.
@@ -145,12 +89,6 @@ class HumanWorld(continuousWorld.ContinuousWorld):
       (newDist, newOrient) after taking a in state s.
     """
     # use human world info for simulation
-    turnAngle = HumanWorld.turnAngle
-    if config.SLIGHT_TURNS: slightTurnAngle = HumanWorld.slightTurnAngle
-    turnDist = HumanWorld.turnDist
-    if config.SLIGHT_TURNS: slightTurnDist = HumanWorld.slightTurnDist
-    walkDist = HumanWorld.walkDist
-
     dist, orient = s
     
     if dist == None or orient == None:
@@ -159,25 +97,9 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     objX = dist * np.cos(orient) 
     objY = dist * np.sin(orient) 
     
-    if a == 'G':
-      orient = 0
-      aX = walkDist; aY = 0
-    else:
-      if a == 'L':
-        orient = -turnAngle
-        dist = turnDist
-      elif a == 'R':
-        orient = turnAngle
-        dist = turnDist
-      elif a == 'SL':
-        orient = -slightTurnAngle
-        dist = slightTurnAngle
-      elif a == 'SR':
-        orient = slightTurnAngle
-        dist = slightTurnAngle
-
-      aX = dist * np.cos(orient) 
-      aY = dist * np.sin(orient) 
+    dist, orient = HumanWorld.actions.getExpectedDistAngle(a)
+    aX = dist * np.cos(orient) 
+    aY = dist * np.sin(orient) 
     
     # the new state is from (aX, aY) to (objX, objY
     newDist, newOrient = featureExtractors.getDistAngle((aX, aY), (objX, objY), orient)

@@ -13,7 +13,7 @@ TWO_OBJECTS = False
 DISCRETE_Q = False
 
 # in training phase
-TRAINING = False
+TRAINING = True
 
 # enable to add slight turns
 SLIGHT_TURNS = True
