@@ -153,7 +153,7 @@ def evaluateAssumption(samples, qFuncs, w, d = None):
     A dictionary {agent: {criteria: value}}
   """
   # define agent
-  actionFn = lambda state: humanWorld.HumanWorld.actions
+  actionFn = lambda state: humanWorld.HumanWorld.actions.getActions()
   qLearnOpts = {'gamma': 0.9,
                 'alpha': 0.5,
                 'epsilon': 0,
@@ -198,7 +198,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   sln = InverseModularRL(qFuncs)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
-  sln.setSamples(samples, humanWorld.HumanWorld.actions)
+  sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
 
   x = sln.solve()
   w = x[:n]
@@ -227,7 +227,7 @@ def humanWorldExperimentQPotential(filenames, rang):
 
   sln = InverseModularRL(qFuncs, learnDiscounter=True)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
-  sln.setSamples(samples, humanWorld.HumanWorld.actions)
+  sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
 
   x = sln.solve()
   w = x[:n]
@@ -242,6 +242,8 @@ def humanWorldExperimentQPotential(filenames, rang):
 
 def humanWorldExperimentQPotentialGridSearch(filenames, rang):
   """
+  One way to solve the nonconvex objective function,
+  grid search over all possible discounters, and optimize the weights for each
   """
   print rang, ": Started."
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
@@ -249,7 +251,7 @@ def humanWorldExperimentQPotentialGridSearch(filenames, rang):
 
   sln = InverseModularRL(qFuncs)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang)
-  sln.setSamples(samples, humanWorld.HumanWorld.actions)
+  sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
 
   discounterRange = map(lambda x: x *.1,  range(1, 10))
   optD = []
@@ -286,8 +288,9 @@ def main():
   if config.DISCRETE_Q:
     experiment = humanWorldExperimentDiscrete
   else:
-    experiment = humanWorldExperimentQPotentialGridSearch
-  
+    #experiment = humanWorldExperimentQPotentialGridSearch
+    experiment = humanWorldExperimentQPotential
+
   from multiprocessing import Pool
   # change the number of processors used here.
   # use 1 for sequential execution.
@@ -295,19 +298,20 @@ def main():
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
-  trialTaskRange = [range(0, 2), range(8, 10), range(16, 18), range(24, 26)]
 
-  if config.DEBUG:
-    experiment(subjFiles, [0])
-    exit(0)
+  if len(sys.argv) > 1:
+    taskId = int(sys.argv[1])
+    values, evaluations = experiment(subjFiles, taskRanges[taskId])
     
-  results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
+    print values
+    print evaluations
+  else:
+    results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
+    values = [r.get()[0] for r in results]
+    evaluations = [r.get()[1] for r in results]
 
-  values = [r.get()[0] for r in results]
-  evaluations = [r.get()[1] for r in results]
-
-  util.saveToFile('values.pkl', values)
-  util.saveToFile('evaluation.pkl', evaluations)
+    util.saveToFile('values.pkl', values)
+    util.saveToFile('evaluation.pkl', evaluations)
 
 if __name__ == '__main__':
   main()

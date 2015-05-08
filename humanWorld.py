@@ -27,7 +27,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   Reward: same as continuousWorld.
   """
   step = 0.3
-  actions = humanActions.getNarrowedHumanActions(step)
+  #actions = humanActions.getNarrowedHumanActions(step)
+  actions = humanActions.getBroadHumanActions(step)
 
   def getPossibleActions(self, state = None):
     return HumanWorld.actions.getActions()

@@ -31,7 +31,7 @@ class HumanActions:
   
 def getNarrowedHumanActions(step):
   """
-  Human basically only moves forward.
+  Assume human basically only moves forward.
   """
   # angles for turning actions
   turnAngle = 45.0 / 180 * np.pi
@@ -48,3 +48,13 @@ def getNarrowedHumanActions(step):
     return HumanActions(('L', 'G', 'R'),\
                         (turnDist, walkDist, turnDist),\
                         (-turnAngle, 0, turnAngle))
+
+def getBroadHumanActions(step):
+  """
+  Assume human can move all forward directions
+  """
+  actions = range(-3, 4)
+  angles = [1.0 * actionId * 30 / 180 * np.pi for actionId in actions]
+  dists = [step / 2] * len(actions)
+  
+  return HumanActions(actions, dists, angles)

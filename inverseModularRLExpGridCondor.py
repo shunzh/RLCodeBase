@@ -10,6 +10,9 @@ import humanWorld
 import humanInfoParser
 
 if __name__ == '__main__':
+  """
+  Takes input arguments as discounters specification.
+  """
   procId = int(sys.argv[1])
   
   d3 = procId % 10
@@ -29,7 +32,7 @@ if __name__ == '__main__':
 
   sln = inverseModularRL.InverseModularRL(qFuncs)
   samples = humanInfoParser.getHumanStatesActions(subjFiles, taskRanges[taskId])
-  sln.setSamples(samples, humanWorld.HumanWorld.actions)
+  sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
   experiment = inverseModularRLExperiments.humanWorldExperimentQPotentialGridSearchHelper
 
   print experiment(sln, d)

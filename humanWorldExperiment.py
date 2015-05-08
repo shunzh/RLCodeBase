@@ -167,7 +167,6 @@ def main():
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = modularAgents.ModularAgent(**qLearnOpts)
     
-    #weights = [1, 0, 0]; discounters = [.1] * 3
     a.setWeights(weights)
     a.setDiscounters(discounters)
 

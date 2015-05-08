@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import differential_evolution
 from inverseRL import InverseRL
 
 class InverseModularRL(InverseRL):
@@ -66,17 +66,14 @@ class InverseModularRL(InverseRL):
       Return:
         optimal weight and discounter, in one vector
     """
-    start_pos = [0] * self.n
-
     # make sure the range of weights are positive
     bnds = tuple((0, 1000) for _ in range(self.n))
     if self.learnDiscounter:
       # range of discounters
       margin = 0.1
       bnds += tuple((0 + margin, 1 - margin) for _ in range(self.n))
-      start_pos += [0.5] * self.n
 
-    result = minimize(self.obj, start_pos, method='SLSQP', bounds=bnds)
+    result = differential_evolution(self.obj, bnds)
     x = result.x.tolist()
     sumX = sum(x[:self.n])
     try:
