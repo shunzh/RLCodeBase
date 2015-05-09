@@ -1,6 +1,7 @@
 import numpy as np
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, minimize
 from inverseRL import InverseRL
+import config
 
 class InverseModularRL(InverseRL):
   """
@@ -67,13 +68,22 @@ class InverseModularRL(InverseRL):
         optimal weight and discounter, in one vector
     """
     # make sure the range of weights are positive
+    start_pos = [0] * self.n
     bnds = tuple((0, 1000) for _ in range(self.n))
     if self.learnDiscounter:
       # range of discounters
       margin = 0.1
       bnds += tuple((0 + margin, 1 - margin) for _ in range(self.n))
+      start_pos += [0.5] * self.n
 
-    result = differential_evolution(self.obj, bnds)
+    if config.SOLVER == "BFGS":
+      # BFGS should be default for `minimize`
+      result = minimize(self.obj, start_pos, bounds=bnds)
+    elif config.SOLVER == "DE":
+      result = differential_evolution(self.obj, bnds)
+    else:
+      raise Exception("Unknown solver " + config.SOLVER)
+
     x = result.x.tolist()
     sumX = sum(x[:self.n])
     try:

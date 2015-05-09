@@ -1,0 +1,15 @@
+Universe = vanilla
+Executable = /usr/local/bin/python
++ProjectDescription = "FLOCK"
++Project = "AI_ROBOTICS"
++Group = "grad"
+Notification = never
+Notify_user = menie482@cs.utexas.edu
+Output     = out.$(Process)
+Error      = err.$(Process)
+Log        = condor.log
+
+num_of_processes=4
+
+Arguments = inverseModularRLExperiments.py $(Process)
+Queue $(num_of_processes)
