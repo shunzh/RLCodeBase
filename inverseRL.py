@@ -3,12 +3,7 @@ import numpy as np
 
 class InverseRL:
   """
-  Inverse Reinforcement Learning algorithm.
-
-  This is implemented as
-  Ng, Andrew Y., and Stuart J. Russell.
-  "Algorithms for inverse reinforcement learning."
-  ICML. 2000.
+  Base class for IRL.
   """
   def setSamplesFromMdp(self, mdp, agent):
     """
@@ -58,8 +53,7 @@ class InverseRL:
       # denominator: all the actions
       ret -= np.log(sum([qToPower(qValues[action]) for action in actionSet]))
 
-    # This is to be minimized, take the negative.
-    return - ret
+    return ret
 
   def pSum(self, qFunc):
     """
@@ -78,22 +72,3 @@ class InverseRL:
       
     # This is to be minimized, take the negative.
     return - ret
-
-  def obj(self, X):
-    """
-    Args:
-      X: parameter vector. weights on basis of rewards
-    Return:
-      The objective function value
-    """
-    alpha = X
-
-    def getReward(state, action, nextState):
-      # dot(alpha, nextState)
-      return sum([coef * feat for coef, feat in zip(alpha, nextState)])
-
-    #TODO what is q function?
-    def computeQValue(state, action):
-      return None
-
-    return self.pSum(computeQValue)

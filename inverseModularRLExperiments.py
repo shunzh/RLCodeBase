@@ -216,8 +216,6 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
 def humanWorldExperimentQPotential(filenames, rang):
   """
-  THIS ONE SHOULD BE DUMMY NOW. THE OBJECTIVE FUNCTION IS NOT CONVEX.
-
   Args:
     rang: load mat with given rang of trials
   """
@@ -234,9 +232,8 @@ def humanWorldExperimentQPotential(filenames, rang):
   d = x[n:]
   evaluation = evaluateAssumption(samples, qFuncs, w, d)
 
-  print rang, ": weights are", w
-  print rang, ": discounters are", d
-  print rang, ": evaluation ", evaluation 
+  print w + d
+  print evaluation 
 
   return [w + d, evaluation] 
 
@@ -302,9 +299,6 @@ def main():
   if len(sys.argv) > 1:
     taskId = int(sys.argv[1])
     values, evaluations = experiment(subjFiles, taskRanges[taskId])
-    
-    print values
-    print evaluations
   else:
     results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
     values = [r.get()[0] for r in results]

@@ -57,7 +57,8 @@ class InverseModularRL(InverseRL):
       # s, a -> q(s, a)
       return sum([w[moduleIdx] * self.qFuncs[moduleIdx](state, action, self.d) for moduleIdx in xrange(len(self.qFuncs))])
     
-    return self.softMaxSum(computeQValue)
+    # to be minimized, return the negation of log
+    return - self.softMaxSum(computeQValue)
 
   def solve(self):
     """

@@ -18,5 +18,5 @@ TRAINING = False
 # enable to add slight turns
 SLIGHT_TURNS = True
 
-#SOLVER = "DE"
-SOLVER = "BFGS"
+SOLVER = "DE"
+#SOLVER = "BFGS"
