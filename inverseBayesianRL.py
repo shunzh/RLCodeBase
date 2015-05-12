@@ -1,6 +1,7 @@
 import numpy as np
 from inverseRL import InverseRL
 from policyIterationAgents import PolicyIterationAgent
+import random
 
 class InverseBayesianRL(InverseRL):
   """
@@ -16,9 +17,13 @@ class InverseBayesianRL(InverseRL):
       rewardPrior: P(R)
       stepSize: \sigma in the paper, the granularity of reward space
     """
-    self.mdp = mdp
     self.rewardPrior = rewardPrior
     self.stepSize = 1
+    self.n = len(self.mdp.getStates())
+    
+    if not "setReward" in dir(mdp):
+      raise Exception("setReward not found in MDP " + self.mdp.__name__ + ".\n\
+                      This is necessary in bayesian irl")
     
     self.agent = PolicyIterationAgent(mdp)
   
@@ -40,7 +45,24 @@ class InverseBayesianRL(InverseRL):
     return priorProb + likelihood
   
   def solve(self):
-    # TODO
-
+    """
+    Implement the PolicyWalk algorithm in the paper.
+    """
     # initialize the reward to be all 0s
-    r = [0] * len(self.mdp.getStates())
+    r = [0] * self.n
+    
+    while True:
+      p = self.obj(r)
+
+      # randomly choose a neighbor
+      idx = random.randint(0, self.n)
+      diff = random.choice(+self.stepSize, -self.stepSize)
+      r[idx] += diff
+      
+      newP = self.obj(r)
+      
+      walkProb = min(1, np.exp(newP - p))
+      
+      # walk to new r with prob of walkProb, otherwise revert
+      if random.random() >= walkProb:
+        r[idx] -= diff

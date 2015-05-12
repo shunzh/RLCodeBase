@@ -42,5 +42,8 @@ DOUBTS
 TODO
 
 - Evaluation: Bayesian IRL
-- Try mar.10 setting. if not working. change actions
-- BUG IN PASSING DISCOUNTERS
+
+- multiple waypoints ahead
+- angular difference
+
+- visual cone
