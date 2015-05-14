@@ -65,7 +65,7 @@ def getHumanWorldQPotentialFuncs(twoObjects = config.TWO_OBJECTS):
     twoObjects: look at two closest objects.
   """
   transition = HumanWorld.transitionSimulate
-  radius = 0
+  radius = 0.2
 
   def vFuncGenerator(reward):
     def vFunc(s, discounter):

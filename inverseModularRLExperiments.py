@@ -142,7 +142,7 @@ def printDiscounter(sln, filename, weights = []):
   
   plt.close()
 
-def evaluateAssumption(samples, qFuncs, w, d = None):
+def evaluateAssumption(zippedData, qFuncs, w, d = None):
   """
   Given samples and weights, compare policies of human and our agents.
   Args:
@@ -173,16 +173,19 @@ def evaluateAssumption(samples, qFuncs, w, d = None):
     agent.setQFuncs(qFuncs)
 
     # go through samples
-    agreedPolicies = 0
+    angularDiff = 0
     posteriorProb = 0
-    for state, action in samples:
+    for zippedDatum in zippedData:
+      datum, sample = zippedData
+      state, action = sample
+
       # add 1 if policy agreed by human subjects
-      agreedPolicies += agent.getPolicy(state) == action 
+      angularDiff += abs(humanWorld.HumanWorld.actions.getExpectedDistAngle(agent.getPolicy(state)) - datum['moveAngle'])
       # add log of the probability of choosing such action by the model
       posteriorProb += np.log(agent.getPolicyProbability(state, action))
-    propAgreedPolicies = 1.0 * agreedPolicies / len(samples)
-    return {'propAgreedPolicies': propAgreedPolicies,\
-            'posteriorProb': posteriorProb}
+    angularDiff = 1.0 * angularDiff / len(zippedData)
+    return {'angularDifference': angularDiff,\
+            'likelihood': posteriorProb}
   
   candidates = [modularAgents.ModularAgent, baselineAgents.RandomAgent, baselineAgents.ReflexAgent]
   return {candidate.__name__: evaluate(candidate) for candidate in candidates}
@@ -197,13 +200,14 @@ def humanWorldExperimentDiscrete(filenames, rang):
   n = len(qFuncs)
 
   sln = InverseModularRL(qFuncs)
-  samples = humanInfoParser.getHumanStatesActions(filenames, rang)
+  parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
+  samples = humanInfoParser.getHumanStatesActions(filenames, rang, parsedHumanData)
   sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
 
   x = sln.solve()
   w = x[:n]
   # TODO test evaluation
-  evaluation = evaluateAssumption(samples, qFuncs, w)
+  evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, w)
 
   print rang, ": weights are", w
   print rang, ": evaluation", evaluation 
@@ -224,13 +228,14 @@ def humanWorldExperimentQPotential(filenames, rang):
   n = len(qFuncs)
 
   sln = InverseModularRL(qFuncs, learnDiscounter=True)
-  samples = humanInfoParser.getHumanStatesActions(filenames, rang)
+  parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
+  samples = humanInfoParser.getHumanStatesActions(filenames, rang, parsedHumanData)
   sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
 
   x = sln.solve()
   w = x[:n]
   d = x[n:]
-  evaluation = evaluateAssumption(samples, qFuncs, w, d)
+  evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, w, d)
 
   print w + d
   print evaluation 

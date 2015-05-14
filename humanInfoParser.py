@@ -17,7 +17,7 @@ def plotHuman(plotting, win, subjIdSet, domainId):
 
   # parse human positions and actions
   for subjId in subjIdSet:
-    humanSamples = parseHumanActions('subj' + str(subjId) + '.parsed.mat', int(domainId))
+    humanSamples = parseHumanData(['subj' + str(subjId) + '.parsed.mat'], [int(domainId)])
 
     prevLoc = None
     for sample in humanSamples:
@@ -44,82 +44,80 @@ def plotHuman(plotting, win, subjIdSet, domainId):
       prevLoc = loc
     prevLoc = None
 
-def getHumanStatesActions(filenames, idxSet):
+def getHumanStatesActions(filenames, idxSet, parsedHumanData = None, getRawAngle = False):
   """
-  Get human actions and states from mat files.
+  return (state, action) paris
+  """
+  parsedHumanData = parsedHumanData or parseHumanData(filenames, idxSet)
+  return map(lambda x:(((x['targDist'][0], x['targAngle'][0]),
+                        (x['targDist'][1], x['targAngle'][1]),
+                        (x['obstDist'][0], x['obstAngle'][0]),
+                        (x['obstDist'][1], x['obstAngle'][1]),
+                        (x['segDist'][0], x['segAngle'][0]),
+                        (x['segDist'][1], x['segAngle'][1])
+                       ),
+                       x['moveAngle'] if getRawAngle else x['action']),
+                       parsedHumanData
+            )
+
+def parseHumanData(filenames, domainIds):
+  """
+  Parse human behavivors from mat, which contains positions, actions and angle changes, etc. at all data points.
+  (Action is redundant given change of angles. Just for convenience.)
+
+  Args:
+    filenames: mat files to read
+    domainIds: room numbers
+
+  Return:
+    a list of dicts that contain all possibly useful information
   """
   samples = []
 
   for filename in filenames:
     mat = util.loadmat(filename)
+    
+    for domainId in domainIds:
+      agentXs = mat['pRes'][domainId].agentX
+      agentZs = mat['pRes'][domainId].agentZ
+      agentAngles = - mat['pRes'][domainId].agentAngle / 180 * np.pi - np.pi  / 2
+      moveAngles = mat['pRes'][domainId].agentMoveAngle / 180 * np.pi
 
-    for idx in idxSet:
-      x = - mat['pRes'][idx].agentX
-      y = - mat['pRes'][idx].agentZ
-      orient = [featureExtractors.adjustAngle(- angle / 180.0 * np.pi - np.pi / 2) for angle in mat['pRes'][idx].agentAngle] 
+      obstDist = mat['pRes'][domainId].obstDist1
+      obstAngle = mat['pRes'][domainId].obstAngle1 / 180.0 * np.pi
+      obstDist2 = mat['pRes'][domainId].obstDist2
+      obstAngle2 = mat['pRes'][domainId].obstAngle2 / 180.0 * np.pi
 
-      obstDist = mat['pRes'][idx].obstDist1
-      obstAngle = mat['pRes'][idx].obstAngle1 / 180.0 * np.pi
-      obstDist2 = mat['pRes'][idx].obstDist2
-      obstAngle2 = mat['pRes'][idx].obstAngle2 / 180.0 * np.pi
-
-      targDist = mat['pRes'][idx].targDist1
-      targAngle = mat['pRes'][idx].targAngle1 / 180.0 * np.pi
-      targDist2 = mat['pRes'][idx].targDist2
-      targAngle2 = mat['pRes'][idx].targAngle2 / 180.0 * np.pi
+      targDist = mat['pRes'][domainId].targDist1
+      targAngle = mat['pRes'][domainId].targAngle1 / 180.0 * np.pi
+      targDist2 = mat['pRes'][domainId].targDist2
+      targAngle2 = mat['pRes'][domainId].targAngle2 / 180.0 * np.pi
 
       # the next segment, already provided.
-      segDist = mat['pRes'][idx].pathDist
-      segAngle = mat['pRes'][idx].pathAngle / 180.0 * np.pi
-      
-      # figure out its action
-      moveAngle = mat['pRes'][idx].agentMoveAngle / 180.0 * np.pi
-
-      # cut the head and tail samples
-      for i in range(HEAD_CUTOFF, len(targDist) - TAIL_CUTOFF):
+      segDist = mat['pRes'][domainId].pathDist
+      segAngle = mat['pRes'][domainId].pathAngle / 180.0 * np.pi
+ 
+      for i in range(HEAD_CUTOFF, len(agentXs) - TAIL_CUTOFF):
         if config.TWO_OBJECTS or humanWorldExperiment.nModules == 4:
+          # coordinate problems, need negate x, z
           (curSegDistInstance, curSegAngleInstance) = continuousWorldDomains.getPreviousWaypoint\
-                                                      (idx, x[i], y[i], orient[i], segDist[i], segAngle[i])
+                                                      (domainId, -agentXs[i], -agentZs[i], agentAngles[i], segDist[i], segAngle[i])
         else:
           # this field will be dummy
           (curSegAngleInstance, curSegDistInstance) = (segDist[i], segAngle[i])
 
-        state = ((targDist[i], targAngle[i]),
-                 (targDist2[i], targAngle2[i]),
-                 (obstDist[i], obstAngle[i]),
-                 (obstDist2[i], obstAngle2[i]),
-                 (segDist[i], segAngle[i]),
-                 (curSegDistInstance, curSegAngleInstance))
-        action = humanWorld.HumanWorld.actions.angleToAction(moveAngle[i])
-        
-        samples.append((state, action))
-
-  return samples
-
-def parseHumanActions(filename, domainId):
-  """
-  Parse human behavivors from mat, which contains positions, actions and angle changes at all data points.
-  (Action is redundant given change of angles. Just for convenience.)
-
-  Args:
-    filename: mat file to read
-    domainId: room number
-
-  Return:
-    a list of dicts, which includes x, y, orient and action.
-  """
-  mat = util.loadmat(filename)
-
-  samples = []
-
-  agentXs = mat['pRes'][domainId].agentX
-  agentZs = mat['pRes'][domainId].agentZ
-  agentAngles = - mat['pRes'][domainId].agentAngle / 180 * np.pi - np.pi  / 2
-  moveAngles = mat['pRes'][domainId].agentMoveAngle / 180 * np.pi
-  actions = mat['pRes'][domainId].action
-
-  for i in range(HEAD_CUTOFF, len(agentXs) - TAIL_CUTOFF):
-    samples.append({'x': agentXs[i], 'y': agentZs[i], 'orient': agentAngles[i], 'action': actions[i], 'moveAngle': moveAngles[i]})
+        action = humanWorld.HumanWorld.actions.angleToAction(moveAngles[i])
+        samples.append({'x': agentXs[i],\
+                        'y': agentZs[i],\
+                        'orient': agentAngles[i],\
+                        'obstDist': [obstDist[i], obstDist2[i]],\
+                        'obstAngle': [obstAngle[i], obstAngle2[i]],\
+                        'targDist': [targDist[i], targDist2[i]],\
+                        'targAngle': [targAngle[i], targAngle2[i]],\
+                        'segDist': [segDist[i], curSegDistInstance],\
+                        'segAngle': [segAngle[i], curSegAngleInstance],\
+                        'action': action,\
+                        'moveAngle': moveAngles[i]})
 
   return samples
 
