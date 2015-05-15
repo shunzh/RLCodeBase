@@ -175,15 +175,13 @@ def evaluateAssumption(zippedData, qFuncs, w, d = None):
     # go through samples
     angularDiff = 0
     posteriorProb = 0
-    for zippedDatum in zippedData:
-      datum, sample = zippedData
+    for datum, sample in zippedData:
       state, action = sample
 
-      # add 1 if policy agreed by human subjects
-      angularDiff += abs(humanWorld.HumanWorld.actions.getExpectedDistAngle(agent.getPolicy(state)) - datum['moveAngle'])
+      angularDiff += abs(humanWorld.HumanWorld.actions.getExpectedDistAngle(agent.getPolicy(state))[1] - datum['moveAngle'])
       # add log of the probability of choosing such action by the model
       posteriorProb += np.log(agent.getPolicyProbability(state, action))
-    angularDiff = 1.0 * angularDiff / len(zippedData)
+    angularDiff = (1.0 * angularDiff / len(zippedData)) / np.pi * 180
     return {'angularDifference': angularDiff,\
             'likelihood': posteriorProb}
   
