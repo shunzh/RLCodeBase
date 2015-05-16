@@ -216,7 +216,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   return [w, evaluation] 
 
-def humanWorldExperimentQPotential(filenames, rang):
+def humanWorldExperimentQPotential(filenames, rang, solving = True):
   """
   Args:
     rang: load mat with given rang of trials
@@ -230,7 +230,12 @@ def humanWorldExperimentQPotential(filenames, rang):
   samples = humanInfoParser.getHumanStatesActions(filenames, rang, parsedHumanData)
   sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
 
-  x = sln.solve()
+  if solving:
+    x = sln.solve()
+  else:
+    # read from files in this case
+    values = pickle.load(open('learnedValues/values.pkl'))
+    x = values[rang[0] / 8]
   w = x[:n]
   d = x[n:]
   evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, w, d)
@@ -301,7 +306,10 @@ def main():
 
   if len(sys.argv) > 1:
     taskId = int(sys.argv[1])
-    values, evaluations = experiment(subjFiles, taskRanges[taskId])
+    values, evaluations = experiment(subjFiles, taskRanges[taskId], solving=False)
+
+    util.saveToFile('values' + str(taskId) + '.pkl', values)
+    util.saveToFile('evaluation' + str(taskId) + '.pkl', evaluations)
   else:
     results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
     values = [r.get()[0] for r in results]

@@ -43,7 +43,12 @@ TODO
 
 - Evaluation: Bayesian IRL
 
+- May try CMA-ES if DE is too slow.
+
 - multiple waypoints ahead
 - angular difference
 
 - visual cone
+
+logis:
+- merge separate condor out files. fine
