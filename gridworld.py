@@ -81,6 +81,11 @@ class Gridworld(mdp.MarkovDecisionProcess):
       return cell
     return self.livingReward
         
+  def setReward(self, state, reward):
+    if state != self.grid.terminalState:
+      x, y = state
+      self.grid[x][y] = reward
+      
   def getStartState(self):
     startStates = []
     for x in range(self.grid.width):
@@ -112,7 +117,7 @@ class Gridworld(mdp.MarkovDecisionProcess):
     """        
         
     if action not in self.getPossibleActions(state):
-      raise "Illegal action!"
+      raise Exception("Illegal action " + str(action))
       
     if action == 'exit':
       return [(self.grid.terminalState, 1)]

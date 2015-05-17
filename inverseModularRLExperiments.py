@@ -306,7 +306,7 @@ def main():
 
   if len(sys.argv) > 1:
     taskId = int(sys.argv[1])
-    values, evaluations = experiment(subjFiles, taskRanges[taskId], solving=False)
+    values, evaluations = experiment(subjFiles, taskRanges[taskId])
 
     util.saveToFile('values' + str(taskId) + '.pkl', values)
     util.saveToFile('evaluation' + str(taskId) + '.pkl', evaluations)

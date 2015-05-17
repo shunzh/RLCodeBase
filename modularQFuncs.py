@@ -65,7 +65,7 @@ def getHumanWorldQPotentialFuncs(twoObjects = config.TWO_OBJECTS):
     twoObjects: look at two closest objects.
   """
   transition = HumanWorld.transitionSimulate
-  radius = 0.2
+  radius = 0
 
   def vFuncGenerator(reward):
     def vFunc(s, discounter):
@@ -104,8 +104,8 @@ def getHumanWorldQPotentialFuncs(twoObjects = config.TWO_OBJECTS):
     return vPath(project, discounter)
 
   if twoObjects:
-    return [lambda s, a, d: qTarget(s[0], a, d[0]) + qTarget(s[1], a, d[0]), # closest target(s)
-            lambda s, a, d: qObstacle(s[2], a, d[1]) + qObstacle(s[3], a, d[1]), # closest obstacle(s)
+    return [lambda s, a, d: qTarget(s[0], a, d[0]),
+            lambda s, a, d: qObstacle(s[2], a, d[1]),
             lambda s, a, d: qSegment(s[4], a, d[2]) + qSegment(s[5], a, d[2])] # next seg point
             #lambda s, a, d = defaultD: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
   else:

@@ -19,11 +19,11 @@ class InverseBayesianRL(InverseRL):
     """
     self.rewardPrior = rewardPrior
     self.stepSize = 1
-    self.n = len(self.mdp.getStates())
+    self.n = len(mdp.getStates())
     
     if not "setReward" in dir(mdp):
-      raise Exception("setReward not found in MDP " + self.mdp.__name__ + ".\n\
-                      This is necessary in bayesian irl")
+      raise Exception("setReward not found in MDP " + mdp.__class__.__name__ + ". \
+This is necessary in bayesian irl")
     
     self.agent = PolicyIterationAgent(mdp)
   
