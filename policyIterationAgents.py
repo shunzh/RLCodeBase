@@ -20,7 +20,7 @@ class PolicyIterationAgent(ValueEstimationAgent):
   
   def getQValue(self, state, action):
     possibleNextStates = self.mdp.getTransitionStatesAndProbs(state, action)
-    return sum([(self.mdp.getReward(nextState) + self.getValue(nextState)) * prob\
+    return sum([(self.mdp.getReward(state, action, nextState) + self.getValue(nextState)) * prob\
                 for nextState, prob in possibleNextStates])
 
   def learn(self):
@@ -43,7 +43,7 @@ class PolicyIterationAgent(ValueEstimationAgent):
       policyStable = True
       for state in self.mdp.getStates():
         b = self.getPolicy(state)
-        actions = self.mdp.getActions(state)
+        actions = self.mdp.getPossibleActions(state)
         self.policies[state] = max(actions, key = lambda a: self.getQValue(state, a))
         
         if b != self.policies[state]: policyStable = False
@@ -54,9 +54,14 @@ class PolicyIterationAgent(ValueEstimationAgent):
     while (not policyStable):
       policyEstimate()
       policyStable = policyImprovement()
+    print "ok"
 
   def getValue(self, state):
     return self.values[state]
 
   def getPolicy(self, state):
-    return self.policies[state]
+    if state in self.policies.keys():
+      return self.policies[state]
+    else:
+      # return the first action if not learned
+      return self.mdp.getPossibleActions(state)[0]

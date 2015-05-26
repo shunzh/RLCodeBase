@@ -115,7 +115,6 @@ class Gridworld(mdp.MarkovDecisionProcess):
     from 'state' by taking 'action' along
     with their transition probabilities.          
     """        
-        
     if action not in self.getPossibleActions(state):
       raise Exception("Illegal action " + str(action))
       
@@ -336,8 +335,8 @@ def getWalkAvoidGrid():
   return Gridworld(grid, isFinal)
 
 def getToyWalkAvoidGrid():
-  grid = [[ 'S',  -1],
-          [ ' ', ' ']]
+  grid = [[ 'S', ' '],
+          [ ' ', 1]]
   isFinal = lambda state : state[0] == 1 and state[1] == 1
   return Gridworld(grid, isFinal)
  

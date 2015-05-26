@@ -11,12 +11,14 @@ class InverseBayesianRL(InverseRL):
   "Bayesian inverse reinforcement learning."
   Urbana 51 (2007): 61801.
   """
-  def __init__(self, mdp, rewardPrior, stepSize = 1):
+  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1):
     """
     Args:
       rewardPrior: P(R)
       stepSize: \sigma in the paper, the granularity of reward space
     """
+    InverseRL.__init__(self, eta)
+
     self.rewardPrior = rewardPrior
     self.stepSize = 1
     self.n = len(mdp.getStates())
@@ -39,7 +41,7 @@ This is necessary in bayesian irl")
     for state, reward in zip(self.agent.mdp.getStates(), X):
       self.agent.mdp.setReward(state, reward)
     self.agent.learn()
-    qFunc = lambda s, a: self.getQValue(s, a)
+    qFunc = lambda s, a: self.agent.getQValue(s, a)
     likelihood = self.softMaxSum(qFunc)
     
     return priorProb + likelihood
@@ -55,8 +57,8 @@ This is necessary in bayesian irl")
       p = self.obj(r)
 
       # randomly choose a neighbor
-      idx = random.randint(0, self.n)
-      diff = random.choice(+self.stepSize, -self.stepSize)
+      idx = random.randint(0, self.n - 1)
+      diff = random.choice([+self.stepSize, -self.stepSize])
       r[idx] += diff
       
       newP = self.obj(r)

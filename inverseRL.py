@@ -5,6 +5,9 @@ class InverseRL:
   """
   Base class for IRL.
   """
+  def __init__(self, eta):
+    self.eta = eta
+
   def setSamplesFromMdp(self, mdp, agent):
     """
     One way to set the samples.

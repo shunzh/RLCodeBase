@@ -31,6 +31,7 @@ def gridWorldExperiments():
   
   sol = InverseBayesianRL(mdp, laplacePriorGen(1))
   sol.setSamplesFromMdp(mdp, a)
+  print sol.getSamples()
   sol.solve()
 
 def main():
