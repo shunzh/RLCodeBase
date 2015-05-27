@@ -54,7 +54,7 @@ class PolicyIterationAgent(ReinforcementAgent):
         self.policies[state] = max(actions, key = lambda a: self.getQValue(state, a))
         
         if b != self.policies[state]: policyStable = False
-      
+
       return policyStable
     
     policyStable = False

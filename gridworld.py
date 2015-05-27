@@ -50,7 +50,10 @@ class Gridworld(mdp.MarkovDecisionProcess):
     state under the special action "done".
     """
     #return ('north','west','south','east', 'ne', 'se', 'nw', 'sw')
-    return ('north','west','south','east')
+    if self.isFinal(state):
+      return ('exit')
+    else:
+      return ('north','west','south','east','stay')
     
   def getStates(self):
     """
@@ -106,7 +109,7 @@ class Gridworld(mdp.MarkovDecisionProcess):
     This convention is to make the grids line up with the examples
     in the R+N textbook.
     """
-    return self.isFinal(state)
+    return state == self.grid.terminalState
                    
   def getTransitionStatesAndProbs(self, state, action):
     """
@@ -153,6 +156,9 @@ class Gridworld(mdp.MarkovDecisionProcess):
       successors.append((northState,massLeft/2.0))
       successors.append((southState,massLeft/2.0)) 
       
+    if action == 'stay':
+      successors.append((state,1))
+
     successors = self.__aggregate(successors)
 
     return successors                                
@@ -337,7 +343,7 @@ def getWalkAvoidGrid():
 def getToyWalkAvoidGrid():
   grid = [[ 'S', ' '],
           [ ' ', 1]]
-  isFinal = lambda state : state[0] == 1 and state[1] == 1
+  isFinal = lambda state : False
   return Gridworld(grid, isFinal)
  
 def getLargeWalkAvoidGrid(obstacleProportion = 0.2):

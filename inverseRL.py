@@ -37,7 +37,7 @@ class InverseRL:
  
   def softMaxSum(self, qFunc):
     """
-    Measures the probability of observing such policies given the q function.
+    Measures the log of the probability of observing such policies given the q function.
     """
     ret= 0
     

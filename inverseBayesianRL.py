@@ -1,7 +1,7 @@
 import numpy as np
 from inverseRL import InverseRL
 from policyIterationAgents import PolicyIterationAgent
-import random
+from scipy.optimize import differential_evolution
 
 class InverseBayesianRL(InverseRL):
   """
@@ -27,7 +27,9 @@ class InverseBayesianRL(InverseRL):
       raise Exception("setReward not found in MDP " + mdp.__class__.__name__ + ". \
 This is necessary in bayesian irl")
     
-    self.agent = PolicyIterationAgent(mdp)
+    opts = {'gamma': 0.8, 
+            'actionFn': lambda state: mdp.getPossibleActions(state)}
+    self.agent = PolicyIterationAgent(mdp, **opts)
   
   def obj(self, X):
     """
@@ -40,31 +42,21 @@ This is necessary in bayesian irl")
 
     for state, reward in zip(self.agent.mdp.getStates(), X):
       self.agent.mdp.setReward(state, reward)
+    
     self.agent.learn()
     qFunc = lambda s, a: self.agent.getQValue(s, a)
     likelihood = self.softMaxSum(qFunc)
     
-    return priorProb + likelihood
+    # want to minimize
+    return - (priorProb + likelihood)
   
   def solve(self):
     """
     Implement the PolicyWalk algorithm in the paper.
     """
     # initialize the reward to be all 0s
-    r = [0] * self.n
+    bnds = tuple((-100, 100) for _ in range(self.n))
     
-    while True:
-      p = self.obj(r)
+    result = differential_evolution(self.obj, bnds)
 
-      # randomly choose a neighbor
-      idx = random.randint(0, self.n - 1)
-      diff = random.choice([+self.stepSize, -self.stepSize])
-      r[idx] += diff
-      
-      newP = self.obj(r)
-      
-      walkProb = min(1, np.exp(newP - p))
-      
-      # walk to new r with prob of walkProb, otherwise revert
-      if random.random() >= walkProb:
-        r[idx] -= diff
+    print result

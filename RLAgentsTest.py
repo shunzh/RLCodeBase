@@ -31,7 +31,6 @@ class Test(unittest.TestCase):
     import gridworld
     mdp = gridworld.getSidewalkGrid()
 
-    env = gridworld.GridworldEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     gamma = 0.8
     qLearnOpts = {'gamma': gamma, 
