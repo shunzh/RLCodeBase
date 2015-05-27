@@ -1,26 +1,33 @@
-from learningAgents import ValueEstimationAgent
+from learningAgents import ReinforcementAgent
 import numpy as np
 import util
 
-class PolicyIterationAgent(ValueEstimationAgent):
+class PolicyIterationAgent(ReinforcementAgent):
   """
   Policy iteration
   """
-  def __init__(self, mdp, threshold = .5):
+  def __init__(self, mdp, **args):
     """
     Args:
       mdp: mdp used for training
       threshold: if changes in V smaller than threshold, then terminate policy estimation.
     """
+    ReinforcementAgent.__init__(self, **args)
+
+    # model based 
     self.mdp = mdp
-    self.threshold = threshold
+
+    try:
+      self.threshold = args['threshold']
+    except:
+      self.threshold = .5 # default threshold
 
     self.values = util.Counter()
     self.policies = util.Counter()
   
   def getQValue(self, state, action):
     possibleNextStates = self.mdp.getTransitionStatesAndProbs(state, action)
-    return sum([(self.mdp.getReward(state, action, nextState) + self.getValue(nextState)) * prob\
+    return sum([(self.mdp.getReward(state, action, nextState) + self.gamma * self.getValue(nextState)) * prob\
                 for nextState, prob in possibleNextStates])
 
   def learn(self):
@@ -54,10 +61,12 @@ class PolicyIterationAgent(ValueEstimationAgent):
     while (not policyStable):
       policyEstimate()
       policyStable = policyImprovement()
-    print "ok"
 
   def getValue(self, state):
     return self.values[state]
+
+  def getAction(self, state):
+    return self.getPolicy(state)
 
   def getPolicy(self, state):
     if state in self.policies.keys():
