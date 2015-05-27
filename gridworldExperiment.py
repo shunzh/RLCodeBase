@@ -149,8 +149,8 @@ if __name__ == '__main__':
   # GET THE GRIDWORLD
   ###########################
 
-  import gridworld
-  mdpFunction = getattr(gridworld, "get"+opts.grid)
+  import gridworld, gridworldMaps
+  mdpFunction = getattr(gridworldMaps, "get"+opts.grid)
   mdp = mdpFunction()
   mdp.setLivingReward(opts.livingReward)
   mdp.setNoise(opts.noise)

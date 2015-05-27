@@ -48,7 +48,8 @@ Environments
 ### Discrete domains
 
 Related files:
-- [gridworld.py](gridworld.py) A gridworld domain.
+- [gridworld.py](gridworld.py) Definition of grid MDP.
+- [gridworldMaps.py](gridworldMaps.py) Specification of grid configurations.
 
 Discrete environments are used to do some basic evaluation for modular RL
 algorithms. The locations of objects and the agent are represented by grid
@@ -58,7 +59,7 @@ Examples for discrete environments can be found in gridworld.py, such as
 `getMazeGrid`, `getBookGrid`, `getBridgeGrid`, etc.  You may add you own by
 looking at their definitions. Concretely,
 
-- define a get$GridlWorldName$ function in gridworld.py. In which,
+- define a get$GridlWorldName$ function in gridworldMaps.py. In which,
 - create a two-dimensional list, usually called `grid`, specified as follows.
 
   * 'S': starting state. Multiple starting states can exist.

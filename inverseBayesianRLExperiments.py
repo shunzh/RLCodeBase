@@ -1,7 +1,7 @@
-import gridworld
 import numpy as np
 from inverseBayesianRL import InverseBayesianRL
 from policyIterationAgents import PolicyIterationAgent
+import gridworldMaps
 
 # two popular reward priors
 def laplacePriorGen(sigma):
@@ -23,8 +23,8 @@ def experiment(mdp):
   sol.solve()
 
 def main():
-  mdp = gridworld.getToyWalkAvoidGrid()
-  #mdp = gridworld.getBookGrid()
+  mdp = gridworldMaps.getToyWalkAvoidGrid()
+  #mdp = gridworldMaps.getBookGrid()
 
   experiment(mdp)
 
