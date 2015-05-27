@@ -216,7 +216,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   return [w, evaluation] 
 
-def humanWorldExperimentQPotential(filenames, rang, solving = True):
+def humanWorldExperimentQPotential(filenames, rang, solving = False):
   """
   Args:
     rang: load mat with given rang of trials

@@ -55,7 +55,7 @@ Discrete environments are used to do some basic evaluation for modular RL
 algorithms. The locations of objects and the agent are represented by grid
 positions.
 
-Examples for discrete environments can be found in gridworld.py, such as
+Examples for discrete environments can be found in gridworldMaps.py, such as
 `getMazeGrid`, `getBookGrid`, `getBridgeGrid`, etc.  You may add you own by
 looking at their definitions. Concretely,
 
