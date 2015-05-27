@@ -89,6 +89,20 @@ HumanWorld is revised from ContinuousWorld. The major difference is that the
 agent has an orientation and can only go straight ahead, turn slightly left or
 right.
 
+Bayesian IRL
+--------------
+
+Related files:
+
+- [inverseBayesianRL.py](inverseBayesianRL.py) implementation of the Bayesian IRL algorithm.
+- [inverseBayesianRLExperiments.py](inverseBayesianRLExperiments.py) to run IRL on gridworld domains.
+
+Implemented according to
+
+Ramachandran, Deepak, and Eyal Amir.
+"Bayesian inverse reinforcement learning."
+Urbana 51 (2007): 61801.
+
 Modular IRL
 --------------
 

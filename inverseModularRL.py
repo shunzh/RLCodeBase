@@ -46,7 +46,7 @@ class InverseModularRL(InverseRL):
       Args:
         X: parameter vector, weights and discounters.
       Return:
-        the function value
+        - log(likelihood)
     """
     w = X[:self.n] # weights
     

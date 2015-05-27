@@ -2,6 +2,7 @@ import numpy as np
 from inverseRL import InverseRL
 from policyIterationAgents import PolicyIterationAgent
 import cma
+import random
 
 class InverseBayesianRL(InverseRL):
   """
@@ -11,17 +12,23 @@ class InverseBayesianRL(InverseRL):
   "Bayesian inverse reinforcement learning."
   Urbana 51 (2007): 61801.
   """
-  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1):
+  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1, maxIterations = 2000, lastWindow = 100):
     """
     Args:
       rewardPrior: P(R)
+      eta: parameter for softmax
       stepSize: \sigma in the paper, the granularity of reward space
+      maxIterations: the number of iterations that policy walk will run
+      lastWindow: the rewards in the last iterations will be considered
     """
     InverseRL.__init__(self, eta)
 
     self.rewardPrior = rewardPrior
     self.stepSize = 1
     self.n = len(mdp.getStates())
+    
+    self.maxIterations = maxIterations
+    self.lastWindow = lastWindow
     
     if not "setReward" in dir(mdp):
       raise Exception("setReward not found in MDP " + mdp.__class__.__name__ + ". \
@@ -47,12 +54,35 @@ This is necessary in bayesian irl")
     qFunc = lambda s, a: self.agent.getQValue(s, a)
     likelihood = self.softMaxSum(qFunc)
     
-    # want to minimize
-    return - (priorProb + likelihood)
+    return priorProb + likelihood
   
   def solve(self):
-    start_pos = [0] * self.n
+    window = []
+    r = [0] * self.n
     
-    result = cma.fmin(self.obj, start_pos, 1)
+    for _ in xrange(self.maxIterations):
+      p = self.obj(r)
 
-    print result[0]
+      # randomly choose a neighbor
+      idx = random.randint(0, self.n - 1)
+      diff = random.choice([+self.stepSize, -self.stepSize])
+      r[idx] += diff
+      
+      newP = self.obj(r)
+      
+      walkProb = min(1, np.exp(newP - p))
+      
+      # walk to new r with prob of walkProb, otherwise revert
+      if random.random() >= walkProb:
+        r[idx] -= diff
+      
+      if _ % 100 == 0:
+        print "Iteration ", _, ": reward ", r
+      
+      if _ in range(self.maxIterations - self.lastWindow, self.maxIterations):
+        window.append(r[:])
+    
+    # average over the rewards in the last window
+    finalR = reduce(lambda x, y: [xi + 1.0 * yi / self.lastWindow for xi, yi in zip(x, y)], window, [0] * len(r))
+
+    print "result: ", finalR
