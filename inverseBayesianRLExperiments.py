@@ -10,6 +10,7 @@ def gaussianPriorGen(sigma):
   return lambda r: 1.0 / (np.sqrt(2 * np.pi) * sigma) * np.exp(- r ** 2 / (2 * sigma))
 
 def gridWorldExperiments():
+  #mdp = gridworld.getBookGrid()
   mdp = gridworld.getToyWalkAvoidGrid()
   
   opts = {'gamma': 0.8, 

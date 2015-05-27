@@ -1,7 +1,7 @@
 import numpy as np
 from inverseRL import InverseRL
 from policyIterationAgents import PolicyIterationAgent
-from scipy.optimize import differential_evolution
+import cma
 
 class InverseBayesianRL(InverseRL):
   """
@@ -51,12 +51,8 @@ This is necessary in bayesian irl")
     return - (priorProb + likelihood)
   
   def solve(self):
-    """
-    Implement the PolicyWalk algorithm in the paper.
-    """
-    # initialize the reward to be all 0s
-    bnds = tuple((-100, 100) for _ in range(self.n))
+    start_pos = [0] * self.n
     
-    result = differential_evolution(self.obj, bnds)
+    result = cma.fmin(self.obj, start_pos, 1)
 
-    print result
+    print result[0]
