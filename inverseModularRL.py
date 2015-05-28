@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import differential_evolution, minimize
 from inverseRL import InverseRL
 import config
+import cma
 
 class InverseModularRL(InverseRL):
   """
@@ -82,6 +83,8 @@ class InverseModularRL(InverseRL):
       result = minimize(self.obj, start_pos, bounds=bnds)
     elif config.SOLVER == "DE":
       result = differential_evolution(self.obj, bnds)
+    elif config.SOLVER == "CMA-ES":
+      result = cma.fmin(self.obj, start_pos, 1)
     else:
       raise Exception("Unknown solver " + config.SOLVER)
 

@@ -216,7 +216,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   return [w, evaluation] 
 
-def humanWorldExperimentQPotential(filenames, rang, solving = False):
+def humanWorldExperimentQPotential(filenames, rang, solving = True):
   """
   Args:
     rang: load mat with given rang of trials
@@ -233,7 +233,7 @@ def humanWorldExperimentQPotential(filenames, rang, solving = False):
   if solving:
     x = sln.solve()
   else:
-    # read from files in this case
+    # read from files if only output the learned results
     values = pickle.load(open('learnedValues/values.pkl'))
     x = values[rang[0] / 8]
   w = x[:n]
@@ -303,6 +303,8 @@ def main():
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
+
+  # experiment(subjFiles, [0]) # TEST ONLY
 
   if len(sys.argv) > 1:
     taskId = int(sys.argv[1])

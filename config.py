@@ -18,5 +18,6 @@ TRAINING = False
 # enable to add slight turns
 SLIGHT_TURNS = True
 
-SOLVER = "DE"
+SOLVER = "CMA-ES"
+#SOLVER = "DE"
 #SOLVER = "BFGS"
