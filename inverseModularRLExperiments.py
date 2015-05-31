@@ -304,21 +304,19 @@ def main():
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
 
-  # experiment(subjFiles, [0]) # TEST ONLY
-
   if len(sys.argv) > 1:
-    taskId = int(sys.argv[1])
-    values, evaluations = experiment(subjFiles, taskRanges[taskId])
-
-    util.saveToFile('values' + str(taskId) + '.pkl', values)
-    util.saveToFile('evaluation' + str(taskId) + '.pkl', evaluations)
+    subjs = [subjFiles[int(sys.argv[1])]]
   else:
-    results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
-    values = [r.get()[0] for r in results]
-    evaluations = [r.get()[1] for r in results]
+    subjs = subjFiles
 
-    util.saveToFile('values.pkl', values)
-    util.saveToFile('evaluation.pkl', evaluations)
+  experiment(subjs, [0]) # TEST ONLY
+
+  results = [pool.apply_async(experiment, args=(subjs, ids)) for ids in taskRanges]
+  values = [r.get()[0] for r in results]
+  evaluations = [r.get()[1] for r in results]
+
+  util.saveToFile('values' + str(subjs) + '.pkl', values)
+  util.saveToFile('evaluation' + str(subjs) + '.pkl', evaluations)
 
 if __name__ == '__main__':
   main()

@@ -41,14 +41,10 @@ DOUBTS
 ==============
 TODO
 
-- Evaluation: Bayesian IRL
+- separate human subjects.
+  weights and discounters for each subjects, each tasks (different rooms).
+- bayes and modular irl on gridworld.
 
-- May try CMA-ES if DE is too slow.
-
+future:
 - multiple waypoints ahead
-- angular difference
-
 - visual cone
-
-logis:
-- merge separate condor out files. fine

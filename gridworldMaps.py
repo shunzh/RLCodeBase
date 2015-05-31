@@ -79,13 +79,12 @@ def getToyWalkAvoidGrid():
   isFinal = lambda state : False
   return Gridworld(grid, isFinal)
  
-def getLargeWalkAvoidGrid(obstacleProportion = 0.2):
+def getLargeWalkAvoidGrid(width, height, specifications):
   """
     Randomly generate a large grid
   """
-  width = 10
-  height = 10
-  targetProportion = 0.05
+  # make sure we have enough space for all the objects
+  assert width * height - 2 >= sum([count for reward, count in specifications])
 
   # init grid world
   grid = [[' ' for i in range(width)] for j in range(height)]
@@ -93,30 +92,21 @@ def getLargeWalkAvoidGrid(obstacleProportion = 0.2):
   # add start and end states
   for j in range(height):
     grid[j][0] = 'S'
-    grid[j][width - 1] = +2
+    grid[j][width - 1] = 0
 
   # random generator used in this context
   rand = random.Random()
   rand.seed(0)
 
-  # randomly set obstacles
-  for _ in xrange(int(width * height * obstacleProportion)):
-    while True:
-      y = rand.choice(range(height))
-      x = rand.choice(range(1, width - 1))
-      if grid[y][x] == ' ':
-        grid[y][x] = -1
-        break
-
-  # randomly set targets
-  for _ in xrange(int(width * height * targetProportion)):
-    while True:
-      y = rand.choice(range(height))
-      x = rand.choice(range(1, width - 1))
-      if grid[y][x] == ' ':
-        grid[y][x] = +1
-        break
+  for reward, count in specifications:
+    # randomly set objects
+    for _ in xrange(count):
+      while True:
+        y = rand.choice(range(height))
+        x = rand.choice(range(1, width - 1))
+        if grid[y][x] == ' ':
+          grid[y][x] = reward
+          break
 
   isFinal = lambda state : state[0] == width - 1
   return Gridworld(grid, isFinal)
-

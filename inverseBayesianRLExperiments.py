@@ -23,8 +23,9 @@ def experiment(mdp):
   sol.solve()
 
 def main():
-  mdp = gridworldMaps.getToyWalkAvoidGrid()
+  #mdp = gridworldMaps.getToyWalkAvoidGrid()
   #mdp = gridworldMaps.getBookGrid()
+  mdp = gridworldMaps.getLargeWalkAvoidGrid(10, 10, specifications=[(1, 10), (2, 10), (-1, 10), (-2, 10)])
 
   experiment(mdp)
 
