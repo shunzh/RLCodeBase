@@ -82,7 +82,7 @@ class InverseModularRL(InverseRL):
       # BFGS should be default for `minimize`
       result = minimize(self.obj, start_pos, bounds=bnds)
     elif config.SOLVER == "DE":
-      result = differential_evolution(self.obj, bnds, popsize=50)
+      result = differential_evolution(self.obj, bnds, tol=0.5)
     elif config.SOLVER == "CMA-ES":
       result = cma.fmin(self.obj, start_pos, 1)
     else:

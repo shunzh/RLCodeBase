@@ -38,6 +38,10 @@ def getWeightDistance(w1, w2):
 
   return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))])
 
+def gridworldExperiment():
+  #TODO
+  pass
+
 def continuousWorldExperiment():
   """
     Can be called to run pre-specified agent and domain.
@@ -309,7 +313,7 @@ def main():
   else:
     subjs = subjFiles
 
-  experiment(subjs, [0]) # TEST ONLY
+  #experiment(subjs, [0]) # TEST ONLY
 
   results = [pool.apply_async(experiment, args=(subjs, ids)) for ids in taskRanges]
   values = [r.get()[0] for r in results]
