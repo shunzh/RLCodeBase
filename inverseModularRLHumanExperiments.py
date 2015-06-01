@@ -70,8 +70,6 @@ def continuousWorldExperiment():
   w = sln.solve()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
-  print "Weight: ", w
-
   # check the consistency between the original optimal policy
   # and the policy predicted by the weights we guessed.
   aHat = modularAgents.ModularAgent(**qLearnOpts)
@@ -191,7 +189,6 @@ def humanWorldExperimentDiscrete(filenames, rang):
   Args:
     rang: load mat with given rang of trials
   """
-  print rang, ": Started."
   qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
   n = len(qFuncs)
 
@@ -205,12 +202,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
   # TODO test evaluation
   evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, w)
 
-  print rang, ": weights are", w
-  print rang, ": evaluation", evaluation 
-
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
-  print rang, ": weight heatmaps done."
-  print rang, ": OK."
 
   return [w, evaluation] 
 
@@ -219,11 +211,10 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
   Args:
     rang: load mat with given rang of trials
   """
-  print rang, ": Started."
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
-  sln = InverseModularRL(qFuncs, learnDiscounter=True)
+  sln = InverseModularRL(qFuncs, learnDiscounter=True, solver="DE")
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang, parsedHumanData)
   sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
@@ -238,9 +229,6 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
   d = x[n:]
   evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, w, d)
 
-  print w + d
-  print evaluation 
-
   return [w + d, evaluation] 
 
 def main():
@@ -254,20 +242,25 @@ def main():
 
   subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
+  taskNum = 32
 
   if len(sys.argv) > 1:
-    subjs = [subjFiles[int(sys.argv[1])]]
+    trialId = int(sys.argv[1])
+
+    subjIdx = trialId / taskNum
+    taskIdx = trialId % taskNum
+
+    results = experiment([subjFiles[subjIdx]], [taskIdx])
+    print results[0]
   else:
-    subjs = subjFiles
+    #experiment(subjs, [0]) # TEST ONLY
 
-  #experiment(subjs, [0]) # TEST ONLY
+    results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
+    values = [r.get()[0] for r in results]
+    evaluations = [r.get()[1] for r in results]
 
-  results = [pool.apply_async(experiment, args=(subjs, ids)) for ids in taskRanges]
-  values = [r.get()[0] for r in results]
-  evaluations = [r.get()[1] for r in results]
-
-  util.saveToFile('values' + str(subjs) + '.pkl', values)
-  util.saveToFile('evaluation' + str(subjs) + '.pkl', evaluations)
+    util.saveToFile('values.pkl', values)
+    util.saveToFile('evaluation.pkl', evaluations)
 
 if __name__ == '__main__':
   main()

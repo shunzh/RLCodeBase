@@ -3,13 +3,13 @@ Executable = /usr/local/bin/python
 +ProjectDescription = "FLOCK"
 +Project = "AI_ROBOTICS"
 +Group = "grad"
-Notification = Complete
+Notification = Never
 Notify_user = menie482@cs.utexas.edu
 Output     = grid_modular_out.$(Process)
-Error      = grid_modular_errerr.$(Process)
+Error      = grid_modular_err.$(Process)
 Log        = grid_modular.log
 
-num_of_processes=10
+num_of_processes=100
 
 Arguments = inverseModularRLGridExperiments.py $(Process)
 Queue $(num_of_processes)

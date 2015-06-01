@@ -3,13 +3,13 @@ Executable = /usr/local/bin/python
 +ProjectDescription = "FLOCK"
 +Project = "AI_ROBOTICS"
 +Group = "grad"
-Notification = Complete
+Notification = Never
 Notify_user = menie482@cs.utexas.edu
 Output     = grid_bayes_out.$(Process)
-Error      = grid_bayes_errerr.$(Process)
+Error      = grid_bayes_err.$(Process)
 Log        = grid_bayes.log
 
-num_of_processes=10
+num_of_processes=100
 
 Arguments = inverseBayesianRLGridExperiments.py $(Process)
 Queue $(num_of_processes)

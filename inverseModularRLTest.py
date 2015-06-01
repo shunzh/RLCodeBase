@@ -4,7 +4,7 @@ Try some simple domains, and human world experiments on both discrete and contin
 """
 import unittest
 from inverseModularRL import InverseModularRL
-import inverseModularRLExperiments
+import inverseModularRLHumanExperiments
 
 class Test(unittest.TestCase):
   def test_corridor(self):
@@ -48,8 +48,8 @@ class Test(unittest.TestCase):
       judge = resultConstraints[expIdx](x)
       if judge == False:
         # plot weights upon failure
-        inverseModularRLExperiments.printWeight(sln, unittest.TestCase.id(self) + '_' + str(expIdx) + '_w.png', d)
-        inverseModularRLExperiments.printDiscounter(sln, unittest.TestCase.id(self) + '_' + str(expIdx) + '_d.png', w)
+        inverseModularRLHumanExperiments.printWeight(sln, unittest.TestCase.id(self) + '_' + str(expIdx) + '_w.png', d)
+        inverseModularRLHumanExperiments.printDiscounter(sln, unittest.TestCase.id(self) + '_' + str(expIdx) + '_d.png', w)
 
       self.assertTrue(judge, msg="Exp #" + str(expIdx) + " weights: " + str(x))
 

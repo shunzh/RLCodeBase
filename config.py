@@ -18,8 +18,4 @@ TRAINING = False
 # enable to add slight turns
 SLIGHT_TURNS = True
 
-#SOLVER = "CMA-ES"
-#SOLVER = "DE"
-SOLVER = "BFGS"
-
 BUDGET_SIZES = [10, 20, 50, 100, 150, 200, 250, 300, 350, 400]

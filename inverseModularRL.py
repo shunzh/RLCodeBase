@@ -16,7 +16,7 @@ class InverseModularRL(InverseRL):
     107(4),477-490
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
-  def __init__(self, qFuncs, eta = 1, learnDiscounter = False):
+  def __init__(self, qFuncs, eta = 1, learnDiscounter = False, solver = "BFGS"):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -29,6 +29,8 @@ class InverseModularRL(InverseRL):
 
     # enable if learning discounters as well
     self.learnDiscounter = learnDiscounter
+    self.solver = solver
+
     # confidence
     self.eta = eta
     # default discounters
@@ -78,15 +80,15 @@ class InverseModularRL(InverseRL):
       bnds += tuple((0 + margin, 1 - margin) for _ in range(self.n))
       start_pos += [0.5] * self.n
 
-    if config.SOLVER == "BFGS":
+    if self.solver == "BFGS":
       # BFGS should be default for `minimize`
       result = minimize(self.obj, start_pos, bounds=bnds)
-    elif config.SOLVER == "DE":
+    elif self.solver == "DE":
       result = differential_evolution(self.obj, bnds, tol=0.5)
-    elif config.SOLVER == "CMA-ES":
+    elif self.solver == "CMA-ES":
       result = cma.fmin(self.obj, start_pos, 1)
     else:
-      raise Exception("Unknown solver " + config.SOLVER)
+      raise Exception("Unknown solver " + self.solver)
 
     x = result.x.tolist()
     sumX = sum(x[:self.n])

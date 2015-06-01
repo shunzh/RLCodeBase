@@ -6,7 +6,7 @@ from inverseModularRL import InverseModularRL
 
 def main():
   if len(sys.argv) > 1:
-    budgetId = int(sys.argv[1])
+    budgetId = int(sys.argv[1]) / 10
     budget = config.BUDGET_SIZES[budgetId]
   else:
     budget = None
@@ -26,7 +26,7 @@ def main():
   a.setWeights([abs(w) for w, count in mdp.spec])
   a.setDiscounters([.8] * len(qFuncs))
 
-  sln = InverseModularRL(qFuncs, learnDiscounter=False)
+  sln = InverseModularRL(qFuncs, learnDiscounter=False, solver="BFGS")
   sln.setSamplesFromMdp(mdp, a, budget)
   w = sln.solve()
 

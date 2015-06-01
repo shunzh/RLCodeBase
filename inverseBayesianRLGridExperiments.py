@@ -14,7 +14,7 @@ def gaussianPriorGen(sigma):
 
 def experiment(mdp):
   if len(sys.argv) > 1:
-    budgetId = int(sys.argv[1])
+    budgetId = int(sys.argv[1]) / 10
     budget = config.BUDGET_SIZES[budgetId]
   else:
     budget = None
