@@ -2,7 +2,6 @@ import sys
 import optparse
 import featureExtractors
 import modularQFuncs
-import baselineAgents
 
 def getUserAction(state, actionFunction):
   """
@@ -188,7 +187,6 @@ if __name__ == '__main__':
   elif opts.agent == 'Approximate':
     actionFn = lambda state: mdp.getPossibleActions(state)
     extractor = featureExtractors.IdentityExtractor # assign different extractor here?
-
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
                   'epsilon': opts.epsilon,
@@ -205,6 +203,8 @@ if __name__ == '__main__':
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules
     a.setQFuncs(modularQFuncs.getObsAvoidFuncs(mdp))
+    a.setWeights([w for w, count in mdp.spec])
+    a.setDiscounters([.8] * len(mdp.spec))
   else:
     if not opts.manual: raise 'Unknown agent type: '+opts.agent
     

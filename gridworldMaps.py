@@ -78,13 +78,13 @@ def getToyWalkAvoidGrid():
           [ ' ', 1]]
   isFinal = lambda state : False
   return Gridworld(grid, isFinal)
- 
-def getLargeWalkAvoidGrid(width, height, specifications):
+
+def getLargeWalkAvoidGrid(width, height, specification):
   """
     Randomly generate a large grid
   """
   # make sure we have enough space for all the objects
-  assert width * height - 2 >= sum([count for reward, count in specifications])
+  assert width * height - 2 >= sum([count for reward, count in specification])
 
   # init grid world
   grid = [[' ' for i in range(width)] for j in range(height)]
@@ -98,7 +98,7 @@ def getLargeWalkAvoidGrid(width, height, specifications):
   rand = random.Random()
   rand.seed(0)
 
-  for reward, count in specifications:
+  for reward, count in specification:
     # randomly set objects
     for _ in xrange(count):
       while True:
@@ -109,4 +109,10 @@ def getLargeWalkAvoidGrid(width, height, specifications):
           break
 
   isFinal = lambda state : state[0] == width - 1
-  return Gridworld(grid, isFinal)
+  mdp = Gridworld(grid, isFinal)
+  mdp.spec = specification
+  
+  return mdp
+
+# a specification used for nips paper
+getRuohanGrid = lambda: getLargeWalkAvoidGrid(10, 10, [(1, 10), (2, 10), (-1, 10), (-2, 10)])

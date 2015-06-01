@@ -51,9 +51,9 @@ class Gridworld(mdp.MarkovDecisionProcess):
     """
     #return ('north','west','south','east', 'ne', 'se', 'nw', 'sw')
     if self.isFinal(state):
-      return ('exit')
+      return ('exit',)
     else:
-      return ('north','west','south','east','stay')
+      return ('north','west','south','east')
     
   def getStates(self):
     """
@@ -156,9 +156,6 @@ class Gridworld(mdp.MarkovDecisionProcess):
       successors.append((northState,massLeft/2.0))
       successors.append((southState,massLeft/2.0)) 
       
-    if action == 'stay':
-      successors.append((state,1))
-
     successors = self.__aggregate(successors)
 
     return successors                                

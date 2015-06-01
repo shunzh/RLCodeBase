@@ -16,8 +16,6 @@ def experiment(mdp):
   a = PolicyIterationAgent(mdp, **opts)
   a.learn()
 
-  print [(state, a.getPolicy(state)) for state in mdp.getStates()]
-  
   sol = InverseBayesianRL(mdp, laplacePriorGen(1))
   sol.setSamplesFromMdp(mdp, a)
   sol.solve()
@@ -25,7 +23,7 @@ def experiment(mdp):
 def main():
   #mdp = gridworldMaps.getToyWalkAvoidGrid()
   #mdp = gridworldMaps.getBookGrid()
-  mdp = gridworldMaps.getLargeWalkAvoidGrid(10, 10, specifications=[(1, 10), (2, 10), (-1, 10), (-2, 10)])
+  mdp = gridworldMaps.getRuohanGrid()
 
   experiment(mdp)
 

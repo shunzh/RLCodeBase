@@ -183,15 +183,11 @@ def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLo
 
 def getObsAvoidFuncs(mdp):
   """
-  Return Q functions for modular mdp for obstacle avoidance behavior
-
-  the environment is passed by mdp
+  Return Q functions for modular mdp for target collection / obstacle avoidance behavior
+  in gridworld domains.
   """
-  obstacle = {'bias': -0.20931133310480204, 'dis': 0.06742681562641269}
-  target = {'bias': 0.20931133310480204, 'dis': -0.06742681562641269}
-  sidewalk = {'x': 0.06250000371801567}
-
   def getNext(state, action):
+    # simulate the next state
     x, y = state
     dx, dy = Actions.directionToVector(action)
     next_x, next_y = int(x + dx), int(y + dy)
@@ -202,14 +198,7 @@ def getObsAvoidFuncs(mdp):
 
     return [next_x, next_y]
 
-  def qWalk(state, action):
-    """
-    QValue of forward walking
-    """
-    next_x, next_y = getNext(state, action)
-    return sidewalk['x'] * next_x
-
-  def radiusBias(state, action, cond, w):
+  def qFuncGen(r, idx):
     """
     Compute a Q value responding to an object, considering the distance to it.
     This is used by obstacle avoidance, and target obtaining.
@@ -219,26 +208,22 @@ def getObsAvoidFuncs(mdp):
       cond: the lambda expr that given state is the object we want
       w: weight vector
     """
-    x, y = state
-    next_x, next_y = getNext(state, action)
+    def qModule(state, action, discounters):
+      if action == "exit": return 0
+      
+      next_x, next_y = getNext(state, action)
 
-    # find the distance to the nearest object
-    minDist = mdp.grid.width * mdp.grid.height
-    for xt in range(mdp.grid.width):
-      for yt in range(mdp.grid.height):
-        cell = mdp.grid[xt][yt] 
-        if cond(cell):
-          # it's an obstacle!
-          dist = math.sqrt((xt - next_x) ** 2 + (yt - next_y) ** 2)
-          if (dist < minDist): minDist = dist
-    return minDist * w['dis'] + 1 * w['bias']
+      # find the distance to the nearest object
+      minDist = mdp.grid.width * mdp.grid.height
+      for xt in range(mdp.grid.width):
+        for yt in range(mdp.grid.height):
+          cell = mdp.grid[xt][yt] 
+          if cell == r:
+            dist = math.sqrt((xt - next_x) ** 2 + (yt - next_y) ** 2)
+            if (dist < minDist): minDist = dist
 
-  def qObstacle(state, action):
-    cond = lambda s : (type(s) == int or type(s) == float) and s == -1
-    return radiusBias(state, action, cond, obstacle)
-
-  def qTarget(state, action):
-    cond = lambda s : (type(s) == int or type(s) == float) and s == +1
-    return radiusBias(state, action, cond, target)
-
-  return [qWalk, qObstacle, qTarget]
+      return r * (discounters[idx] ** minDist)
+    return qModule
+    
+  rewards = [r for r, c in mdp.spec]
+  return [qFuncGen(r / abs(r), idx) for r, idx in zip(rewards, range(len(rewards)))]

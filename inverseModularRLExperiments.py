@@ -39,8 +39,29 @@ def getWeightDistance(w1, w2):
   return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))])
 
 def gridworldExperiment():
-  #TODO
-  pass
+  import gridworldMaps
+  mdp = gridworldMaps.getRuohanGrid()
+  qFuncs = modularQFuncs.getObsAvoidFuncs(mdp)
+
+  actionFn = lambda state: mdp.getPossibleActions(state)
+  qLearnOpts = {'gamma': 0.9,
+                'alpha': 0.5,
+                'epsilon': 0,
+                'actionFn': actionFn}
+  # modular agent
+  a = modularAgents.ModularAgent(**qLearnOpts)
+  a.setQFuncs(qFuncs)
+  a.setWeights([w for w, count in mdp.spec])
+  a.setDiscounters([.8] * len(qFuncs))
+
+  sln = InverseModularRL(qFuncs)
+  sln.setSamplesFromMdp(mdp, a)
+  output = sln.solve()
+  w = output.x.tolist()
+
+  print "Weight: ", w
+  
+  return w
 
 def continuousWorldExperiment():
   """
@@ -50,7 +71,6 @@ def continuousWorldExperiment():
   init = continuousWorldDomains.loadFromMat('miniRes25.mat', 0)
   #init = cw.toyDomain()
   m = cw.ContinuousWorld(init)
-  env = cw.ContinuousEnvironment(m)
 
   actionFn = lambda state: m.getPossibleActions(state)
   qLearnOpts = {'gamma': 0.9,
@@ -249,56 +269,9 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
 
   return [w + d, evaluation] 
 
-def humanWorldExperimentQPotentialGridSearch(filenames, rang):
-  """
-  One way to solve the nonconvex objective function,
-  grid search over all possible discounters, and optimize the weights for each
-  """
-  print rang, ": Started."
-  qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
-  n = len(qFuncs)
-
-  sln = InverseModularRL(qFuncs)
-  samples = humanInfoParser.getHumanStatesActions(filenames, rang)
-  sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
-
-  discounterRange = map(lambda x: x *.1,  range(1, 10))
-  optD = []
-  optFunValue = 0 # values are to be minimized, must be positive
-  # FIXME overfit length of q
-  for d1 in discounterRange:
-    for d2 in discounterRange:
-      for d3 in discounterRange:
-        d = [d1, d2, d3]
-        objValue, x = humanWorldExperimentQPotentialGridSearchHelper(sln, d)
-       
-        if sln.objValue > optFunValue:
-          optW = x[:n]
-          optD = d
-
-  evaluation = evaluateAssumption(samples, qFuncs, optW, optD)
-
-  print rang, ": weights are", optW
-  print rang, ": discounters are", optD
-  print rang, ": evaluation ", evaluation 
-
-  return [optW + optD, evaluation] 
-
-def humanWorldExperimentQPotentialGridSearchHelper(sln, d):
-  sln.setDiscounters(d)
-  x = sln.solve()
-  
-  return [sln.objValue, x]
-
-def main():
-  import config
-  
+def humanExperiments():
   # set experiment here
-  if config.DISCRETE_Q:
-    experiment = humanWorldExperimentDiscrete
-  else:
-    #experiment = humanWorldExperimentQPotentialGridSearch
-    experiment = humanWorldExperimentQPotential
+  experiment = humanWorldExperimentQPotential
 
   from multiprocessing import Pool
   # change the number of processors used here.
@@ -321,6 +294,10 @@ def main():
 
   util.saveToFile('values' + str(subjs) + '.pkl', values)
   util.saveToFile('evaluation' + str(subjs) + '.pkl', evaluations)
+
+def main():
+  #humanExperiments()
+  gridworldExperiment()
 
 if __name__ == '__main__':
   main()

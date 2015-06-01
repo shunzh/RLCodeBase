@@ -15,10 +15,6 @@ class ModularAgent(ApproximateQAgent):
   """
   def __init__(self, **args):
     ApproximateQAgent.__init__(self, **args)
-
-    # weights and discounters should be set later after learning
-    self.weights = [0, 0, 1]
-    self.discounters = [0.6] * 3
  
   def getQValue(self, state, action):
     """
@@ -73,4 +69,3 @@ class ModularAgent(ApproximateQAgent):
 
     values = [self.getQValue(state, action) for action in actions]
     return np.std(values)
-
