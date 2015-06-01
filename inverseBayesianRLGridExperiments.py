@@ -4,6 +4,7 @@ from policyIterationAgents import PolicyIterationAgent
 import gridworldMaps
 import sys
 import config
+import copy
 
 # two popular reward priors
 def laplacePriorGen(sigma):
@@ -45,12 +46,12 @@ def inferWeightsFromReward(mdp, rewards):
   return map(lambda _: _ / sum(weights), weights)
 
 def main():
-  #mdp = gridworldMaps.getToyWalkAvoidGrid()
-  #mdp = gridworldMaps.getBookGrid()
-  mdp = gridworldMaps.getRuohanGrid()
+  #mdpName = gridworldMaps.getToyWalkAvoidGrid
+  #mdpName = gridworldMaps.getBookGrid
+  mdpName = lambda: gridworldMaps.getRuohanGrid(0)
 
-  rewards = experiment(mdp)
-  print inferWeightsFromReward(mdp, rewards)
+  rewards = experiment(mdpName())
+  print inferWeightsFromReward(mdpName(), rewards)
 
 if __name__ == '__main__':
   main()

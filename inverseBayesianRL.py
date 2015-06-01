@@ -1,8 +1,8 @@
 import numpy as np
 from inverseRL import InverseRL
 from policyIterationAgents import PolicyIterationAgent
-import cma
 import random
+import config
 
 class InverseBayesianRL(InverseRL):
   """
@@ -12,7 +12,7 @@ class InverseBayesianRL(InverseRL):
   "Bayesian inverse reinforcement learning."
   Urbana 51 (2007): 61801.
   """
-  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1, maxIterations = 3000, lastWindow = 100):
+  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1, lastWindow = 100):
     """
     Args:
       rewardPrior: P(R)
@@ -27,7 +27,6 @@ class InverseBayesianRL(InverseRL):
     self.stepSize = 1
     self.n = len(mdp.getStates())
     
-    self.maxIterations = maxIterations
     self.lastWindow = lastWindow
     
     if not "setReward" in dir(mdp):
@@ -57,10 +56,10 @@ This is necessary in bayesian irl")
     return priorProb + likelihood
   
   def solve(self):
-    window = []
     r = [0] * self.n
+    stableSteps = 0
     
-    for _ in xrange(self.maxIterations):
+    while True:
       p = self.obj(r)
 
       # randomly choose a neighbor
@@ -75,14 +74,10 @@ This is necessary in bayesian irl")
       # walk to new r with prob of walkProb, otherwise revert
       if random.random() >= walkProb:
         r[idx] -= diff
+      else:
+        stableSteps += 1
       
-      #if _ % 100 == 0:
-      #  print "Iteration ", _, ": reward ", r
-      
-      if _ in range(self.maxIterations - self.lastWindow, self.maxIterations):
-        window.append(r[:])
-    
-    # average over the rewards in the last window
-    finalR = reduce(lambda x, y: [xi + 1.0 * yi / self.lastWindow for xi, yi in zip(x, y)], window, [0] * len(r))
+      if config.DEBUG:
+        print "Iteration ", _, ": reward ", r
 
-    return finalR
+    return r

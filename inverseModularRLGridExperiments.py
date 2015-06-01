@@ -12,7 +12,7 @@ def main():
     budget = None
 
   import gridworldMaps
-  mdp = gridworldMaps.getRuohanGrid()
+  mdp = gridworldMaps.getRuohanGrid(0)
   qFuncs = modularQFuncs.getObsAvoidFuncs(mdp)
 
   actionFn = lambda state: mdp.getPossibleActions(state)

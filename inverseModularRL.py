@@ -83,14 +83,20 @@ class InverseModularRL(InverseRL):
     if self.solver == "BFGS":
       # BFGS should be default for `minimize`
       result = minimize(self.obj, start_pos, bounds=bnds)
+      x = result.x.tolist()
     elif self.solver == "DE":
-      result = differential_evolution(self.obj, bnds, tol=0.5)
+      result = differential_evolution(self.obj, bnds)
+      x = result.x.tolist()
     elif self.solver == "CMA-ES":
-      result = cma.fmin(self.obj, start_pos, 1)
+      xWrapper = lambda x: [bnds[idx][0] + x[idx] / 10.0 * (bnds[idx][1] - bnds[idx][0]) for idx in xrange(len(x))]
+      cmaObj = lambda x: self.obj(xWrapper(x))
+      result = cma.fmin(cmaObj, start_pos, 2,\
+                        {'bounds': [0, 10]})
+      x = xWrapper(result[0])
+      print x
     else:
       raise Exception("Unknown solver " + self.solver)
 
-    x = result.x.tolist()
     sumX = sum(x[:self.n])
     try:
       w = [x[idx] / sumX for idx in xrange(self.n)]
@@ -100,7 +106,5 @@ class InverseModularRL(InverseRL):
       
     d = x[self.n:]
     
-    self.objValue = result.fun
-
     # concatenate weights and discounter (could be [])
     return w + d
