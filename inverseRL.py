@@ -1,5 +1,6 @@
 from scipy.optimize import minimize
 import numpy as np
+import random
 
 class InverseRL:
   """
@@ -8,14 +9,23 @@ class InverseRL:
   def __init__(self, eta):
     self.eta = eta
 
-  def setSamplesFromMdp(self, mdp, agent):
+  def setSamplesFromMdp(self, mdp, agent, budget = None):
     """
     One way to set the samples.
     Read form mdp and get the policies of states.
 
     Set self.getSamples and self.getActions here.
+    
+    Args:
+      mdp
+      agent
+      budget: the number of the samples that can be used for learning.
+              None if no such budget.
     """
     states = mdp.getStates()
+    if budget:
+      states = random.sample(states, budget)
+
     self.getSamples = lambda : [(state, agent.getPolicy(state)) for state in states]
     self.getActions = lambda s : mdp.getPossibleActions(s)
 

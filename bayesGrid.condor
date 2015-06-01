@@ -5,11 +5,11 @@ Executable = /usr/local/bin/python
 +Group = "grad"
 Notification = Complete
 Notify_user = menie482@cs.utexas.edu
-Output     = grid_modular_out.$(Process)
-Error      = grid_modular_errerr.$(Process)
-Log        = grid_modular.log
+Output     = grid_bayes_out.$(Process)
+Error      = grid_bayes_errerr.$(Process)
+Log        = grid_bayes.log
 
 num_of_processes=10
 
-Arguments = inverseModularRLGridExperiments.py $(Process)
+Arguments = inverseBayesianRLGridExperiments.py $(Process)
 Queue $(num_of_processes)

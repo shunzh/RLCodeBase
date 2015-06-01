@@ -38,31 +38,6 @@ def getWeightDistance(w1, w2):
 
   return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))])
 
-def gridworldExperiment():
-  import gridworldMaps
-  mdp = gridworldMaps.getRuohanGrid()
-  qFuncs = modularQFuncs.getObsAvoidFuncs(mdp)
-
-  actionFn = lambda state: mdp.getPossibleActions(state)
-  qLearnOpts = {'gamma': 0.9,
-                'alpha': 0.5,
-                'epsilon': 0,
-                'actionFn': actionFn}
-  # modular agent
-  a = modularAgents.ModularAgent(**qLearnOpts)
-  a.setQFuncs(qFuncs)
-  a.setWeights([w for w, count in mdp.spec])
-  a.setDiscounters([.8] * len(qFuncs))
-
-  sln = InverseModularRL(qFuncs)
-  sln.setSamplesFromMdp(mdp, a)
-  output = sln.solve()
-  w = output.x.tolist()
-
-  print "Weight: ", w
-  
-  return w
-
 def continuousWorldExperiment():
   """
     Can be called to run pre-specified agent and domain.
@@ -92,8 +67,7 @@ def continuousWorldExperiment():
 
   sln = InverseModularRL(qFuncs)
   sln.setSamplesFromMdp(m, a)
-  output = sln.solve()
-  w = output.x.tolist()
+  w = sln.solve()
   w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
 
   print "Weight: ", w
@@ -269,7 +243,7 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
 
   return [w + d, evaluation] 
 
-def humanExperiments():
+def main():
   # set experiment here
   experiment = humanWorldExperimentQPotential
 
@@ -294,10 +268,6 @@ def humanExperiments():
 
   util.saveToFile('values' + str(subjs) + '.pkl', values)
   util.saveToFile('evaluation' + str(subjs) + '.pkl', evaluations)
-
-def main():
-  #humanExperiments()
-  gridworldExperiment()
 
 if __name__ == '__main__':
   main()

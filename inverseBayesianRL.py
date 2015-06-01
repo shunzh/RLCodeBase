@@ -12,7 +12,7 @@ class InverseBayesianRL(InverseRL):
   "Bayesian inverse reinforcement learning."
   Urbana 51 (2007): 61801.
   """
-  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1, maxIterations = 2000, lastWindow = 100):
+  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1, maxIterations = 3000, lastWindow = 100):
     """
     Args:
       rewardPrior: P(R)
@@ -76,8 +76,8 @@ This is necessary in bayesian irl")
       if random.random() >= walkProb:
         r[idx] -= diff
       
-      if _ % 100 == 0:
-        print "Iteration ", _, ": reward ", r
+      #if _ % 100 == 0:
+      #  print "Iteration ", _, ": reward ", r
       
       if _ in range(self.maxIterations - self.lastWindow, self.maxIterations):
         window.append(r[:])
@@ -85,4 +85,4 @@ This is necessary in bayesian irl")
     # average over the rewards in the last window
     finalR = reduce(lambda x, y: [xi + 1.0 * yi / self.lastWindow for xi, yi in zip(x, y)], window, [0] * len(r))
 
-    print "result: ", finalR
+    return finalR

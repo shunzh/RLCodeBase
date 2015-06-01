@@ -204,9 +204,8 @@ def getObsAvoidFuncs(mdp):
     This is used by obstacle avoidance, and target obtaining.
 
     Args:
-      state, action
-      cond: the lambda expr that given state is the object we want
-      w: weight vector
+      r: the reward of the module class to be found
+      idx: the id of the class
     """
     def qModule(state, action, discounters):
       if action == "exit": return 0
@@ -222,8 +221,8 @@ def getObsAvoidFuncs(mdp):
             dist = math.sqrt((xt - next_x) ** 2 + (yt - next_y) ** 2)
             if (dist < minDist): minDist = dist
 
-      return r * (discounters[idx] ** minDist)
+      return r / abs(r) * discounters[idx] ** minDist
     return qModule
     
   rewards = [r for r, c in mdp.spec]
-  return [qFuncGen(r / abs(r), idx) for r, idx in zip(rewards, range(len(rewards)))]
+  return [qFuncGen(r, idx) for r, idx in zip(rewards, range(len(rewards)))]
