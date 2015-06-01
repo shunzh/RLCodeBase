@@ -29,15 +29,6 @@ def checkPolicyConsistency(states, a, b):
 
   return 1.0 * consistentPolices / len(states)
 
-def getWeightDistance(w1, w2):
-  """
-    Return:
-      ||w1 - w2||_2
-  """
-  assert len(w1) == len(w2)
-
-  return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))])
-
 def continuousWorldExperiment():
   """
     Can be called to run pre-specified agent and domain.
@@ -78,7 +69,7 @@ def continuousWorldExperiment():
 
   # print for experiments
   print checkPolicyConsistency(m.getStates(), a, aHat)
-  print getWeightDistance(a.getWeights(), w)
+  print util.getVectorDistance(a.getWeights(), w)
 
   return w, sln
 

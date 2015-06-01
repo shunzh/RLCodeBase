@@ -1,8 +1,8 @@
 import numpy as np
 from inverseRL import InverseRL
 from policyIterationAgents import PolicyIterationAgent
-import cma
 import random
+import config
 
 class InverseBayesianRL(InverseRL):
   """
@@ -12,7 +12,7 @@ class InverseBayesianRL(InverseRL):
   "Bayesian inverse reinforcement learning."
   Urbana 51 (2007): 61801.
   """
-  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1, maxIterations = 3000, lastWindow = 100):
+  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1, maxIterations = 10000, lastWindow = 100):
     """
     Args:
       rewardPrior: P(R)
@@ -76,8 +76,8 @@ This is necessary in bayesian irl")
       if random.random() >= walkProb:
         r[idx] -= diff
       
-      #if _ % 100 == 0:
-      #  print "Iteration ", _, ": reward ", r
+      if config.DEBUG and _ % 100 == 0:
+        print "Iteration ", _, ": reward ", r
       
       if _ in range(self.maxIterations - self.lastWindow, self.maxIterations):
         window.append(r[:])
