@@ -3,6 +3,7 @@ from inverseRL import InverseRL
 from policyIterationAgents import PolicyIterationAgent
 import random
 import config
+import cma
 
 class InverseBayesianRL(InverseRL):
   """
@@ -12,7 +13,7 @@ class InverseBayesianRL(InverseRL):
   "Bayesian inverse reinforcement learning."
   Urbana 51 (2007): 61801.
   """
-  def __init__(self, mdp, rewardPrior, eta = 1, stepSize = 1, lastWindow = 100):
+  def __init__(self, mdp, rewardPrior, eta = 1, solver = "PolicyWalk", stepSize = 1, maxIterations = 200000):
     """
     Args:
       rewardPrior: P(R)
@@ -27,7 +28,9 @@ class InverseBayesianRL(InverseRL):
     self.stepSize = 1
     self.n = len(mdp.getStates())
     
-    self.lastWindow = lastWindow
+    self.solver = solver
+
+    self.maxIterations = maxIterations
     
     if not "setReward" in dir(mdp):
       raise Exception("setReward not found in MDP " + mdp.__class__.__name__ + ". \
@@ -55,11 +58,12 @@ This is necessary in bayesian irl")
     
     return priorProb + likelihood
   
-  def solve(self):
+  def policyWalk(self):
     r = [0] * self.n
-    stableSteps = 0
+    optR = r
+    optP = -np.inf
     
-    while True:
+    for _ in xrange(self.maxIterations):
       p = self.obj(r)
 
       # randomly choose a neighbor
@@ -69,15 +73,33 @@ This is necessary in bayesian irl")
       
       newP = self.obj(r)
       
-      walkProb = min(1, np.exp(newP - p))
+      if newP > optP:
+        optP = newP
+        optR = r[:]
       
+      walkProb = min(1, np.exp(newP - p))
       # walk to new r with prob of walkProb, otherwise revert
       if random.random() >= walkProb:
         r[idx] -= diff
-      else:
-        stableSteps += 1
       
       if config.DEBUG:
         print "Iteration ", _, ": reward ", r
+    
+    return optR
 
+  def cmaes(self):
+    start_pos = [0] * self.n
+    
+    # cma is a minimizer, take the negation of the obj value
+    cmaObj = lambda x: - self.obj(x)
+    result = cma.fmin(cmaObj, start_pos, .5)
+
+    print result[0]
+
+  def solve(self):
+    if self.solver == "PolicyWalk":
+      r = self.policyWalk()
+    elif self.solver == "CMA-ES":
+      r = self.cmaes()
+    
     return r

@@ -17,18 +17,12 @@ def parseFiles(filename, trueW, xAxis, perTrial):
     errors = []
     for trialId in xrange(perTrial):
       condorId = xId * perTrial + trialId
-<<<<<<< HEAD
       try:
         f = open(filename + "." + str(condorId), 'r')
         w = ast.literal_eval(f.read())
         errors.append(util.getVectorDistance(w, trueW))
       except:
         print "issue in processing ", filename, condorId
-=======
-      f = open(filename + "." + str(condorId), 'r')
-      w = ast.literal_eval(f.read())
-      errors.append(util.getVectorDistance(w, trueW))
->>>>>>> 0b1c1a735b6e6921e69aa67290159a9204985536
     means.append(np.mean(errors))
     cis.append(1.96 * np.std(errors) / np.sqrt(perTrial))
   

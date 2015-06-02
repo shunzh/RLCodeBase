@@ -47,7 +47,6 @@ def inferWeightsFromReward(mdp, rewards):
 
 def main():
   #mdpName = gridworldMaps.getToyWalkAvoidGrid
-  #mdpName = gridworldMaps.getBookGrid
   mdpName = lambda: gridworldMaps.getRuohanGrid(0)
 
   rewards = experiment(mdpName())
