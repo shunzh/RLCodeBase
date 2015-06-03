@@ -116,4 +116,4 @@ def getLargeWalkAvoidGrid(width, height, specification, seed = 0):
   return mdp
 
 # a specification used for nips paper
-getRuohanGrid = lambda seed = 0: getLargeWalkAvoidGrid(10, 10, [(1, 2), (2, 2), (-1, 2), (-2, 2)], seed)
+getRuohanGrid = lambda seed = 0: getLargeWalkAvoidGrid(10, 10, [(1, 4), (2, 4), (-1, 4), (-2, 4)], seed)

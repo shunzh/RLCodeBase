@@ -3,6 +3,7 @@ import modularQFuncs
 import modularAgents
 import config
 from inverseModularRL import InverseModularRL
+import util
 
 def main():
   if len(sys.argv) > 1:
@@ -15,6 +16,9 @@ def main():
   mdp = gridworldMaps.getRuohanGrid(0)
   qFuncs = modularQFuncs.getObsAvoidFuncs(mdp)
 
+  trueW = [abs(w) for w, count in mdp.spec]
+  trueW = map(lambda _: 1.0 * _ / sum(trueW), trueW)
+
   actionFn = lambda state: mdp.getPossibleActions(state)
   qLearnOpts = {'gamma': 0.9,
                 'alpha': 0.5,
@@ -23,14 +27,14 @@ def main():
   # modular agent
   a = modularAgents.ModularAgent(**qLearnOpts)
   a.setQFuncs(qFuncs)
-  a.setWeights([abs(w) for w, count in mdp.spec])
+  a.setWeights(trueW)
   a.setDiscounters([.8] * len(qFuncs))
 
   sln = InverseModularRL(qFuncs, learnDiscounter=False, solver="BFGS")
   sln.setSamplesFromMdp(mdp, a, budget)
   w = sln.solve()
 
-  print w
+  print util.getMSE(w, trueW)
 
 if __name__ == '__main__':
   main()

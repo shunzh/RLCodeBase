@@ -13,7 +13,7 @@ class InverseBayesianRL(InverseRL):
   "Bayesian inverse reinforcement learning."
   Urbana 51 (2007): 61801.
   """
-  def __init__(self, mdp, rewardPrior, eta = 1, solver = "PolicyWalk", stepSize = 1, maxIterations = 50000):
+  def __init__(self, mdp, rewardPrior, eta = 1, solver = "PolicyWalk", stepSize = 1, maxIterations = 20000):
     """
     Args:
       rewardPrior: P(R)

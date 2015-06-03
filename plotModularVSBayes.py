@@ -9,7 +9,7 @@ import util
 
 n_groups = 2
 
-def parseFiles(filename, trueW, xAxis, perTrial):
+def parseFiles(filename, xAxis, perTrial):
   means = []
   cis = []
 
@@ -19,8 +19,8 @@ def parseFiles(filename, trueW, xAxis, perTrial):
       condorId = xId * perTrial + trialId
       try:
         with open(filename + "." + str(condorId), 'r') as f:
-          w = ast.literal_eval(f.read())
-          errors.append(util.getMSE(w, trueW))
+          mse = ast.literal_eval(f.read())
+          errors.append(mse)
       except:
         print "issue in processing ", filename, condorId
     means.append(np.mean(errors))
@@ -28,13 +28,8 @@ def parseFiles(filename, trueW, xAxis, perTrial):
   
   plt.errorbar(xAxis, means, cis)
 
-expectation = [0.16666666666666666,
- 0.3333333333333333,
- 0.16666666666666666,
- 0.3333333333333333]
-
-parseFiles("eval_modular_vs_bayes/grid_modular_out", expectation, config.BUDGET_SIZES, 10)
-parseFiles("eval_modular_vs_bayes/grid_bayes_out", expectation, config.BUDGET_SIZES, 10)
+parseFiles("eval_modular_vs_bayes/grid_modular_out", config.BUDGET_SIZES, 10)
+parseFiles("eval_modular_vs_bayes/grid_bayes_out", config.BUDGET_SIZES, 10)
 
 plt.xlabel('Number of Samples')
 plt.ylabel('L1-normed error of weights')
