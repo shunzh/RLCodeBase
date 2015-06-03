@@ -11,6 +11,6 @@ for idx in xrange(len(table)):
   for agent in agents:
     print '& ' + agent,
     for metric in metrics:
-      print ' & ' + str(round(table[idx][agent][metric], 4)),
+      print ' & ' + str(round(table[idx][agent][metric], 3)),
     print '\\\\'
   print '\\hline'

@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import ast
 import config
-import util
 
 n_groups = 2
 
@@ -25,6 +24,8 @@ def parseFiles(filename, xAxis, perTrial):
         print "issue in processing ", filename, condorId
     means.append(np.mean(errors))
     cis.append(1.96 * np.std(errors) / np.sqrt(len(errors)))
+    
+    print errors
   
   plt.errorbar(xAxis, means, cis)
 
