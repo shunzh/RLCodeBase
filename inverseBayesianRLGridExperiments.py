@@ -39,15 +39,15 @@ def inferWeightsFromReward(mdp, rewards):
       x, y = state
       cell = mdp.grid[x][y] 
       if cell == r:
-        modularReward += abs(rewards[stateIdx])
+        modularReward += rewards[stateIdx]
     modularReward /= c
-    weights.append(modularReward)
+    weights.append(abs(modularReward))
   
   return map(lambda _: _ / sum(weights), weights)
 
 def main():
   #mdpName = gridworldMaps.getToyWalkAvoidGrid
-  mdpName = lambda: gridworldMaps.getRuohanGrid(0)
+  mdpName = lambda: gridworldMaps.getRuohanGrid(seed=0)
 
   rewards = experiment(mdpName())
   print inferWeightsFromReward(mdpName(), rewards)

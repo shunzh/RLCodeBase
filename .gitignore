@@ -63,3 +63,4 @@ eval_*
 
 # condor
 out.*
+*.tar.gz

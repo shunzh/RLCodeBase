@@ -17,11 +17,16 @@ import numpy as np
 def getVectorDistance(w1, w2):
   """
     Return:
-      ||w1 - w2||_1
+      ||w1 - w2||_2
   """
   assert len(w1) == len(w2)
 
-  return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))], 1)
+  return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))])
+
+def getMSE(x, y):
+  assert len(x) == len(y)
+  
+  return sum([(xi - yi) ** 2 for xi, yi in zip(x, y)]) / len(x)
 
 def saveToFile(filename, obj):
   """
