@@ -1,9 +1,9 @@
-import numpy as np
 import continuousWorldDomains
 from humanWorld import HumanWorld, HumanEnvironment
 import humanInfoParser
 import featureExtractors
 import continuousWorldExperiment
+import config
 
 def printString(x): print x
 
@@ -134,7 +134,7 @@ def main():
     win = plotting.drawDomain()
     # draw human trajectories
     if 'vr' in opts.grid:
-      humanInfoParser.plotHuman(plotting, win, range(25, 29), vrDomainId)
+      humanInfoParser.plotHuman(plotting, win, config.HUMAN_SUBJECTS, vrDomainId)
 
   a = None
   actionFn = lambda state: mdp.getPossibleActions(state)
@@ -163,7 +163,7 @@ def main():
     a.setWeights('learnedValues/humanAgent' + opts.category + 'Weights.pkl')
   elif opts.agent == 'Modular':
     # for modular agents
-    import modularAgents, modularQFuncs, config
+    import modularAgents, modularQFuncs
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = modularAgents.ModularAgent(**qLearnOpts)
     

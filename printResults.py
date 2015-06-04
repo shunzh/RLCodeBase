@@ -4,29 +4,32 @@ Print human-readable learning results to std output.
 
 import pickle
 from pprint import pprint
-import os
+import util
 
-if os.path.isfile('values.pkl'):
-  values = pickle.load(open('values.pkl'))
-else:
-  values = pickle.load(open('learnedValues/values.pkl'))
-
-try:
-  evaluation = pickle.load(open('evaluation.pkl'))
-  evaluationExists = True
-except:
-  evaluationExists = False
+def loadFile(filename):
+  try:
+    values = pickle.load(open(filename + '.pkl')) or pickle.load(open('learnedValues/' + filename + '.pkl'))
+  except:
+    print "try to merge condor output files"
+    try:
+      values = []
+      for idx in range(4):
+        values.append(pickle.load(open(filename + str(idx) + '.pkl')))
+      util.saveToFile(filename + ".pkl", values)
+    except:
+      print "file not found" + filename
+  
+  return values or []
 
 taskNames = ['Path only', 'Obstacle + Path', 'Target + Path', 'All']
 
-print
+values = loadFile("values")
+evaluations = loadFile("evaluation")
 
 moduleNum = 3
 for idx in range(4):
   print taskNames[idx]
   print 'Labels: [target, obstacle, path]'
-  print 'Weights:', [round(x, 4) for x in values[idx][:moduleNum]]
-  print 'Discounters:', [round(x, 4) for x in values[idx][moduleNum:]]
-  print 'Evaluation:'
-  if evaluationExists: pprint(evaluation[idx]) # print the dictionary structure of the evaluation results
+  print 'Weights:', [round(x, 3) for x in values[idx][:moduleNum]]
+  print 'Discounters:', [round(x, 3) for x in values[idx][moduleNum:]]
   print

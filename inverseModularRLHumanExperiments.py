@@ -10,6 +10,7 @@ import baselineAgents
 import humanWorld
 import pickle
 import util
+import config
 
 def continuousWorldExperiment():
   """
@@ -172,7 +173,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   x = sln.solve()
   w = x[:n]
-  # TODO test evaluation
+  # FIXME need both raw data and parsed data, so zip them together
   evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, w)
 
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
@@ -211,8 +212,7 @@ def main():
   # change the number of processors used here.
   # use 1 for sequential execution.
 
-  #subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
-  subjFiles = ["subj25.parsed.mat"]
+  subjFiles = ["subj" + str(num) + ".parsed.mat" for num in config.HUMAN_SUBJECTS]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
 
   """

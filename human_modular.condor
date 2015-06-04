@@ -1,6 +1,5 @@
 Universe = vanilla
 Executable = /usr/local/bin/python
-+ProjectDescription = "FLOCK"
 +Project = "AI_ROBOTICS"
 +Group = "grad"
 Notification = Never
