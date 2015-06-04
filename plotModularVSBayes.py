@@ -13,27 +13,28 @@ def parseFiles(filename, xAxis, perTrial):
   cis = []
 
   for xId in xrange(len(xAxis)):
-    errors = []
+    data = []
     for trialId in xrange(perTrial):
       condorId = xId * perTrial + trialId
       try:
         with open(filename + "." + str(condorId), 'r') as f:
-          mse = ast.literal_eval(f.read())
-          errors.append(mse)
+          datum = ast.literal_eval(f.read())
+          data.append(datum)
       except:
         print "issue in processing ", filename, condorId
-    means.append(np.mean(errors))
-    cis.append(1.96 * np.std(errors) / np.sqrt(len(errors)))
+    means.append(np.mean(data))
+    cis.append(1.96 * np.std(data) / np.sqrt(len(data)))
     
-    print errors
+    print data
   
   plt.errorbar(xAxis, means, cis)
 
 parseFiles("eval_modular_vs_bayes/grid_modular_out", config.BUDGET_SIZES, 10)
 parseFiles("eval_modular_vs_bayes/grid_bayes_out", config.BUDGET_SIZES, 10)
 
+plt.gcf().set_size_inches(5,4)
 plt.xlabel('Number of Samples')
-plt.ylabel('L1-normed error of weights')
-plt.legend(["Modular IRL", "Bayesian IRL"])
-plt.savefig("grid_modular_vs_bayes.eps")
+plt.ylabel('Policy Agreement')
+plt.legend(["Modular IRL", "Bayesian IRL"], "lower right")
+plt.savefig("grid_modular_vs_bayes.png")
 plt.close()
