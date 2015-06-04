@@ -14,6 +14,13 @@ def gaussianPriorGen(sigma):
   return lambda r: 1.0 / (np.sqrt(2 * np.pi) * sigma) * np.exp(- r ** 2 / (2 * sigma))
 
 def experiment(mdp):
+  """
+  Run bayes irl experiment.
+  
+  Return:
+    r: reward
+    consistency
+  """
   if len(sys.argv) > 1:
     budgetId = int(sys.argv[1]) / 10
     budget = config.BUDGET_SIZES[budgetId]
@@ -27,17 +34,22 @@ def experiment(mdp):
 
   sol = InverseBayesianRL(mdp, laplacePriorGen(1))
   sol.setSamplesFromMdp(mdp, a, budget)
-  return sol.solve()
+  r = sol.solve()
+  
+  for idx, s in enumerate(mdp.getStates()):
+    mdp.setReward(s, r[idx])
+  aEst = PolicyIterationAgent(mdp, **opts)
+  aEst.learn()
+  
+  return [r, util.checkPolicyConsistency(mdp.getStates(), a, aEst)]
 
 def main():
   #mdpName = gridworldMaps.getToyWalkAvoidGrid
   mdpName = lambda: gridworldMaps.getRuohanGrid(seed=0)
 
-  rewards = experiment(mdpName())
+  rewards, consistency = experiment(mdpName())
 
-  mdp = mdpName()
-  trueRewards = [mdp.getReward(None, None, state) for state in mdp.getStates()] 
-  print util.getMSE(rewards, trueRewards)
+  print consistency
 
 if __name__ == '__main__':
   main()

@@ -11,24 +11,6 @@ import humanWorld
 import pickle
 import util
 
-def checkPolicyConsistency(states, a, b):
-  """
-    Check how many policies on the states are consistent with the optimal one.
-
-    Args:
-      states: the set of states that we want to compare the policies
-      a, b: two agents that we want to compare their policies
-    Return:
-      Portion of consistent policies
-  """
-  consistentPolices = 0
-
-  # Walk through each state
-  for state in states:
-    consistentPolices += int(a.getPolicy(state) == b.getPolicy(state))
-
-  return 1.0 * consistentPolices / len(states)
-
 def continuousWorldExperiment():
   """
     Can be called to run pre-specified agent and domain.
@@ -68,7 +50,7 @@ def continuousWorldExperiment():
   aHat.setWeights(w) # get the weights in the result
 
   # print for experiments
-  print checkPolicyConsistency(m.getStates(), a, aHat)
+  print util.checkPolicyConsistency(m.getStates(), a, aHat)
   print util.getVectorDistance(a.getWeights(), w)
 
   return w, sln
@@ -231,7 +213,8 @@ def main():
   # use 1 for sequential execution.
   pool = Pool(processes=1)
 
-  subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
+  #subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
+  subjFiles = ["subj25.parsed.mat"]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
   taskNum = 32
 

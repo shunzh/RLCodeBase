@@ -32,6 +32,8 @@ class InverseBayesianRL(InverseRL):
 
     self.maxIterations = maxIterations
     
+    self.optPolicy = None # assigned after solving
+    
     if not "setReward" in dir(mdp):
       raise Exception("setReward not found in MDP " + mdp.__class__.__name__ + ". \
 This is necessary in bayesian irl")

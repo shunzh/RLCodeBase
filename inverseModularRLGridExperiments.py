@@ -5,7 +5,7 @@ import config
 from inverseModularRL import InverseModularRL
 import util
 
-def main():
+def experiment():
   if len(sys.argv) > 1:
     budgetId = int(sys.argv[1]) / 10
     budget = config.BUDGET_SIZES[budgetId]
@@ -34,7 +34,15 @@ def main():
   sln.setSamplesFromMdp(mdp, a, budget)
   w = sln.solve()
 
-  print util.getMSE(w, trueW)
+  aEst = modularAgents.ModularAgent(**qLearnOpts)
+  aEst.setQFuncs(qFuncs)
+  aEst.setWeights(w) # get the weights in the result
+  aEst.setDiscounters([.8] * len(qFuncs))
+
+  # print for experiments
+  return [w, util.checkPolicyConsistency(mdp.getStates(), a, aEst)]
 
 if __name__ == '__main__':
-  main()
+  w, consistency = experiment()
+  
+  print consistency

@@ -28,6 +28,24 @@ def getMSE(x, y):
   
   return sum([(xi - yi) ** 2 for xi, yi in zip(x, y)]) / len(x)
 
+def checkPolicyConsistency(states, a, b):
+  """
+    Check how many policies on the states are consistent with the optimal one.
+
+    Args:
+      states: the set of states that we want to compare the policies
+      a, b: two agents that we want to compare their policies
+    Return:
+      Portion of consistent policies
+  """
+  consistentPolices = 0
+
+  # Walk through each state
+  for state in states:
+    consistentPolices += int(a.getPolicy(state) == b.getPolicy(state))
+
+  return 1.0 * consistentPolices / len(states)
+
 def saveToFile(filename, obj):
   """
   Save an object to a pickle file

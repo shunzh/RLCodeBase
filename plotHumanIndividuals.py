@@ -2,6 +2,10 @@ import ast
 import numpy as np
 import matplotlib.pyplot as plt
 
+"""
+GOT NOT TIME TO REORGANIZE THESE CODES.
+JUST DIRTY CODES FOR PLOTTING.
+"""
 def parseFiles(filename, rang):
   xs = []
   for condorId in rang:
