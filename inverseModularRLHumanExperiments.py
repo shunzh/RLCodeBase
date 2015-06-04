@@ -208,33 +208,30 @@ def main():
   # set experiment here
   experiment = humanWorldExperimentQPotential
 
-  from multiprocessing import Pool
   # change the number of processors used here.
   # use 1 for sequential execution.
-  pool = Pool(processes=1)
 
   #subjFiles = ["subj" + str(num) + ".parsed.mat" for num in xrange(25, 29)]
   subjFiles = ["subj25.parsed.mat"]
   taskRanges = [range(0, 8), range(8, 16), range(16, 24), range(24, 32)]
-  taskNum = 32
 
-  if len(sys.argv) > 1:
-    trialId = int(sys.argv[1])
+  """
+  # run trials separately
+  trialId = int(sys.argv[1])
 
-    subjIdx = trialId / taskNum
-    taskIdx = trialId % taskNum
+  subjIdx = trialId / taskNum
+  taskIdx = trialId % taskNum
 
-    results = experiment([subjFiles[subjIdx]], [taskIdx])
-    print results[0]
-  else:
-    #experiment(subjs, [0]) # TEST ONLY
+  results = experiment([subjFiles[subjIdx]], [taskIdx])
+  print results[0]
+  """
+  
+  # run tasks separately
+  taskId = int(sys.argv[1])
+  value, evaluation = experiment(subjFiles, taskRanges[taskId])
 
-    results = [pool.apply_async(experiment, args=(subjFiles, ids)) for ids in taskRanges]
-    values = [r.get()[0] for r in results]
-    evaluations = [r.get()[1] for r in results]
-
-    util.saveToFile('values.pkl', values)
-    util.saveToFile('evaluation.pkl', evaluations)
+  util.saveToFile('values' + str(taskId) + '.pkl', value)
+  util.saveToFile('evaluation' + str(taskId) + '.pkl', evaluation)
 
 if __name__ == '__main__':
   main()
