@@ -39,11 +39,8 @@ DOUBTS
 - consider all the module instances - necessary?
 
 ==============
-TODO
 
-- separate human subjects.
-  weights and discounters for each subjects, each tasks (different rooms).
-- bayes and modular irl on gridworld.
+increase the radius, or learn the radius
 
 future:
 - multiple waypoints ahead

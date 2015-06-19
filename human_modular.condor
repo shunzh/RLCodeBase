@@ -8,7 +8,7 @@ Output     = out.$(Process)
 Error      = err.$(Process)
 Log        = condor.log
 
-num_of_processes=128
+num_of_processes=4
 
 Arguments = inverseModularRLHumanExperiments.py $(Process)
 Queue $(num_of_processes)
