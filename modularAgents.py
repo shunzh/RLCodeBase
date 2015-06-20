@@ -1,6 +1,5 @@
 from qlearningAgents import ApproximateQAgent
 
-import math
 import numpy as np
 
 class ModularAgent(ApproximateQAgent):
@@ -21,11 +20,11 @@ class ModularAgent(ApproximateQAgent):
     Get Q value by consulting each module.
     """
     # sum over q values from each sub mdp
-    return sum([self.getSubQValue(state, action, i) * self.weights[i] for i in xrange(self.nModules)])
+    return sum([self.getSubQValue(state, action, i) for i in xrange(self.nModules)])
   
   def getSubQValue(self, s, a, moduleId):
     state, action = self.mapper(s, a)
-    return self.qFuncs[moduleId](state, action, self.discounters)
+    return self.qFuncs[moduleId](state, action, self.para)
 
   def getSubQValues(self, state, action):
     """
@@ -40,12 +39,12 @@ class ModularAgent(ApproximateQAgent):
     """
     self.qFuncs = qFuncs
     self.nModules = len(self.qFuncs)
-
-  def setWeights(self, weights):
-    self.weights = weights
   
-  def setDiscounters(self, discounters):
-    self.discounters = discounters
+  def setParameters(self, x):
+    """
+    Parameters used to config the Q
+    """
+    self.para = x
 
   def getWeights(self):
     return self.weights

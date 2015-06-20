@@ -8,9 +8,6 @@ import featureExtractors
 import numpy as np
 from humanWorld import HumanWorld
 import warnings
-from game import Actions
-import math
-import config
 
 """
 Human world functions
@@ -52,7 +49,7 @@ def getHumanWorldDiscreteFuncs():
           lambda s, a, d = None: qObstacle(s[2], a), # closest obstacles
           lambda s, a, d = None: qSegment(s[4], a)]
 
-def getHumanWorldQPotentialFuncs(twoObjects = config.TWO_OBJECTS):
+def getHumanWorldQPotentialFuncs():
   """
   Rather learned from samples, we define the potential functions (a value function) based on reward.
   Q functions here just reflect the potential functions.
@@ -65,54 +62,33 @@ def getHumanWorldQPotentialFuncs(twoObjects = config.TWO_OBJECTS):
     twoObjects: look at two closest objects.
   """
   transition = HumanWorld.transitionSimulate
-  radius = 0.1
 
-  def vFuncGenerator(reward):
-    def vFunc(s, discounter):
-      """
-        _
-      _/ \_ <- looks like this
-      """
-      dist, orient = s
-      if dist == None or orient == None:
-        # in which case no such object left in the domain
-        return 0
-      elif dist < radius:
-        return reward
-      else:
-        return reward * np.power(discounter, dist - radius)
-    return vFunc
+  def vFunc(s, para):
+    """
+      _
+    _/ \_ <- v function looks like this
+
+    """
+    reward, discounter, radius = para
+    dist, orient = s
+    if dist == None or orient == None:
+      # in which case no such object left in the domain
+      return 0
+    elif dist < radius:
+      return reward
+    else:
+      return reward * np.power(discounter, dist - radius)
   
-  vTarget = vFuncGenerator(1)
-  vObstacle = vFuncGenerator(-1)
-  vSegment = vFuncGenerator(1)
-  vPath = vFuncGenerator(1)
-
-  def qTarget(state, action, discounter):
-    return vTarget(transition(state, action), discounter)
-
-  def qObstacle(state, action, discounter):
-    return vObstacle(transition(state, action), discounter)
-
-  def qSegment(state, action, discounter):
-    return vSegment(transition(state, action), discounter)
-
-  def qPath(state, currentState, action, discounter):
+  def qPath(state, currentState, action, reward, discounter, radius):
     s = transition(state, action)
     curS = transition(currentState, action)
     project = featureExtractors.getProjectionToSegmentLocalView(s, curS)
-    return vPath(project, discounter)
+    return vFunc(project, reward, discounter, radius)
 
-  if twoObjects:
-    return [lambda s, a, d: qTarget(s[0], a, d[0]),
-            lambda s, a, d: qObstacle(s[2], a, d[1]),
-            lambda s, a, d: qSegment(s[4], a, d[2]) + qSegment(s[5], a, d[2])] # next seg point
-            #lambda s, a, d = defaultD: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
-  else:
-    return [lambda s, a, d: qTarget(s[0], a, d[0]), # closest target(s)
-            lambda s, a, d: qObstacle(s[2], a, d[1]), # closest obstacle(s)
-            lambda s, a, d: qSegment(s[4], a, d[2])] # next seg point
-            #lambda s, a, d: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
+  return [lambda s, a, x: vFunc(transition(s[0], a), [x[0], x[3], x[6]]), # closest target(s)
+          lambda s, a, x: vFunc(transition(s[2], a), [x[1], x[4], x[7]]), # closest obstacle(s)
+          lambda s, a, x: vFunc(transition(s[4], a), [x[2], x[5], x[8]])] # next seg point
+          #lambda s, a, d: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
 
 def getHumanWorldContinuousFuncs():
   """

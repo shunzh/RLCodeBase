@@ -11,6 +11,7 @@ import humanWorld
 import pickle
 import util
 import config
+import warnings
 
 def continuousWorldExperiment():
   """
@@ -112,13 +113,13 @@ def printDiscounter(sln, filename, weights = []):
   
   plt.close()
 
-def evaluateAssumption(zippedData, qFuncs, w, d = None):
+def evaluateAssumption(zippedData, qFuncs, x):
   """
   Given samples and weights, compare policies of human and our agents.
   Args:
-    samples: list of (state, action)
-    w: learned weight
-    d: learned discounters
+    zippedData: raw data and parsed data
+    qFuncs
+    x: learned parameters
   Return:
     A dictionary {agent: {criteria: value}}
   """
@@ -138,8 +139,6 @@ def evaluateAssumption(zippedData, qFuncs, w, d = None):
       {key: value}
     """
     agent = agentType(**qLearnOpts)
-    agent.setWeights(w)
-    if d != None: agent.setDiscounters(d)
     agent.setQFuncs(qFuncs)
 
     # go through samples
@@ -188,7 +187,13 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
-  sln = InverseModularRL(qFuncs, learnDiscounter=True, solver="CMA-ES")
+  starts = [0] * n + [0.5] * n + [0] * n
+  margin = 0.1
+  bnds = tuple((0, 1000) for _ in range(n))\
+       + tuple((0 + margin, 1 - margin) for _ in range(n))\
+       + tuple((0, 1) for _ in range(n))
+
+  sln = InverseModularRL(qFuncs, starts, bnds, solver="CMA-ES")
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang, parsedHumanData)
   sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
@@ -199,11 +204,15 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
     # read from files if only output the learned results
     values = pickle.load(open('learnedValues/values.pkl'))
     x = values[rang[0] / 8]
-  w = x[:n]
-  d = x[n:]
-  evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, w, d)
+  
+  weightSum = x[:n]
+  if weightSum == 0:
+    warnings.warn("weights are 0.")
+  else:
+    x[:n] = [xi / weightSum for xi in x[:n]]
+  evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, x)
 
-  return [w + d, evaluation] 
+  return [x, evaluation] 
 
 def main():
   # set experiment here

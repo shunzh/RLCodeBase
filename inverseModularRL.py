@@ -16,25 +16,25 @@ class InverseModularRL(InverseRL):
     107(4),477-490
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
-  def __init__(self, qFuncs, eta = 1, learnDiscounter = False, solver = "BFGS"):
+  def __init__(self, qFuncs, eta = 1, starts, bnds, solver = "BFGS"):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
         eta: consistency factor
-        learnDiscounter: put discounter as part of X to solve.
-                         Currently not doing in this way - would be nonconvex. 
+        starts: init values of X
+        bnds: boundary of X
     """
     self.qFuncs = qFuncs
     self.n = len(self.qFuncs)
 
     # enable if learning discounters as well
-    self.learnDiscounter = learnDiscounter
+    self.starts = starts
+    self.bns = bnds
     self.solver = solver
 
     # confidence
     self.eta = eta
     # default discounters
-    self.d = [.8] * self.n
   
   def setDiscounters(self, d):
     # make sure the length of discounters is correct
@@ -51,34 +51,21 @@ class InverseModularRL(InverseRL):
       Return:
         - log(likelihood)
     """
-    w = X[:self.n] # weights
-    
-    if self.learnDiscounter:
-      self.d = X[self.n:]
-
     def computeQValue(state, action):
       # s, a -> q(s, a)
-      return sum([w[moduleIdx] * self.qFuncs[moduleIdx](state, action, self.d) for moduleIdx in xrange(len(self.qFuncs))])
+      return sum([self.qFuncs[moduleIdx](state, action, X) for moduleIdx in xrange(len(self.qFuncs))])
     
     # to be minimized, return the negation of log
     return - self.softMaxSum(computeQValue)
 
   def solve(self):
     """
-      Overrides IRL's solver.
-      Find the appropriate weight and discounter for each module, by walking through the policy.
-
       Return:
         optimal weight and discounter, in one vector
     """
     # make sure the range of weights are positive
-    start_pos = [0] * self.n
-    bnds = tuple((0, 1000) for _ in range(self.n))
-    if self.learnDiscounter:
-      # range of discounters
-      margin = 0.1
-      bnds += tuple((0 + margin, 1 - margin) for _ in range(self.n))
-      start_pos += [0.5] * self.n
+    start_pos = self.starts
+    bnds = self.bns
 
     if self.solver == "BFGS":
       # BFGS should be default for `minimize`
@@ -97,14 +84,5 @@ class InverseModularRL(InverseRL):
     else:
       raise Exception("Unknown solver " + self.solver)
 
-    sumX = sum(x[:self.n])
-    try:
-      w = [x[idx] / sumX for idx in xrange(self.n)]
-    except:
-      w = x[:self.n]
-      print "all 0 weights. weird"
-      
-    d = x[self.n:]
-    
     # concatenate weights and discounter (could be [])
-    return w + d
+    return x
