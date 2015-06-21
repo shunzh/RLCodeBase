@@ -103,10 +103,7 @@ def main():
       valueTable = pickle.load(open('learnedValues/values.pkl'))
       values = valueTable[vrDomainId / 8] # 8 domains per task
       
-      weights = values[:nModules]
-      discounters = [] if len(values) == nModules else values[nModules:]
-
-      print "init using domain #", vrDomainId, "with values", weights, "and discounters", discounters
+      print "init using domain #", vrDomainId, "with parameters", values
   elif opts.grid == 'vrTrain':
     init = lambda: continuousWorldDomains.loadFromMat('miniRes25.mat', 0, randInit = True)
   elif opts.grid == 'toy':
@@ -167,8 +164,7 @@ def main():
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = modularAgents.ModularAgent(**qLearnOpts)
     
-    a.setWeights(weights)
-    a.setDiscounters(discounters)
+    a.setParameters(values)
 
     if config.DISCRETE_Q:
       # way 1: using q tables
