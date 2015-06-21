@@ -16,7 +16,7 @@ class InverseModularRL(InverseRL):
     107(4),477-490
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
-  def __init__(self, qFuncs, eta = 1, starts, bnds, solver = "BFGS"):
+  def __init__(self, qFuncs, starts, bnds, eta = 1, solver = "BFGS"):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
