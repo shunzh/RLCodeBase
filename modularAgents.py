@@ -3,15 +3,6 @@ from qlearningAgents import ApproximateQAgent
 import numpy as np
 
 class ModularAgent(ApproximateQAgent):
-  """
-  State: location of the agent.
-  Action: weights on the sub-MDPs.
-  Transition: transition of the agent.
-  Reward: reward from the environment.
-
-  Assume:
-  Weights are independent from the location of the agent.
-  """
   def __init__(self, **args):
     ApproximateQAgent.__init__(self, **args)
  
@@ -46,9 +37,6 @@ class ModularAgent(ApproximateQAgent):
     """
     self.para = x
 
-  def getWeights(self):
-    return self.weights
-  
   def update(self, state, action, nextState, reward):
     """
     There is no learning here.

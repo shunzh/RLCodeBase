@@ -140,6 +140,8 @@ def evaluateAssumption(zippedData, qFuncs, x):
     """
     agent = agentType(**qLearnOpts)
     agent.setQFuncs(qFuncs)
+    if hasattr(agent, 'setParameters'):
+      agent.setParameters(x)
 
     # go through samples
     angularDiff = 0
