@@ -149,6 +149,7 @@ def evaluateAssumption(zippedData, qFuncs, x):
     for datum, sample in zippedData:
       state, action = sample
 
+      # difference in angle
       angularDiff += abs(humanWorld.HumanWorld.actions.getExpectedDistAngle(agent.getPolicy(state))[1] - datum['moveAngle'])
       # add log of the probability of choosing such action by the model
       posteriorProb += np.log(agent.getPolicyProbability(state, action))
@@ -173,9 +174,8 @@ def humanWorldExperimentDiscrete(filenames, rang):
   sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())
 
   x = sln.solve()
-  w = x[:n]
   # FIXME need both raw data and parsed data, so zip them together
-  evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, w)
+  evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, x)
 
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
 
@@ -235,6 +235,7 @@ def main():
   # run tasks separately
   taskId = int(sys.argv[1])
   value, evaluation = experiment(subjFiles, taskRanges[taskId])
+  #value, evaluation = experiment(subjFiles[0:1], [0]) # TEST
 
   util.saveToFile('values' + str(taskId) + '.pkl', value)
   util.saveToFile('evaluation' + str(taskId) + '.pkl', evaluation)
