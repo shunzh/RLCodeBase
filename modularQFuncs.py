@@ -8,6 +8,8 @@ import featureExtractors
 import numpy as np
 from humanWorld import HumanWorld
 import warnings
+import math
+from game import Actions
 
 """
 Human world functions

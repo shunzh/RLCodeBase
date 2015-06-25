@@ -12,7 +12,7 @@ rm stats
 # draw figures
 for i in `seq 0 31`;
 do
-  python humanWorldExperiment.py -a Modular -g vr$i
+  python humanWorldExperiment.py -a Modular -g vr$i -e .1
 done
 
 # convert from eps to png

@@ -191,7 +191,7 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
 
   starts = [0] * n + [0.5] * n + [0] * n
   margin = 0.1
-  bnds = tuple((0, 1000) for _ in range(n))\
+  bnds = tuple((-1000, 1000) for _ in range(n))\
        + tuple((0 + margin, 1 - margin) for _ in range(n))\
        + tuple((0, 1) for _ in range(n))
 
@@ -207,11 +207,6 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
     values = pickle.load(open('learnedValues/values.pkl'))
     x = values[rang[0] / 8]
   
-  weightSum = x[:n]
-  if weightSum == 0:
-    warnings.warn("weights are 0.")
-  else:
-    x[:n] = [xi / weightSum for xi in x[:n]]
   evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, x)
 
   return [x, evaluation] 
