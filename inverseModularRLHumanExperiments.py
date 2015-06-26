@@ -179,7 +179,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   printWeight(sln, 'objValuesTask' + str(rang[0] / len(rang) + 1) + '.png')
 
-  return [w, evaluation] 
+  return [x, evaluation] 
 
 def humanWorldExperimentQPotential(filenames, rang, solving = True):
   """
@@ -191,7 +191,7 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
 
   starts = [0] * n + [0.5] * n + [0] * n
   margin = 0.1
-  bnds = tuple((-1000, 1000) for _ in range(n))\
+  bnds = ((0, 1000), (-1000, 0), (0, 1000))\
        + tuple((0 + margin, 1 - margin) for _ in range(n))\
        + tuple((0, 1) for _ in range(n))
 
@@ -235,7 +235,6 @@ def main():
   # run tasks separately
   taskId = int(sys.argv[1])
   value, evaluation = experiment(subjFiles, taskRanges[taskId])
-  #value, evaluation = experiment(subjFiles[0:1], [0]) # TEST
 
   util.saveToFile('values' + str(taskId) + '.pkl', value)
   util.saveToFile('evaluation' + str(taskId) + '.pkl', evaluation)
