@@ -193,7 +193,7 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
   margin = 0.1
   bnds = ((0, 1000), (-1000, 0), (0, 1000))\
        + tuple((0 + margin, 1 - margin) for _ in range(n))\
-       + tuple((0, 1) for _ in range(n))
+       + tuple((0, 0.001) for _ in range(n))
 
   sln = InverseModularRL(qFuncs, starts, bnds, solver="CMA-ES")
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
