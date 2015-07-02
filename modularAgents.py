@@ -31,6 +31,9 @@ class ModularAgent(ApproximateQAgent):
     self.qFuncs = qFuncs
     self.nModules = len(self.qFuncs)
   
+  def getParameters(self):
+    return self.para
+
   def setParameters(self, x):
     """
     Parameters used to config the Q

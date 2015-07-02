@@ -11,51 +11,6 @@ import humanWorld
 import pickle
 import util
 import config
-import warnings
-
-def continuousWorldExperiment():
-  """
-    Can be called to run pre-specified agent and domain.
-  """
-  import continuousWorld as cw
-  init = continuousWorldDomains.loadFromMat('miniRes25.mat', 0)
-  #init = cw.toyDomain()
-  m = cw.ContinuousWorld(init)
-
-  actionFn = lambda state: m.getPossibleActions(state)
-  qLearnOpts = {'gamma': 0.9,
-                'alpha': 0.5,
-                'epsilon': 0,
-                'actionFn': actionFn}
-  # modular agent
-  a = modularAgents.ModularAgent(**qLearnOpts)
-
-  if len(sys.argv) > 1:
-    # user wants to set weights themselves
-    w = map(float, sys.argv[1:])
-    a.setWeights(w)
-
-  qFuncs = modularQFuncs.getContinuousWorldFuncs(m)
-  # set the weights and corresponding q-functions for its sub-mdps
-  # note that the modular agent is able to determine the optimal policy based on these
-  a.setQFuncs(qFuncs)
-
-  sln = InverseModularRL(qFuncs)
-  sln.setSamplesFromMdp(m, a)
-  w = sln.solve()
-  w = map(lambda _: round(_, 5), w) # avoid weird numerical problem
-
-  # check the consistency between the original optimal policy
-  # and the policy predicted by the weights we guessed.
-  aHat = modularAgents.ModularAgent(**qLearnOpts)
-  aHat.setQFuncs(qFuncs)
-  aHat.setWeights(w) # get the weights in the result
-
-  # print for experiments
-  print util.checkPolicyConsistency(m.getStates(), a, aHat)
-  print util.getVectorDistance(a.getWeights(), w)
-
-  return w, sln
 
 def printWeight(sln, filename, discounters = []):
   import matplotlib.pyplot as plt
@@ -189,11 +144,11 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
-  starts = [0] * n + [0.5] * n + [0] * n
+  starts = [0] * n + [0.5] * n + [0]
   margin = 0.1
   bnds = ((0, 1000), (-1000, 0), (0, 1000))\
        + tuple((0 + margin, 1 - margin) for _ in range(n))\
-       + tuple((0, 0.001) for _ in range(n))
+       + ((0, 2),)
 
   sln = InverseModularRL(qFuncs, starts, bnds, solver="CMA-ES")
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
