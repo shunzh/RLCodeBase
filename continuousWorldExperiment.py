@@ -186,7 +186,6 @@ def main():
   if opts.agent == 'value':
     a = valueIterationAgents.ValueIterationAgent(mdp, opts.discount, opts.iters)
   elif opts.agent == 'q':
-    continuousEnv = ContinuousEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -195,7 +194,6 @@ def main():
     a = qlearningAgents.QLearningAgent(**qLearnOpts)
   elif opts.agent == 'Approximate':
     extractor = featureExtractors.ContinousRadiusLogExtractor(mdp, 'targs')
-    continuousEnv = ContinuousEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 
@@ -205,7 +203,6 @@ def main():
     a = qlearningAgents.ApproximateQAgent(**qLearnOpts)
   elif opts.agent == 'Modular':
     import modularAgents, modularQFuncs
-    continuousEnv = ContinuousEnvironment(mdp)
     actionFn = lambda state: mdp.getPossibleActions(state)
     qLearnOpts = {'gamma': opts.discount, 
                   'alpha': opts.learningRate, 

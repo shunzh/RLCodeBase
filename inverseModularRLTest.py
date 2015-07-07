@@ -4,6 +4,11 @@ Try some simple domains, and human world experiments on both discrete and contin
 """
 import unittest
 from inverseModularRL import InverseModularRL
+import modularQFuncs
+import util
+import continuousWorldDomains
+from humanWorld import HumanWorld
+import modularAgents
 
 class Test(unittest.TestCase):
   methodCandidates = ["CMA-ES", "BFGS"]
@@ -33,6 +38,33 @@ class Test(unittest.TestCase):
                          lambda w: w[1] >= 0.99,\
                          lambda w: w[2] >= 0.99]
     self.checkResult(samples, actions, qFuncs, resultConstraints)
+  
+  def test_human_env(self):
+    #TODO
+    qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()[:2]
+    n = len(qFuncs)
+    x = [1, -1] + [.5, .5] + [0, 0.5]
+
+    init = continuousWorldDomains.loadFromMat('miniRes25.mat', 0)
+    mdp = HumanWorld(init)
+    actionFn = lambda state: mdp.getPossibleActions(state)
+    qLearnOpts = {'gamma': 0.9,
+                  'alpha': 0.5,
+                  'epsilon': 0,
+                  'actionFn': actionFn}
+    agent = modularAgents.ModularAgent(**qLearnOpts)
+    agent.setParameters(x)
+
+    starts = [0] * n + [0.5] * n
+    margin = 0.1
+    bnds = ((0, 1000), (-1000, 0))\
+         + tuple((0 + margin, 1 - margin) for _ in range(n))\
+         + ((0, 10), (0, 10))
+
+    sln = InverseModularRL(qFuncs, starts, bnds, solver="CMA-ES")
+    sln.setSamplesFromMdp(mdp, agent)
+
+    sln.solve()
  
   def checkResult(self, samples, actions, qFuncs, resultConstraints):
     n = len(qFuncs)
