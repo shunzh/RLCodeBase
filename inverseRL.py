@@ -25,7 +25,9 @@ class InverseRL:
     if budget:
       states = random.sample(states, budget)
 
-    self.getSamples = lambda : [(state, agent.getPolicy(state)) for state in states]
+    samples = [(state, agent.getPolicy(state)) for state in states]
+    samples = map(lambda (s, a): agent.mapper(s, a), samples)
+    self.getSamples = lambda : samples
     self.getActions = lambda s : mdp.getPossibleActions(s)
 
   def setSamples(self, samples, actions):
