@@ -45,6 +45,23 @@ def simpleToyDomain(category = 'targs'):
 
   return ret
 
+def simpleMixDomain():
+  """
+  Put one object for target, penalty and path waypoint.
+  """
+  ret = {}
+  ret['objs'] = {'targs': [(1, 1)], 'obsts': [(-1, 1)], 'segs': [(0, -1)],\
+                 'entrance': [(0, 0)]}
+  ret['xBoundary'] = [-2, 2]
+  ret['yBoundary'] = [-2, 2]
+
+  # radius of an object (so the object doesn't appear as a point)
+  ret['radius'] = 0.075
+  # step size of the agent movement
+  ret['step'] = 0.1
+  
+  return ret
+
 def toyDomain(category = 'targs'):
   """
   Similar to the simple toy domain, but with multiple (same) objects.

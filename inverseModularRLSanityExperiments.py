@@ -9,7 +9,7 @@ def sanityCheck(gtX):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
-  init = continuousWorldDomains.loadFromMat('miniRes25.mat', 0)
+  init = continuousWorldDomains.simpleMixDomain()
   mdp = HumanWorld(init)
   actionFn = lambda state: mdp.getPossibleActions(state)
   qLearnOpts = {'gamma': 0.9,
@@ -38,5 +38,5 @@ def sanityCheck(gtX):
   return x
 
 if __name__ == '__main__':
-  gtX = [1, -1, 0] + [.5, .5, 0] + [0, 0.5, 0]
+  gtX = [1, -1, 0] + [.2, .2, 0] + [0, 0.5, 0]
   sanityCheck(gtX)
