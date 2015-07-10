@@ -16,7 +16,7 @@ class InverseModularRL(InverseRL):
     107(4),477-490
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
-  def __init__(self, qFuncs, starts, bnds, eta = 1, solver = "BFGS"):
+  def __init__(self, qFuncs, starts, bnds, constants = [], eta = 1, solver = "BFGS"):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -30,6 +30,8 @@ class InverseModularRL(InverseRL):
     # enable if learning discounters as well
     self.starts = starts
     self.bns = bnds
+    self.constants = constants
+
     self.solver = solver
 
     # confidence
@@ -51,6 +53,9 @@ class InverseModularRL(InverseRL):
       Return:
         - log(likelihood)
     """
+    # append the constants, which are fixed and not to solve
+    X.append(self.constants)
+
     def computeQValue(state, action):
       # s, a -> q(s, a)
       return sum([self.qFuncs[moduleIdx](state, action, X) for moduleIdx in xrange(len(self.qFuncs))])

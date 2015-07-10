@@ -144,13 +144,13 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
-  starts = [0] * n + [0.5] * n + [0, 0.1, 0]
+  starts = [0] * n + [0.5] * n
   margin = 0.1
-  bnds = ((0, 1000), (-1000, 0), (0, 1000))\
-       + tuple((0 + margin, 1 - margin) for _ in range(n))\
-       + ((0.000, 0.001), (0.100, 0.101), (0.000, 0.001))
+  bnds = ((0, 100), (-100, 0), (0, 100))\
+       + tuple((0 + margin, 1 - margin) for _ in range(n))
+  constants = [0, 0.001, 0]
 
-  sln = InverseModularRL(qFuncs, starts, bnds, solver="CMA-ES")
+  sln = InverseModularRL(qFuncs, starts, bnds, constants, solver="CMA-ES")
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang, parsedHumanData)
   sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())

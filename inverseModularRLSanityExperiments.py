@@ -24,7 +24,7 @@ def sanityCheck(gtX):
 
   starts = [0] * n + [0.5] * n + [0] * n
   margin = 0.1
-  bnds = ((0, 1000), (-1000, 0), (0, 1000))\
+  bnds = ((0, 100), (-100, 0), (0, 100))\
        + tuple((0 + margin, 1 - margin) for _ in range(n))\
        + tuple((0, 1) for _ in range(n))
   
@@ -38,5 +38,5 @@ def sanityCheck(gtX):
   return x
 
 if __name__ == '__main__':
-  gtX = [1, -1, 0] + [.2, .2, 0] + [0, 0.5, 0]
+  gtX = [1, -1, 2] + [.2, .2, .2] + [0, 0.3, 0]
   sanityCheck(gtX)

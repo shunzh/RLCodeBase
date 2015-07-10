@@ -87,9 +87,9 @@ def getHumanWorldQPotentialFuncs():
     project = featureExtractors.getProjectionToSegmentLocalView(s, curS)
     return vFunc(project, reward, discounter, radius)
 
-  return [lambda s, a, x: vFunc(transition(s[0], a), [x[0], x[3], x[6]]), # closest target(s)
-          lambda s, a, x: vFunc(transition(s[2], a), [x[1], x[4], x[7]]), # closest obstacle(s)
-          lambda s, a, x: vFunc(transition(s[4], a), [x[2], x[5], x[8]])] # next seg point
+  return [lambda s, a, x: vFunc(transition(s[0], a), [x[0], x[3], 0]), # closest target(s)
+          lambda s, a, x: vFunc(transition(s[2], a), [x[1], x[4], 0.01]), # closest obstacle(s)
+          lambda s, a, x: vFunc(transition(s[4], a), [x[2], x[5], 0])] # next seg point
           #lambda s, a, d: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
 
 def getHumanWorldContinuousFuncs():
