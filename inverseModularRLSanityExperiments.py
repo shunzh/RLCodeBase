@@ -7,9 +7,8 @@ import featureExtractors
 
 def sanityCheck(gtX):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
-  n = len(qFuncs)
 
-  init = continuousWorldDomains.simpleMixDomain()
+  init = continuousWorldDomains.loadFromMat('miniRes25.mat', 0)
   mdp = HumanWorld(init)
   actionFn = lambda state: mdp.getPossibleActions(state)
   qLearnOpts = {'gamma': 0.9,
@@ -22,13 +21,15 @@ def sanityCheck(gtX):
   agent.setMapper(mapper) # absolute position to relative position to objects 
   agent.setParameters(gtX)
 
-  starts = [0] * n + [0.5] * n + [0] * n
+  starts = [0] * 2 + [0.5] * 2 + [0] * 2
   margin = 0.1
-  bnds = ((0, 100), (-100, 0), (0, 100))\
-       + tuple((0 + margin, 1 - margin) for _ in range(n))\
-       + tuple((0, 1) for _ in range(n))
+  bnds = ((0, 100), (-100, 0))\
+       + tuple((0 + margin, 1 - margin) for _ in range(2))\
+       + tuple((0, 1) for _ in range(2))
+  # add constants for path module
+  decorator = lambda x: x[0:2] + [0] + x[2:4] + [0] + x[4:6] + [0]
   
-  sln = InverseModularRL(qFuncs, starts, bnds, solver="CMA-ES")
+  sln = InverseModularRL(qFuncs, starts, bnds, decorator, solver="CMA-ES")
   sln.setSamplesFromMdp(mdp, agent)
   x = sln.solve()
   
@@ -38,5 +39,5 @@ def sanityCheck(gtX):
   return x
 
 if __name__ == '__main__':
-  gtX = [1, -1, 2] + [.2, .2, .2] + [0, 0.3, 0]
+  gtX = [4, -2, 0] + [.3, .3, 0] + [0, 0.2, 0]
   sanityCheck(gtX)

@@ -5,7 +5,6 @@ from inverseModularRL import InverseModularRL
 import modularAgents
 import modularQFuncs
 import humanInfoParser
-import continuousWorldDomains
 import baselineAgents
 import humanWorld
 import pickle
@@ -121,7 +120,6 @@ def humanWorldExperimentDiscrete(filenames, rang):
     rang: load mat with given rang of trials
   """
   qFuncs = modularQFuncs.getHumanWorldDiscreteFuncs()
-  n = len(qFuncs)
 
   sln = InverseModularRL(qFuncs)
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
@@ -144,13 +142,15 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
-  starts = [0] * n + [0.5] * n
+  starts = [0] * n + [0.5] * n + [0]
   margin = 0.1
   bnds = ((0, 100), (-100, 0), (0, 100))\
-       + tuple((0 + margin, 1 - margin) for _ in range(n))
-  constants = [0, 0.001, 0]
+       + tuple((0 + margin, 1 - margin) for _ in range(n))\
+       + ((0, 1),)
+  # radiuses of target and path are 0
+  decorator = lambda x: x[0:6] + [0] + [x[6]] + [0]
 
-  sln = InverseModularRL(qFuncs, starts, bnds, constants, solver="CMA-ES")
+  sln = InverseModularRL(qFuncs, starts, bnds, decorator, solver="CMA-ES")
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
   samples = humanInfoParser.getHumanStatesActions(filenames, rang, parsedHumanData)
   sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())

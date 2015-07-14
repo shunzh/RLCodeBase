@@ -136,7 +136,7 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     width = self.xBoundary[1] - self.xBoundary[0]
     height = self.xBoundary[1] - self.xBoundary[0]
     
-    while len(states) < 500:
+    while len(states) < 1000:
       x = self.xBoundary[0] + random.random() * width
       y = self.yBoundary[0] + random.random() * height
       states.append(((x, y), 0))

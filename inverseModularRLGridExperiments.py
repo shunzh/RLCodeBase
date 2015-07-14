@@ -6,6 +6,7 @@ from inverseModularRL import InverseModularRL
 import util
 
 def experiment():
+  # set budget (number of samples used) as the first argument
   if len(sys.argv) > 1:
     budgetId = int(sys.argv[1]) / 10
     budget = config.BUDGET_SIZES[budgetId]
