@@ -4,6 +4,7 @@ from humanWorld import HumanWorld
 import modularAgents
 from inverseModularRL import InverseModularRL
 import featureExtractors
+import sys
 
 def sanityCheck(gtX):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
@@ -19,25 +20,31 @@ def sanityCheck(gtX):
   mapper = featureExtractors.getHumanContinuousMapper(mdp)
   agent.setQFuncs(qFuncs)
   agent.setMapper(mapper) # absolute position to relative position to objects 
-  agent.setParameters(gtX)
 
-  starts = [0] * 2 + [0.5] * 2 + [0] * 2
+  starts = [0] * 2 + [0.5] * 2
   margin = 0.1
   bnds = ((0, 100), (-100, 0))\
        + tuple((0 + margin, 1 - margin) for _ in range(2))\
-       + tuple((0, 1) for _ in range(2))
   # add constants for path module
-  decorator = lambda x: x[0:2] + [0] + x[2:4] + [0] + x[4:6] + [0]
+  decorator = lambda x: x[0:2] + [0] + x[2:4] + [0] + [0] * 3
   
+  agent.setParameters(decorator(gtX))
+
   sln = InverseModularRL(qFuncs, starts, bnds, decorator, solver="CMA-ES")
   sln.setSamplesFromMdp(mdp, agent)
   x = sln.solve()
   
-  print "ground truth: ", gtX
-  print "solved: ", x
+  print "results:"
+  print gtX
+  print x
 
   return x
 
 if __name__ == '__main__':
-  gtX = [4, -2, 0] + [.3, .3, 0] + [0, 0.2, 0]
-  sanityCheck(gtX)
+  taskId = int(sys.argv[1])
+  
+  gtXs = [[0.5, -0.5] + [.5, .5],\
+          [0.5, -0.5] + [.5, .9],\
+          [0.9, -0.1] + [.5, .5],\
+          [0.1, -0.9] + [.5, .5]]
+  sanityCheck(gtXs[taskId])

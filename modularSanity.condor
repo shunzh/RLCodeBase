@@ -8,7 +8,7 @@ Output     = out.sanity.$(Process)
 Error      = err.sanity.$(Process)
 Log        = sanity.log
 
-num_of_processes=1
+num_of_processes=4
 
-Arguments = inverseModularRLSanityExperiments.py
+Arguments = inverseModularRLSanityExperiments.py $(Process)
 Queue $(num_of_processes)
