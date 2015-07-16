@@ -76,10 +76,8 @@ def getHumanWorldQPotentialFuncs():
     if dist == None or orient == None:
       # in which case no such object left in the domain
       return 0
-    elif dist < radius:
-      return reward
     else:
-      return reward * np.power(discounter, dist - radius)
+      return reward * np.power(discounter, max(0, dist - radius))
   
   def qPath(state, currentState, action, reward, discounter, radius):
     s = transition(state, action)

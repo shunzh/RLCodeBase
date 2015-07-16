@@ -144,9 +144,9 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
 
   starts = [0] * n + [0.5] * n + [0]
   margin = 0.1
-  bnds = ((0, 100), (-100, 0), (0, 100))\
+  bnds = ((0, 1), (-1, 0), (0, 1))\
        + tuple((0 + margin, 1 - margin) for _ in range(n))\
-       + ((0, 1),)
+       + ((0, 0.6),)
   # radiuses of target and path are 0
   decorator = lambda x: x[0:6] + [0] + [x[6]] + [0]
 
@@ -157,12 +157,13 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
 
   if solving:
     x = sln.solve()
-  else:
-    # read from files if only output the learned results
-    values = pickle.load(open('learnedValues/values.pkl'))
-    x = values[rang[0] / 8]
+  """
+  # read from files if only output the learned results
+  values = pickle.load(open('learnedValues/values.pkl'))
+  x = values[rang[0] / 8]
+  """
   
-  evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, x)
+  evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, decorator(x))
 
   return [x, evaluation] 
 

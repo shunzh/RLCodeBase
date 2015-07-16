@@ -23,8 +23,8 @@ def sanityCheck(gtX):
 
   starts = [0] * 2 + [0.5] * 2
   margin = 0.1
-  bnds = ((0, 100), (-100, 0))\
-       + tuple((0 + margin, 1 - margin) for _ in range(2))\
+  bnds = ((0, 1), (-1, 0))\
+       + tuple((0 + margin, 1 - margin) for _ in range(2))
   # add constants for path module
   decorator = lambda x: x[0:2] + [0] + x[2:4] + [0] + [0] * 3
   
@@ -43,8 +43,8 @@ def sanityCheck(gtX):
 if __name__ == '__main__':
   taskId = int(sys.argv[1])
   
-  gtXs = [[0.5, -0.5] + [.5, .5],\
-          [0.5, -0.5] + [.5, .9],\
-          [0.9, -0.1] + [.5, .5],\
-          [0.1, -0.9] + [.5, .5]]
+  gtXs = [[1, -1] + [.5, .5],\
+          [1, -1] + [.5, .9],\
+          [1, -0.5] + [.5, .5],\
+          [0.5, -1] + [.5, .5]]
   sanityCheck(gtXs[taskId])

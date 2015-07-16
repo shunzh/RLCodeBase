@@ -30,8 +30,12 @@ moduleNum = 3
 for idx in range(4):
   print taskNames[idx]
   print 'Labels: [target, obstacle, path]'
-  print 'Rewards:', [round(x, 3) for x in values[idx][:moduleNum]]
+
+  rewards = values[idx][:moduleNum]
+  sumRewards = sum(map(abs, rewards))
+  rewards = map(lambda _: _ / sumRewards, rewards)
+  print 'Normalized rewards:', [round(x, 3) for x in rewards]
   print 'Discounters:', [round(x, 3) for x in values[idx][moduleNum:2*moduleNum]]
   print 'Others:', [round(x, 3) for x in values[idx][2*moduleNum:]]
-  print 'Evaluation:', pprint(evaluations[idx]) # print the dictionary structure of the evaluation results
+  print 'Evaluation:', pprint(evaluations[idx])
   print
