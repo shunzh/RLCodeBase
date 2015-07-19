@@ -60,14 +60,15 @@ def sanityCheck(gtX, id):
        + tuple((0, 1) for _ in range(2))
   # add constants for path module
   decorator = lambda x: x[0:2] + [0] + x[2:4] + [0] + x[4:6] + [0]
+  regular = lambda x: 4 * sum(x[4:6])
   
   agent.setParameters(decorator(gtX))
 
-  sln = InverseModularRL(qFuncs, starts, bnds, decorator, solver="CMA-ES")
+  sln = InverseModularRL(qFuncs, starts, bnds, decorator, regular, solver="CMA-ES")
   sln.setSamplesFromMdp(mdp, agent)
   x = sln.solve()
   
-  plotContinuousDomainValues(mdp, agent, mapper, "continuous_world_values" + str(id) + ".png")
+  #plotContinuousDomainValues(mdp, agent, mapper, "continuous_world_values" + str(id) + ".png")
   
   print "results:"
   print gtX
@@ -78,8 +79,8 @@ def sanityCheck(gtX, id):
 if __name__ == '__main__':
   taskId = int(sys.argv[1])
   
-  gtXs = [[1, -1] + [.1, .9] + [0, 0],\
-          [1, -1] + [.9, .1] + [0, 0],\
-          [1, -1] + [.1, .9] + [0.8, 0],\
-          [1, -1] + [.1, .9] + [0, 0.8]]
+  gtXs = [[1, -1] + [.5, .5] + [0, 0],\
+          [1, -1] + [.9, .5] + [0, 0],\
+          [1, -1] + [.5, .5] + [0.5, 0],\
+          [1, -1] + [.5, .5] + [0, 0.5]]
   sanityCheck(gtXs[taskId], taskId)

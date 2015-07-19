@@ -16,7 +16,10 @@ class InverseModularRL(InverseRL):
     107(4),477-490
     http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
   """
-  def __init__(self, qFuncs, starts, bnds, decorator = lambda x: x, eta = 1, solver = "BFGS"):
+  def __init__(self, qFuncs, starts, bnds,\
+               decorator = lambda x: x,\
+               regular = lambda x: 0,\
+               eta = 1, solver = "BFGS"):
     """
       Args:
         qFuncs: a list of Q functions for all the modules
@@ -32,6 +35,7 @@ class InverseModularRL(InverseRL):
     self.bns = bnds
     # decorate X if necessary, identity function by default
     self.decorator = decorator 
+    self.regular = regular
 
     self.solver = solver
 
@@ -49,6 +53,7 @@ class InverseModularRL(InverseRL):
         - log(likelihood)
     """
     # append the constants, which are fixed and not to solve
+    reg = self.regular(X)
     X = self.decorator(X)
 
     def computeQValue(state, action):
@@ -56,7 +61,7 @@ class InverseModularRL(InverseRL):
       return sum([self.qFuncs[moduleIdx](state, action, X) for moduleIdx in xrange(len(self.qFuncs))])
     
     # to be minimized, return the negation of log
-    return - self.softMaxSum(computeQValue)
+    return - self.softMaxSum(computeQValue) + reg
 
   def solve(self):
     """

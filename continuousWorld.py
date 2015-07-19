@@ -38,6 +38,10 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     self.touchedObstacleSet = []
     self.collectedTargetSet = []
 
+    # stateWindow is the window that states are sampled from,
+    # smaller or equal to the original world window
+    if not 'stateWindow' in self.__dict__.keys():
+      self.stateWindow = [self.xBoundary[0], self.xBoundary[1], self.yBoundary[0], self.yBoundary[1]]
     if not 'livingReward' in self.__dict__.keys():
       self.livingReward = 0
 
@@ -133,13 +137,19 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     Return list of random states. This is usually for sanity check.
     """
     states = []
-    width = self.xBoundary[1] - self.xBoundary[0]
-    height = self.xBoundary[1] - self.xBoundary[0]
+    windowX = self.stateWindow[0:2]
+    windowY = self.stateWindow[2:4]
+
+    stepX = (windowX[1] - windowX[0]) / 20
+    stepY = (windowY[1] - windowY[0]) / 20
     
-    while len(states) < 600:
-      x = self.xBoundary[0] + random.random() * width
-      y = self.yBoundary[0] + random.random() * height
-      states.append(((x, y), 0))
+    x = windowX[0]
+    while x < windowX[1]:
+      y = windowY[0]
+      while y < windowY[1]:
+        states.append(((x, y), 0))
+        y += stepY
+      x += stepX
       
     return states
         
