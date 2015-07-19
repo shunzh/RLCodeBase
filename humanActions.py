@@ -53,7 +53,8 @@ def getBroadHumanActions(step):
   """
   Assume human can move all forward directions
   """
-  actions = range(-3, 4)
+  #FIXME
+  actions = range(-6, 6)
   angles = [1.0 * actionId * 30 / 180 * np.pi for actionId in actions]
   dists = [step / 2] * len(actions)
   

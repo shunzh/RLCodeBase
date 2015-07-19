@@ -142,13 +142,12 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
   n = len(qFuncs)
 
-  starts = [0] * n + [0.5] * n + [0]
+  starts = [0] * n + [0.5] * n
   margin = 0.1
   bnds = ((0, 1), (-1, 0), (0, 1))\
-       + tuple((0 + margin, 1 - margin) for _ in range(n))\
-       + ((0, 0.6),)
+       + tuple((0 + margin, 1 - margin) for _ in range(n))
   # radiuses of target and path are 0
-  decorator = lambda x: x[0:6] + [0] + [x[6]] + [0]
+  decorator = lambda x: x[0:6] + [0, 0.2, 0]
 
   sln = InverseModularRL(qFuncs, starts, bnds, decorator, solver="CMA-ES")
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
@@ -157,11 +156,10 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
 
   if solving:
     x = sln.solve()
-  """
+    
   # read from files if only output the learned results
   values = pickle.load(open('learnedValues/values.pkl'))
   x = values[rang[0] / 8]
-  """
   
   evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, decorator(x))
 

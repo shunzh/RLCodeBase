@@ -50,16 +50,13 @@ def simpleMixDomain():
   Put one object for target, penalty and path waypoint.
   """
   ret = {}
-  ret['objs'] = {'targs': [(1, 1), (-1, 1)],\
-                 'obsts': [(0, 1), (0, -1)],\
-                 'segs':  [(-1, -1), (1, -1)],\
+  ret['objs'] = {'targs': [(1, 1)],\
+                 'obsts': [(-1, -1)],\
+                 'segs': [],\
                  'entrance': [(0, 0)]}
   ret['xBoundary'] = [-3, 3]
   ret['yBoundary'] = [-3, 3]
 
-  # step size of the agent movement
-  ret['step'] = 0.1
-  
   return ret
 
 def toyDomain(category = 'targs'):

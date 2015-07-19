@@ -51,6 +51,20 @@ def getHumanWorldDiscreteFuncs():
           lambda s, a, d = None: qObstacle(s[2], a), # closest obstacles
           lambda s, a, d = None: qSegment(s[4], a)]
 
+def potentialVFunc(s, para):
+  """
+    _
+  _/ \_ <- v function looks like this
+
+  """
+  reward, discounter, radius = para
+  dist, orient = s
+  if dist == None or orient == None:
+    # in which case no such object left in the domain
+    return 0
+  else:
+    return reward * np.power(discounter, max(0, dist - radius))
+ 
 def getHumanWorldQPotentialFuncs():
   """
   Rather learned from samples, we define the potential functions (a value function) based on reward.
@@ -65,29 +79,15 @@ def getHumanWorldQPotentialFuncs():
   """
   transition = HumanWorld.transitionSimulate
 
-  def vFunc(s, para):
-    """
-      _
-    _/ \_ <- v function looks like this
-
-    """
-    reward, discounter, radius = para
-    dist, orient = s
-    if dist == None or orient == None:
-      # in which case no such object left in the domain
-      return 0
-    else:
-      return reward * np.power(discounter, max(0, dist - radius))
-  
   def qPath(state, currentState, action, reward, discounter, radius):
     s = transition(state, action)
     curS = transition(currentState, action)
     project = featureExtractors.getProjectionToSegmentLocalView(s, curS)
-    return vFunc(project, reward, discounter, radius)
+    return potentialVFunc(project, reward, discounter, radius)
 
-  return [lambda s, a, x: vFunc(transition(s[0], a), [x[0], x[3], x[6]]), # closest target(s)
-          lambda s, a, x: vFunc(transition(s[2], a), [x[1], x[4], x[7]]), # closest obstacle(s)
-          lambda s, a, x: vFunc(transition(s[4], a), [x[2], x[5], x[8]])] # next seg point
+  return [lambda s, a, x: potentialVFunc(transition(s[0], a), [x[0], x[3], x[6]]), # closest target(s)
+          lambda s, a, x: potentialVFunc(transition(s[2], a), [x[1], x[4], x[7]]), # closest obstacle(s)
+          lambda s, a, x: potentialVFunc(transition(s[4], a), [x[2], x[5], x[8]])] # next seg point
           #lambda s, a, d: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
 
 def getHumanWorldContinuousFuncs():

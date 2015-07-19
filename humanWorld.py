@@ -26,7 +26,8 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   Transition: same as continuousWorld but 
   Reward: same as continuousWorld.
   """
-  step = 0.3
+  #FIXME 
+  step = 0.1
   #actions = humanActions.getNarrowedHumanActions(step)
   actions = humanActions.getBroadHumanActions(step)
 

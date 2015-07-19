@@ -78,7 +78,7 @@ class QLearningAgent(ReinforcementAgent):
       terminal state, you should return a value of 0.0.
     """
     bestAction = self.getPolicy(state)
-    if bestAction: 
+    if bestAction != None: 
       return self.getQValue(state, bestAction)
     else: 
       return 0.0
@@ -96,7 +96,7 @@ class QLearningAgent(ReinforcementAgent):
       optActions = [action for action in actions if q_value_func(action) == maxQValue]
       return random.choice(optActions)
     else:
-      return None
+      print "no idea"
     
   def getPolicyProbability(self, state, action):
     """

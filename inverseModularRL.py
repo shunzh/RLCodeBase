@@ -39,12 +39,6 @@ class InverseModularRL(InverseRL):
     self.eta = eta
     # default discounters
   
-  def setDiscounters(self, d):
-    # make sure the length of discounters is correct
-    assert len(d) == self.n
-    # set discounters here
-    self.d = d
-
   def obj(self, X):
     """
       The objective function to be minimized.
