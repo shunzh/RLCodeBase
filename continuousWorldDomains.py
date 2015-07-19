@@ -54,9 +54,8 @@ def simpleMixDomain():
                  'obsts': [(-1, -1)],\
                  'segs': [],\
                  'entrance': [(0, 0)]}
-  ret['xBoundary'] = [-3, 3]
-  ret['yBoundary'] = [-3, 3]
-  ret['stateWindow'] = [-1.0, 1.0, -1.0 ,1.0]
+  ret['xBoundary'] = [-3.0, 3.0]
+  ret['yBoundary'] = [-3.0, 3.0]
 
   return ret
 

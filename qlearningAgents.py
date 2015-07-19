@@ -96,7 +96,7 @@ class QLearningAgent(ReinforcementAgent):
       optActions = [action for action in actions if q_value_func(action) == maxQValue]
       return random.choice(optActions)
     else:
-      print "no idea"
+      raise Exception("get policy has no available actions")
     
   def getPolicyProbability(self, state, action):
     """

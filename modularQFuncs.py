@@ -80,6 +80,7 @@ def getHumanWorldQPotentialFuncs():
   transition = HumanWorld.transitionSimulate
 
   def qPath(state, currentState, action, reward, discounter, radius):
+    #TODO
     s = transition(state, action)
     curS = transition(currentState, action)
     project = featureExtractors.getProjectionToSegmentLocalView(s, curS)

@@ -27,7 +27,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
   Reward: same as continuousWorld.
   """
   #FIXME 
-  step = 0.05
+  step = 0.1
   #actions = humanActions.getNarrowedHumanActions(step)
   actions = humanActions.getBroadHumanActions(step)
 
@@ -103,7 +103,7 @@ class HumanWorld(continuousWorld.ContinuousWorld):
     aX = dist * np.cos(orient) 
     aY = dist * np.sin(orient) 
     
-    # the new state is from (aX, aY) to (objX, objY
+    # the new state is from (aX, aY) to (objX, objY)
     newDist, newOrient = featureExtractors.getDistAngle((aX, aY), (objX, objY), orient)
 
     return (newDist, newOrient)
