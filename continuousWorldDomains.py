@@ -50,12 +50,12 @@ def simpleMixDomain():
   Put one object for target, penalty and path waypoint.
   """
   ret = {}
-  ret['objs'] = {'targs': [(1, 1)],\
-                 'obsts': [(-1, -1)],\
+  ret['objs'] = {'targs': [(1, 1), (-1, -1)],\
+                 'obsts': [(-1, 1), (1, -1)],\
                  'segs': [],\
                  'entrance': [(0, 0)]}
-  ret['xBoundary'] = [-3.0, 3.0]
-  ret['yBoundary'] = [-3.0, 3.0]
+  ret['xBoundary'] = [-1.5, 1.5]
+  ret['yBoundary'] = [-1.5, 1.5]
 
   return ret
 
