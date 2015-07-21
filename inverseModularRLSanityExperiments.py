@@ -14,6 +14,7 @@ def plotContinuousDomainValues(mdp, agent, mapper, filename):
   xBoundary = mdp.xBoundary
   yBoundary = mdp.yBoundary
   
+  ax = plt.axes()
   data = []
   x = xBoundary[0]
   while x < xBoundary[1]:
@@ -23,12 +24,19 @@ def plotContinuousDomainValues(mdp, agent, mapper, filename):
       # mapper maps (s, a) to (s, a). only need s here
       state = ((x, y), 0)
       row.append(agent.getValue(state))
+
+      policy = agent.getPolicy(state)
+      dist, angle = HumanWorld.actions.getExpectedDistAngle(policy)
+      xAxis = (x - xBoundary[0]) / stepSize
+      yAxis = (y - yBoundary[0]) / stepSize
+      ax.arrow(xAxis, yAxis, np.cos(angle) * 0.5, np.sin(angle) * 0.5)
+
       y += stepSize
     data.append(row)
     x += stepSize
 
   plt.imshow(data, interpolation='none')
-
+  plt.show()
   plt.jet()
   plt.colorbar()
 
@@ -51,13 +59,12 @@ def sanityCheck(gtX, id):
   agent.setQFuncs(qFuncs)
   agent.setMapper(mapper) # absolute position to relative position to objects 
 
-  starts = [0] * 2 + [0.5] * 2 + [0] * 2
-  margin = 0.1
-  bnds = ((0, 1), (-1, 0))\
-       + tuple((0 + margin, 1 - margin) for _ in range(2))\
-       + tuple((0, 1) for _ in range(2))
+  starts = [0] * 2 + [0.5] * 2
+  margin = 0.01
+  bnds = ((0, 1), (0, 1))\
+       + tuple((0 + margin, 1 - margin) for _ in range(2))
   # add constants for path module
-  decorator = lambda x: x[0:2] + [0] + x[2:4] + [0] + x[4:6] + [0]
+  decorator = lambda x: x[0:2] + [0] + x[2:4] + [0] + [0] * 3
   regular = lambda x: 0
   
   agent.setParameters(decorator(gtX))
@@ -77,8 +84,8 @@ def sanityCheck(gtX, id):
 if __name__ == '__main__':
   taskId = int(sys.argv[1])
   
-  gtXs = [[1, 1] + [.8, .2] + [0, 0],\
-          [1, .5] + [.5, .5] + [0, 0],\
-          [1, 1] + [.8, .2] + [0.5, 0],\
-          [1, 1] + [.8, .2] + [0, 0.5]]
+  gtXs = [[1, 1] + [.99, .1],\
+          [1, 1] + [.9, .1],\
+          [1, 1] + [.5, .5],\
+          [1, -1] + [.5, .5]]
   sanityCheck(gtXs[taskId], taskId)

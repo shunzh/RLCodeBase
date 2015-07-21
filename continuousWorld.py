@@ -140,8 +140,8 @@ class ContinuousWorld(mdp.MarkovDecisionProcess):
     windowX = self.stateWindow[0:2]
     windowY = self.stateWindow[2:4]
 
-    stepX = (windowX[1] - windowX[0]) / 25
-    stepY = (windowY[1] - windowY[0]) / 25
+    stepX = (windowX[1] - windowX[0]) / 20
+    stepY = (windowY[1] - windowY[0]) / 20
     
     x = windowX[0]
     while x < windowX[1]:

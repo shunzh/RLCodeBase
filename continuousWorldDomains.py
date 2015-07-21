@@ -45,13 +45,22 @@ def simpleToyDomain(category = 'targs'):
 
   return ret
 
-def simpleMixDomain():
+def simpleMixDomain(num = 2):
   """
   Put one object for target, penalty and path waypoint.
   """
   ret = {}
-  ret['objs'] = {'targs': [(1, 1), (-1, -1)],\
-                 'obsts': [(-1, 1), (1, -1)],\
+  if num == 2:
+    targs = [(1, 1), (-1, -1)]
+    obsts = [(-1, 1), (1, -1)]
+  elif num == 1:
+    targs = [(1, 1)]
+    obsts = [(-1, -1)]
+  else:
+    raise Exception("Un-configed number of objects")
+
+  ret['objs'] = {'targs': targs,\
+                 'obsts': obsts,\
                  'segs': [],\
                  'entrance': [(0, 0)]}
   ret['xBoundary'] = [-1.5, 1.5]
