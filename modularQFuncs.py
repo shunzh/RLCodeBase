@@ -60,7 +60,7 @@ def potentialVFunc(s, para):
   reward, discounter, radius = para
   
   # some domains contain orientation
-  if s is list or s is tuple:
+  if s is tuple or s is list:
     dist, orient = s
   else:
     dist = s
@@ -98,17 +98,16 @@ def getHumanWorldQPotentialFuncs():
           #lambda s, a, d: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
 
 def getGridQPotentialFuncs(mdp):
-  """
-  Return Q functions for modular mdp for target collection / obstacle avoidance behavior
-  in gridworld domains.
-  """
   mapper = featureExtractors.getGridMapper(mdp)
+  
+  vFunc = lambda s, x: sum([potentialVFunc(si, x) for si in s])
+
   def extract(s, a):
     s = featureExtractors.gridGetNext(mdp, s, a)
     return mapper(s, a)[0]
 
-  return [lambda s, a, x: potentialVFunc(extract(s, a)[0], [x[0], x[2], 0]),
-          lambda s, a, x: potentialVFunc(extract(s, a)[1], [x[1], x[3], 0])]
+  return [lambda s, a, x: vFunc(extract(s, a)[0], [x[0], x[2], 0]),
+          lambda s, a, x: vFunc(extract(s, a)[1], [x[1], x[3], 0])]
 
 def getHumanWorldContinuousFuncs():
   """

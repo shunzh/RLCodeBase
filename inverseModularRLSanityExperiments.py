@@ -6,6 +6,7 @@ from inverseModularRL import InverseModularRL
 import featureExtractors
 import sys
 import numpy as np
+import inverseModularPlot
 
 def plotContinuousDomainValues(mdp, agent, mapper, filename):
   import matplotlib.pyplot as plt
@@ -44,30 +45,6 @@ def plotContinuousDomainValues(mdp, agent, mapper, filename):
   
   plt.close()
 
-def printFitness(sln, filename):
-  import matplotlib.pyplot as plt
-
-  stepSize = 1
-  data = []
-  for i in range(0, 11, stepSize):
-    row = []
-    for j in range(0, 11, stepSize):
-      value = sln.obj([1, 1, .1 * i, .1 * j])
-      row.append(value)
-      print i, j, value
-    data.append(row)
-
-  plt.imshow(data, interpolation='none')
-  plt.xticks(range(11), np.arange(0,1.1,0.1 * stepSize))
-  plt.yticks(range(11), np.arange(0,1.1,0.1 * stepSize))
-
-  plt.jet()
-  plt.colorbar()
-
-  plt.savefig(filename)
-  
-  plt.close()
-
 def sanityCheck(gtX, id):
   qFuncs = modularQFuncs.getHumanWorldQPotentialFuncs()
 
@@ -97,7 +74,7 @@ def sanityCheck(gtX, id):
   sln.setSamplesFromMdp(mdp, agent)
   x = sln.solve()
   
-  printFitness(sln, "fitness" + str(id) + ".png")
+  inverseModularPlot.printFitness(sln, "fitness" + str(id) + ".png")
   plotContinuousDomainValues(mdp, agent, mapper, "continuous_world_values" + str(id) + ".png")
   
   print "results:"

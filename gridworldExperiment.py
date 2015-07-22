@@ -202,9 +202,8 @@ if __name__ == '__main__':
                   'actionFn': actionFn}
     a = modularAgents.ModularAgent(**qLearnOpts)
     # here, set the Q tables of the trained modules
-    a.setQFuncs(modularQFuncs.getObsAvoidFuncs(mdp))
-    a.setWeights([w for w, count in mdp.spec])
-    a.setDiscounters([.8] * len(mdp.spec))
+    a.setQFuncs(modularQFuncs.getGridQPotentialFuncs(mdp))
+    a.setParameters([1, 1, 0.5, 0.5])
   else:
     if not opts.manual: raise 'Unknown agent type: '+opts.agent
     

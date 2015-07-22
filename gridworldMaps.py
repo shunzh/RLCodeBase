@@ -82,7 +82,7 @@ def getToyWalkAvoidGrid():
 
   return mdp
 
-def getLargeWalkAvoidGrid(width, height, specification, seed = 0):
+def getLargeWalkAvoidGrid(width, height, specification, positions = None, seed = 0):
   """
     Randomly generate a large grid
   """
@@ -95,19 +95,28 @@ def getLargeWalkAvoidGrid(width, height, specification, seed = 0):
   # add start
   grid[0][0] = 'S'
 
-  # random generator used in this context
-  rand = random.Random()
-  rand.seed(seed)
+  if positions:
+    # pre-specified posiitons
+    pIdx = 0
+    for label, num in specification:
+      for _ in xrange(num):
+        x, y = positions[pIdx]
+        grid[y][x] = label
+        pIdx += 1
+  else:
+    # random generator used in this context
+    rand = random.Random()
+    rand.seed(seed)
 
-  for reward, count in specification:
-    # randomly set objects
-    for _ in xrange(count):
-      while True:
-        y = rand.choice(range(height))
-        x = rand.choice(range(1, width - 1))
-        if grid[y][x] == ' ':
-          grid[y][x] = reward
-          break
+    for reward, count in specification:
+      # randomly set objects
+      for _ in xrange(count):
+        while True:
+          y = rand.choice(range(height))
+          x = rand.choice(range(1, width - 1))
+          if grid[y][x] == ' ':
+            grid[y][x] = reward
+            break
 
   isFinal = lambda state : False
   mdp = Gridworld(grid, isFinal)
@@ -116,5 +125,5 @@ def getLargeWalkAvoidGrid(width, height, specification, seed = 0):
   return mdp
 
 # a specification used for nips paper
-getRuohanGrid = lambda seed = 0: getLargeWalkAvoidGrid(10, 10, [(1, 4), (2, 4), (-1, 4), (-2, 4)], seed)
-getTestGrid = lambda seed = 0: getLargeWalkAvoidGrid(10, 10, [(1, 4), (2, 4)], seed)
+getRuohanGrid = lambda seed = 0: getLargeWalkAvoidGrid(10, 10, [(1, 4), (2, 4), (-1, 4), (-2, 4)], seed=seed)
+getTestGrid = lambda seed = 0: getLargeWalkAvoidGrid(10, 10, [(1, 5), (2, 5)], seed=seed)
