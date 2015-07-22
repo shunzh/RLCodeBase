@@ -52,7 +52,7 @@ def simpleMixDomain(num = 2):
   ret = {}
   if num == 2:
     targs = [(1, 1), (-1, -1)]
-    obsts = [(-1, 1), (1, -1)]
+    obsts = [(0, 0), (0, 1)]
   elif num == 1:
     targs = [(1, 1)]
     obsts = [(-1, -1)]
@@ -63,8 +63,8 @@ def simpleMixDomain(num = 2):
                  'obsts': obsts,\
                  'segs': [],\
                  'entrance': [(0, 0)]}
-  ret['xBoundary'] = [-1.5, 1.5]
-  ret['yBoundary'] = [-1.5, 1.5]
+  ret['xBoundary'] = [-3.0, 3.0]
+  ret['yBoundary'] = [-3.0, 3.0]
 
   return ret
 

@@ -63,7 +63,7 @@ class InverseRL:
 
       # both numerator and denominator raise to the power of e
       # numerator: optimal action
-      ret += qValues[optAction]
+      ret += self.eta * qValues[optAction]
       # denominator: all the actions
       ret -= np.log(sum([qToPower(qValues[action]) for action in actionSet]))
 

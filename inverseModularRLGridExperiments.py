@@ -31,7 +31,7 @@ def experiment():
   a.setWeights(trueW)
   a.setDiscounters([.8] * len(qFuncs))
 
-  sln = InverseModularRL(qFuncs, learnDiscounter=False, solver="BFGS")
+  sln = InverseModularRL(qFuncs)
   sln.setSamplesFromMdp(mdp, a, budget)
   w = sln.solve()
 
@@ -44,6 +44,4 @@ def experiment():
   return [w, util.checkPolicyConsistency(mdp.getStates(), a, aEst)]
 
 if __name__ == '__main__':
-  w, consistency = experiment()
-  
-  print consistency
+  experiment()
