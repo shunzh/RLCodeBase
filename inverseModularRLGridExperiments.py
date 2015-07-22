@@ -33,8 +33,8 @@ def experiment(gtX, budget = None):
 
   sln = InverseModularRL(qFuncs, starts, bnds, solver="CMA-ES")
   sln.setSamplesFromMdp(mdp, a, budget)
-  #x = sln.solve()
-  inverseModularPlot.printFitness(sln, "grid_fitness.png")
+  x = sln.solve()
+  #inverseModularPlot.printFitness(sln, "grid_fitness.png")
   
   print gtX
   print x

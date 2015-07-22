@@ -197,7 +197,7 @@ def getGridMapper(mdp):
       idx: the id of the class
     """
     states = []
-    next_x, next_y = gridGetNext(mdp, state, action)
+    x, y = state
     # find the distance to the nearest object
     for moduleClass in moduleClasses:
       dists = []
@@ -205,7 +205,7 @@ def getGridMapper(mdp):
         for yt in range(mdp.grid.height):
           cell = mdp.grid[xt][yt] 
           if cell == moduleClass:
-            dist = abs(xt - next_x) + abs(yt - next_y)
+            dist = abs(xt - x) + abs(yt - y)
             dists.append(dist)
       states.append(dists)
     return (states, action)
