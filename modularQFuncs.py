@@ -58,8 +58,14 @@ def potentialVFunc(s, para):
 
   """
   reward, discounter, radius = para
-  dist, orient = s
-  if dist == None or orient == None:
+  
+  # some domains contain orientation
+  if s is list or s is tuple:
+    dist, orient = s
+  else:
+    dist = s
+
+  if dist == None:
     # in which case no such object left in the domain
     return 0
   else:
@@ -90,6 +96,19 @@ def getHumanWorldQPotentialFuncs():
           lambda s, a, x: potentialVFunc(transition(s[2], a), [x[1], x[4], x[7]]), # closest obstacle(s)
           lambda s, a, x: potentialVFunc(transition(s[4], a), [x[2], x[5], x[8]])] # next seg point
           #lambda s, a, d: qPath(s[4], s[5], a, d[3])] # closest path (next two seg points)
+
+def getGridQPotentialFuncs(mdp):
+  """
+  Return Q functions for modular mdp for target collection / obstacle avoidance behavior
+  in gridworld domains.
+  """
+  mapper = featureExtractors.getGridMapper(mdp)
+  def extract(s, a):
+    s = featureExtractors.gridGetNext(mdp, s, a)
+    return mapper(s, a)[0]
+
+  return [lambda s, a, x: potentialVFunc(extract(s, a)[0], [x[0], x[2], 0]),
+          lambda s, a, x: potentialVFunc(extract(s, a)[1], [x[1], x[3], 0])]
 
 def getHumanWorldContinuousFuncs():
   """
@@ -158,48 +177,3 @@ def getContinuousWorldFuncs(mdp, Extractor = featureExtractors.ContinousRadiusLo
 
   return [qTarget, qObstacle, qSegment]
 
-def getObsAvoidFuncs(mdp):
-  """
-  Return Q functions for modular mdp for target collection / obstacle avoidance behavior
-  in gridworld domains.
-  """
-  def getNext(state, action):
-    # simulate the next state
-    x, y = state
-    dx, dy = Actions.directionToVector(action)
-    next_x, next_y = int(x + dx), int(y + dy)
-    if next_x < 0 or next_x >= mdp.grid.width:
-      next_x = x
-    if next_y < 0 or next_y >= mdp.grid.height:
-      next_y = y
-
-    return [next_x, next_y]
-
-  def qFuncGen(r, idx):
-    """
-    Compute a Q value responding to an object, considering the distance to it.
-    This is used by obstacle avoidance, and target obtaining.
-
-    Args:
-      r: the reward of the module class to be found
-      idx: the id of the class
-    """
-    def qModule(state, action, discounters):
-      if action == "exit": return 0
-      
-      next_x, next_y = getNext(state, action)
-
-      # find the distance to the nearest object
-      minDist = mdp.grid.width * mdp.grid.height
-      for xt in range(mdp.grid.width):
-        for yt in range(mdp.grid.height):
-          cell = mdp.grid[xt][yt] 
-          if cell == r:
-            dist = math.sqrt((xt - next_x) ** 2 + (yt - next_y) ** 2)
-            if (dist < minDist): minDist = dist
-
-      return r / abs(r) * discounters[idx] ** minDist
-    return qModule
-    
-  rewards = [r for r, c in mdp.spec]
-  return [qFuncGen(r, idx) for r, idx in zip(rewards, range(len(rewards)))]

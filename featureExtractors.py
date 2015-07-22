@@ -12,6 +12,7 @@ import numpy.linalg
 import numpy as np
 import humanWorld
 import warnings
+from game import Actions
 
 class FeatureExtractor:  
   def getFeatures(self, state, action):    
@@ -170,6 +171,46 @@ def getHumanDiscreteMapper(mdp, category = None):
     ret = getDistAngelList
 
   return ret
+
+def gridGetNext(mdp, state, action):
+  # simulate the next state
+  x, y = state
+  dx, dy = Actions.directionToVector(action)
+  next_x, next_y = int(x + dx), int(y + dy)
+  if next_x < 0 or next_x >= mdp.grid.width:
+    next_x = x
+  if next_y < 0 or next_y >= mdp.grid.height:
+    next_y = y
+
+  return [next_x, next_y]
+
+def getGridMapper(mdp):
+  moduleClasses = map(lambda _: _[0], mdp.spec)
+
+  def getDists(state, action):
+    """
+    Compute a Q value responding to an object, considering the distance to it.
+    This is used by obstacle avoidance, and target obtaining.
+
+    Args:
+      r: the reward of the module class to be found
+      idx: the id of the class
+    """
+    states = []
+    next_x, next_y = gridGetNext(mdp, state, action)
+    # find the distance to the nearest object
+    for moduleClass in moduleClasses:
+      minDist = mdp.grid.width * mdp.grid.height
+      for xt in range(mdp.grid.width):
+        for yt in range(mdp.grid.height):
+          cell = mdp.grid[xt][yt] 
+          if cell == moduleClass:
+            dist = np.sqrt((xt - next_x) ** 2 + (yt - next_y) ** 2)
+            if (dist < minDist): minDist = dist
+      states.append(dist)
+    return (states, action)
+
+  return getDists
 
 def discreteQTableCompressor(state, action):
   dist, angle = state

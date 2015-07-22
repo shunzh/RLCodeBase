@@ -109,7 +109,7 @@ def getLargeWalkAvoidGrid(width, height, specification, seed = 0):
           grid[y][x] = reward
           break
 
-  isFinal = lambda state : state[0] == width - 1
+  isFinal = lambda state : False
   mdp = Gridworld(grid, isFinal)
   mdp.spec = specification
   
@@ -117,3 +117,4 @@ def getLargeWalkAvoidGrid(width, height, specification, seed = 0):
 
 # a specification used for nips paper
 getRuohanGrid = lambda seed = 0: getLargeWalkAvoidGrid(10, 10, [(1, 4), (2, 4), (-1, 4), (-2, 4)], seed)
+getTestGrid = lambda seed = 0: getLargeWalkAvoidGrid(10, 10, [(1, 4), (2, 4)], seed)
