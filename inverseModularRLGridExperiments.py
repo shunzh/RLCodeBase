@@ -3,8 +3,6 @@ import modularQFuncs
 import modularAgents
 import config
 from inverseModularRL import InverseModularRL
-import featureExtractors
-import inverseModularPlot
 
 def experiment(gtX, budget = None):
   # set budget (number of samples used) as the first argument
@@ -42,7 +40,7 @@ def experiment(gtX, budget = None):
 if __name__ == '__main__':
   taskId = int(sys.argv[1])
 
-  gtXs = [[1, 1] + [.5, .5],\
+  gtXs = [[1, 1] + [.9, .9],\
           [1, 1] + [.9, .1],\
-          [1, -1] + [.5, .5]]
+          [1, -1] + [.9, .9]]
   experiment(gtXs[taskId])

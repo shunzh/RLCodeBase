@@ -205,7 +205,7 @@ def getGridMapper(mdp):
         for yt in range(mdp.grid.height):
           cell = mdp.grid[xt][yt] 
           if cell == moduleClass:
-            dist = abs(xt - x) + abs(yt - y)
+            dist = np.sqrt((xt - x) ** 2 + (yt - y) ** 2)
             dists.append(dist)
       states.append(dists)
     return (states, action)

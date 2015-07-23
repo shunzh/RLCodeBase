@@ -2,11 +2,11 @@ Universe = vanilla
 Executable = /usr/local/bin/python
 +Project = "AI_ROBOTICS"
 +Group = "grad"
-Notification = Never
+Notification = Complete
 Notify_user = menie482@cs.utexas.edu
-Output     = grid_modular_out.$(Process)
-Error      = grid_modular_err.$(Process)
-Log        = grid_modular.log
+Output     = out.grid.$(Process)
+Error      = err.grid.$(Process)
+Log        = grid.log
 
 num_of_processes=3
 

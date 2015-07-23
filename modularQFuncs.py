@@ -60,11 +60,11 @@ def potentialVFunc(s, para):
   reward, discounter, radius = para
   
   # some domains contain orientation
-  if s is tuple or s is list:
+  if type(s) is tuple or type(s) is list:
     dist, orient = s
   else:
     dist = s
-
+  
   if dist == None:
     # in which case no such object left in the domain
     return 0

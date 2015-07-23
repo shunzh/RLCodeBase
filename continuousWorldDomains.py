@@ -45,7 +45,7 @@ def simpleToyDomain(category = 'targs'):
 
   return ret
 
-def simpleMixDomain(num = 2):
+def simpleMixDomain(num = 1):
   """
   Put one object for target, penalty and path waypoint.
   """

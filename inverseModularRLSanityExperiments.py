@@ -26,11 +26,11 @@ def plotContinuousDomainValues(mdp, agent, mapper, filename):
       state = ((x, y), 0)
       row.append(agent.getValue(state))
 
-      policy = agent.getPolicy(state)
-      dist, angle = HumanWorld.actions.getExpectedDistAngle(policy)
       xAxis = (x - xBoundary[0]) / stepSize
       yAxis = (y - yBoundary[0]) / stepSize
-      ax.arrow(xAxis, yAxis, np.cos(angle) * 0.5, np.sin(angle) * 0.5)
+      policy = agent.getPolicy(state)
+      dist, angle = HumanWorld.actions.getExpectedDistAngle(policy)
+      ax.arrow(xAxis, yAxis, np.cos(angle) * 1, np.sin(angle) * 1)
 
       y += stepSize
     data.append(row)
@@ -72,7 +72,7 @@ def sanityCheck(gtX, id):
 
   sln = InverseModularRL(qFuncs, starts, bnds, decorator, regular, solver="CMA-ES")
   sln.setSamplesFromMdp(mdp, agent)
-  x = sln.solve()
+  #x = sln.solve()
   
   inverseModularPlot.printFitness(sln, "fitness" + str(id) + ".png")
   plotContinuousDomainValues(mdp, agent, mapper, "continuous_world_values" + str(id) + ".png")
@@ -86,8 +86,7 @@ def sanityCheck(gtX, id):
 if __name__ == '__main__':
   taskId = int(sys.argv[1])
   
-  gtXs = [[1, 1] + [.5, .5],\
-          [1, 1] + [.9, .1],\
-          [1, 1] + [.5, .5],\
-          [1, -1] + [.5, .5]]
+  gtXs = [[1, 1] + [.9, .9],\
+          [1, 1] + [.99, .1],\
+          [1, 1] + [.1, .99]]
   sanityCheck(gtXs[taskId], taskId)
