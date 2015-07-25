@@ -65,7 +65,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     if 'observeTransition' in dir(agent): 
         agent.observeTransition(state, action, nextState, reward)
 
-    # here, change the environment reponding to the agent's behavior
+    # here, change the environment responding to the agent's behavior
     environment.step(state, action, nextState, reward)
 
     returns += reward * totalDiscount
@@ -164,7 +164,8 @@ def main():
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = modularAgents.ModularAgent(**qLearnOpts)
     
-    a.setParameters(values)
+    decorator = lambda x: x[0:6] + [0, 0.2, 0]
+    a.setParameters(decorator(values))
 
     if config.DISCRETE_Q:
       # way 1: using q tables

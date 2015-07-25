@@ -21,12 +21,12 @@ class Test(unittest.TestCase):
     goAngle = 30.0 / 180 * np.pi
     turnAngle = 15.0 / 180 * np.pi
     
-    persueBehavior = lambda s, a: abs(s[1]) < goAngle and a == 'G' or\
-                                  s[1] < -turnAngle and a == 'L' or\
-                                  s[1] > turnAngle and a == 'R'
-    avoidBehavior  = lambda s, a: abs(s[1]) < goAngle and a != 'G' or\
-                                  s[1] < -turnAngle and a != 'L' or\
-                                  s[1] > turnAngle and a != 'R'
+    persueBehavior = lambda s, a: abs(s[1]) < goAngle and a == 0 or\
+                                  s[1] < -turnAngle and a < 0 or\
+                                  s[1] > turnAngle and a > 0
+    avoidBehavior  = lambda s, a: abs(s[1]) < goAngle and a == 0 or\
+                                  s[1] < -turnAngle and a < 0 or\
+                                  s[1] > turnAngle and a > 0
 
     consistentActions = [0, 0, 0]
     allActions = [0, 0, 0]
@@ -37,8 +37,8 @@ class Test(unittest.TestCase):
       for sample in samples:
         # decouple
         state, action = sample
-        targ, _, obst, _, seg = state
-
+        targ, _, obst, _, seg, _ = state
+        
         if idx == 0:
           # task 1: path only
           consistentActions[0] += persueBehavior(seg, action)
@@ -68,5 +68,4 @@ class Test(unittest.TestCase):
     self.assertGreaterEqual(consistencies[2], 1 - self.threshold, msg='task 3 bad consistency ' + str(consistencies[2]))
    
 if __name__ == '__main__':
-  print "DUMMY FOR NOW. Haven't updated."
-  #unittest.main()
+  unittest.main()
