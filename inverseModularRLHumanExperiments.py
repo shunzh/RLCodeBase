@@ -94,8 +94,11 @@ def evaluateAssumption(zippedData, qFuncs, x):
     """
     agent = agentType(**qLearnOpts)
     agent.setQFuncs(qFuncs)
-    if hasattr(agent, 'setParameters'):
+    if agent.__class__.__name__ == "ModularAgent":
       agent.setParameters(x)
+    elif agent.__class__.__name__ == "ReflexAgent":
+      # don't use the parameter learned for modular
+      agent.setParameters([1, -1, 1, .8, .8, .8, 0, .1, 0])
 
     # go through samples
     angularDiff = 0
@@ -134,7 +137,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   return [x, evaluation] 
 
-def humanWorldExperimentQPotential(filenames, rang, solving = True):
+def humanWorldExperimentQPotential(filenames, rang, solving = False):
   """
   Args:
     rang: load mat with given rang of trials
@@ -147,7 +150,7 @@ def humanWorldExperimentQPotential(filenames, rang, solving = True):
   bnds = ((0, 100), (-100, 0), (0, 100))\
        + tuple((0 + margin, 1 - margin) for _ in range(n))
   # radiuses of target and path are 0
-  decorator = lambda x: x[0:6] + [0, 0.2, 0]
+  decorator = lambda x: x[0:6] + [0, 0.1, 0]
 
   sln = InverseModularRL(qFuncs, starts, bnds, decorator, solver="CMA-ES")
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)

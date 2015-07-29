@@ -23,7 +23,5 @@ done
 # plot figures on number of contected objects
 # this uses the `stat` file
 python plotContacts.py
-# print the learned value again
-python printResults.py
 
 rm *.eps

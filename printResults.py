@@ -37,5 +37,6 @@ for idx in range(4):
   print 'Normalized rewards:', [round(x, 3) for x in rewards]
   print 'Discounters:', [round(x, 3) for x in values[idx][moduleNum:2*moduleNum]]
   print 'Others:', [round(x, 3) for x in values[idx][2*moduleNum:]]
-  print 'Evaluation:', pprint(evaluations[idx])
+  print 'Evaluation:'
+  pprint(evaluations[idx])
   print
