@@ -77,6 +77,7 @@ def parseHumanData(filenames, domainIds):
   for filename in filenames:
     mat = util.loadmat(filename)
     
+    # iterate through domains
     for domainId in domainIds:
       agentXs = mat['pRes'][domainId].agentX
       agentZs = mat['pRes'][domainId].agentZ

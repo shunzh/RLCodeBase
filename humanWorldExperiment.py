@@ -164,7 +164,7 @@ def main():
     actionFn = lambda state: mdp.getPossibleActions(state)
     a = modularAgents.ModularAgent(**qLearnOpts)
     
-    decorator = lambda x: x[0:6] + [0, 0.2, 0]
+    decorator = lambda x: x[0:6] + [0, config.OBSTACLE_RADIUS, 0]
     a.setParameters(decorator(values))
 
     if config.DISCRETE_Q:

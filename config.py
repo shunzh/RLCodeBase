@@ -12,12 +12,12 @@ TWO_OBJECTS = False
 # use potential based q functions if false
 DISCRETE_Q = False
 
-# in training phase
-TRAINING = False
-
 # enable to add slight turns
 SLIGHT_TURNS = True
 
-HUMAN_SUBJECTS = range(25, 31)
+TRAINING = False
+
+HUMAN_SUBJECTS = range(25, 29)
+OBSTACLE_RADIUS = 0
 
 BUDGET_SIZES = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]

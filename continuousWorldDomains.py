@@ -54,8 +54,8 @@ def simpleMixDomain(num = 1):
     targs = [(1, 1), (-1, -1)]
     obsts = [(0, 0), (0, 1)]
   elif num == 1:
-    targs = [(1, 1)]
-    obsts = [(-1, -1)]
+    targs = [(-1, -1)]
+    obsts = [(1, 1)]
   else:
     raise Exception("Un-configed number of objects")
 

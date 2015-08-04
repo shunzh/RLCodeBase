@@ -14,13 +14,13 @@ import config
 def printWeight(sln, filename, discounters = []):
   import matplotlib.pyplot as plt
 
-  stepSize = 2
+  stepSize = 1
   data = []
   for i in range(0, 11, stepSize):
     row = []
     for j in range(0, 11 - i, stepSize):
       k = 10 - i - j
-      row.append(-sln.obj([0.1 * i, 0.1 * j, 0.1 * k] + discounters))
+      row.append(-sln.obj([10 * i, - 10 * j, 10 * k] + discounters))
     for j in range(11 - i, 11, stepSize):
       row.append(0) # will be masked
     data.append(row)
@@ -30,13 +30,16 @@ def printWeight(sln, filename, discounters = []):
   data = np.ma.array(data, mask=mask)
 
   plt.imshow(data, interpolation='none')
-  plt.xticks(range(6), np.arange(0,1.1,0.1 * stepSize))
-  plt.yticks(range(6), np.arange(0,1.1,0.1 * stepSize))
+  plt.xticks(range(10 / stepSize + 1), np.arange(0,1.1,0.1 * stepSize))
+  plt.yticks(range(10 / stepSize + 1), np.arange(0,1.1,0.1 * stepSize))
   plt.xlabel('Obstacle Module Weight');
   plt.ylabel('Target Module Weight');
 
+  plt.gcf().set_size_inches(5,5)
   plt.jet()
   plt.colorbar()
+  plt.show()
+  plt.bone()
 
   plt.savefig(filename)
   
@@ -137,7 +140,7 @@ def humanWorldExperimentDiscrete(filenames, rang):
 
   return [x, evaluation] 
 
-def humanWorldExperimentQPotential(filenames, rang, solving = False):
+def humanWorldExperimentQPotential(filenames, rang, solving = True):
   """
   Args:
     rang: load mat with given rang of trials
@@ -150,7 +153,7 @@ def humanWorldExperimentQPotential(filenames, rang, solving = False):
   bnds = ((0, 100), (-100, 0), (0, 100))\
        + tuple((0 + margin, 1 - margin) for _ in range(n))
   # radiuses of target and path are 0
-  decorator = lambda x: x[0:6] + [0, 0.1, 0]
+  decorator = lambda x: x[0:6] + [0, config.OBSTACLE_RADIUS, 0]
 
   sln = InverseModularRL(qFuncs, starts, bnds, decorator, solver="CMA-ES")
   parsedHumanData = humanInfoParser.parseHumanData(filenames, rang)
@@ -163,6 +166,8 @@ def humanWorldExperimentQPotential(filenames, rang, solving = False):
     # read from files if only output the learned results
     values = pickle.load(open('learnedValues/values.pkl'))
     x = values[rang[0] / 8]
+  
+  #printWeight(sln, "weights" + str(rang[0] / 8) + ".png", [.8] * 3)  
   
   evaluation = evaluateAssumption(zip(parsedHumanData, samples), qFuncs, decorator(x))
 
