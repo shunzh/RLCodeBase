@@ -25,12 +25,14 @@ Related files:
 - [config.py](config.py) Some global configurations. This is very likely to be
   the only file you want to modify if you just want to run the existing
   experiments.
-- [moduleTraining.sh](moduleTraining.sh) Code to train target, obstacle, path
-  modules using q learning.
 - [humanModularIRLExperiment.sh](humanModularIRLExperiment.sh) Please see inline
   comments for details. To run this, you need to have the human data {miniRes25.mat,
   subj[25-28].parsed.mat} in your checked-out folder, which are not included in
   this repo.
+- [moduleTraining.sh](moduleTraining.sh) (Now we are using continuous Q
+  functions. This experiment uses discrete Q tables and is outdated) Code to
+  train target, obstacle, path modules using q learning. It uses discrete Q
+  tables.
 
 Learning Agents
 --------------
@@ -96,7 +98,7 @@ Bayesian IRL
 Related files:
 
 - [inverseBayesianRL.py](inverseBayesianRL.py) implementation of the Bayesian IRL algorithm.
-- [inverseBayesianRLExperiments.py](inverseBayesianRLExperiments.py) to run IRL on gridworld domains.
+- [inverseBayesianRLGridExperiments.py](inverseBayesianRLGridExperiments.py) to run IRL on gridworld domains.
 
 Implemented according to
 
@@ -110,7 +112,8 @@ Modular IRL
 Related files:
 
 - [inverseModularRL.py](inverseModularRL.py) implementation of the modular IRL algorithm.
-- [inverseModularRLExperiments.py](inverseModularRLExperiments.py) to run IRL on humanWorld domains.
+- [inverseModularRLHumanExperiments.py](inverseModularRLHumanExperiments.py) to run IRL on human world domains.
+- [inverseModularRLGridExperiments.py](inverseModularRLGridExperiments.py) to run IRL on grid world domains.
 - [inverseModularRLTest.py](inverseModularRLTest.py) unit tests.
 
 Inverse modular reinforcement learning is basically implemented according to
@@ -120,4 +123,9 @@ learning for visuomotor behavior, Biological Cybernetics,
 107(4),477-490
 http://www.cs.utexas.edu/~dana/Biol_Cyber.pdf
 
-[Place holder: details of the algorithm will be described in my thesis]
+For human experiments, human subjects data are required and  put in the same
+folder, named as ubj{ID}.parsed.mat. ID is in the range of 25-36. These files
+are not included in this repo.
+
+The details of the algorithm will be described in my thesis (will be available
+soon) and/or a future publication.

@@ -44,11 +44,11 @@ def plotHuman(plotting, win, subjIdSet, domainId):
       prevLoc = loc
     prevLoc = None
 
-def getHumanStatesActions(filenames, idxSet, parsedHumanData = None, getRawAngle = False):
+def getHumanStatesActions(profile, parsedHumanData = None, getRawAngle = False):
   """
   return (state, action) paris
   """
-  parsedHumanData = parsedHumanData or parseHumanData(filenames, idxSet)
+  parsedHumanData = parsedHumanData or parseHumanData(profile)
   return map(lambda x:(((x['targDist'][0], x['targAngle'][0]),
                         (x['targDist'][1], x['targAngle'][1]),
                         (x['obstDist'][0], x['obstAngle'][0]),
@@ -60,7 +60,7 @@ def getHumanStatesActions(filenames, idxSet, parsedHumanData = None, getRawAngle
                        parsedHumanData
             )
 
-def parseHumanData(filenames, domainIds):
+def parseHumanData(profile):
   """
   Parse human behavivors from mat, which contains positions, actions and angle changes, etc. at all data points.
   (Action is redundant given change of angles. Just for convenience.)
@@ -74,11 +74,11 @@ def parseHumanData(filenames, domainIds):
   """
   samples = []
 
-  for filename in filenames:
+  for filename in profile.keys():
     mat = util.loadmat(filename)
     
     # iterate through domains
-    for domainId in domainIds:
+    for domainId in profile[filename]:
       agentXs = mat['pRes'][domainId].agentX
       agentZs = mat['pRes'][domainId].agentZ
       agentAngles = - mat['pRes'][domainId].agentAngle / 180 * np.pi - np.pi  / 2

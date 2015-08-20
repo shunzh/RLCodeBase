@@ -38,6 +38,8 @@ def plotContinuousDomainValues(mdp, agent, mapper, filename):
     data.append(row)
     x += stepSize
 
+  plt.scatter([10, 20], [10, 20], s=[100, 100], marker='+')
+
   plt.imshow(data, interpolation='none')
   plt.jet()
   plt.colorbar()
