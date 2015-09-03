@@ -5,11 +5,13 @@
 # purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
-
 import random
 
 class MarkovDecisionProcess:
-    
+  def __init__(self):
+    self.timer = 0
+    self.reset()
+ 
   def getStates(self):
     """
     Return a list of all states in the MDP.
@@ -74,5 +76,22 @@ class MarkovDecisionProcess:
     are equivalent.
     """
     abstract
-
     
+  def doAction(self, action):
+    successors = self.mdp.getTransitionStatesAndProbs(self.state, action) 
+    sum = 0.0
+    rand = random.random()
+    state = self.getCurrentState()
+    for nextState, prob in successors:
+      sum += prob
+      if sum > 1.0:
+        raise 'Total transition probability more than one; sample failure.' 
+      if rand < sum:
+        reward = self.mdp.getReward(state, action, nextState)
+        self.state = nextState
+        return (nextState, reward)
+
+    raise 'Total transition probability less than one; sample failure.'    
+        
+  def reset(self):
+    self.state = self.getStartState()
