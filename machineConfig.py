@@ -22,18 +22,22 @@ class MachineConfiguration(ControlledMarkovProcess):
     Can set non-operated machines
     an action: (i, j) operate machine i to be in config j
     """
-    return [(i, j) for j in range(1, self.m+1)\
+    return [None]\
+         + [(i, j) for j in range(1, self.m+1)\
                    for i in range(self.n) if self.state[i] == 0]
 
   def getTransitionStatesAndProbs(self, state, action):
-    # make a deep copy
-    state = self.state[:]
+    if action == None:
+      return [(state, 1)]
+    else:
+      # make a deep copy
+      state = self.state[:]
 
-    mch = action[0]
-    config = action[1]
-    state[mch] = config
-    
-    return [(state, 1)]
+      mch = action[0]
+      config = action[1]
+      state[mch] = config
+      
+      return [(state, 1)]
   
   def getReward(self, state):
     if self.isTerminal(state):

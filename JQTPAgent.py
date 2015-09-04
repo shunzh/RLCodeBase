@@ -45,7 +45,7 @@ class JPQTAgent:
 
     responseTime = self.cmp.getResponseTime(state)
     vBeforeResponse = self.getValue(state, self.phi, policy, responseTime)
-    vAfterResponse = self.gamma ** responseTime * 
+    vAfterResponse = self.gamma ** responseTime * #TODO
     
     return cost + vBeforeResponse
   
