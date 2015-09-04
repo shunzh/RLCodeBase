@@ -26,7 +26,9 @@ class MachineConfiguration(ControlledMarkovProcess):
                    for i in range(self.n) if self.state[i] == 0]
 
   def getTransitionStatesAndProbs(self, state, action):
+    # make a deep copy
     state = self.state[:]
+
     mch = action[0]
     config = action[1]
     state[mch] = config
