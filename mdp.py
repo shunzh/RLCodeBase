@@ -19,12 +19,6 @@ class MarkovDecisionProcess:
     """
     abstract
         
-  def getStartState(self):
-    """
-    Return the start state of the MDP.
-    """
-    abstract
-    
   def getPossibleActions(self, state):
     """
     Return list of possible actions from 'state'.

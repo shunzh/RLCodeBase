@@ -11,7 +11,6 @@ class JPQTAgent:
 
   def getValue(self, pi=None, horizon='inf'):
 
-
   def getQValue(self, state, policy, query):
     cost = self.cmp.cost(query)
 
