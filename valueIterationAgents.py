@@ -9,7 +9,7 @@
 import mdp, util
 
 from learningAgents import ValueEstimationAgent
-INF = 2**31-1 #float('inf')
+INF = float('inf')
 
 class ValueIterationAgent(ValueEstimationAgent):
   """
@@ -37,26 +37,23 @@ class ValueIterationAgent(ValueEstimationAgent):
     self.iterations = iterations
     self.values = util.Counter() # A Counter is a dict with default 0
      
-    "*** YOUR CODE HERE ***"
-    
     for time in range(iterations):
       values = util.Counter()
       for state in mdp.getStates():
         if mdp.isTerminal(state): 
-	  values[state] = 0
-	else: 
+          values[state] = 0
+        else: 
           maxValue = -INF
-	  for action in mdp.getPossibleActions(state):
-	    maxValue = max(maxValue, self.getQValue(state, action))
-	  values[state] = maxValue
-      self.values = values
+          for action in mdp.getPossibleActions(state):
+            maxValue = max(maxValue, self.getQValue(state, action))
+          values[state] = maxValue
+          self.values = values
     
   def getValue(self, state):
     """
       Return the value of the state (computed in __init__).
     """
     return self.values[state]
-
 
   def getQValue(self, state, action):
     """
@@ -87,7 +84,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       q = self.getQValue(state, action)
       if q > maxValue:
         maxValue = q
-	bestAction = action
+    bestAction = action
 
     return bestAction
 

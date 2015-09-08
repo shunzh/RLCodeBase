@@ -4,37 +4,35 @@ import util
 import copy
 
 class JPQTAgent:
-  def __init__(self, cmp, rewardSet, initialPhi=None, gamma=0.9):
+  def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9):
+    # underlying cmp
     self.cmp = cmp
+    # set of possible reward functions
     self.rewardSet = rewardSet
     self.gamma = gamma
-    
-    self.n = self.cmp.n
-    # init belief on rewards with uniform distribution
-    self.phi = initialPhi or [1.0 / self.n] * self.n
+    # init belief on rewards in rewardSet
+    self.phi = initialPhi
 
-  def getRewardFunc(self, state, phi):
-    #TODO
-
-  def getReward(self, state, phi):
+  def getRewardFunc(self, phi):
     """
-    uses our belief
+    return the mean reward function under the given belief
     """
-    #TODO
+    return lambda state: sum([reward(state) * p for reward, p in zip(self.rewardSet, phi)])
 
   def getOptValues(self, phi):
     cmp = copy.deepcopy(self.cmp)
     cmp.rewardFunc = self.getRewardFunc(phi)
 
     viAgent = ValueIterationAgent(cmp, discount=self.gamma)
-    return viAgent.getValues()
+    return lambda state: viAgent.getValue(state)
   
   def getValue(self, state, phi, pi, horizon):
     sum = 0
+    rewardFunc = self.getRewardFunc(phi)
     
+    # only sample one trajectory
     for t in range(horizon):
-      sum += self.gamma ** t * self.getReward(state, self.phi)
-      state = util.chooseFromDistribution(self.cmp.getTransitionStatesAndProbs(state))
+      sum += self.gamma ** t * sum([rewardFunc(state) * prob for state, prob in getMultipleTransitionMatrix(cmp, policy, t)])
     
     return sum
 

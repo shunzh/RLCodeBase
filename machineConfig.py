@@ -5,6 +5,7 @@ class MachineConfiguration(ControlledMarkovProcess):
     self.n = n
     self.m = m
     self.cost = cost
+    # the ground truth reward function
     self.rewardFunc = rewardFunc
 
     self.getResponseTime = 2
