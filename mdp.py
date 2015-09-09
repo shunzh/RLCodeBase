@@ -11,6 +11,8 @@ class MarkovDecisionProcess:
   def __init__(self):
     self.timer = 0
     self.reset()
+    # make it undefined as a base class
+    self.getReward = lambda state: None
  
   def getStates(self):
     """
@@ -53,14 +55,6 @@ class MarkovDecisionProcess:
     """
     abstract
         
-  def getReward(self, state, action, nextState):
-    """
-    Get the reward for the state, action, nextState transition.
-    
-    Not available in reinforcement learning.
-    """
-    abstract
-
   def isTerminal(self, state):
     """
     Returns true if the current state is a terminal state.  By convention,
@@ -81,7 +75,7 @@ class MarkovDecisionProcess:
       if sum > 1.0:
         raise 'Total transition probability more than one; sample failure.' 
       if rand < sum:
-        reward = self.mdp.getReward(state, action, nextState)
+        reward = self.getReward(state, action, nextState)
         self.state = nextState
         return (nextState, reward)
 
