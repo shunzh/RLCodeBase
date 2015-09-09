@@ -92,6 +92,7 @@ class JPQTAgent:
   def learn(self):
     # iterate optimize over policy and query
     #TODO
+    pass
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """
