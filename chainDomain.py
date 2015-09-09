@@ -15,7 +15,12 @@ class ChainDomain(ControlledMarkovProcess):
     return self.length / 2
   
   def getPossibleActions(self, state):
-    return [-1, 0, 1]
+    if state == 0:
+      return [0, 1]
+    elif state == self.length - 1:
+      return [-1, 0]
+    else:
+      return [-1, 0, 1]
   
   def getTransitionStatesAndProbs(self, state, action):
     state += action
@@ -27,4 +32,4 @@ class ChainDomain(ControlledMarkovProcess):
     return 0
 
   def isTerminal(self, state):
-    return False
+    return state == 0 or state == self.length - 1

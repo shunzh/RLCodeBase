@@ -20,7 +20,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       for a given number of iterations using the supplied
       discount factor.
   """
-  def __init__(self, mdp, discount = 0.9, iterations = 100, initValues = util.Counter()):
+  def __init__(self, mdp, discount = 0.9, iterations = 10, initValues = util.Counter()):
     """
       Your value iteration agent should take an mdp on
       construction, run the indicated number of iterations
@@ -48,7 +48,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           for action in mdp.getPossibleActions(state):
             maxValue = max(maxValue, self.getQValue(state, action))
           values[state] = maxValue
-        self.values = values
+      self.values = values
     
   def getValue(self, state):
     """
@@ -84,7 +84,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       q = self.getQValue(state, action)
       if q > maxValue:
         maxValue = q
-    bestAction = action
+        bestAction = action
 
     return bestAction
 

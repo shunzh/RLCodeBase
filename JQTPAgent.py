@@ -38,16 +38,17 @@ class JPQTAgent:
     sum = 0
     rewardFunc = self.getRewardFunc(phi)
     
-    for t in range(horizon):
-      sum += self.gamma ** t * sum([rewardFunc(s) * prob for s, prob in getMultipleTransitionDistr(cmp, state, policy, t)])
+    for t in range(1, horizon + 1):
+      possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, t)
+      sum += self.gamma ** t * sum([rewardFunc(s) * prob for s, prob in possibleStatesAndProbs])
     
     return sum
 
-  def getPossiblePhiAndProbs(self, state, query):
-    actions = self.cmp.getPossibleActions(state)
+  def getPossiblePhiAndProbs(self, query):
+    actions = self.cmp.getPossibleActions(query)
     viAgent = self.getVIAgent(self.phi)
     # action -> qValue dict
-    qValues = [viAgent.getQValue(state, action) for action in actions]
+    qValues = [viAgent.getQValue(query, action) for action in actions]
 
     # the set of new phis
     phis = []
@@ -55,10 +56,12 @@ class JPQTAgent:
       # copy current phi
       phi = self.phi[:]
       for idx in range(self.rewardSetSize):
-        if self.viAgentSet[idx].getPolicy(state) != action:
+        if self.viAgentSet[idx].getPolicy(query) != action:
           phi[idx] = 0
+
       # normalize phi
-      phi = [x / sum(phi) for x in phi]
+      if sum(phi) != 0:
+        phi = [x / sum(phi) for x in phi]
       phis.append(phi)
     
     # the probability of observing new phis
@@ -66,15 +69,18 @@ class JPQTAgent:
     probs = [prob / sum(probsUnnormed) for prob in probsUnnormed]
     
     # belief -> prob dict
-    return {phi: prob for phi, prob in zip(phis, probs)}
+    distr = util.Counter()
+    for phi, prob in zip(phis, probs):
+      distr[tuple(phi)] = prob
+    return distr.items()
 
   def getQValue(self, state, policy, query, responseTime):
     cost = self.cmp.cost(query)
 
     vBeforeResponse = self.getValue(state, self.phi, policy, responseTime)
     
-    possiblePhis = self.getPossiblePhiAndProbs(state, query)
-    possibleStatesAndProbs = getMultipleTransitionDistr(cmp, state, policy, responseTime)
+    possiblePhis = self.getPossiblePhiAndProbs(query)
+    possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, responseTime)
     
     vAfterResponse = 0
     for fPhi, fPhiProb in possiblePhis:
@@ -93,27 +99,31 @@ class JPQTAgent:
     """
     Enumerate all possible queries
     """
-    responseTime = self.cmp.getResponseTime()
-    return max(self.cmp.querySet, key=lambda q: self.getQValue(state, policy, q, responseTime))
+    responseTime = self.cmp.responseTime
+    return max(self.cmp.queries, key=lambda q: self.getQValue(state, policy, q, responseTime))
   
   def optimizePolicy(self, state, query):
     """
     Uses dynamic programming
     """
     v = util.Counter()
+    possiblePhis = self.getPossiblePhiAndProbs(query)
     for state in self.cmp.getStates():
-      v[state] = self.getQValue(state, None, query, 0)
+      for fPhi, fPhiProb in possiblePhis:
+        viAgent = self.getVIAgent(fPhi)
+        values = lambda state: viAgent.getValue(state)
+        v[state] += values(state) * fPhiProb
       
     cmp = copy.deepcopy(self.cmp)
     cmp.getReward = self.getRewardFunc(self.phi)
-    responseTime = self.cmp.getResponseTime()
+    responseTime = self.cmp.responseTime
     viAgent = ValueIterationAgent(cmp, iterations=responseTime, initValues=v)
     return lambda state: viAgent.getPolicy(state)
 
   def learn(self):
     state = self.cmp.state
     q = self.cmp.queries[0] # get a random query
-    pi = None # ok to start with nothing
+    pi = lambda state: self.cmp.getPossibleActions(state)[0] # start with a policy
 
     # iterate optimize over policy and query
     while True:
@@ -126,11 +136,12 @@ def getMultipleTransitionDistr(cmp, state, policy, time):
   Return state -> prob
   """
   p = {s: 0 for s in cmp.getStates()}
-  p[state] = 1
+  p[state] = 1.0
 
   for t in range(time):
-    vNext = {s: 0 for s in cmp.getStates()}
+    pNext = {s: 0 for s in cmp.getStates()}
     for s in cmp.getStates():
       for nextS, nextProb in cmp.getTransitionStatesAndProbs(state, policy(state)):
         p[nextS] += p[s] * nextProb
-    p = vNext
+    p = pNext
+  return p.items()
