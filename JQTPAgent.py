@@ -54,37 +54,34 @@ class JPQTAgent:
 
   def getPossiblePhiAndProbs(self, query):
     actions = self.cmp.getPossibleActions(query)
-    viAgent = self.getVIAgent(self.phi)
-    # action -> qValue dict
-    qValues = [viAgent.getQValue(query, action) for action in actions]
-
-    # the set of new phis
-    phis = []
-    for action in actions:
-      # copy current phi
-      phi = self.phi[:]
-      for idx in range(self.rewardSetSize):
-        if self.viAgentSet[idx].getPolicy(query) != action:
-          phi[idx] = 0
-
-      # normalize phi
-      if sum(phi) != 0:
-        phi = [x / sum(phi) for x in phi]
-      phis.append(phi)
-    
-    # the probability of observing new phis
-    probsUnnormed = [numpy.exp(qValue) for qValue in qValues]
-    probs = [prob / sum(probsUnnormed) for prob in probsUnnormed]
-    
     # belief -> prob dict
     distr = util.Counter()
-    for phi, prob in zip(phis, probs):
-      distr[tuple(phi)] = prob
+
+    # consider all possible actions (responses), find out their probabilities,
+    # and compute the probability of observing the next phi
+    for action in actions:
+      # the probability of observing this action
+      actProb = 0
+      phi = self.phi[:]
+      for idx in range(self.rewardSetSize):
+        if self.viAgentSet[idx].getPolicy(query) == action:
+          actProb += phi[idx]
+
+      # given that this response is observed, compute the next phi
+      # normalize phi
+      if self.viAgentSet[idx].getPolicy(query) != action:
+        phi[idx] = 0
+      if sum(phi) != 0:
+        phi = [x / sum(phi) for x in phi]
+      
+      distr[tuple(phi)] = actProb
+    
     return distr.items()
 
-  def getQValue(self, state, policy, query, responseTime):
+  def getQValue(self, state, policy, query):
     cost = self.cmp.cost(query)
 
+    responseTime = self.cmp.responseTime
     vBeforeResponse = self.getValue(state, self.phi, policy, responseTime)
     
     possiblePhis = self.getPossiblePhiAndProbs(query)
@@ -107,8 +104,7 @@ class JPQTAgent:
     """
     Enumerate all possible queries
     """
-    responseTime = self.cmp.responseTime
-    return max(self.cmp.queries, key=lambda q: self.getQValue(state, policy, q, responseTime))
+    return max(self.cmp.queries, key=lambda q: self.getQValue(state, policy, q))
   
   def optimizePolicy(self, state, query):
     """
@@ -124,7 +120,7 @@ class JPQTAgent:
       
     cmp = copy.deepcopy(self.cmp)
     cmp.getReward = self.getRewardFunc(self.phi)
-    responseTime = self.cmp.responseTime
+    responseTime = cmp.responseTime
     viAgent = ValueIterationAgent(cmp, iterations=responseTime, initValues=v)
     return lambda state: viAgent.getPolicy(state)
 
