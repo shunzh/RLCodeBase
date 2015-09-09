@@ -8,7 +8,7 @@ class MachineConfiguration(ControlledMarkovProcess):
     # the ground truth reward function
     self.rewardFunc = rewardFunc
 
-    self.getResponseTime = 2
+    self.responseTime = 2
 
     ControlledMarkovProcess.__init__(self, responseFunc)
     

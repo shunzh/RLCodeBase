@@ -20,7 +20,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       for a given number of iterations using the supplied
       discount factor.
   """
-  def __init__(self, mdp, discount = 0.9, iterations = 100):
+  def __init__(self, mdp, discount = 0.9, iterations = 100, initValues = util.Counter()):
     """
       Your value iteration agent should take an mdp on
       construction, run the indicated number of iterations
@@ -35,9 +35,10 @@ class ValueIterationAgent(ValueEstimationAgent):
     self.mdp = mdp
     self.discount = discount
     self.iterations = iterations
-    self.values = util.Counter() # A Counter is a dict with default 0
+    self.values = initValues
      
-    for time in range(iterations):
+    for _ in range(iterations):
+      # note that values are updated off-place
       values = util.Counter()
       for state in mdp.getStates():
         if mdp.isTerminal(state): 
@@ -47,7 +48,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           for action in mdp.getPossibleActions(state):
             maxValue = max(maxValue, self.getQValue(state, action))
           values[state] = maxValue
-          self.values = values
+        self.values = values
     
   def getValue(self, state):
     """
@@ -66,7 +67,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     "*** YOUR CODE HERE ***"
     q = 0
     for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
-      q += prob * (self.mdp.getReward(state, action, nextState) + self.discount * self.getValue(nextState))
+      q += prob * (self.mdp.getReward(nextState) + self.discount * self.getValue(nextState))
     return q
     
   def getPolicy(self, state):
