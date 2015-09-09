@@ -29,20 +29,28 @@ class JPQTAgent:
     return lambda state: sum([reward(state) * p for reward, p in zip(self.rewardSet, phi)])
 
   def getVIAgent(self, phi):
+    """
+    Return a trained value iteratoin agent with given phi.
+    So we can use getValue, getPolicy, getQValue, etc.
+    """
     cmp = copy.deepcopy(self.cmp)
     cmp.getReward = self.getRewardFunc(phi)
 
     return ValueIterationAgent(cmp, discount=self.gamma)
   
   def getValue(self, state, phi, policy, horizon):
-    sum = 0
+    """
+    Accumulated rewards by following a fixed policy to a time horizon.
+    No learning here. 
+    """
+    v = 0
     rewardFunc = self.getRewardFunc(phi)
     
     for t in range(1, horizon + 1):
       possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, t)
-      sum += self.gamma ** t * sum([rewardFunc(s) * prob for s, prob in possibleStatesAndProbs])
+      v += self.gamma ** t * sum([rewardFunc(s) * prob for s, prob in possibleStatesAndProbs])
     
-    return sum
+    return v
 
   def getPossiblePhiAndProbs(self, query):
     actions = self.cmp.getPossibleActions(query)
@@ -123,13 +131,18 @@ class JPQTAgent:
   def learn(self):
     state = self.cmp.state
     q = self.cmp.queries[0] # get a random query
-    pi = lambda state: self.cmp.getPossibleActions(state)[0] # start with a policy
-
+    pi = lambda state: self.cmp.getPossibleActions(state)[1] # start with an arbitrary policy
+    
     # iterate optimize over policy and query
     while True:
-      self.optimizePolicy(state, q)
-      self.optimizeQuery(state, pi)
+      # test here
+      for s in self.cmp.getStates():
+        print s, pi(s)
+      print
 
+      pi = self.optimizePolicy(state, q)
+      q  = self.optimizeQuery(state, pi)
+      
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """
   Multiply a transition matrix multiple times.
