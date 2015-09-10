@@ -3,6 +3,7 @@ from cmp import ControlledMarkovProcess
 class ChainDomain(ControlledMarkovProcess):
   def __init__(self, rewardFunc, queries, length=5):
     responseFunc = lambda state: rewardFunc(state)
+    self.getReward = lambda state: rewardFunc(state)
     self.length = length
     self.responseTime = 1
 

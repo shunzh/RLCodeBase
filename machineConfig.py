@@ -1,19 +1,30 @@
 from cmp import ControlledMarkovProcess
 
 class MachineConfiguration(ControlledMarkovProcess):
-  def __init__(self, n, m, rewardFunc, responseFunc, cost=-0.2):
+  def __init__(self, n, m, rewardFunc, responseFunc, queries):
     self.n = n
     self.m = m
-    self.cost = cost
     # the ground truth reward function
     self.rewardFunc = rewardFunc
 
     self.responseTime = 2
 
-    ControlledMarkovProcess.__init__(self, responseFunc)
+    ControlledMarkovProcess.__init__(self, queries, responseFunc)
     
+  def getStates(self):
+    configs = range(self.m + 1)
+    l = [[]]
+    for _ in range(self.n):
+      newL = []
+      for item in l:
+        newL += [item + [i] for i in configs]
+      l = newL
+      
+    l = map(tuple, l)
+    return l
+
   def reset(self):
-    self.state = [0] * self.n
+    self.state = (0,) * self.n
 
   def isTerminal(self, state):
     return not 0 in state
@@ -29,21 +40,15 @@ class MachineConfiguration(ControlledMarkovProcess):
 
   def getTransitionStatesAndProbs(self, state, action):
     if action == None:
+      # means stay
       return [(state, 1)]
     else:
       # make a deep copy
-      state = self.state[:]
+      state = list(self.state[:])
 
       mch = action[0]
       config = action[1]
       state[mch] = config
       
-      return [(state, 1)]
+      return [(tuple(state), 1)]
   
-  def getReward(self, state):
-    if self.isTerminal(state):
-      # complete configuration
-      sum([self.rewardFunc(i, state[i]) for i in range(self.n)])
-    else:
-      # incomplete configuration
-      return self.cost

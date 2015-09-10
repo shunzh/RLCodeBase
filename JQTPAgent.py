@@ -4,7 +4,7 @@ import copy
 import numpy
 import util
 
-class JPQTAgent:
+class JQTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9):
     # underlying cmp
     self.cmp = cmp
