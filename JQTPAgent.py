@@ -20,7 +20,11 @@ class JQTPAgent:
     for idx in range(self.rewardSetSize):
       phi = [0] * self.rewardSetSize
       phi[idx] = 1
-      self.viAgentSet.append(self.getVIAgent(phi))
+      
+      # a VI agent based on one reward
+      viAgent = self.getVIAgent(phi)
+      self.viAgentSet.append(viAgent)
+      print viAgent.values
 
   def getRewardFunc(self, phi):
     """
@@ -130,15 +134,11 @@ class JQTPAgent:
     pi = lambda state: self.cmp.getPossibleActions(state)[1] # start with an arbitrary policy
     
     # iterate optimize over policy and query
-    while True:
-      # test here
-      for s in self.cmp.getStates():
-        print s, pi(s)
-      print
-
+    for _ in range(100):
       pi = self.optimizePolicy(state, q)
       q  = self.optimizeQuery(state, pi)
-      
+      print _, self.getQValue(state, pi, q)
+
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """
   Multiply a transition matrix multiple times.

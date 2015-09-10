@@ -5,14 +5,15 @@ def main():
   numMachines = 3
   numConfigs = 3
 
-  queries = range(numMachines) # can ask a configuration of a machine
   factoredReward = lambda i, j: j
   rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), [factoredReward])
 
-  responseFunc = lambda q: max(range(numMachines), key=lambda config: factoredReward(q, config))
-  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], responseFunc, queries)
+  # can ask a configuration of a machine
+  queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
+  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries)
   
-  agent = JQTPAgent(cmp, rewardSet, [1])
+  initialPhi = [1]
+  agent = JQTPAgent(cmp, rewardSet, initialPhi)
   
   agent.learn()
 

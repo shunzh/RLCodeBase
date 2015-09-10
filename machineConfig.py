@@ -1,15 +1,13 @@
 from cmp import ControlledMarkovProcess
 
 class MachineConfiguration(ControlledMarkovProcess):
-  def __init__(self, n, m, rewardFunc, responseFunc, queries):
+  def __init__(self, n, m, trueReward, queries):
     self.n = n
     self.m = m
-    # the ground truth reward function
-    self.rewardFunc = rewardFunc
 
     self.responseTime = 2
 
-    ControlledMarkovProcess.__init__(self, queries, responseFunc)
+    ControlledMarkovProcess.__init__(self, queries, trueReward)
     
   def getStates(self):
     configs = range(self.m + 1)
@@ -23,11 +21,14 @@ class MachineConfiguration(ControlledMarkovProcess):
     l = map(tuple, l)
     return l
 
+  def cost(self, query):
+    return 0
+  
   def reset(self):
     self.state = (0,) * self.n
 
   def isTerminal(self, state):
-    return not 0 in state
+    return 0 in state
 
   def getPossibleActions(self, state):
     """
@@ -51,4 +52,3 @@ class MachineConfiguration(ControlledMarkovProcess):
       state[mch] = config
       
       return [(tuple(state), 1)]
-  
