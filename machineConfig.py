@@ -28,7 +28,7 @@ class MachineConfiguration(ControlledMarkovProcess):
     self.state = (0,) * self.n
 
   def isTerminal(self, state):
-    return 0 in state
+    return not 0 in state
 
   def getPossibleActions(self, state):
     """
@@ -37,15 +37,17 @@ class MachineConfiguration(ControlledMarkovProcess):
     """
     return [None]\
          + [(i, j) for j in range(1, self.m+1)\
-                   for i in range(self.n) if self.state[i] == 0]
+                   for i in range(self.n) if state[i] == 0]
 
   def getTransitionStatesAndProbs(self, state, action):
+    assert action in self.getPossibleActions(state)
+
     if action == None:
       # means stay
       return [(state, 1)]
     else:
       # make a deep copy
-      state = list(self.state[:])
+      state = list(state[:])
 
       mch = action[0]
       config = action[1]

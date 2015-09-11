@@ -6,13 +6,14 @@ def main():
   numConfigs = 3
 
   factoredReward = lambda i, j: j
-  rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), [factoredReward])
+  alterFactoredReward = lambda i, j: 3 - j
+  rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), [factoredReward, alterFactoredReward])
 
   # can ask a configuration of a machine
   queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries)
   
-  initialPhi = [1]
+  initialPhi = [.5, .5]
   agent = JQTPAgent(cmp, rewardSet, initialPhi)
   
   agent.learn()

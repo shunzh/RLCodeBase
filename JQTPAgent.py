@@ -24,7 +24,6 @@ class JQTPAgent:
       # a VI agent based on one reward
       viAgent = self.getVIAgent(phi)
       self.viAgentSet.append(viAgent)
-      print viAgent.values
 
   def getRewardFunc(self, phi):
     """
@@ -131,13 +130,15 @@ class JQTPAgent:
   def learn(self):
     state = self.cmp.state
     q = self.cmp.queries[0] # get a random query
-    pi = lambda state: self.cmp.getPossibleActions(state)[1] # start with an arbitrary policy
+    pi = lambda state: self.cmp.getPossibleActions(state)[-1] # start with an arbitrary policy
     
     # iterate optimize over policy and query
     for _ in range(100):
-      pi = self.optimizePolicy(state, q)
       q  = self.optimizeQuery(state, pi)
-      print _, self.getQValue(state, pi, q)
+      print "optimized q", q
+      pi = self.optimizePolicy(state, q)
+      print "optimized pi", [(s, pi(s)) for s in self.cmp.getStates()]
+      print self.getQValue(state, pi, q)
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """
@@ -146,11 +147,14 @@ def getMultipleTransitionDistr(cmp, state, policy, time):
   """
   p = {s: 0 for s in cmp.getStates()}
   p[state] = 1.0
-
+  
   for t in range(time):
     pNext = {s: 0 for s in cmp.getStates()}
     for s in cmp.getStates():
-      for nextS, nextProb in cmp.getTransitionStatesAndProbs(state, policy(state)):
-        p[nextS] += p[s] * nextProb
-    p = pNext
+      if p[s] > 0:
+        for nextS, nextProb in cmp.getTransitionStatesAndProbs(s, policy(s)):
+          pNext[nextS] += p[s] * nextProb
+    p = pNext.copy()
+  
+  assert sum(p.values()) > .99
   return p.items()
