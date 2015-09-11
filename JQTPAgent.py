@@ -13,6 +13,10 @@ class JQTPAgent:
     self.gamma = gamma
     # init belief on rewards in rewardSet
     self.phi = initialPhi
+    
+    # bookkeep our in-mind planning
+    self.responseToPhi = util.Counter()
+    self.phiToPolicy = util.Counter()
 
     # initialize VI agent for reward set for future use
     self.viAgentSet = []
@@ -78,6 +82,7 @@ class JQTPAgent:
       if sum(phi) != 0:
         phi = [x / sum(phi) for x in phi]
         distr[tuple(phi)] = actProb
+        self.responseToPhi[action] = tuple(phi)
     
     return distr.items()
 
@@ -98,6 +103,8 @@ class JQTPAgent:
       for fState, fStateProb in possibleStatesAndProbs:
         estimatedValue += values(fState) * fStateProb
       vAfterResponse += fPhiProb * estimatedValue
+      
+      self.phiToPolicy[tuple(fPhi)] = lambda s: viAgent.getPolicy(s)
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -105,7 +112,6 @@ class JQTPAgent:
     """
     Enumerate all possible queries
     """
-    print "q of queries", [self.getQValue(state, policy, q) for q in self.cmp.queries]
     return max(self.cmp.queries, key=lambda q: self.getQValue(state, policy, q))
   
   def optimizePolicy(self, state, query):
@@ -126,9 +132,16 @@ class JQTPAgent:
     viAgent = ValueIterationAgent(cmp, iterations=responseTime, initValues=v)
     return lambda state: viAgent.getPolicy(state)
 
+  def respond(self, query, response):
+    """
+    The response is informed to the agent regarding a previous query
+    """
+    # such response was imagined by the agent before and the solution is bookkept
+    return self.phiToPolicy[self.responseToPhi(query)]
+
   def learn(self):
     state = self.cmp.state
-    q = self.cmp.queries[1] # get a random query
+    q = self.cmp.queries[0] # get a random query
     pi = lambda state: self.cmp.getPossibleActions(state)[-1] # start with an arbitrary policy
     
     # iterate optimize over policy and query
@@ -143,7 +156,7 @@ class JQTPAgent:
       
       if q == prevQ:
         # converged
-        return
+        return q, pi
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """

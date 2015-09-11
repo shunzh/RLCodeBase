@@ -5,7 +5,7 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
   def __init__(self, queries, trueReward):
     MarkovDecisionProcess.__init__(self)
     
-    self.outsandingQueries = None
+    self.outsandingQuery = None
     # possible queries
     self.queries = queries
     
@@ -18,7 +18,7 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     """
     Ask the policy of this state
     """
-    self.outsandingQueries = (q, self.timer + self.getResponseTime)
+    self.outsandingQuery = (q, self.timer + self.responseTime)
   
   def cost(self, q):
     """
@@ -31,9 +31,9 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     The agent should check with this function to see whether there is a feedback
     For now, it is not called, as we only do in mind simulation. 
     """
-    if self.timer >= self.outsandingQueries[1]:
+    if self.outsandingQuery != None and self.timer >= self.outsandingQuery[1]:
       # issues a response
-      res = self.viAgent.getPolicy(self.outsandingQueries[0])
-    
-    self.outsandingQueries = None
-    return res
+      res = self.viAgent.getPolicy(self.outsandingQuery[0])
+      self.outsandingQuery = None
+      return res
+    else: return None

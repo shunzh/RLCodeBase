@@ -72,16 +72,18 @@ class MarkovDecisionProcess:
     abstract
     
   def doAction(self, action):
-    successors = self.mdp.getTransitionStatesAndProbs(self.state, action) 
+    self.timer += 1
+    state = self.state
+    successors = self.getTransitionStatesAndProbs(state, action) 
+
     sum = 0.0
     rand = random.random()
-    state = self.getCurrentState()
     for nextState, prob in successors:
       sum += prob
       if sum > 1.0:
         raise 'Total transition probability more than one; sample failure.' 
       if rand < sum:
-        reward = self.getReward(state, action, nextState)
+        reward = self.getReward(nextState)
         self.state = nextState
         return (nextState, reward)
 

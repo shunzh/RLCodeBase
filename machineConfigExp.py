@@ -7,6 +7,7 @@ def main():
   numMachines = 3
   numConfigs = 3
   rewardNum = 10
+  gamma = 0.81
 
   factoredRewards = []
   randomTable = {(idx, i, j): random.random() * 3 for idx in xrange(rewardNum)\
@@ -32,9 +33,33 @@ def main():
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries)
   
   initialPhi = [1.0 / rewardNum] * rewardNum
-  agent = JQTPAgent(cmp, rewardSet, initialPhi, gamma=0.81)
+  agent = JQTPAgent(cmp, rewardSet, initialPhi, gamma=gamma)
   
-  agent.learn()
+  q, pi = agent.learn()
+  
+  # init state
+  state = cmp.state
+  # accumulated return
+  ret = 0
+  while True:
+    if cmp.isTerminal(state):
+      break
+    
+    # query the model in the first time step
+    if cmp.timer == 0:
+      cmp.query(q)
+    
+    # see whether there is any response
+    response = cmp.responseCallback()
+    #if response != None:
+      # update policy
+      #pi = agent.respond(q, response)
+    
+    action = pi(state)
+    state, reward = cmp.doAction(action)
+    ret += reward * gamma ** cmp.timer
+  
+  print ret
 
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):
