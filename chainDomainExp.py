@@ -12,7 +12,7 @@ def main():
 
   queries = [2]
 
-  cmp = ChainDomain(rewardFunc, queries)
+  cmp = ChainDomain(queries, rewardFunc)
   agent = JQTPAgent(cmp, [rewardFunc, alterRewardFunc], [.5, .5])
   
   agent.learn()
