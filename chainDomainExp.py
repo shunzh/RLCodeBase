@@ -7,13 +7,13 @@ def main():
     else: return 0
 
   def alterRewardFunc(state):
-    if state == 4: return 1
+    if state == 4: return 2
     else: return 0
 
   queries = [2]
 
   cmp = ChainDomain(queries, rewardFunc)
-  agent = JQTPAgent(cmp, [rewardFunc, alterRewardFunc], [.5, .5])
+  agent = JQTPAgent(cmp, [rewardFunc, alterRewardFunc], [.5, .5], gamma=1)
   
   agent.learn()
 

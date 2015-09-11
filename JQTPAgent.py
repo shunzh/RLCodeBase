@@ -13,7 +13,7 @@ class JQTPAgent:
     self.gamma = gamma
     # init belief on rewards in rewardSet
     self.phi = initialPhi
-    
+
     # initialize VI agent for reward set for future use
     self.viAgentSet = []
     self.rewardSetSize = len(self.rewardSet)
@@ -71,13 +71,13 @@ class JQTPAgent:
           actProb += phi[idx]
 
       # given that this response is observed, compute the next phi
-      # normalize phi
-      if self.viAgentSet[idx].getPolicy(query) != action:
-        phi[idx] = 0
+      for idx in range(self.rewardSetSize):
+        if self.viAgentSet[idx].getPolicy(query) != action:
+          phi[idx] = 0
+      # normalize phi, only record possible phis
       if sum(phi) != 0:
         phi = [x / sum(phi) for x in phi]
-      
-      distr[tuple(phi)] = actProb
+        distr[tuple(phi)] = actProb
     
     return distr.items()
 
@@ -99,14 +99,13 @@ class JQTPAgent:
         estimatedValue += values(fState) * fStateProb
       vAfterResponse += fPhiProb * estimatedValue
 
-    vAfterResponse *= self.gamma ** responseTime
-
-    return cost + vBeforeResponse + vAfterResponse
+    return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
   def optimizeQuery(self, state, policy):
     """
     Enumerate all possible queries
     """
+    print "q of queries", [self.getQValue(state, policy, q) for q in self.cmp.queries]
     return max(self.cmp.queries, key=lambda q: self.getQValue(state, policy, q))
   
   def optimizePolicy(self, state, query):
@@ -129,16 +128,22 @@ class JQTPAgent:
 
   def learn(self):
     state = self.cmp.state
-    q = self.cmp.queries[0] # get a random query
+    q = self.cmp.queries[1] # get a random query
     pi = lambda state: self.cmp.getPossibleActions(state)[-1] # start with an arbitrary policy
     
     # iterate optimize over policy and query
     for _ in range(100):
-      q  = self.optimizeQuery(state, pi)
-      print "optimized q", q
+      prevQ = copy.deepcopy(q)
+
       pi = self.optimizePolicy(state, q)
+      q  = self.optimizeQuery(state, pi)
+      print "Iteration #", _
       print "optimized pi", [(s, pi(s)) for s in self.cmp.getStates()]
-      print self.getQValue(state, pi, q)
+      print "optimized q", q
+      
+      if q == prevQ:
+        # converged
+        return
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """

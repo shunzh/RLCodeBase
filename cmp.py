@@ -9,6 +9,8 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     # possible queries
     self.queries = queries
     
+    # the real reward function
+    # learn a VI agent on this reward setting, and policy will be decided.
     self.getReward = trueReward
     self.viAgent = ValueIterationAgent(self)
 

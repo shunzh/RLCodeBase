@@ -2,7 +2,6 @@ from cmp import ControlledMarkovProcess
 
 class ChainDomain(ControlledMarkovProcess):
   def __init__(self, queries, rewardFunc, length=5):
-    responseFunc = lambda state: rewardFunc(state)
     self.length = length
     self.responseTime = 1
 
@@ -24,8 +23,7 @@ class ChainDomain(ControlledMarkovProcess):
   
   def getTransitionStatesAndProbs(self, state, action):
     state += action
-    if state < 0: state = 0
-    elif state >= self.length: state = self.length - 1
+    assert state >= 0 and state < self.length
     return [(state, 1)]
   
   def cost(self, q):

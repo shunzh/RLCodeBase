@@ -5,7 +5,7 @@ class MachineConfiguration(ControlledMarkovProcess):
     self.n = n
     self.m = m
 
-    self.responseTime = 2
+    self.responseTime = 1
 
     ControlledMarkovProcess.__init__(self, queries, trueReward)
     

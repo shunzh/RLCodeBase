@@ -1,6 +1,7 @@
 from machineConfig import MachineConfiguration
 from JQTPAgent import JQTPAgent
 import random
+import copy
 
 def main():
   numMachines = 3
@@ -8,18 +9,30 @@ def main():
   rewardNum = 10
 
   factoredRewards = []
-  randomTable = [random.random() * 3 for _ in xrange(numMachines * (numConfigs+1) * rewardNum)]
-  for idx in range(rewardNum):
-    rewardFunc = lambda i, j: randomTable[idx * numMachines * numConfigs + i * numMachines + j - 1]
-    factoredRewards.append(rewardFunc)
-  rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), factoredRewards)
+  randomTable = {(idx, i, j): random.random() * 3 for idx in xrange(rewardNum)\
+                                                  for i in xrange(numMachines)\
+                                                  for j in xrange(numConfigs)}
 
+  # FIXME think of a good way to do this!!
+  factoredRewards.append(lambda i, j: randomTable[(0, i, j-1)])
+  factoredRewards.append(lambda i, j: randomTable[(1, i, j-1)])
+  factoredRewards.append(lambda i, j: randomTable[(2, i, j-1)])
+  factoredRewards.append(lambda i, j: randomTable[(3, i, j-1)])
+  factoredRewards.append(lambda i, j: randomTable[(4, i, j-1)])
+  factoredRewards.append(lambda i, j: randomTable[(5, i, j-1)])
+  factoredRewards.append(lambda i, j: randomTable[(6, i, j-1)])
+  factoredRewards.append(lambda i, j: randomTable[(7, i, j-1)])
+  factoredRewards.append(lambda i, j: randomTable[(8, i, j-1)])
+  factoredRewards.append(lambda i, j: randomTable[(9, i, j-1)])
+
+  rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), factoredRewards)
+  
   # can ask a configuration of a machine
   queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries)
   
   initialPhi = [1.0 / rewardNum] * rewardNum
-  agent = JQTPAgent(cmp, rewardSet, initialPhi)
+  agent = JQTPAgent(cmp, rewardSet, initialPhi, gamma=0.81)
   
   agent.learn()
 
@@ -33,4 +46,3 @@ def rewardFuncGen(factorRewardFunc, size):
 
 if __name__ == '__main__':
   main()
-
