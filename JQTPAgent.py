@@ -29,8 +29,6 @@ class JQTPAgent:
       viAgent = self.getVIAgent(phi)
       self.viAgentSet.append(viAgent)
 
-      print viAgent.values
-
   def getRewardFunc(self, phi):
     """
     return the mean reward function under the given belief
