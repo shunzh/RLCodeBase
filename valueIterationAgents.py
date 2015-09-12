@@ -6,10 +6,10 @@
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
-import mdp, util
+import mdp, util, sys
 
 from learningAgents import ValueEstimationAgent
-INF = float('inf')
+INF = sys.maxint
 
 class ValueIterationAgent(ValueEstimationAgent):
   """
@@ -20,7 +20,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       for a given number of iterations using the supplied
       discount factor.
   """
-  def __init__(self, mdp, discount = 0.9, iterations = 100, initValues = util.Counter()):
+  def __init__(self, mdp, discount = 0.9, iterations = INF, initValues = util.Counter()):
     """
       Your value iteration agent should take an mdp on
       construction, run the indicated number of iterations
@@ -37,7 +37,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     self.iterations = iterations
     self.values = initValues
      
-    for _ in range(iterations):
+    for _ in xrange(iterations):
       # note that values are updated off-place
       values = util.Counter()
       for state in mdp.getStates():
@@ -48,6 +48,9 @@ class ValueIterationAgent(ValueEstimationAgent):
           for action in mdp.getPossibleActions(state):
             maxValue = max(maxValue, self.getQValue(state, action))
           values[state] = maxValue
+
+      if util.getVectorDistance(values.values(), self.values.values()) < .01:
+        break
       self.values = values
     
   def getValue(self, state):

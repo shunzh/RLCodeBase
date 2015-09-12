@@ -2,29 +2,34 @@ from machineConfig import MachineConfiguration
 from JQTPAgent import JQTPAgent
 import random
 import copy
+import util
+
+gamma = 0.81
 
 def main():
   numMachines = 3
   numConfigs = 3
-  rewardNum = 10
-  gamma = 0.81
 
   factoredRewards = []
+  rewardNum = 10
   randomTable = {(idx, i, j): random.random() * 3 for idx in xrange(rewardNum)\
                                                   for i in xrange(numMachines)\
                                                   for j in xrange(numConfigs)}
+  """
+  rewardNum = 2
+  randomTable = util.Counter()
+  randomTable[0, 2, 1] = 5
+  randomTable[0, 1, 2] = 1
+  randomTable[0, 0, 1] = 1
+  
+  randomTable[1, 2, 1] = 5
+  randomTable[1, 1, 1] = 1
+  randomTable[1, 0, 2] = 1
+  """
 
   # FIXME think of a good way to do this!!
-  factoredRewards.append(lambda i, j: randomTable[(0, i, j-1)])
-  factoredRewards.append(lambda i, j: randomTable[(1, i, j-1)])
-  factoredRewards.append(lambda i, j: randomTable[(2, i, j-1)])
-  factoredRewards.append(lambda i, j: randomTable[(3, i, j-1)])
-  factoredRewards.append(lambda i, j: randomTable[(4, i, j-1)])
-  factoredRewards.append(lambda i, j: randomTable[(5, i, j-1)])
-  factoredRewards.append(lambda i, j: randomTable[(6, i, j-1)])
-  factoredRewards.append(lambda i, j: randomTable[(7, i, j-1)])
-  factoredRewards.append(lambda i, j: randomTable[(8, i, j-1)])
-  factoredRewards.append(lambda i, j: randomTable[(9, i, j-1)])
+  for idx in xrange(rewardNum):
+    factoredRewards.append(lambda i, j, idx=idx: randomTable[(idx, i, j-1)])
 
   rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), factoredRewards)
   
@@ -39,6 +44,7 @@ def main():
   
   # init state
   state = cmp.state
+  print 's', state
   # accumulated return
   ret = 0
   while True:
@@ -51,12 +57,13 @@ def main():
     
     # see whether there is any response
     response = cmp.responseCallback()
-    #if response != None:
+    if response != None:
       # update policy
-      #pi = agent.respond(q, response)
+      pi = agent.respond(q, response)
     
     action = pi(state)
     state, reward = cmp.doAction(action)
+    print 's', state, 'r', reward
     ret += reward * gamma ** cmp.timer
   
   print ret
@@ -64,9 +71,9 @@ def main():
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):
     if not 0 in s:
-      return sum([factorRewardFunc(i, s[i]) for i in range(size)])
+      return -0.2 + gamma * sum([factorRewardFunc(i, s[i]) for i in range(size)])
     else:
-      return -0.2
+      return -0.2 * (1 + gamma)
   return func
 
 if __name__ == '__main__':

@@ -29,6 +29,8 @@ class JQTPAgent:
       viAgent = self.getVIAgent(phi)
       self.viAgentSet.append(viAgent)
 
+      print viAgent.values
+
   def getRewardFunc(self, phi):
     """
     return the mean reward function under the given belief
@@ -104,7 +106,7 @@ class JQTPAgent:
         estimatedValue += values(fState) * fStateProb
       vAfterResponse += fPhiProb * estimatedValue
       
-      self.phiToPolicy[tuple(fPhi)] = lambda s: viAgent.getPolicy(s)
+      self.phiToPolicy[tuple(fPhi)] = lambda s, agent=viAgent: agent.getPolicy(s)
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -137,7 +139,8 @@ class JQTPAgent:
     The response is informed to the agent regarding a previous query
     """
     # such response was imagined by the agent before and the solution is bookkept
-    return self.phiToPolicy[self.responseToPhi(query)]
+    pi = self.phiToPolicy[self.responseToPhi[response]]
+    return pi
 
   def learn(self):
     state = self.cmp.state
