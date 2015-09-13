@@ -71,7 +71,7 @@ class JQTPAgent:
       actProb = 0
       phi = self.phi[:]
       for idx in range(self.rewardSetSize):
-        if self.viAgentSet[idx].getPolicy(query) == action:
+        if action in self.viAgentSet[idx].getPolicies(query):
           actProb += phi[idx]
 
       # given that this response is observed, compute the next phi
@@ -152,7 +152,7 @@ class JQTPAgent:
       pi = self.optimizePolicy(state, q)
       q  = self.optimizeQuery(state, pi)
       print "Iteration #", _
-      print "optimized pi", [(s, pi(s)) for s in self.cmp.getStates()]
+      print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
       print "optimized q", q
       
       if q == prevQ:

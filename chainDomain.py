@@ -3,7 +3,7 @@ from cmp import ControlledMarkovProcess
 class ChainDomain(ControlledMarkovProcess):
   def __init__(self, queries, rewardFunc, length=5):
     self.length = length
-    self.responseTime = 1
+    self.responseTime = 2
 
     ControlledMarkovProcess.__init__(self, queries, rewardFunc)
   
@@ -11,7 +11,7 @@ class ChainDomain(ControlledMarkovProcess):
     return range(self.length)
   
   def getStartState(self):
-    return self.length / 2
+    return 3
   
   def getPossibleActions(self, state):
     if state == 0:

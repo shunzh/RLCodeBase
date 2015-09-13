@@ -4,7 +4,8 @@ import random
 import copy
 import util
 
-gamma = 0.81
+cost = -0.2
+gamma = 0.9
 
 def main():
   numMachines = 3
@@ -18,13 +19,13 @@ def main():
   """
   rewardNum = 2
   randomTable = util.Counter()
-  randomTable[0, 2, 1] = 5
-  randomTable[0, 1, 2] = 1
-  randomTable[0, 0, 1] = 1
+  randomTable[0, 0, 1] = 5
+  randomTable[0, 1, 1] = 1
+  randomTable[0, 2, 1] = -1
   
-  randomTable[1, 2, 1] = 5
-  randomTable[1, 1, 1] = 1
-  randomTable[1, 0, 2] = 1
+  randomTable[1, 0, 1] = 5
+  randomTable[1, 1, 1] = -1
+  randomTable[1, 2, 1] = 1
   """
 
   # FIXME think of a good way to do this!!
@@ -37,16 +38,19 @@ def main():
   queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries)
   
+  print [(i, j+1, randomTable[0, i, j]) for i in xrange(numMachines) for j in xrange(numConfigs)]
+
   initialPhi = [1.0 / rewardNum] * rewardNum
-  agent = JQTPAgent(cmp, rewardSet, initialPhi, gamma=gamma)
+  agent = JQTPAgent(cmp, rewardSet, initialPhi, gamma=gamma ** 2)
   
   q, pi = agent.learn()
+  
+  ret = 0
   
   # init state
   state = cmp.state
   print 's', state
   # accumulated return
-  ret = 0
   while True:
     if cmp.isTerminal(state):
       break
@@ -59,21 +63,28 @@ def main():
     response = cmp.responseCallback()
     if response != None:
       # update policy
+      print 'o', response
       pi = agent.respond(q, response)
     
     action = pi(state)
     state, reward = cmp.doAction(action)
     print 's', state, 'r', reward
-    ret += reward * gamma ** cmp.timer
+
+    # to compute the return, need to fit the experiment in the paper
+    ret += reward * gamma ** ((cmp.timer - 1) * 2)
   
   print ret
+
+  file = open('results', 'a')
+  file.write(str(ret) + '\n')
+  file.close()
 
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):
     if not 0 in s:
-      return -0.2 + gamma * sum([factorRewardFunc(i, s[i]) for i in range(size)])
+      return cost + gamma * sum([factorRewardFunc(i, s[i]) for i in range(size)])
     else:
-      return -0.2 * (1 + gamma)
+      return cost * (1 + gamma)
   return func
 
 if __name__ == '__main__':

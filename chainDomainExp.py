@@ -4,16 +4,16 @@ from JQTPAgent import JQTPAgent
 def main():
   def rewardFunc(state):
     if state == 0: return 10
-    else: return 0
+    else: return -1
 
   def alterRewardFunc(state):
     if state == 4: return 1
-    else: return 0
+    else: return -.5
 
   gamma = .9
   queries = [2]
 
-  cmp = ChainDomain(queries, rewardFunc)
+  cmp = ChainDomain(queries, alterRewardFunc)
   agent = JQTPAgent(cmp, [rewardFunc, alterRewardFunc], [.5, .5], gamma=gamma)
   
   q, pi = agent.learn()
@@ -38,7 +38,7 @@ def main():
     action = pi(state)
     state, reward = cmp.doAction(action)
     print 's', state, 'r', reward
-    ret += reward * gamma ** cmp.timer
+    ret += reward
   
   print ret
  

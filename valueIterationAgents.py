@@ -42,7 +42,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       values = util.Counter()
       for state in mdp.getStates():
         if mdp.isTerminal(state): 
-          values[state] = self.mdp.getReward(state)
+          values[state] = initValues[state] + self.mdp.getReward(state)
         else: 
           maxValue = -INF
           for action in mdp.getPossibleActions(state):
@@ -93,6 +93,21 @@ class ValueIterationAgent(ValueEstimationAgent):
           maxValue = q
           bestAction = action
       return bestAction
+  
+  def getPolicies(self, state):
+    """
+    Return the actions which share the max q
+    """
+    if self.mdp.isTerminal(state):
+      return None
+    else:
+      maxValue = -INF
+      actions = self.mdp.getPossibleActions(state)
+      for action in actions:
+        q = self.getQValue(state, action)
+        if q > maxValue:
+          maxValue = q
+      return filter(lambda act: self.getQValue(state, action) == maxValue, actions)
 
   def getAction(self, state):
     "Returns the policy at the state (no exploration)."
