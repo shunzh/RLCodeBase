@@ -8,24 +8,31 @@ cost = -0.2
 gamma = 0.9
 
 def main():
+  factoredRewards = []
+
   numMachines = 3
   numConfigs = 3
 
-  factoredRewards = []
   rewardNum = 10
   randomTable = {(idx, i, j): random.random() * 3 for idx in xrange(rewardNum)\
                                                   for i in xrange(numMachines)\
                                                   for j in xrange(numConfigs)}
+  queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
   """
+  numMachines = 2
+  numConfigs = 2
   rewardNum = 2
+
   randomTable = util.Counter()
-  randomTable[0, 0, 1] = 5
+  randomTable[0, 0, 0] = 5
+  randomTable[0, 1, 0] = -1
   randomTable[0, 1, 1] = 1
-  randomTable[0, 2, 1] = -1
   
-  randomTable[1, 0, 1] = 5
+  randomTable[1, 0, 0] = 5
+  randomTable[1, 1, 0] = 1
   randomTable[1, 1, 1] = -1
-  randomTable[1, 2, 1] = 1
+
+  queries = [(0, 1), (1, 0)]
   """
 
   # FIXME think of a good way to do this!!
@@ -35,7 +42,6 @@ def main():
   rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), factoredRewards)
   
   # can ask a configuration of a machine
-  queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries)
   
   print [(i, j+1, randomTable[0, i, j]) for i in xrange(numMachines) for j in xrange(numConfigs)]

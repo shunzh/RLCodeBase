@@ -3,6 +3,7 @@ from valueIterationAgents import ValueIterationAgent
 import copy
 import numpy
 import util
+import pprint
 
 class JQTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9):
@@ -76,7 +77,7 @@ class JQTPAgent:
 
       # given that this response is observed, compute the next phi
       for idx in range(self.rewardSetSize):
-        if self.viAgentSet[idx].getPolicy(query) != action:
+        if not action in self.viAgentSet[idx].getPolicies(query):
           phi[idx] = 0
       # normalize phi, only record possible phis
       if sum(phi) != 0:
@@ -114,19 +115,20 @@ class JQTPAgent:
     """
     return max(self.cmp.queries, key=lambda q: self.getQValue(state, policy, q))
   
-  def optimizePolicy(self, state, query):
+  def optimizePolicy(self, query):
     """
     Uses dynamic programming
     """
     v = util.Counter()
     possiblePhis = self.getPossiblePhiAndProbs(query)
-    for state in self.cmp.getStates():
-      for fPhi, fPhiProb in possiblePhis:
-        viAgent = self.getVIAgent(fPhi)
-        values = lambda state: viAgent.getValue(state)
+    for fPhi, fPhiProb in possiblePhis:
+      viAgent = self.getVIAgent(fPhi)
+      for state in self.cmp.getStates():
+        values = lambda s: viAgent.getValue(s)
         v[state] += values(state) * fPhiProb
       
     cmp = copy.deepcopy(self.cmp)
+
     cmp.getReward = self.getRewardFunc(self.phi)
     responseTime = cmp.responseTime
     viAgent = ValueIterationAgent(cmp, iterations=responseTime, initValues=v)
@@ -149,7 +151,7 @@ class JQTPAgent:
     for _ in range(100):
       prevQ = copy.deepcopy(q)
 
-      pi = self.optimizePolicy(state, q)
+      pi = self.optimizePolicy(q)
       q  = self.optimizeQuery(state, pi)
       print "Iteration #", _
       print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
