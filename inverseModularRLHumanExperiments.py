@@ -2,12 +2,12 @@ import numpy as np
 import sys
 
 from inverseModularRL import InverseModularRL
+from InverseModularRLConsintine import InverseModularRLConsintine
 import modularAgents
 import modularQFuncs
 import humanInfoParser
 import baselineAgents
 import humanWorld
-import pickle
 import util
 import config
 
@@ -97,9 +97,9 @@ def evaluateAssumption(zippedData, qFuncs, x):
     """
     agent = agentType(**qLearnOpts)
     agent.setQFuncs(qFuncs)
-    if agent.__class__.__name__ == "ModularAgent":
+    if agent.__class__.__name__ == "ModularAgent" or agent.__class__.__name__ == "ReflexAgent":
       agent.setParameters(x)
-    elif agent.__class__.__name__ == "ReflexAgent":
+    elif agent.__class__.__name__ == 'MyopicAgent':
       # don't use the parameter learned for modular
       agent.setParameters([1, -1, 1, .8, .8, .8, 0, .1, 0])
 
@@ -117,7 +117,10 @@ def evaluateAssumption(zippedData, qFuncs, x):
     return {'angularDifference': angularDiff,\
             'likelihood': posteriorProb}
   
-  candidates = [modularAgents.ModularAgent, baselineAgents.RandomAgent, baselineAgents.ReflexAgent]
+  candidates = [modularAgents.ModularAgent,\
+                baselineAgents.RandomAgent,\
+                baselineAgents.ReflexAgent,\
+                baselineAgents.MyopicAgent]
   return {candidate.__name__: evaluate(candidate) for candidate in candidates}
 
 def humanWorldExperimentDiscrete(sourceProfile):
@@ -154,7 +157,8 @@ def humanWorldExperimentQPotential(sourceProfile, solving = True):
   # the radius of obstacle may change frequently for testing, so is put in the config.py file.
   decorator = lambda x: x[0:6] + [0, config.OBSTACLE_RADIUS, 0]
 
-  sln = InverseModularRL(qFuncs, starts, bnds, decorator, solver="CMA-ES")
+  #sln = InverseModularRL(qFuncs, starts, bnds, decorator, solver="CMA-ES")
+  sln = InverseModularRLConsintine(qFuncs, starts, bnds, decorator, solver="CMA-ES")
   parsedHumanData = humanInfoParser.parseHumanData(sourceProfile)
   samples = humanInfoParser.getHumanStatesActions(sourceProfile, parsedHumanData)
   sln.setSamples(samples, humanWorld.HumanWorld.actions.getActions())

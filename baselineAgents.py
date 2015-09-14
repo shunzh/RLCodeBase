@@ -8,7 +8,7 @@ class RandomAgent(ModularAgent):
     return 0.0
   
 
-class ReflexAgent(ModularAgent):
+class MyopicAgent(ModularAgent):
   """
   Same setting as modular agent.
   Instead of weighted sum of Q functions, just select the one with the largest Q value.
@@ -28,3 +28,7 @@ class ReflexAgent(ModularAgent):
         maxIdx = i
         
     return self.getSubQValue(state, action, maxIdx)
+
+# Use a different name here for convenience
+# Parameters will be different based on context of the experiment
+ReflexAgent = MyopicAgent

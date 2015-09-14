@@ -53,6 +53,7 @@ class InverseModularRL(InverseRL):
         - log(likelihood)
     """
     # append the constants, which are fixed and not to solve
+    print X
     reg = self.regular(X)
     X = self.decorator(X)
 
