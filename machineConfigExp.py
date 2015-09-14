@@ -17,23 +17,12 @@ def main():
   randomTable = {(idx, i, j): random.random() * 3 for idx in xrange(rewardNum)\
                                                   for i in xrange(numMachines)\
                                                   for j in xrange(numConfigs)}
+  """
+  randomTable = {(idx, i, j): j+1 for idx in xrange(rewardNum)\
+                                  for i in xrange(numMachines)\
+                                  for j in xrange(numConfigs)}
+  """
   queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
-  """
-  numMachines = 2
-  numConfigs = 2
-  rewardNum = 2
-
-  randomTable = util.Counter()
-  randomTable[0, 0, 0] = 5
-  randomTable[0, 1, 0] = -1
-  randomTable[0, 1, 1] = 1
-  
-  randomTable[1, 0, 0] = 5
-  randomTable[1, 1, 0] = 1
-  randomTable[1, 1, 1] = -1
-
-  queries = [(0, 1), (1, 0)]
-  """
 
   # FIXME think of a good way to do this!!
   for idx in xrange(rewardNum):
@@ -49,8 +38,7 @@ def main():
   initialPhi = [1.0 / rewardNum] * rewardNum
   agent = JQTPAgent(cmp, rewardSet, initialPhi, gamma=gamma ** 2)
   
-  q, pi = agent.learn()
-  
+  q, pi, qValue = agent.learn()
   ret = 0
   
   # init state
@@ -76,14 +64,20 @@ def main():
     state, reward = cmp.doAction(action)
     print 's', state, 'r', reward
 
-    # to compute the return, need to fit the experiment in the paper
     ret += reward * gamma ** ((cmp.timer - 1) * 2)
   
-  print ret
+  print 'return', ret
+  print 'qvalue', qValue
 
-  file = open('results', 'a')
-  file.write(str(ret) + '\n')
-  file.close()
+  """
+  rFile = open('results', 'a')
+  rFile.write(str(ret) + '\n')
+  rFile.close()
+
+  bFile = open('beliefs', 'a')
+  bFile.write(str(qValue) + '\n')
+  bFile.close()
+  """
 
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):

@@ -54,7 +54,7 @@ class JQTPAgent:
     v = 0
     rewardFunc = self.getRewardFunc(phi)
     
-    for t in range(1, horizon + 1):
+    for t in range(horizon):
       possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, t)
       v += self.gamma ** t * sum([rewardFunc(s) * prob for s, prob in possibleStatesAndProbs])
     
@@ -106,6 +106,7 @@ class JQTPAgent:
       vAfterResponse += fPhiProb * estimatedValue
       
       self.phiToPolicy[tuple(fPhi)] = lambda s, agent=viAgent: agent.getPolicy(s)
+    print vBeforeResponse, vAfterResponse, cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -159,7 +160,7 @@ class JQTPAgent:
       
       if q == prevQ:
         # converged
-        return q, pi
+        return q, pi, self.getQValue(state, pi, q)
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """
@@ -178,4 +179,4 @@ def getMultipleTransitionDistr(cmp, state, policy, time):
     p = pNext.copy()
   
   assert sum(p.values()) > .99
-  return p.items()
+  return filter(lambda (x, y): y>0, p.items())
