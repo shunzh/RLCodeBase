@@ -149,18 +149,20 @@ class JQTPAgent:
     pi = lambda state: self.cmp.getPossibleActions(state)[-1] # start with an arbitrary policy
     
     # iterate optimize over policy and query
-    for _ in range(100):
+    counter = 0
+    while True:
       prevQ = copy.deepcopy(q)
 
       pi = self.optimizePolicy(q)
       q  = self.optimizeQuery(state, pi)
-      print "Iteration #", _
+      print "Iteration #", counter
       print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
       print "optimized q", q
       
       if q == prevQ:
         # converged
         return q, pi, self.getQValue(state, pi, q)
+      counter += 1
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """

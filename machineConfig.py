@@ -1,11 +1,11 @@
 from cmp import ControlledMarkovProcess
 
 class MachineConfiguration(ControlledMarkovProcess):
-  def __init__(self, n, m, trueReward, queries):
+  def __init__(self, n, m, trueReward, queries, responseTime=0):
     self.n = n
     self.m = m
 
-    self.responseTime = 1
+    self.responseTime = responseTime
 
     ControlledMarkovProcess.__init__(self, queries, trueReward)
     
