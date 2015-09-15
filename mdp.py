@@ -72,7 +72,6 @@ class MarkovDecisionProcess:
     abstract
     
   def doAction(self, action):
-    self.timer += 1
     state = self.state
     successors = self.getTransitionStatesAndProbs(state, action) 
 
@@ -89,5 +88,8 @@ class MarkovDecisionProcess:
 
     raise 'Total transition probability less than one; sample failure.'    
         
+  def timeElapse(self):
+    self.timer += 1
+
   def reset(self):
     self.state = self.getStartState()

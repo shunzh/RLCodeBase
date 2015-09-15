@@ -5,8 +5,8 @@ import numpy
 import util
 import pprint
 
-class JQTPAgent:
-  def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9):
+class JQTPAgent(ValueIterationAgent):
+  def __init__(self, cmp, rewardSet, initialPhi, queryEnabled=True, gamma=0.9):
     # underlying cmp
     self.cmp = cmp
     # set of possible reward functions
@@ -14,21 +14,27 @@ class JQTPAgent:
     self.gamma = gamma
     # init belief on rewards in rewardSet
     self.phi = initialPhi
+    self.queryEnabled = queryEnabled
     
-    # bookkeep our in-mind planning
-    self.responseToPhi = util.Counter()
-    self.phiToPolicy = util.Counter()
+    if self.queryEnabled:
+      # bookkeep our in-mind planning
+      self.responseToPhi = util.Counter()
+      self.phiToPolicy = util.Counter()
 
-    # initialize VI agent for reward set for future use
-    self.viAgentSet = []
-    self.rewardSetSize = len(self.rewardSet)
-    for idx in range(self.rewardSetSize):
-      phi = [0] * self.rewardSetSize
-      phi[idx] = 1
-      
-      # a VI agent based on one reward
-      viAgent = self.getVIAgent(phi)
-      self.viAgentSet.append(viAgent)
+      # initialize VI agent for reward set for future use
+      self.viAgentSet = []
+      self.rewardSetSize = len(self.rewardSet)
+      for idx in range(self.rewardSetSize):
+        phi = [0] * self.rewardSetSize
+        phi[idx] = 1
+        
+        # a VI agent based on one reward
+        viAgent = self.getVIAgent(phi)
+        self.viAgentSet.append(viAgent)
+    else:
+      # without query, reduce to a VI problem
+      cmp.getReward = self.getRewardFunc(self.phi)
+      ValueIterationAgent.__init__(self, cmp, gamma)
 
   def getRewardFunc(self, phi):
     """
@@ -44,7 +50,9 @@ class JQTPAgent:
     cmp = copy.deepcopy(self.cmp)
     cmp.getReward = self.getRewardFunc(phi)
 
-    return ValueIterationAgent(cmp, discount=self.gamma)
+    vi = ValueIterationAgent(cmp, discount=self.gamma)
+    vi.learn()
+    return vi
   
   def getValue(self, state, phi, policy, horizon):
     """
@@ -133,7 +141,8 @@ class JQTPAgent:
     cmp.getReward = self.getRewardFunc(self.phi)
     responseTime = cmp.responseTime
     viAgent = ValueIterationAgent(cmp, iterations=responseTime, initValues=v)
-    return lambda state: viAgent.getPolicy(state)
+    pi = viAgent.learn()
+    return pi
 
   def respond(self, query, response):
     """
@@ -144,25 +153,30 @@ class JQTPAgent:
     return pi
 
   def learn(self):
-    state = self.cmp.state
-    q = self.cmp.queries[0] # get a random query
-    pi = lambda state: self.cmp.getPossibleActions(state)[-1] # start with an arbitrary policy
-    
-    # iterate optimize over policy and query
-    counter = 0
-    while True:
-      prevQ = copy.deepcopy(q)
-
-      pi = self.optimizePolicy(q)
-      q  = self.optimizeQuery(state, pi)
-      print "Iteration #", counter
-      print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
-      print "optimized q", q
+    if self.queryEnabled:
+      # learning with queries
+      state = self.cmp.state
+      q = self.cmp.queries[0] # get a random query
+      pi = lambda state: self.cmp.getPossibleActions(state)[-1] # start with an arbitrary policy
       
-      if q == prevQ:
-        # converged
-        return q, pi, self.getQValue(state, pi, q)
-      counter += 1
+      # iterate optimize over policy and query
+      counter = 0
+      while True:
+        prevQ = copy.deepcopy(q)
+
+        pi = self.optimizePolicy(q)
+        q  = self.optimizeQuery(state, pi)
+        print "Iteration #", counter
+        print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
+        print "optimized q", q
+        
+        if q == prevQ:
+          # converged
+          return q, pi, self.getQValue(state, pi, q)
+        counter += 1
+    else:
+      pi = ValueIterationAgent.learn(self)
+      return None, pi, ValueIterationAgent.getValue(self, self.cmp.state)
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """
