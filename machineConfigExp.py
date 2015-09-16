@@ -91,8 +91,8 @@ def main():
   rewardNum = len(rewardSet)
   initialPhi = [1.0 / rewardNum] * rewardNum
 
-  Agent = IterativeQTPAgent
-  #Agent = JointQTPAgent
+  #Agent = IterativeQTPAgent
+  Agent = JointQTPAgent
 
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, responseTime=1)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma ** 2,\
@@ -102,6 +102,7 @@ def main():
   print ret
   print qValue
 
+  """
   rFile = open('results', 'a')
   rFile.write(str(ret) + '\n')
   rFile.close()
@@ -109,6 +110,7 @@ def main():
   bFile = open('beliefs', 'a')
   bFile.write(str(qValue) + '\n')
   bFile.close()
+  """
 
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):

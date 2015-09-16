@@ -4,6 +4,7 @@ import copy
 import numpy
 import util
 import pprint
+import config
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9,\
@@ -148,13 +149,21 @@ class QTPAgent:
       for state in self.cmp.getStates():
         values = lambda s: viAgent.getValue(s)
         v[state] += values(state) * fPhiProb
-      
+    
+    if config.DEBUG:
+      print query, "future v"
+      pprint.pprint([(s, v[s]) for s in self.cmp.getStates()])
+
     cmp = copy.deepcopy(self.cmp)
 
     cmp.getReward = self.getRewardFunc(self.phi)
     responseTime = cmp.responseTime
-    viAgent = ValueIterationAgent(cmp, iterations=responseTime, initValues=v)
+    viAgent = ValueIterationAgent(cmp, discount=self.gamma, iterations=responseTime, initValues=v)
     pi = viAgent.learn()
+    
+    if config.DEBUG:
+      print query, "v func"
+      pprint.pprint([(s, viAgent.getValue(s), pi(s)) for s in cmp.getStates()])
     return pi
 
   def respond(self, query, response):
@@ -186,8 +195,9 @@ class JointQTPAgent(QTPAgent):
       q = optQuery
       pi = optPi
 
-      print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
-      print "optimized q", q
+      if config.VERBOSE:
+        print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
+        print "optimized q", q
 
     if self.queryIgnored or not self.queryEnabled:
       # in both settings, plan on prior belief
@@ -212,9 +222,10 @@ class IterativeQTPAgent(QTPAgent):
 
         pi = self.optimizePolicy(q)
         q  = self.optimizeQuery(state, pi)
-        print "Iteration #", counter
-        print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
-        print "optimized q", q
+        if config.VERBOSE:
+          print "Iteration #", counter
+          print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
+          print "optimized q", q
         
         if q == prevQ:
           # converged
