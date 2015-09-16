@@ -2,6 +2,7 @@ from machineConfig import MachineConfiguration
 from JQTPAgent import JQTPAgent
 import random
 from baselineAgents import RandomAgent
+import util
 
 cost = -0.2
 gamma = 0.9
@@ -51,9 +52,20 @@ def main():
                                                   for i in xrange(numMachines)\
                                                   for j in xrange(numConfigs)}
   """
-  randomTable = {(idx, i, j): j+1 for idx in xrange(rewardNum)\
-                                  for i in xrange(numMachines)\
-                                  for j in xrange(numConfigs)}
+  rewardNum = 2
+  randomTable = util.Counter()
+  randomTable[(0, 0, 0)] = 5
+  randomTable[(1, 0, 0)] = 5
+  
+  randomTable[(0, 1, 0)] = 2
+  randomTable[(0, 1, 1)] = -2
+  randomTable[(0, 2, 0)] = 2
+  randomTable[(0, 2, 1)] = -2
+
+  randomTable[(1, 1, 0)] = -1
+  randomTable[(1, 1, 1)] = 1
+  randomTable[(1, 2, 0)] = -1
+  randomTable[(1, 2, 1)] = 1
   """
 
   for idx in xrange(rewardNum):
@@ -63,7 +75,7 @@ def main():
   queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
 
   # can ask a configuration of a machine
-  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, responseTime=2)
+  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, responseTime=1)
   
   # print the true reward
   print [(i, j+1, randomTable[0, i, j]) for i in xrange(numMachines) for j in xrange(numConfigs)]
@@ -91,7 +103,7 @@ def main():
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):
     if not 0 in s:
-      return cost * (1 + gamma) + gamma ** 2 * (cost + sum([factorRewardFunc(i, s[i]) for i in range(size)]))
+      return cost * (1 + gamma) + gamma ** 2 * (sum([factorRewardFunc(i, s[i]) for i in range(size)]))
     else:
       return cost * (1 + gamma)
   return func
