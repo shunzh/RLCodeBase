@@ -5,7 +5,7 @@ import numpy
 import util
 import pprint
 
-class JQTPAgent:
+class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9,\
                queryEnabled=True, queryIgnored=False):
     """
@@ -166,10 +166,43 @@ class JQTPAgent:
     return pi
 
   def learn(self):
+    abstract
+
+class JointQTPAgent(QTPAgent):
+  def learn(self):
+    state = self.cmp.state
+    if self.queryEnabled:
+      maxQValue = -float('INF')
+      optQuery = None; optPi = None
+
+      for q in self.cmp.queries:
+        pi = self.optimizePolicy(q)
+        qValue = self.getQValue(state, pi, q)
+        if qValue > maxQValue:
+          maxQValue = qValue
+          optQuery = q
+          optPi = pi
+      
+      q = optQuery
+      pi = optPi
+
+      print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
+      print "optimized q", q
+
+    if self.queryIgnored or not self.queryEnabled:
+      # in both settings, plan on prior belief
+      pi = lambda s: self.viAgent.getPolicy(s)
+
+    if self.queryEnabled:
+      return q, pi, self.getQValue(state, pi, q)
+    else:
+      return None, pi, self.viAgent.getValue(self.cmp.state)
+
+class IterativeQTPAgent(QTPAgent):
+  def learn(self):
     state = self.cmp.state
     if self.queryEnabled:
       # learning with queries
-      pi = lambda state: self.cmp.getPossibleActions(state)[-1] # start with an arbitrary policy
       q = self.cmp.queries[0] # get a random query
       
       # iterate optimize over policy and query

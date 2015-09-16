@@ -1,5 +1,5 @@
 from chainDomain import ChainDomain
-from JQTPAgent import JQTPAgent
+from QTPAgent import QTPAgent
 
 def main():
   def rewardFunc(state):
@@ -14,7 +14,7 @@ def main():
   queries = [2]
 
   cmp = ChainDomain(queries, alterRewardFunc)
-  agent = JQTPAgent(cmp, [rewardFunc, alterRewardFunc], [.5, .5], gamma=gamma)
+  agent = QTPAgent(cmp, [rewardFunc, alterRewardFunc], [.5, .5], gamma=gamma)
   
   q, pi = agent.learn()
   state = cmp.state

@@ -9,6 +9,7 @@
 import mdp, util, sys
 
 from learningAgents import ValueEstimationAgent
+import random
 INF = sys.maxint
 
 class ValueIterationAgent(ValueEstimationAgent):
@@ -85,25 +86,14 @@ class ValueIterationAgent(ValueEstimationAgent):
       there are no legal actions, which is the case at the
       terminal state, you should return None.
     """
-    "*** YOUR CODE HERE ***"
-    if self.mdp.isTerminal(state):
-      # no action taken on terminal state
-      return None
-    else:
-      maxValue = -INF
-      for action in self.mdp.getPossibleActions(state):
-        q = self.getQValue(state, action)
-        if q > maxValue:
-          maxValue = q
-          bestAction = action
-      return bestAction
+    return random.choice(self.getPolicies(state))
   
   def getPolicies(self, state):
     """
     Return the actions which share the max q
     """
     if self.mdp.isTerminal(state):
-      return None
+      return [None]
     else:
       maxValue = -INF
       actions = self.mdp.getPossibleActions(state)
