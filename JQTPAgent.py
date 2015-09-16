@@ -5,8 +5,17 @@ import numpy
 import util
 import pprint
 
-class JQTPAgent(ValueIterationAgent):
-  def __init__(self, cmp, rewardSet, initialPhi, queryEnabled=True, gamma=0.9):
+class JQTPAgent:
+  def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9,\
+               queryEnabled=True, queryIgnored=False):
+    """
+    queryEnabled
+      The agent can ask query.
+      Becomes planning only using the prior belief if turned off.
+    queryIgnored
+      Query is asked, but the agent forgets such query is asked and planning using the prior belief.
+      After a response is received, the agent will update its policy.
+    """
     # underlying cmp
     self.cmp = cmp
     # set of possible reward functions
@@ -15,7 +24,11 @@ class JQTPAgent(ValueIterationAgent):
     # init belief on rewards in rewardSet
     self.phi = initialPhi
     self.queryEnabled = queryEnabled
+    self.queryIgnored = queryIgnored
     
+    self.preprocess()
+    
+  def preprocess(self):
     if self.queryEnabled:
       # bookkeep our in-mind planning
       self.responseToPhi = util.Counter()
@@ -31,10 +44,11 @@ class JQTPAgent(ValueIterationAgent):
         # a VI agent based on one reward
         viAgent = self.getVIAgent(phi)
         self.viAgentSet.append(viAgent)
-    else:
+    
+    if not self.queryEnabled or self.queryIgnored:
       # without query, reduce to a VI problem
-      cmp.getReward = self.getRewardFunc(self.phi)
-      ValueIterationAgent.__init__(self, cmp, gamma)
+      # plan on the mean rewards
+      self.viAgent = self.getVIAgent(self.phi)
 
   def getRewardFunc(self, phi):
     """
@@ -150,12 +164,13 @@ class JQTPAgent(ValueIterationAgent):
     """
     # such response was imagined by the agent before and the solution is bookkept
     pi = self.phiToPolicy[self.responseToPhi[response]]
+    print "pi updated"
     return pi
 
   def learn(self):
+    state = self.cmp.state
     if self.queryEnabled:
       # learning with queries
-      state = self.cmp.state
       q = self.cmp.queries[0] # get a random query
       pi = lambda state: self.cmp.getPossibleActions(state)[-1] # start with an arbitrary policy
       
@@ -174,9 +189,15 @@ class JQTPAgent(ValueIterationAgent):
           # converged
           return q, pi, self.getQValue(state, pi, q)
         counter += 1
+      
+    if self.queryIgnored or not self.queryEnabled:
+      # in both settings, plan on prior belief
+      pi = self.viAgent.learn()
+    
+    if self.queryEnabled:
+      return q, pi, self.getQValue(state, pi, q)
     else:
-      pi = ValueIterationAgent.learn(self)
-      return None, pi, ValueIterationAgent.getValue(self, self.cmp.state)
+      return None, pi, self.viAgent.getValue(self.cmp.state)
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """

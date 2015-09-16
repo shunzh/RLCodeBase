@@ -47,7 +47,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         else: 
           maxValue = -INF
           for action in self.mdp.getPossibleActions(state):
-            maxValue = max(maxValue, ValueIterationAgent.getQValue(self, state, action))
+            maxValue = max(maxValue, self.getQValue(state, action))
           values[state] = maxValue
 
       if util.getVectorDistance(values.values(), self.values.values()) < .01:
@@ -74,7 +74,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     "*** YOUR CODE HERE ***"
     q = 0
     for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
-      q += prob * (self.mdp.getReward(nextState) + self.discount * ValueIterationAgent.getValue(self, nextState))
+      q += prob * (self.mdp.getReward(nextState) + self.discount * self.getValue(nextState))
     return q
     
   def getPolicy(self, state):
@@ -92,7 +92,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     else:
       maxValue = -INF
       for action in self.mdp.getPossibleActions(state):
-        q = ValueIterationAgent.getQValue(self, state, action)
+        q = self.getQValue(state, action)
         if q > maxValue:
           maxValue = q
           bestAction = action

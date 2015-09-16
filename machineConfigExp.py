@@ -63,16 +63,18 @@ def main():
   queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
 
   # can ask a configuration of a machine
-  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries)
+  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, responseTime=2)
   
   # print the true reward
   print [(i, j+1, randomTable[0, i, j]) for i in xrange(numMachines) for j in xrange(numConfigs)]
 
-  queryEnabled = False
+  queryEnabled = True
+  queryIgnored = False
 
   rewardNum = len(rewardSet)
   initialPhi = [1.0 / rewardNum] * rewardNum
-  agent = JQTPAgent(cmp, rewardSet, initialPhi, gamma=gamma ** 2, queryEnabled=queryEnabled)
+  agent = JQTPAgent(cmp, rewardSet, initialPhi, gamma=gamma ** 2,\
+                    queryEnabled=queryEnabled, queryIgnored=queryIgnored)
  
   ret, qValue = JQTPExp(cmp, agent, rewardSet, queryEnabled)
   print ret
@@ -82,16 +84,14 @@ def main():
   rFile.write(str(ret) + '\n')
   rFile.close()
 
-  """
   bFile = open('beliefs', 'a')
-  bFile.write(str(qValu) + '\n')
+  bFile.write(str(qValue) + '\n')
   bFile.close()
-  """
 
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):
     if not 0 in s:
-      return cost + gamma * (cost + sum([factorRewardFunc(i, s[i]) for i in range(size)]))
+      return cost * (1 + gamma) + gamma ** 2 * (cost + sum([factorRewardFunc(i, s[i]) for i in range(size)]))
     else:
       return cost * (1 + gamma)
   return func
