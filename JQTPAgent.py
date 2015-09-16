@@ -128,7 +128,6 @@ class JQTPAgent:
       vAfterResponse += fPhiProb * estimatedValue
       
       self.phiToPolicy[tuple(fPhi)] = lambda s, agent=viAgent: agent.getPolicy(s)
-    print vBeforeResponse, vAfterResponse, cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -164,15 +163,14 @@ class JQTPAgent:
     """
     # such response was imagined by the agent before and the solution is bookkept
     pi = self.phiToPolicy[self.responseToPhi[response]]
-    print "pi updated"
     return pi
 
   def learn(self):
     state = self.cmp.state
     if self.queryEnabled:
       # learning with queries
-      q = self.cmp.queries[0] # get a random query
       pi = lambda state: self.cmp.getPossibleActions(state)[-1] # start with an arbitrary policy
+      q = self.cmp.queries[0] # get a random query
       
       # iterate optimize over policy and query
       counter = 0
@@ -187,12 +185,12 @@ class JQTPAgent:
         
         if q == prevQ:
           # converged
-          return q, pi, self.getQValue(state, pi, q)
+          break
         counter += 1
       
     if self.queryIgnored or not self.queryEnabled:
       # in both settings, plan on prior belief
-      pi = self.viAgent.learn()
+      pi = lambda s: self.viAgent.getPolicy(s)
     
     if self.queryEnabled:
       return q, pi, self.getQValue(state, pi, q)

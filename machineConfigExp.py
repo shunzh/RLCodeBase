@@ -22,6 +22,7 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
     # query the model in the first time step
     if queryEnabled:
       if cmp.timer == 0:
+        print 'q', q
         cmp.query(q)
     
       # see whether there is any response
