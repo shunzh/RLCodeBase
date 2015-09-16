@@ -42,6 +42,13 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
   
   return ret, qValue
 
+def priorSanityCheck(numConfigs, rewardNum, randomTable):
+  meanRewards = [sum([randomTable[idx, 0, j] for idx in range(rewardNum)])\
+                                             for j in range(numConfigs)]
+  maxMeanConfig = max(range(numConfigs), key=lambda j: meanRewards[j])
+  # assume first reward is the true reward
+  return randomTable[0, 0, maxMeanConfig]
+
 def main():
   factoredRewards = []
 
@@ -68,7 +75,7 @@ def main():
   randomTable[(1, 2, 0)] = -1
   randomTable[(1, 2, 1)] = 1
   """
-
+  
   for idx in xrange(rewardNum):
     factoredRewards.append(lambda i, j, idx=idx: randomTable[(idx, i, j-1)])
   rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), factoredRewards)
