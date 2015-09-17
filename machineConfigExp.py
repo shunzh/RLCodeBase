@@ -4,7 +4,9 @@ import random
 from baselineAgents import RandomAgent
 import util
 
+# reward for incomplete configurations
 cost = -0.2
+# discount factor
 gamma = 0.9
 
 def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
@@ -12,7 +14,7 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
  
   # init state
   state = cmp.state
-  print 's', state
+  print 's', state, 'r', cmp.getReward(state)
 
   # accumulated return
   ret = cmp.getReward(state)
@@ -38,7 +40,7 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
     print 's', state, 'r', reward
 
     cmp.timeElapse()
-    ret += reward * gamma ** (cmp.timer * 2)
+    ret += reward * gamma ** cmp.timer
   
   return ret, qValue
 
@@ -76,7 +78,7 @@ def main():
     factoredRewards.append(lambda i, j, idx=idx: randomTable[(idx, i, j-1)])
   rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), factoredRewards)
   
-  queries = [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
+  queries = [('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]
 
   # print the true reward
   print [(i, j+1, randomTable[0, i, j]) for i in xrange(numMachines) for j in xrange(numConfigs)]
@@ -90,15 +92,14 @@ def main():
   #Agent = IterativeQTPAgent
   Agent = JointQTPAgent
 
-  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma ** 2, responseTime=1)
-  agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma ** 2,\
+  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime=2)
+  agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
                 queryEnabled=queryEnabled, queryIgnored=queryIgnored)
  
   ret, qValue = JQTPExp(cmp, agent, rewardSet, queryEnabled)
   print ret
   print qValue
 
-  """
   rFile = open('results', 'a')
   rFile.write(str(ret) + '\n')
   rFile.close()
@@ -106,15 +107,14 @@ def main():
   bFile = open('beliefs', 'a')
   bFile.write(str(qValue) + '\n')
   bFile.close()
-  """
 
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):
-    if not 0 in s:
+    if not 0 in s and not 'S' in s:
       # Rob may have discounted this in the final step
       return sum([factorRewardFunc(i, s[i]) for i in range(size)])
     else:
-      return cost * (1 + gamma)
+      return cost
   return func
 
 if __name__ == '__main__':

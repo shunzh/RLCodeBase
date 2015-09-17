@@ -19,8 +19,6 @@ def getValueDistance(w1, w2):
     Return:
       ||w1 - w2||_2
   """
-  assert len(w1) == len(w2)
-
   return np.linalg.norm([w1[key] - w2[key] for key in w1.keys()])
 
 def getMSE(x, y):
