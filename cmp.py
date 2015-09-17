@@ -2,7 +2,7 @@ from mdp import MarkovDecisionProcess
 from valueIterationAgents import ValueIterationAgent
 
 class ControlledMarkovProcess(MarkovDecisionProcess):
-  def __init__(self, queries, trueReward):
+  def __init__(self, queries, trueReward, gamma):
     MarkovDecisionProcess.__init__(self)
     
     self.outsandingQuery = None
@@ -12,7 +12,8 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     # the real reward function
     # learn a VI agent on this reward setting, and policy will be decided.
     self.getReward = trueReward
-    self.viAgent = ValueIterationAgent(self)
+    self.viAgent = ValueIterationAgent(self, gamma)
+    self.viAgent.learn()
 
   def query(self, q):
     """

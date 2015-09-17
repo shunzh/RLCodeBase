@@ -14,14 +14,14 @@ import scipy.io as spio
 import pickle
 import numpy as np
 
-def getVectorDistance(w1, w2):
+def getValueDistance(w1, w2):
   """
     Return:
       ||w1 - w2||_2
   """
   assert len(w1) == len(w2)
 
-  return np.linalg.norm([w1[i] - w2[i] for i in range(len(w1))])
+  return np.linalg.norm([w1[key] - w2[key] for key in w1.keys()])
 
 def getMSE(x, y):
   assert len(x) == len(y)

@@ -145,20 +145,20 @@ class QTPAgent:
     v = util.Counter()
     possiblePhis = self.getPossiblePhiAndProbs(query)
     for fPhi, fPhiProb in possiblePhis:
-      viAgent = self.getVIAgent(fPhi)
+      fViAgent = self.getVIAgent(fPhi)
       for state in self.cmp.getStates():
-        values = lambda s: viAgent.getValue(s)
-        v[state] += values(state) * fPhiProb
+        v[state] += fViAgent.getValue(state) * fPhiProb
     
     if config.DEBUG:
       print query, "future v"
       pprint.pprint([(s, v[s]) for s in self.cmp.getStates()])
 
     cmp = copy.deepcopy(self.cmp)
-
     cmp.getReward = self.getRewardFunc(self.phi)
     responseTime = cmp.responseTime
-    viAgent = ValueIterationAgent(cmp, discount=self.gamma, iterations=responseTime, initValues=v)
+    # here, run responseTime - 1 iterations
+    # because in my implementation, query step does one iteration, which compute reward + discounted value
+    viAgent = ValueIterationAgent(cmp, discount=self.gamma, iterations=responseTime-1, initValues=v)
     pi = viAgent.learn()
     
     if config.DEBUG:

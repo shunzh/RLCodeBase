@@ -1,13 +1,13 @@
 from cmp import ControlledMarkovProcess
 
 class MachineConfiguration(ControlledMarkovProcess):
-  def __init__(self, n, m, trueReward, queries, responseTime=0):
+  def __init__(self, n, m, trueReward, queries, gamma, responseTime=0):
     self.n = n
     self.m = m
 
     self.responseTime = responseTime
 
-    ControlledMarkovProcess.__init__(self, queries, trueReward)
+    ControlledMarkovProcess.__init__(self, queries, trueReward, gamma)
     
   def getStates(self):
     configs = range(self.m + 1)
@@ -35,14 +35,14 @@ class MachineConfiguration(ControlledMarkovProcess):
     Can set non-operated machines
     an action: (i, j) operate machine i to be in config j
     """
-    return [None]\
+    return ['Wait']\
          + [(i, j) for j in range(1, self.m+1)\
                    for i in range(self.n) if state[i] == 0]
 
   def getTransitionStatesAndProbs(self, state, action):
     assert action in self.getPossibleActions(state)
 
-    if action == None:
+    if action == 'Wait':
       # means stay
       return [(state, 1)]
     else:

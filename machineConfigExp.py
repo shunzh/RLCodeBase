@@ -9,12 +9,13 @@ gamma = 0.9
 
 def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
   q, pi, qValue = agent.learn()
-  ret = 0
  
   # init state
   state = cmp.state
   print 's', state
+
   # accumulated return
+  ret = cmp.getReward(state)
   while True:
     if cmp.isTerminal(state):
       break
@@ -36,9 +37,8 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
     state, reward = cmp.doAction(action)
     print 's', state, 'r', reward
 
-    ret += reward * gamma ** (cmp.timer * 2)
-    
     cmp.timeElapse()
+    ret += reward * gamma ** (cmp.timer * 2)
   
   return ret, qValue
 
@@ -66,14 +66,10 @@ def main():
   randomTable[(0, 0, 0)] = 5
   randomTable[(1, 0, 0)] = 5
   
-  randomTable[(0, 1, 0)] = 2
-  randomTable[(0, 1, 1)] = -2
-  randomTable[(0, 2, 0)] = 2
-  randomTable[(0, 2, 1)] = -2
-
-  randomTable[(1, 1, 0)] = -1
+  randomTable[(0, 1, 0)] = 1
   randomTable[(1, 1, 1)] = 1
-  randomTable[(1, 2, 0)] = -1
+
+  randomTable[(0, 2, 0)] = 1
   randomTable[(1, 2, 1)] = 1
   
   for idx in xrange(rewardNum):
@@ -94,7 +90,7 @@ def main():
   #Agent = IterativeQTPAgent
   Agent = JointQTPAgent
 
-  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, responseTime=1)
+  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma ** 2, responseTime=1)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma ** 2,\
                 queryEnabled=queryEnabled, queryIgnored=queryIgnored)
  
@@ -115,7 +111,8 @@ def main():
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):
     if not 0 in s:
-      return cost * (1 + gamma) + gamma ** 2 * (sum([factorRewardFunc(i, s[i]) for i in range(size)]))
+      # Rob may have discounted this in the final step
+      return sum([factorRewardFunc(i, s[i]) for i in range(size)])
     else:
       return cost * (1 + gamma)
   return func
