@@ -56,7 +56,7 @@ class MachineConfiguration(ControlledMarkovProcess):
       actions += [(i, j) for j in range(1, self.m+1)]
     else:
       # choose a component for configuration
-      actions += [(i, 'S') for i in range(self.n)]
+      actions += [(i, 'S') for i in range(self.n) if state[i] != 'S']
     
     return actions
 

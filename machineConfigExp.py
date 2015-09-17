@@ -8,6 +8,7 @@ import util
 cost = -0.2
 # discount factor
 gamma = 0.9
+responseTime = 2
 
 def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
   q, pi, qValue = agent.learn()
@@ -65,14 +66,14 @@ def main():
   """
   rewardNum = 2
   randomTable = util.Counter()
-  randomTable[(0, 0, 0)] = 5
-  randomTable[(1, 0, 0)] = 5
+  randomTable[(0, 0, 0)] = 1
+  randomTable[(1, 0, 0)] = 1
   
-  randomTable[(0, 1, 0)] = 1
-  randomTable[(1, 1, 1)] = 1
+  randomTable[(0, 1, 0)] = 100
+  randomTable[(1, 1, 1)] = 100
 
-  randomTable[(0, 2, 0)] = 1
-  randomTable[(1, 2, 1)] = 1
+  randomTable[(0, 2, 0)] = 100
+  randomTable[(1, 2, 1)] = 100
   
   for idx in xrange(rewardNum):
     factoredRewards.append(lambda i, j, idx=idx: randomTable[(idx, i, j-1)])
@@ -92,7 +93,7 @@ def main():
   #Agent = IterativeQTPAgent
   Agent = JointQTPAgent
 
-  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime=2)
+  cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
                 queryEnabled=queryEnabled, queryIgnored=queryIgnored)
  
