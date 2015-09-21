@@ -21,7 +21,7 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
   print 's', state, 'r', cmp.getReward(state)
 
   # accumulated return
-  ret = 0
+  ret = cmp.getReward(state)
   while True:
     if cmp.isTerminal(state):
       break
@@ -44,7 +44,6 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
     print 's', state, 'r', reward
 
     cmp.timeElapse()
-
     ret += reward * gamma ** cmp.timer
   
   return ret, qValue
