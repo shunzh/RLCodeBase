@@ -36,33 +36,36 @@ class ValueIterationAgent(ValueEstimationAgent):
     self.mdp = mdp
     self.discount = discount
     self.iterations = iterations
-    self.values = initValues
+    # allValues: t, state -> value
+    self.allValues = [initValues]
   
   def learn(self):
-    for _ in xrange(self.iterations):
+    for t in xrange(self.iterations):
       # note that values are updated off-place
       values = util.Counter()
       for state in self.mdp.getStates():
         if self.mdp.isTerminal(state):
           values[state] = self.mdp.getReward(state)
         else:
-          values[state] = max([self.getQValue(state, action)\
-                               for action in self.mdp.getPossibleActions(state)])
+          values[state] = max([self.getQValue(state, action, t)\
+                                 for action in self.mdp.getPossibleActions(state)])
 
-      if util.getValueDistance(values, self.values) < .001:
-        # converged
+      self.allValues.append(values)
+
+      # Can stop for infinite horizon and converged
+      if self.iterations == INF and util.getValueDistance(values, self.allValues[-2]) < .001:
         break
-      self.values = values
-    
-    return lambda s: self.getPolicy(s)
-    
-  def getValue(self, state):
-    """
-      Return the value of the state (computed in __init__).
-    """
-    return self.values[state]
 
-  def getQValue(self, state, action):
+    self.allValues.reverse()
+    
+  def getValue(self, state, t=0):
+    """
+      Return the value of the state
+      By default, look at the value in the last timestep
+    """
+    return self.allValues[t][state]
+
+  def getQValue(self, state, action, t=0):
     """
       The q-value of the state action pair
       (after the indicated number of value iteration
@@ -73,10 +76,10 @@ class ValueIterationAgent(ValueEstimationAgent):
     "*** YOUR CODE HERE ***"
     q = 0
     for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
-      q += prob * (self.mdp.getReward(state) + self.discount * self.getValue(nextState))
+      q += prob * (self.mdp.getReward(state) + self.discount * self.getValue(nextState, t))
     return q
     
-  def getPolicy(self, state):
+  def getPolicy(self, state, t=0):
     """
       The policy is the best action in the given state
       according to the values computed by value iteration.
@@ -84,9 +87,10 @@ class ValueIterationAgent(ValueEstimationAgent):
       there are no legal actions, which is the case at the
       terminal state, you should return None.
     """
-    return random.choice(self.getPolicies(state))
+    return random.choice(self.getPolicies(state, t))
+    #return self.getPolicies(state)[0] # enable this when i only want to fix randomness
   
-  def getPolicies(self, state):
+  def getPolicies(self, state, t=0):
     """
     Return the actions which share the max q
     """
@@ -96,12 +100,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       maxValue = -INF
       actions = self.mdp.getPossibleActions(state)
       for action in actions:
-        q = self.getQValue(state, action)
+        q = self.getQValue(state, action, t)
         if q > maxValue:
           maxValue = q
-      return filter(lambda act: self.getQValue(state, act) == maxValue, actions)
-
-  def getAction(self, state):
-    "Returns the policy at the state (no exploration)."
-    return self.getPolicy(state)
-  
+      return filter(lambda act: self.getQValue(state, act, t) == maxValue, actions)

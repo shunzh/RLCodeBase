@@ -128,7 +128,8 @@ class QTPAgent:
         estimatedValue += values(fState) * fStateProb
       vAfterResponse += fPhiProb * estimatedValue
       
-      self.phiToPolicy[tuple(fPhi)] = lambda s, agent=viAgent: agent.getPolicy(s)
+      # this is a stationary policy
+      self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s)
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -148,7 +149,7 @@ class QTPAgent:
       fViAgent = self.getVIAgent(fPhi)
       for state in self.cmp.getStates():
         v[state] += fViAgent.getValue(state) * fPhiProb
-    
+
     if config.DEBUG:
       print query, "future v"
       pprint.pprint([(s, v[s]) for s in self.cmp.getStates()])
@@ -156,14 +157,15 @@ class QTPAgent:
     cmp = copy.deepcopy(self.cmp)
     cmp.getReward = self.getRewardFunc(self.phi)
     responseTime = cmp.responseTime
-    # here, run responseTime - 1 iterations
-    # because in my implementation, query step does one iteration, which compute reward + discounted value
-    viAgent = ValueIterationAgent(cmp, discount=self.gamma, iterations=responseTime-1, initValues=v)
-    pi = viAgent.learn()
+
+    viAgent = ValueIterationAgent(cmp, discount=self.gamma, iterations=responseTime, initValues=v)
+    viAgent.learn()
+    # this is a non-stationary policy
+    pi = lambda s, t: viAgent.getPolicy(s, t+1) 
     
     if config.DEBUG:
       print query, "v func"
-      pprint.pprint([(s, viAgent.getValue(s), pi(s)) for s in cmp.getStates()])
+      pprint.pprint([(s, viAgent.getValue(s), viAgent.getPolicies(s)) for s in cmp.getStates()])
     return pi
 
   def respond(self, query, response):
@@ -196,12 +198,12 @@ class JointQTPAgent(QTPAgent):
       pi = optPi
 
       if config.VERBOSE:
-        print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
+        print "optimized pi", [(s, pi(s, -1)) for s in [(0, 0, 0), ('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]]
         print "optimized q", q
 
     if self.queryIgnored or not self.queryEnabled:
       # in both settings, plan on prior belief
-      pi = lambda s: self.viAgent.getPolicy(s)
+      pi = lambda s, t: self.viAgent.getPolicy(s)
 
     if self.queryEnabled:
       return q, pi, self.getQValue(state, pi, q)
@@ -224,7 +226,7 @@ class IterativeQTPAgent(QTPAgent):
         q  = self.optimizeQuery(state, pi)
         if config.VERBOSE:
           print "Iteration #", counter
-          print "optimized pi", [(s, pi(s)) for s in [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]]
+          print "optimized pi", [(s, pi(s, -1)) for s in [(0, 0, 0), ('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]]
           print "optimized q", q
         
         if q == prevQ:
@@ -253,7 +255,7 @@ def getMultipleTransitionDistr(cmp, state, policy, time):
     pNext = {s: 0 for s in cmp.getStates()}
     for s in cmp.getStates():
       if p[s] > 0:
-        for nextS, nextProb in cmp.getTransitionStatesAndProbs(s, policy(s)):
+        for nextS, nextProb in cmp.getTransitionStatesAndProbs(s, policy(s, t)):
           pNext[nextS] += p[s] * nextProb
     p = pNext.copy()
   

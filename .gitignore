@@ -64,5 +64,5 @@ eval_*
 # condor
 out.*
 *.tar.gz
-results
-beliefs
+*results
+*beliefs

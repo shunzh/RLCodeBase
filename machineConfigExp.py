@@ -3,11 +3,14 @@ from QTPAgent import IterativeQTPAgent, JointQTPAgent
 import random
 from baselineAgents import RandomAgent
 import util
+import config
+import sys
 
 # reward for incomplete configurations
 cost = -0.2
 # discount factor
 gamma = 0.9
+# the time step that the agent receives the response
 responseTime = 2
 
 def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
@@ -18,7 +21,7 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
   print 's', state, 'r', cmp.getReward(state)
 
   # accumulated return
-  ret = cmp.getReward(state)
+  ret = 0
   while True:
     if cmp.isTerminal(state):
       break
@@ -36,11 +39,12 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
         print 'o', response
         pi = agent.respond(q, response)
     
-    action = pi(state)
+    action = pi(state, cmp.timer)
     state, reward = cmp.doAction(action)
     print 's', state, 'r', reward
 
     cmp.timeElapse()
+
     ret += reward * gamma ** cmp.timer
   
   return ret, qValue
@@ -60,20 +64,23 @@ def main():
 
   """
   rewardNum = 10
+  # set the random seed here so the experiments are reproducible
+  # read seed from argument
+  random.seed(sys.argv[1])
   randomTable = {(idx, i, j): random.random() * 3 for idx in xrange(rewardNum)\
                                                   for i in xrange(numMachines)\
                                                   for j in xrange(numConfigs)}
   """
   rewardNum = 2
   randomTable = util.Counter()
-  randomTable[(0, 0, 0)] = 1
-  randomTable[(1, 0, 0)] = 1
+  randomTable[(0, 0, 0)] = 5
+  randomTable[(1, 0, 0)] = 5
   
-  randomTable[(0, 1, 0)] = 100
-  randomTable[(1, 1, 1)] = 100
+  randomTable[(0, 1, 0)] = 1
+  randomTable[(1, 1, 1)] = 1
 
-  randomTable[(0, 2, 0)] = 100
-  randomTable[(1, 2, 1)] = 100
+  randomTable[(0, 2, 0)] = 1
+  randomTable[(1, 2, 1)] = 1
   
   for idx in xrange(rewardNum):
     factoredRewards.append(lambda i, j, idx=idx: randomTable[(idx, i, j-1)])
@@ -90,8 +97,8 @@ def main():
   rewardNum = len(rewardSet)
   initialPhi = [1.0 / rewardNum] * rewardNum
 
-  #Agent = IterativeQTPAgent
   Agent = JointQTPAgent
+  #Agent = IterativeQTPAgent
 
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
@@ -101,13 +108,14 @@ def main():
   print ret
   print qValue
 
-  rFile = open('results', 'a')
-  rFile.write(str(ret) + '\n')
-  rFile.close()
+  if config.SAVE_TO_FILE:
+    rFile = open(Agent.__name__ + 'results', 'a')
+    rFile.write(str(ret) + '\n')
+    rFile.close()
 
-  bFile = open('beliefs', 'a')
-  bFile.write(str(qValue) + '\n')
-  bFile.close()
+    bFile = open(Agent.__name__ + 'beliefs', 'a')
+    bFile.write(str(qValue) + '\n')
+    bFile.close()
 
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):
