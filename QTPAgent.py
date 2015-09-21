@@ -8,11 +8,8 @@ import config
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9,\
-               queryEnabled=True, queryIgnored=False):
+               queryIgnored=False):
     """
-    queryEnabled
-      The agent can ask query.
-      Becomes planning only using the prior belief if turned off.
     queryIgnored
       Query is asked, but the agent forgets such query is asked and planning using the prior belief.
       After a response is received, the agent will update its policy.
@@ -24,31 +21,28 @@ class QTPAgent:
     self.gamma = gamma
     # init belief on rewards in rewardSet
     self.phi = initialPhi
-    self.queryEnabled = queryEnabled
     self.queryIgnored = queryIgnored
     
     self.preprocess()
     
   def preprocess(self):
-    if self.queryEnabled:
-      # bookkeep our in-mind planning
-      self.responseToPhi = util.Counter()
-      self.phiToPolicy = util.Counter()
+    # bookkeep our in-mind planning
+    self.responseToPhi = util.Counter()
+    self.phiToPolicy = util.Counter()
 
-      # initialize VI agent for reward set for future use
-      self.viAgentSet = []
-      self.rewardSetSize = len(self.rewardSet)
-      for idx in range(self.rewardSetSize):
-        phi = [0] * self.rewardSetSize
-        phi[idx] = 1
-        
-        # a VI agent based on one reward
-        viAgent = self.getVIAgent(phi)
-        self.viAgentSet.append(viAgent)
+    # initialize VI agent for reward set for future use
+    self.viAgentSet = []
+    self.rewardSetSize = len(self.rewardSet)
+    for idx in range(self.rewardSetSize):
+      phi = [0] * self.rewardSetSize
+      phi[idx] = 1
+      
+      # a VI agent based on one reward
+      viAgent = self.getVIAgent(phi)
+      self.viAgentSet.append(viAgent)
     
-    if not self.queryEnabled or self.queryIgnored:
-      # without query, reduce to a VI problem
-      # plan on the mean rewards
+    if self.queryIgnored:
+      # plan on the mean rewards in this case
       self.viAgent = self.getVIAgent(self.phi)
 
   def getRewardFunc(self, phi):
@@ -182,66 +176,58 @@ class QTPAgent:
 class JointQTPAgent(QTPAgent):
   def learn(self):
     state = self.cmp.state
-    if self.queryEnabled:
-      maxQValue = -float('INF')
-      optQuery = None; optPi = None
+    maxQValue = -float('INF')
+    optQuery = None; optPi = None
 
-      for q in self.cmp.queries:
-        pi = self.optimizePolicy(q)
-        qValue = self.getQValue(state, pi, q)
-        if qValue > maxQValue:
-          maxQValue = qValue
-          optQuery = q
-          optPi = pi
-      
-      q = optQuery
-      pi = optPi
+    for q in self.cmp.queries:
+      pi = self.optimizePolicy(q)
+      qValue = self.getQValue(state, pi, q)
+      if qValue > maxQValue:
+        maxQValue = qValue
+        optQuery = q
+        optPi = pi
+    
+    q = optQuery
+    pi = optPi
 
-      if config.VERBOSE:
-        print "optimized pi", [(s, pi(s, 0)) for s in [(0, 0, 0), ('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]]
-        print "optimized q", q
+    if config.VERBOSE:
+      print "optimized pi", [(s, pi(s, 0)) for s in [(0, 0, 0), ('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]]
+      print "optimized q", q
 
-    if self.queryIgnored or not self.queryEnabled:
+    if self.queryIgnored:
       # in both settings, plan on prior belief
       pi = lambda s, t: self.viAgent.getPolicy(s)
 
-    if self.queryEnabled:
-      return q, pi, self.getQValue(state, pi, q)
-    else:
-      return None, pi, self.viAgent.getValue(self.cmp.state)
+    return q, pi, self.getQValue(state, pi, q)
 
 class IterativeQTPAgent(QTPAgent):
   def learn(self):
     state = self.cmp.state
-    if self.queryEnabled:
-      # learning with queries
-      q = self.cmp.queries[0] # get a random query
-      
-      # iterate optimize over policy and query
-      counter = 0
-      while True:
-        prevQ = copy.deepcopy(q)
+    # learning with queries
+    q = self.cmp.queries[0] # get a random query
+    
+    # iterate optimize over policy and query
+    counter = 0
+    while True:
+      prevQ = copy.deepcopy(q)
 
-        pi = self.optimizePolicy(q)
-        q  = self.optimizeQuery(state, pi)
-        if config.VERBOSE:
-          print "Iteration #", counter
-          print "optimized pi", [(s, pi(s, -1)) for s in [(0, 0, 0), ('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]]
-          print "optimized q", q
-        
-        if q == prevQ:
-          # converged
-          break
-        counter += 1
+      pi = self.optimizePolicy(q)
+      q  = self.optimizeQuery(state, pi)
+      if config.VERBOSE:
+        print "Iteration #", counter
+        print "optimized pi", [(s, pi(s, -1)) for s in [(0, 0, 0), ('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]]
+        print "optimized q", q
       
-    if self.queryIgnored or not self.queryEnabled:
+      if q == prevQ:
+        # converged
+        break
+      counter += 1
+    
+    if self.queryIgnored:
       # in both settings, plan on prior belief
       pi = lambda s: self.viAgent.getPolicy(s)
     
-    if self.queryEnabled:
-      return q, pi, self.getQValue(state, pi, q)
-    else:
-      return None, pi, self.viAgent.getValue(self.cmp.state)
+    return q, pi, self.getQValue(state, pi, q)
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """

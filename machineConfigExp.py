@@ -13,7 +13,7 @@ gamma = 0.9
 # the time step that the agent receives the response
 responseTime = 2
 
-def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
+def JQTPExp(cmp, agent, rewardSet):
   q, pi, qValue = agent.learn()
  
   # init state
@@ -27,17 +27,16 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
       break
     
     # query the model in the first time step
-    if queryEnabled:
-      if cmp.timer == 0:
-        print 'q', q
-        cmp.query(q)
-    
-      # see whether there is any response
-      response = cmp.responseCallback()
-      if response != None:
-        # update policy
-        print 'o', response
-        pi = agent.respond(q, response)
+    if cmp.timer == 0:
+      print 'q', q
+      cmp.query(q)
+  
+    # see whether there is any response
+    response = cmp.responseCallback()
+    if response != None:
+      # update policy
+      print 'o', response
+      pi = agent.respond(q, response)
     
     action = pi(state, cmp.timer)
     state, reward = cmp.doAction(action)
@@ -79,11 +78,11 @@ def main():
   rewardSet = map(lambda rf: rewardFuncGen(rf, numMachines), factoredRewards)
   
   queries = [('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]
+  #queries = [(0, 0, 0)]
 
   # print the true reward
   print [(i, j+1, randomTable[0, i, j]) for i in xrange(numMachines) for j in xrange(numConfigs)]
 
-  queryEnabled = False
   queryIgnored = False
 
   rewardNum = len(rewardSet)
@@ -94,9 +93,9 @@ def main():
 
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
-                queryEnabled=queryEnabled, queryIgnored=queryIgnored)
+                queryIgnored=queryIgnored)
  
-  ret, qValue = JQTPExp(cmp, agent, rewardSet, queryEnabled)
+  ret, qValue = JQTPExp(cmp, agent, rewardSet)
   print ret
   print qValue
 
@@ -113,7 +112,7 @@ def rewardFuncGen(factorRewardFunc, size):
   def func(s):
     if not 0 in s and not 'S' in s:
       # Rob may have discounted this in the final step
-      return sum([factorRewardFunc(i, s[i]) for i in range(size)])
+      return cost + gamma * sum([factorRewardFunc(i, s[i]) for i in range(size)])
     else:
       return cost
   return func
