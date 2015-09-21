@@ -48,20 +48,12 @@ def JQTPExp(cmp, agent, rewardSet, queryEnabled=True):
   
   return ret, qValue
 
-def priorSanityCheck(numConfigs, rewardNum, randomTable):
-  meanRewards = [sum([randomTable[idx, 0, j] for idx in range(rewardNum)])\
-                                             for j in range(numConfigs)]
-  maxMeanConfig = max(range(numConfigs), key=lambda j: meanRewards[j])
-  # assume first reward is the true reward
-  return randomTable[0, 0, maxMeanConfig]
-
 def main():
   factoredRewards = []
 
   numMachines = 3
   numConfigs = 3
 
-  """
   rewardNum = 10
   # set the random seed here so the experiments are reproducible
   # read seed from argument
@@ -76,10 +68,9 @@ def main():
   randomTable[(1, 0, 0)] = 5
   
   randomTable[(0, 1, 0)] = 1
-  randomTable[(1, 1, 1)] = 1
 
-  randomTable[(0, 2, 0)] = 1
   randomTable[(1, 2, 1)] = 1
+  """
   
   for idx in xrange(rewardNum):
     factoredRewards.append(lambda i, j, idx=idx: randomTable[(idx, i, j-1)])
@@ -108,11 +99,11 @@ def main():
   print qValue
 
   if config.SAVE_TO_FILE:
-    rFile = open(Agent.__name__ + 'results', 'a')
+    rFile = open('results', 'a')
     rFile.write(str(ret) + '\n')
     rFile.close()
 
-    bFile = open(Agent.__name__ + 'beliefs', 'a')
+    bFile = open('beliefs', 'a')
     bFile.write(str(qValue) + '\n')
     bFile.close()
 
