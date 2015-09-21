@@ -68,8 +68,10 @@ def main():
   randomTable[(1, 0, 0)] = 5
   
   randomTable[(0, 1, 0)] = 1
+  randomTable[(1, 1, 0)] = -1
 
-  randomTable[(1, 2, 1)] = 1
+  randomTable[(0, 1, 1)] = -1
+  randomTable[(1, 1, 1)] = 1
   """
   
   for idx in xrange(rewardNum):
@@ -81,7 +83,7 @@ def main():
   # print the true reward
   print [(i, j+1, randomTable[0, i, j]) for i in xrange(numMachines) for j in xrange(numConfigs)]
 
-  queryEnabled = True
+  queryEnabled = False
   queryIgnored = False
 
   rewardNum = len(rewardSet)

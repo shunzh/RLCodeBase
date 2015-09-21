@@ -198,7 +198,7 @@ class JointQTPAgent(QTPAgent):
       pi = optPi
 
       if config.VERBOSE:
-        print "optimized pi", [(s, pi(s, -1)) for s in [(0, 0, 0), ('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]]
+        print "optimized pi", [(s, pi(s, 0)) for s in [(0, 0, 0), ('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]]
         print "optimized q", q
 
     if self.queryIgnored or not self.queryEnabled:

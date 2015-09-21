@@ -48,7 +48,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           values[state] = self.mdp.getReward(state)
         else:
           values[state] = max([self.getQValue(state, action, t)\
-                                 for action in self.mdp.getPossibleActions(state)])
+                               for action in self.mdp.getPossibleActions(state)])
 
       self.allValues.append(values)
 
@@ -95,7 +95,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     Return the actions which share the max q
     """
     if self.mdp.isTerminal(state):
-      return [None]
+      return []
     else:
       maxValue = -INF
       actions = self.mdp.getPossibleActions(state)
