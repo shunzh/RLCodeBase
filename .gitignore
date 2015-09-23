@@ -66,3 +66,4 @@ out.*
 *.tar.gz
 *results
 *beliefs
+experiments

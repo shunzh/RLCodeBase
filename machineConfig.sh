@@ -1,4 +1,4 @@
-for i in `seq 0 89`;
+for i in `seq 0 599`;
 do
-  python machineConfigExp.py $i
+  python machineConfigExp.py
 done
