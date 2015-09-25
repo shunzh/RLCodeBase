@@ -38,7 +38,7 @@ class WindyCorridor(ControlledMarkovProcess):
       return ['G']
 
   def getTransitionStatesAndProbs(self, state, action):
-    assert action in self.getPossibleActions(state)
+    assert action in self.getPossibleActions(state), "Unexpected action %r from state %r" % (action, state)
     
     # terminal state
     if state == 'T': return []
@@ -50,7 +50,7 @@ class WindyCorridor(ControlledMarkovProcess):
         # end of simulation?
         if self.circular: nextState = (0, 0)
         else: nextState = 'T'
-      elif type(interDist) is int and interDist < self.interLength:
+      elif type(interDist) is int and interDist < self.interLength - 1:
         nextState = (interId, interDist + 1)
       else:
         # move to the next segment
@@ -59,5 +59,8 @@ class WindyCorridor(ControlledMarkovProcess):
       # side states
       nextState = (interId, action)
     
+    # don't make up a state!
+    assert nextState in self.getStates(), "Unexpected next state %r from state %r" % (nextState, state)
+
     # deterministic transition
     return [(nextState, 1)]

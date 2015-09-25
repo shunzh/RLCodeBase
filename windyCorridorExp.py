@@ -1,6 +1,7 @@
 from QTPAgent import IterativeQTPAgent, JointQTPAgent
 from windyCorridor import WindyCorridor
 from CMPExp import Experiment
+import util
 
 # discount factor
 gamma = 0.9
@@ -15,8 +16,15 @@ circular = False
 queries = [(interId, interLength - 1) for interId in xrange(interNum)]
 
 def main():
-  rewardSet = [rewardGen([(2, 'L'),(1, 'L'),(0, 'L')]),\
-               rewardGen([(2, 'R'),(1, 'R'),(0, 'R')])]
+  reward0 = util.Counter()
+  reward0[(2, 'L')] = 10
+  reward0[(0, 'L')] = -10
+
+  reward1 = util.Counter()
+  reward1[(2, 'R')] = 10
+  reward1[(0, 'R')] = -10
+
+  rewardSet = [rewardGen(reward0), rewardGen(reward1)]
 
   rewardNum = len(rewardSet)
   initialPhi = [1.0 / rewardNum] * rewardNum
@@ -25,17 +33,13 @@ def main():
   cmp = WindyCorridor(queries, rewardSet[0], gamma, responseTime, interLength, interNum, circular)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  
-  ret, qValue = Experiment(cmp, agent, gamma, rewardSet)
+  ret, qValue = Experiment(cmp, agent, gamma, rewardSet, horizon=interLength * interNum * 2)
   print ret
   print qValue
 
-def rewardGen(pref): 
+def rewardGen(rewards): 
   def rewardFunc(s):
-    if s == pref[0]: return 10
-    elif s == pref[1]: return 5
-    elif s == pref[2]: return 2
-    else: return 0
-  
+    return rewards[s]
   return rewardFunc
 
 if __name__ == '__main__':

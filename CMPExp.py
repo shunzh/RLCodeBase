@@ -1,5 +1,5 @@
 import config
-def Experiment(cmp, agent, gamma, rewardSet):
+def Experiment(cmp, agent, gamma, rewardSet, horizon=float('inf')):
   q, pi, qValue = agent.learn()
  
   # init state
@@ -9,7 +9,7 @@ def Experiment(cmp, agent, gamma, rewardSet):
   # accumulated return
   ret = cmp.getReward(state)
   while True:
-    if cmp.isTerminal(state):
+    if cmp.isTerminal(state) or cmp.timer >= horizon:
       break
     
     # query the model in the first time step
