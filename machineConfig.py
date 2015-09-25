@@ -5,9 +5,7 @@ class MachineConfiguration(ControlledMarkovProcess):
     self.n = n
     self.m = m
 
-    self.responseTime = responseTime
-
-    ControlledMarkovProcess.__init__(self, queries, trueReward, gamma)
+    ControlledMarkovProcess.__init__(self, queries, trueReward, gamma, responseTime)
     
   def getStates(self):
     configs = range(self.m + 1)

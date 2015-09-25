@@ -1,10 +1,10 @@
 from machineConfig import MachineConfiguration
 from QTPAgent import IterativeQTPAgent, JointQTPAgent
 import random
-from baselineAgents import RandomAgent
 import util
 import config
 import sys
+from CMPExp import Experiment
 
 # reward for incomplete configurations
 cost = -0.2
@@ -19,40 +19,6 @@ queries = [(0, 0, 0)]
 
 # for OQPP
 queryIgnored = False
-
-def JQTPExp(cmp, agent, rewardSet):
-  q, pi, qValue = agent.learn()
- 
-  # init state
-  state = cmp.state
-  print 's', state, 'r', cmp.getReward(state)
-
-  # accumulated return
-  ret = cmp.getReward(state)
-  while True:
-    if cmp.isTerminal(state):
-      break
-    
-    # query the model in the first time step
-    if cmp.timer == 0:
-      print 'q', q
-      cmp.query(q)
-  
-    # see whether there is any response
-    response = cmp.responseCallback()
-    if response != None:
-      # update policy
-      print 'o', response
-      pi = agent.respond(q, response)
-    
-    action = pi(state, cmp.timer)
-    state, reward = cmp.doAction(action)
-    print 's', state, 'r', reward
-
-    cmp.timeElapse()
-    ret += reward * gamma ** cmp.timer
-  
-  return ret, qValue
 
 def main():
   factoredRewards = []
@@ -103,7 +69,7 @@ def main():
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
                 queryIgnored=queryIgnored)
  
-  ret, qValue = JQTPExp(cmp, agent, rewardSet)
+  ret, qValue = Experiment(cmp, agent, gamma, rewardSet)
   print ret
   print qValue
 

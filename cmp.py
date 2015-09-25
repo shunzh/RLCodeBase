@@ -2,12 +2,13 @@ from mdp import MarkovDecisionProcess
 from valueIterationAgents import ValueIterationAgent
 
 class ControlledMarkovProcess(MarkovDecisionProcess):
-  def __init__(self, queries, trueReward, gamma):
+  def __init__(self, queries, trueReward, gamma, responseTime):
     MarkovDecisionProcess.__init__(self)
     
     self.outsandingQuery = None
     # possible queries
     self.queries = queries
+    self.responseTime = responseTime
     
     # the real reward function
     # learn a VI agent on this reward setting, and policy will be decided.
@@ -30,7 +31,6 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
   def responseCallback(self):
     """
     The agent should check with this function to see whether there is a feedback
-    For now, it is not called, as we only do in mind simulation. 
     """
     if self.outsandingQuery != None and self.timer >= self.outsandingQuery[1]:
       # issues a response
