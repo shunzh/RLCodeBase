@@ -69,7 +69,7 @@ class MarkovDecisionProcess:
     state as having a self-loop action 'pass' with zero reward; the formulations
     are equivalent.
     """
-    abstract
+    return False
     
   def doAction(self, action):
     state = self.state
