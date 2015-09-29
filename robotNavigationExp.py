@@ -3,24 +3,24 @@ from CMPExp import Experiment
 import util
 from robotNavigation import RobotNavigation
 
-width = 3
-height = 3
+width = 5
+height = 5
 
 # discount factor
 gamma = 0.9
 # the time step that the agent receives the response
-responseTime = 8
+responseTime = 6
 
 queries = [(3, 2)]
 
 def main():
   rewards0 = util.Counter()
-  rewards0[(2, 0)] = 10
-  rewards0[(2, 2)] = -10
+  rewards0[(3, 0)] = 10
+  rewards0[(3, 4)] = -10
   
   rewards1 = util.Counter()
-  rewards1[(2, 0)] = -10
-  rewards1[(2, 2)] = 10
+  rewards1[(3, 0)] = -10
+  rewards1[(3, 4)] = 10
 
   rewardSet = [rewardGen(rewards0), rewardGen(rewards1)]
   rewardNum = len(rewardSet)
