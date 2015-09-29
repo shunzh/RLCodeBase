@@ -10,21 +10,43 @@ responseTime = 5
 
 interLength = 3
 interNum = 3
-circular = False
+circular = True
 
 # at this intersection, what would you do?
 queries = [(interId, interLength - 1) for interId in xrange(interNum)]
 
 def main():
-  reward0 = util.Counter()
-  reward0[(2, 'L')] = 10
-  reward0[(0, 'L')] = -10
+  rewards = []
 
-  reward1 = util.Counter()
-  reward1[(2, 'R')] = 10
-  reward1[(0, 'R')] = -10
+  reward = util.Counter()
+  reward[(0, 'L')] = 10
+  reward[(0, 'R')] = -10
+  reward[(1, 'L')] = 1
+  reward[(1, 'R')] = -1
+  rewards.append(reward)
 
-  rewardSet = [rewardGen(reward0), rewardGen(reward1)]
+  reward = util.Counter()
+  reward[(0, 'L')] = 10
+  reward[(0, 'R')] = -10
+  reward[(1, 'L')] = -1
+  reward[(1, 'R')] = 1
+  rewards.append(reward)
+
+  reward = util.Counter()
+  reward[(0, 'L')] = -10
+  reward[(0, 'R')] = 10
+  reward[(1, 'L')] = 1
+  reward[(1, 'R')] = -1
+  rewards.append(reward)
+
+  reward = util.Counter()
+  reward[(0, 'L')] = -10
+  reward[(0, 'R')] = 10
+  reward[(1, 'L')] = -1
+  reward[(1, 'R')] = 1
+  rewards.append(reward)
+
+  rewardSet = [rewardGen(reward) for reward in rewards]
 
   rewardNum = len(rewardSet)
   initialPhi = [1.0 / rewardNum] * rewardNum

@@ -19,7 +19,7 @@ queries = [('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]
 
 # for OQPP
 queryIgnored = False
-clusterDistance = 0.1
+clusterDistance = float(sys.argv[1])
 
 def main():
   factoredRewards = []
@@ -75,11 +75,11 @@ def main():
   print qValue
 
   if config.SAVE_TO_FILE:
-    rFile = open('results', 'a')
+    rFile = open('results' + sys.argv[1], 'a')
     rFile.write(str(ret) + '\n')
     rFile.close()
 
-    bFile = open('beliefs', 'a')
+    bFile = open('beliefs' + sys.argv[1], 'a')
     bFile.write(str(qValue) + '\n')
     bFile.close()
 
