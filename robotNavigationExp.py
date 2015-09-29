@@ -17,10 +17,12 @@ def main():
   rewards0 = util.Counter()
   rewards0[(3, 0)] = 10
   rewards0[(3, 4)] = -10
+  rewards0[(1, 3)] = 1
   
   rewards1 = util.Counter()
   rewards1[(3, 0)] = -10
   rewards1[(3, 4)] = 10
+  rewards1[(1, 3)] = 1
 
   rewardSet = [rewardGen(rewards0), rewardGen(rewards1)]
   rewardNum = len(rewardSet)

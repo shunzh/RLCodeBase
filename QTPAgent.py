@@ -8,7 +8,7 @@ import config
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9,\
-               queryIgnored=False):
+               queryIgnored=False, clusterDistance=0):
     """
     queryIgnored
       Query is asked, but the agent forgets such query is asked and planning using the prior belief.
@@ -22,6 +22,9 @@ class QTPAgent:
     # init belief on rewards in rewardSet
     self.phi = initialPhi
     self.queryIgnored = queryIgnored
+
+    self.clusterDistance = clusterDistance
+    self.rewardClusters = util.Counter()
     
     self.preprocess()
     
@@ -50,17 +53,32 @@ class QTPAgent:
     return the mean reward function under the given belief
     """
     return lambda state: sum([reward(state) * p for reward, p in zip(self.rewardSet, phi)])
+  
+  def getRewardDistance(self, rewardFunc0, rewardFunc1):
+    dist = sum([abs(rewardFunc0(s) - rewardFunc1(s)) for s in self.cmp.getStates()])
+    dist /= len(self.cmp.getStates())
+    return dist
 
-  def getVIAgent(self, phi):
+  def getVIAgent(self, phi, cluster=False):
     """
     Return a trained value iteratoin agent with given phi.
     So we can use getValue, getPolicy, getQValue, etc.
     """
-    cmp = copy.deepcopy(self.cmp)
-    cmp.getReward = self.getRewardFunc(phi)
+    rewardFunc = self.getRewardFunc(phi)
 
+    # posterior belief clustering.
+    # if this reward func is reasonably close to a previous computed one, use that one instead.
+    if cluster:
+      for rewardCand in self.rewardClusters.keys():
+        if self.getRewardDistance(rewardFunc, rewardCand) < self.clusterDistance:
+          return self.rewardClusters[rewardCand]
+
+    cmp = copy.deepcopy(self.cmp)
+    cmp.getReward = rewardFunc
     vi = ValueIterationAgent(cmp, discount=self.gamma)
     vi.learn()
+    # bookkeep this vi agent
+    self.rewardClusters[rewardFunc] = vi
     return vi
   
   def getValue(self, state, phi, policy, horizon):
@@ -115,7 +133,7 @@ class QTPAgent:
     
     vAfterResponse = 0
     for fPhi, fPhiProb in possiblePhis:
-      viAgent = self.getVIAgent(fPhi)
+      viAgent = self.getVIAgent(fPhi, cluster=True)
       values = lambda state: viAgent.getValue(state)
       estimatedValue = 0
       for fState, fStateProb in possibleStatesAndProbs:
@@ -140,7 +158,7 @@ class QTPAgent:
     v = util.Counter()
     possiblePhis = self.getPossiblePhiAndProbs(query)
     for fPhi, fPhiProb in possiblePhis:
-      fViAgent = self.getVIAgent(fPhi)
+      fViAgent = self.getVIAgent(fPhi, cluster=True)
       for state in self.cmp.getStates():
         v[state] += fViAgent.getValue(state) * fPhiProb
 
@@ -152,6 +170,7 @@ class QTPAgent:
     cmp.getReward = self.getRewardFunc(self.phi)
     responseTime = cmp.responseTime
 
+    # backpropogate `responseTime` time steps
     viAgent = ValueIterationAgent(cmp, discount=self.gamma, iterations=responseTime, initValues=v)
     viAgent.learn()
     # this is a non-stationary policy

@@ -1,4 +1,4 @@
-for i in `seq 0 599`;
+for i in `seq 0 199`;
 do
   python machineConfigExp.py
 done
