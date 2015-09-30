@@ -133,7 +133,7 @@ class QTPAgent:
     
     vAfterResponse = 0
     for fPhi, fPhiProb in possiblePhis:
-      viAgent = self.getVIAgent(fPhi, cluster=True)
+      viAgent = self.getVIAgent(fPhi, config.CLUSTER)
       values = lambda state: viAgent.getValue(state)
       estimatedValue = 0
       for fState, fStateProb in possibleStatesAndProbs:
@@ -158,7 +158,7 @@ class QTPAgent:
     v = util.Counter()
     possiblePhis = self.getPossiblePhiAndProbs(query)
     for fPhi, fPhiProb in possiblePhis:
-      fViAgent = self.getVIAgent(fPhi, cluster=True)
+      fViAgent = self.getVIAgent(fPhi, config.CLUSTER)
       for state in self.cmp.getStates():
         v[state] += fViAgent.getValue(state) * fPhiProb
 
@@ -201,6 +201,7 @@ class JointQTPAgent(QTPAgent):
     for q in self.cmp.queries:
       pi = self.optimizePolicy(q)
       qValue = self.getQValue(state, pi, q)
+      print q, qValue
       if qValue > maxQValue:
         maxQValue = qValue
         optQuery = q
@@ -234,7 +235,7 @@ class IterativeQTPAgent(QTPAgent):
       q  = self.optimizeQuery(state, pi)
       if config.VERBOSE:
         print "Iteration #", counter
-        print "optimized pi", [(s, pi(s, -1)) for s in [(0, 0, 0), ('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]]
+        print "optimized pi", [(s, pi(s, -1)) for s in self.cmp.getStates()]
         print "optimized q", q
       
       if q == prevQ:

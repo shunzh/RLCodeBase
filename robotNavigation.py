@@ -11,7 +11,7 @@ class RobotNavigation(ControlledMarkovProcess):
 
   def reset(self):
     # initial state: this far to the first intersection
-    self.state = (0, self.height / 2)
+    self.state = (0, 0)
     
   def getStates(self):
     return [(x, y) for x in xrange(self.width) for y in xrange(self.height)]
