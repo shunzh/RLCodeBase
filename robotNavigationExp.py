@@ -16,11 +16,11 @@ queries = [(x, y) for x in xrange(width) for y in xrange(height)]
 
 def main():
   rewards0 = util.Counter()
-  rewards0[(4, 0)] = 10
-  rewards0[(0, 4)] = -10
+  rewards0[(0, 2)] = 10
+  rewards0[(0, 4)] = -100
   
   rewards1 = util.Counter()
-  rewards1[(4, 0)] = -10
+  rewards1[(0, 2)] = -100
   rewards1[(0, 4)] = 10
 
   rewardSet = [rewardGen(rewards0), rewardGen(rewards1)]
@@ -28,6 +28,7 @@ def main():
   initialPhi = [1.0 / rewardNum] * rewardNum
 
   Agent = JointQTPAgent
+  #Agent = IterativeQTPAgent
   cmp = RobotNavigation(queries, rewardSet[0], gamma, responseTime, width, height)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  

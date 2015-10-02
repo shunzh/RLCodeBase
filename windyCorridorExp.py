@@ -52,6 +52,7 @@ def main():
   initialPhi = [1.0 / rewardNum] * rewardNum
 
   Agent = JointQTPAgent
+  #Agent = IterativeQTPAgent
   cmp = WindyCorridor(queries, rewardSet[0], gamma, responseTime, interLength, interNum, circular)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  

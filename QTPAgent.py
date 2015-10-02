@@ -145,12 +145,6 @@ class QTPAgent:
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
-  def optimizeQuery(self, state, policy):
-    """
-    Enumerate all possible queries
-    """
-    return max(self.cmp.queries, key=lambda q: self.getQValue(state, policy, q))
-  
   def optimizePolicy(self, query):
     """
     Uses dynamic programming
@@ -189,8 +183,6 @@ class QTPAgent:
     pi = self.phiToPolicy[self.responseToPhi[response]]
     return pi
 
-  def learn(self):
-    abstract
 
 class JointQTPAgent(QTPAgent):
   def learn(self):
@@ -220,11 +212,38 @@ class JointQTPAgent(QTPAgent):
 
     return q, pi, self.getQValue(state, pi, q)
 
+
 class IterativeQTPAgent(QTPAgent):
+  def optimizeQuery(self, state, policy):
+    """
+    Enumerate relevant considering the states reachable by the transient policy.
+    """
+    if config.FILTER_QUERY:
+      possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, self.cmp.responseTime)
+      # FIXME
+      # assuming deterministic
+      fState = possibleStatesAndProbs[0][0]
+
+      queries = []
+      for query in self.cmp.queries:
+        # FIXME
+        # overfit mc problem
+        feat = query.index('S')
+        if fState[feat] == 'S' or fState[feat] == 0:
+          queries.append(query)
+    else:
+      queries = self.cmp.queries
+    
+    if config.VERBOSE:
+      print "Considering queries", queries
+
+    return max(queries, key=lambda q: self.getQValue(state, policy, q))
+ 
   def learn(self):
     state = self.cmp.state
     # learning with queries
-    q = self.cmp.queries[0] # get a random query
+    q = self.cmp.queries[0] # initialize with a query
+    print "init q", q
     
     # iterate optimize over policy and query
     counter = 0
@@ -235,7 +254,6 @@ class IterativeQTPAgent(QTPAgent):
       q  = self.optimizeQuery(state, pi)
       if config.VERBOSE:
         print "Iteration #", counter
-        print "optimized pi", [(s, pi(s, -1)) for s in self.cmp.getStates()]
         print "optimized q", q
       
       if q == prevQ:
@@ -248,6 +266,7 @@ class IterativeQTPAgent(QTPAgent):
       pi = lambda s: self.viAgent.getPolicy(s)
     
     return q, pi, self.getQValue(state, pi, q)
+
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """

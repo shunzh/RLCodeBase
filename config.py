@@ -4,4 +4,8 @@ VERBOSE = True
 
 SAVE_TO_FILE = False
 
+# for AQTP
+FILTER_QUERY = True
+
+# use posterior clustering
 CLUSTER = False

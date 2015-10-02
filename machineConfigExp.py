@@ -13,19 +13,20 @@ gamma = 0.9
 # the time step that the agent receives the response
 responseTime = 2
 
+numMachines = 5
+numConfigs = 3
+
 # ask the operator: if this state is selected, what would you do?
-queries = [('S', 0, 0), (0, 'S', 0), (0, 0, 'S')]
+queries = [[0] * numMachines for _ in xrange(numMachines)]
+for _ in xrange(numMachines): queries[_][_] = 'S'
+queries = [tuple(query) for query in queries]
 #queries = [(0, 0, 0)]
 
 # for OQPP
 queryIgnored = False
-clusterDistance = float(sys.argv[1])
 
 def main():
   factoredRewards = []
-
-  numMachines = 3
-  numConfigs = 3
 
   rewardNum = 10
   # set the random seed here so the experiments are reproducible
@@ -68,7 +69,7 @@ def main():
 
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
-                queryIgnored=queryIgnored, clusterDistance=clusterDistance)
+                queryIgnored=queryIgnored)
  
   ret, qValue = Experiment(cmp, agent, gamma, rewardSet)
   print ret
