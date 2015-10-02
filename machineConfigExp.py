@@ -13,8 +13,8 @@ gamma = 0.9
 # the time step that the agent receives the response
 responseTime = 2
 
-numMachines = 5
-numConfigs = 3
+numMachines = 3
+numConfigs = 2
 
 # ask the operator: if this state is selected, what would you do?
 queries = [[0] * numMachines for _ in xrange(numMachines)]
@@ -64,8 +64,8 @@ def main():
   rewardNum = len(rewardSet)
   initialPhi = [1.0 / rewardNum] * rewardNum
 
-  Agent = JointQTPAgent
-  #Agent = IterativeQTPAgent
+  #Agent = JointQTPAgent
+  Agent = IterativeQTPAgent
 
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
