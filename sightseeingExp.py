@@ -9,16 +9,17 @@ height = 10
 # discount factor
 gamma = 0.9
 # the time step that the agent receives the response
-responseTime = 2
+responseTime = 5
 
-queries = [(2, 2, 0), (5, 5, 0), (8, 9, 0)]
+queries = [(1, 1, 0), (5, 9, 0), (9, 5, 0)]
 
 def main():
   rewards = []
 
   for query in queries:
+    x, y, status = query
     reward = util.Counter()
-    reward[query] = 1
+    reward[(x, y)] = 1
     rewards.append(reward)
 
   rewardSet = [rewardGen(reward) for reward in rewards]
@@ -39,7 +40,7 @@ def rewardGen(rewards):
     x, y, status = s
     if status == 1:
       if (x, y) in rewards.keys():
-        return rewards[s]
+        return rewards[(x, y)]
       else:
         return -1
     else:

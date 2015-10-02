@@ -28,6 +28,7 @@ queryIgnored = False
 def main():
   factoredRewards = []
 
+  """
   rewardNum = 10
   # set the random seed here so the experiments are reproducible
   # read seed from argument
@@ -52,7 +53,6 @@ def main():
   randomTable[(1, 2, 0)] = 5
   randomTable[(1, 2, 1)] = 4
   randomTable[(1, 2, 2)] = 3
-  """
 
   for idx in xrange(rewardNum):
     factoredRewards.append(lambda i, j, idx=idx: randomTable[(idx, i, j-1)])
@@ -64,8 +64,8 @@ def main():
   rewardNum = len(rewardSet)
   initialPhi = [1.0 / rewardNum] * rewardNum
 
-  #Agent = JointQTPAgent
-  Agent = IterativeQTPAgent
+  Agent = JointQTPAgent
+  #Agent = IterativeQTPAgent
 
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
