@@ -1,6 +1,10 @@
 import config
+import time
+
 def Experiment(cmp, agent, gamma, rewardSet, horizon=float('inf')):
+  t = time.time()
   q, pi, qValue = agent.learn()
+  timeElapsed = time.time() - t
  
   # init state
   state = cmp.state
@@ -31,4 +35,4 @@ def Experiment(cmp, agent, gamma, rewardSet, horizon=float('inf')):
     cmp.timeElapse()
     ret += reward * gamma ** cmp.timer
   
-  return ret, qValue
+  return ret, qValue, timeElapsed

@@ -221,9 +221,8 @@ class IterativeQTPAgent(QTPAgent):
       queries = []
       for query in self.cmp.queries:
         # FIXME
-        # overfit mc problem
-        feat = query.index('S')
-        if fState[feat] == 'S' or fState[feat] == 0:
+        # overfit sightseeing problem
+        if query[0] >= fState[0] and query[1] >= fState[1]:
           queries.append(query)
     else:
       queries = self.cmp.queries
