@@ -197,7 +197,6 @@ class JointQTPAgent(QTPAgent):
     pi = optPi
 
     if config.VERBOSE:
-      print "optimized pi", [(s, pi(s, 0)) for s in self.cmp.queries]
       print "optimized q", q
 
     if self.queryIgnored:

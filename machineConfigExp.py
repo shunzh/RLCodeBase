@@ -41,18 +41,12 @@ def main():
   rewardNum = 2
   randomTable = util.Counter()
   randomTable[(0, 0, 0)] = 5
-  randomTable[(0, 1, 0)] = 0
-  randomTable[(0, 1, 1)] = 2
-  randomTable[(0, 2, 0)] = 3
-  randomTable[(0, 2, 1)] = 5
-  randomTable[(0, 2, 2)] = 5
+  randomTable[(0, 1, 0)] = 1
+  randomTable[(0, 1, 1)] = -1
 
   randomTable[(1, 0, 0)] = 5
-  randomTable[(1, 1, 0)] = 2
+  randomTable[(1, 1, 0)] = -1
   randomTable[(1, 1, 1)] = 1
-  randomTable[(1, 2, 0)] = 5
-  randomTable[(1, 2, 1)] = 4
-  randomTable[(1, 2, 2)] = 3
 
   for idx in xrange(rewardNum):
     factoredRewards.append(lambda i, j, idx=idx: randomTable[(idx, i, j-1)])
@@ -71,16 +65,16 @@ def main():
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
                 queryIgnored=queryIgnored)
  
-  ret, qValue = Experiment(cmp, agent, gamma, rewardSet)
+  ret, qValue, elapsedTime = Experiment(cmp, agent, gamma, rewardSet)
   print ret
   print qValue
 
   if config.SAVE_TO_FILE:
-    rFile = open('results' + sys.argv[1], 'a')
+    rFile = open('results', 'a')
     rFile.write(str(ret) + '\n')
     rFile.close()
 
-    bFile = open('beliefs' + sys.argv[1], 'a')
+    bFile = open('beliefs', 'a')
     bFile.write(str(qValue) + '\n')
     bFile.close()
 

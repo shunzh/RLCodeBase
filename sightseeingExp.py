@@ -14,7 +14,7 @@ gamma = 0.9
 # the time step that the agent receives the response
 responseTime = 10
 
-queries = [(int(width * random.random()), int(width * random.random()), 0)\
+queries = [(int((width - 1) * random.random()), int((width - 1) * random.random()), 0)\
            for _ in xrange(10)]
 
 def main():
@@ -24,7 +24,7 @@ def main():
   for _ in xrange(rewardNum):
     # for each reward candidate, 5 possible sights
     reward = util.Counter()
-    for idx in xrange(5):
+    for idx in xrange(3):
       query = random.choice(queries)
       x, y, status = query
       reward[(x, y)] = 1
