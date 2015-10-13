@@ -33,8 +33,8 @@ def main():
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardNum] * rewardNum
 
-  #Agent = JointQTPAgent
-  Agent = IterativeQTPAgent
+  Agent = JointQTPAgent
+  #Agent = IterativeQTPAgent
   cmp = Sightseeing(queries, rewardSet[0], gamma, responseTime, width, height)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  
