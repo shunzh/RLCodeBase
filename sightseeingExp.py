@@ -6,16 +6,18 @@ import random
 import sys
 import config
 
-width = 10
-height = 10
+scale = 1
+width = 10 * scale
+height = 10 * scale
 
 # discount factor
 gamma = 0.9
 # the time step that the agent receives the response
-responseTime = 10
+responseTime = 10 * scale
 
+random.seed(sys.argv[1])
 queries = [(int((width - 1) * random.random()), int((width - 1) * random.random()), 0)\
-           for _ in xrange(10)]
+           for _ in xrange(10 * scale)]
 
 def main():
   rewards = []
@@ -24,7 +26,7 @@ def main():
   for _ in xrange(rewardNum):
     # for each reward candidate, 5 possible sights
     reward = util.Counter()
-    for idx in xrange(3):
+    for idx in xrange(5 * scale):
       query = random.choice(queries)
       x, y, status = query
       reward[(x, y)] = 1
@@ -33,8 +35,8 @@ def main():
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardNum] * rewardNum
 
-  Agent = JointQTPAgent
-  #Agent = IterativeQTPAgent
+  #Agent = JointQTPAgent
+  Agent = IterativeQTPAgent
   cmp = Sightseeing(queries, rewardSet[0], gamma, responseTime, width, height)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  

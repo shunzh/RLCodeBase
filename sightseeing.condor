@@ -8,5 +8,5 @@ Log        = condor.log
 
 num_of_processes=400
 
-Arguments = sightseeingExp.py
+Arguments = sightseeingExp.py $(Process)
 Queue $(num_of_processes)
