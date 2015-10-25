@@ -5,4 +5,4 @@ VERBOSE = True
 SAVE_TO_FILE = True
 
 # for AQTP
-FILTER_QUERY = False
+FILTER_QUERY = True
