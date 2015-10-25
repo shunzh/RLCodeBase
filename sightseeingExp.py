@@ -6,7 +6,7 @@ import random
 import sys
 import config
 
-scale = 1
+scale = 2
 width = 10 * scale
 height = 10 * scale
 
@@ -15,7 +15,6 @@ gamma = 0.9
 # the time step that the agent receives the response
 responseTime = 10 * scale
 
-random.seed(sys.argv[1])
 queries = [(int((width - 1) * random.random()), int((width - 1) * random.random()), 0)\
            for _ in xrange(10 * scale)]
 
@@ -35,8 +34,8 @@ def main():
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardNum] * rewardNum
 
-  #Agent = JointQTPAgent
-  Agent = IterativeQTPAgent
+  Agent = JointQTPAgent
+  #Agent = IterativeQTPAgent
   cmp = Sightseeing(queries, rewardSet[0], gamma, responseTime, width, height)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  

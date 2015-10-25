@@ -1,26 +1,24 @@
 function main()
   clear all; close all;
 
-  plot([100, 400], [0.478, 0.133], '*-');
+  errorbar([100, 400], [0.598, 0.204], [0.058, 0.049], '*-');
   hold on
-  plot([100, 400], [0.471, 0.131], 'o-');
-  plot([100, 400], [0.502, 0.150], '+--');
+  errorbar([100, 400], [0.647, 0.215], [0.062, 0.044], '+--');
 
-  legend('AQTP', 'AQTP (no filtering)', 'JQTP');
+  legend('AQTP', 'JQTP');
   xlabel('Number of States');
   ylabel('Accumulated Return');
-  axis([0, 500, 0, 0.6]);
+  axis([0, 500, 0, 0.8]);
 
 
   figure;
 
-  plot([100, 400], [2.674, 44.043], '*-');
+  errorbar([100, 400], [3.838, 45.927], [0.269, 1.306], '*-');
   hold on
-  plot([100, 400], [9.703, 66.288], 'o-');
-  plot([100, 400], [10.463, 68.599], '+--');
+  errorbar([100, 400], [11.517, 155.710], [0.135, 1.485], '+--');
 
-  legend('AQTP', 'AQTP (no filtering)', 'JQTP');
+  legend('AQTP', 'JQTP');
   xlabel('Number of States');
   ylabel('Computation Time (sec.)');
-  axis([0, 500, 0, 100]);
+  axis([0, 500, 0, 250]);
 end
