@@ -40,7 +40,7 @@ def main():
   cmp = Sightseeing(queries, rewardSet[0], gamma, responseTime, width, height)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  
-  ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet)
+  ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet, horizon=20)
   print ret
   print qValue
 
