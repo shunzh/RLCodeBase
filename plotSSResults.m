@@ -1,23 +1,25 @@
 function main()
   clear all; close all;
 
-  errorbar([100, 400], [0.598, 0.204], [0.058, 0.049], '*-');
+  errorbar([100, 400], [0.674, 0.271], [0.058, 0.047], '*-');
   hold on
-  errorbar([100, 400], [0.647, 0.215], [0.062, 0.044], '+--');
+  errorbar([100, 400], [0.715, 0.296], [0.059, 0.049], 'o-');
+  errorbar([100, 400], [0.727, 0.300], [0.120, 0.046], '+--');
 
-  legend('AQTP', 'JQTP');
+  legend('AQTP', 'AQTP-RS', 'JQTP');
   xlabel('Number of States');
   ylabel('Accumulated Return');
-  axis([0, 500, 0, 0.8]);
+  axis([0, 500, 0.2, 0.8]);
 
 
   figure;
 
-  errorbar([100, 400], [3.838, 45.927], [0.269, 1.306], '*-');
+  errorbar([100, 400], [3.507, 45.360], [0.165, 1.341], '*-');
   hold on
-  errorbar([100, 400], [11.517, 155.710], [0.135, 1.485], '+--');
+  errorbar([100, 400], [7.528, 90.511], [0.234, 2.618], 'o-');
+  errorbar([100, 400], [10.607, 157.824], [0.141, 2.046], '+--');
 
-  legend('AQTP', 'JQTP');
+  legend('AQTP', 'AQTP-RS', 'JQTP');
   xlabel('Number of States');
   ylabel('Computation Time (sec.)');
   axis([0, 500, 0, 250]);
