@@ -65,7 +65,7 @@ def main():
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
                 queryIgnored=queryIgnored)
  
-  ret, qValue, elapsedTime = Experiment(cmp, agent, gamma, rewardSet)
+  ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet)
   print ret
   print qValue
 
@@ -77,6 +77,10 @@ def main():
     bFile = open('beliefs', 'a')
     bFile.write(str(qValue) + '\n')
     bFile.close()
+
+    tFile = open('time', 'a')
+    tFile.write(str(timeElapsed) + '\n')
+    tFile.close()
 
 def rewardFuncGen(factorRewardFunc, size):
   def func(s):

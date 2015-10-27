@@ -5,6 +5,7 @@ import numpy
 import util
 import pprint
 import config
+import random
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9,\
@@ -231,10 +232,10 @@ class IterativeQTPAgent(QTPAgent):
 
     return max(queries, key=lambda q: self.getQValue(state, policy, q))
  
-  def learn(self):
+  def learnInstance(self):
     state = self.cmp.state
     # learning with queries
-    q = self.cmp.queries[0] # initialize with a query
+    q = random.choice(self.cmp.queries) # initialize with a query
     print "init q", q
     
     # iterate optimize over policy and query
@@ -258,7 +259,14 @@ class IterativeQTPAgent(QTPAgent):
       pi = lambda s: self.viAgent.getPolicy(s)
     
     return q, pi, self.getQValue(state, pi, q)
-
+  
+  def learn(self):
+    results = []
+    for _ in xrange(config.AQTP_RESTARTS + 1):
+      results.append(self.learnInstance())
+    
+    # return the results with maximum q value
+    return max(results, key=lambda x: x[2])
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """

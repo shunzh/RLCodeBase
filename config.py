@@ -6,3 +6,6 @@ SAVE_TO_FILE = True
 
 # for AQTP
 FILTER_QUERY = True
+
+# run AQTP for AQTP_RESTARTS + 1 times
+AQTP_RESTARTS = 1
