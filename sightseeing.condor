@@ -6,7 +6,7 @@ Notification = Never
 Notify_user = menie482@cs.utexas.edu
 Log        = condor.log
 
-num_of_processes=400
+num_of_processes=800
 
-Arguments = sightseeingExp.py
+Arguments = sightseeingExp.py $(Process)
 Queue $(num_of_processes)

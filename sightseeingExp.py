@@ -15,6 +15,7 @@ gamma = 0.9
 # the time step that the agent receives the response
 responseTime = 10 * scale
 
+random.seed(sys.argv[1])
 queries = [(int((width - 1) * random.random()), int((width - 1) * random.random()), 0)\
            for _ in xrange(10 * scale)]
 
