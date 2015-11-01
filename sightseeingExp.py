@@ -6,17 +6,18 @@ import random
 import sys
 import config
 
-scale = 2
-width = 10 * scale
-height = 10 * scale
+scale = 1
+# it is like a corridor from the driver's view
+width = 3 * scale
+height = 8 * 4 * scale
 
 # discount factor
 gamma = 0.9
 # the time step that the agent receives the response
-responseTime = 10 * scale
+responseTime = 15 * scale
 
 random.seed(sys.argv[1])
-queries = [(int((width - 1) * random.random()), int((width - 1) * random.random()), 0)\
+queries = [(int((width - 1) * random.random()), int((width - 1) * random.random()), 1, 0)\
            for _ in xrange(10 * scale)]
 
 def main():
@@ -28,15 +29,15 @@ def main():
     reward = util.Counter()
     for idx in xrange(5 * scale):
       query = random.choice(queries)
-      x, y, status = query
+      x, y, dir, status = query
       reward[(x, y)] = 1
     rewards.append(reward)
 
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardNum] * rewardNum
 
-  #Agent = JointQTPAgent
-  Agent = IterativeQTPAgent
+  Agent = JointQTPAgent
+  #Agent = IterativeQTPAgent
   cmp = Sightseeing(queries, rewardSet[0], gamma, responseTime, width, height)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  
@@ -59,7 +60,7 @@ def main():
 
 def rewardGen(rewards): 
   def rewardFunc(s):
-    x, y, status = s
+    x, y, dir, status = s
     if status == 1:
       if (x, y) in rewards.keys():
         return rewards[(x, y)]
