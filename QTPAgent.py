@@ -222,8 +222,12 @@ class IterativeQTPAgent(QTPAgent):
       for query in self.cmp.queries:
         # FIXME
         # overfit sightseeing problem
-        if query[0] >= fState[0] and query[1] >= fState[1]:
-          queries.append(query)
+        if fState[2] == 1:
+          if query[0] > fState[0] and query[2] == 1:
+            queries.append(query)
+        else:
+          if query[0] < fState[0] and query[2] == -1:
+            queries.append(query)
     else:
       queries = self.cmp.queries
     
@@ -233,8 +237,11 @@ class IterativeQTPAgent(QTPAgent):
     return max(queries, key=lambda q: self.getQValue(state, policy, q))
  
   def learnInstance(self):
+    # there could be multiple initializations for AQTP
+    # this is learning with one initial query
     state = self.cmp.state
     # learning with queries
+    print self.cmp.queries
     q = random.choice(self.cmp.queries) # initialize with a query
     print "init q", q
     

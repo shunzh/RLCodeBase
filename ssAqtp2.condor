@@ -4,9 +4,10 @@ Executable = /usr/local/bin/python
 +Group = "grad"
 Notification = Never
 Notify_user = menie482@cs.utexas.edu
-Log        = condor.log
+Output     = ssAqtp2_out.$(Process)
+Error      = ssAqtp2_err.$(Process)
 
 num_of_processes=800
 
-Arguments = sightseeingExp.py $(Process)
+Arguments = sightseeingExp.py 2 AQTP 
 Queue $(num_of_processes)

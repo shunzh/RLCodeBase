@@ -1,0 +1,13 @@
+Universe = vanilla
+Executable = /usr/local/bin/python
++Project = "AI_ROBOTICS"
++Group = "grad"
+Notification = Never
+Notify_user = menie482@cs.utexas.edu
+Output     = ssJqtp_out.$(Process)
+Error      = ssJqtp_err.$(Process)
+
+num_of_processes=800
+
+Arguments = sightseeingExp.py 1 AQTP 
+Queue $(num_of_processes)

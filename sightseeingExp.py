@@ -4,9 +4,10 @@ import util
 from sightseeing import Sightseeing
 import random
 import sys
-import config
 
-scale = 1
+# arguments: sightseeingExp.py scale algorithm
+
+scale = int(sys.argv[1])
 # it is like a corridor from the driver's view
 width = 8 * 4 * scale
 height = 3
@@ -14,11 +15,14 @@ height = 3
 # discount factor
 gamma = 0.9
 # the time step that the agent receives the response
-responseTime = 15 * scale
+responseTime = 16 * scale
 
-random.seed(sys.argv[1])
-queries = [(int(width * random.random()), int(height * random.random()), 1, 0)\
-           for _ in xrange(10 * scale)]
+queries = []
+for _ in xrange(10 * scale):
+  x = int(width * random.random())
+  y = int(height * random.random())
+  queries.append((x, y, 1, 0))
+  queries.append((x, y, -1, 0))
 
 def main():
   rewards = []
@@ -36,27 +40,20 @@ def main():
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardNum] * rewardNum
 
-  Agent = JointQTPAgent
-  #Agent = IterativeQTPAgent
+  if sys.argv[2] == 'JQTP':
+    Agent = JointQTPAgent
+  elif sys.argv[2] == 'AQTP':
+    Agent = IterativeQTPAgent
+  else:
+    raise Exception("Unknown Agent " + sys.argv[2])
+
   cmp = Sightseeing(queries, rewardSet[0], gamma, responseTime, width, height)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  
   ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet)
   print ret
   print qValue
-
-  if config.SAVE_TO_FILE:
-    rFile = open('results', 'a')
-    rFile.write(str(ret) + '\n')
-    rFile.close()
-
-    bFile = open('beliefs', 'a')
-    bFile.write(str(qValue) + '\n')
-    bFile.close()
-
-    tFile = open('time', 'a')
-    tFile.write(str(timeElapsed) + '\n')
-    tFile.close()
+  print timeElapsed
 
 def rewardGen(rewards): 
   def rewardFunc(s):
