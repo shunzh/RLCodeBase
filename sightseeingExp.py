@@ -8,8 +8,8 @@ import config
 
 scale = 1
 # it is like a corridor from the driver's view
-width = 3 * scale
-height = 8 * 4 * scale
+width = 8 * 4 * scale
+height = 3
 
 # discount factor
 gamma = 0.9
@@ -17,7 +17,7 @@ gamma = 0.9
 responseTime = 15 * scale
 
 random.seed(sys.argv[1])
-queries = [(int((width - 1) * random.random()), int((width - 1) * random.random()), 1, 0)\
+queries = [(int(width * random.random()), int(height * random.random()), 1, 0)\
            for _ in xrange(10 * scale)]
 
 def main():
@@ -66,7 +66,7 @@ def rewardGen(rewards):
         return rewards[(x, y)]
       else:
         return -1
-    elif s[0] == width - 1 and s[1] == height - 1:
+    elif s[0] == 0 and s[1] == 0 and s[2] != 0:
       return 2
     else:
       return 0

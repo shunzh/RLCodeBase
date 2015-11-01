@@ -14,7 +14,8 @@ class Sightseeing(ControlledMarkovProcess):
                                   for y in xrange(self.height)\
                                   for dir in [-1, 1]\
                                   for status in xrange(2)]
-    states += [(0, 0, 0, 0)]
+    states += [(0, y, 0, status) for y in xrange(self.height)\
+                                 for status in xrange(2)]
     return states
 
   def reset(self):
@@ -25,17 +26,20 @@ class Sightseeing(ControlledMarkovProcess):
 
   def getPossibleActions(self, state):
     # actions are coordinate diff
-    actions = []
-    if state[3] != 1: actions.append('Drop')
-    
-    # can navigate north or south
-    if state[1] > 0: actions.append('North')
-    if state[1] < self.height - 1: actions.append('South')
-    
-    # navigate east or west depending on the direction it chooses
-    # not that state[2] == 0 only at the initial state, so it chooses the direction in the first step
-    if state[2] <= 0: actions.append('West')
-    if state[2] >= 0: actions.append('East')
+    if state[2] == 0:
+      actions = ['East', 'West']
+    else:
+      actions = []
+      if state[3] != 1: actions.append('Drop')
+      
+      # can navigate north or south depends on which column
+      if state[1] > 0 and state[0] % 2 == 0: actions.append('North')
+      if state[1] < self.height - 1 and state[0] % 2 == 1: actions.append('South')
+      
+      # navigate east or west depending on the direction it chooses
+      # not that state[2] == 0 only at the initial state, so it chooses the direction in the first step
+      if state[2] <= 0: actions.append('West')
+      if state[2] >= 0: actions.append('East')
     
     return actions
   

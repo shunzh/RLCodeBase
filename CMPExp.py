@@ -30,7 +30,7 @@ def Experiment(cmp, agent, gamma, rewardSet, horizon=float('inf')):
     
     action = pi(state, cmp.timer)
     state, reward = cmp.doAction(action)
-    if config.VERBOSE: print 's', state, 'r', reward
+    if config.VERBOSE: print 's', state, 'a', action, 'r', reward
 
     cmp.timeElapse()
     ret += reward * gamma ** cmp.timer
