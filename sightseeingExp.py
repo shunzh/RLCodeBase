@@ -9,13 +9,15 @@ import sys
 
 scale = int(sys.argv[1])
 # it is like a corridor from the driver's view
-width = 8 * 4 * scale
+width = 20 * scale
 height = 3
 
 # discount factor
 gamma = 0.9
 # the time step that the agent receives the response
-responseTime = 16 * scale
+responseTime = 10 * scale
+
+random.seed(sys.argv[3])
 
 queries = []
 for _ in xrange(10 * scale):

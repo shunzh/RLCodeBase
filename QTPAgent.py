@@ -241,7 +241,6 @@ class IterativeQTPAgent(QTPAgent):
     # this is learning with one initial query
     state = self.cmp.state
     # learning with queries
-    print self.cmp.queries
     q = random.choice(self.cmp.queries) # initialize with a query
     print "init q", q
     
