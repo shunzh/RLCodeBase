@@ -7,7 +7,7 @@ Notify_user = menie482@cs.utexas.edu
 Output     = ssJqtp_out.$(Process)
 Error      = ssJqtp_err.$(Process)
 
-num_of_processes=800
+num_of_processes=400
 
-Arguments = sightseeingExp.py 1 JQTP 
+Arguments = sightseeingExp.py 1 JQTP $(Process)
 Queue $(num_of_processes)

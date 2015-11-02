@@ -7,7 +7,7 @@ Notify_user = menie482@cs.utexas.edu
 Output     = ssAqtp2_out.$(Process)
 Error      = ssAqtp2_err.$(Process)
 
-num_of_processes=800
+num_of_processes=400
 
-Arguments = sightseeingExp.py 2 AQTP 
+Arguments = sightseeingExp.py 2 AQTP $(Process)
 Queue $(num_of_processes)
