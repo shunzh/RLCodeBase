@@ -4,6 +4,7 @@ import util
 from sightseeing import Sightseeing
 import random
 import sys
+import config
 
 # arguments: sightseeingExp.py scale algorithm
 
@@ -46,16 +47,28 @@ def main():
     Agent = JointQTPAgent
   elif sys.argv[2] == 'AQTP':
     Agent = IterativeQTPAgent
+  elif sys.argv[2] == 'AQTP-NE':
+    Agent = IterativeQTPAgent
+    config.FILTER_QUERY = False
   else:
     raise Exception("Unknown Agent " + sys.argv[2])
 
   cmp = Sightseeing(queries, rewardSet[0], gamma, responseTime, width, height)
-  agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
+  agent = Agent(cmp, rewardSet, initialPhi, relevance, gamma=gamma)
  
   ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet)
   print ret
   print qValue
   print timeElapsed
+
+def relevance(fState, query):
+  # see whether feature, query are relevant
+  if fState[2] == 1:
+    if query[0] > fState[0] and query[2] == 1:
+      return True
+  else:
+    if query[0] < fState[0] and query[2] == -1:
+      return True
 
 def rewardGen(rewards): 
   def rewardFunc(s):

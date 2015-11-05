@@ -3,13 +3,13 @@ function main()
 
   [am, aci] = process('ssAqtp_out', 1);
   [a2m, a2ci] = process('ssAqtp2_out', 1);
-  errorbar([100, 400], [am, a2m], [aci, a2ci], '*-');
+  errorbar([60, 120], [am, a2m], [aci, a2ci], '*-');
   hold on
   [jm, jci] = process('ssJqtp_out', 1);
   [j2m, j2ci] = process('ssJqtp2_out', 1);
-  errorbar([100, 400], [jm, j2m], [jci, j2ci], '+--');
+  errorbar([60, 120], [jm, j2m], [jci, j2ci], '+--');
 
-  legend('AQTP', 'JQTP');
+  legend('AQTP-QE', 'E-JQTP');
   xlabel('Number of States');
   ylabel('Accumulated Return');
 
@@ -18,13 +18,13 @@ function main()
 
   [am, aci] = process('ssAqtp_out', 2);
   [a2m, a2ci] = process('ssAqtp2_out', 2);
-  errorbar([100, 400], [am, a2m], [aci, a2ci], '*-');
+  errorbar([60, 120], [am, a2m], [aci, a2ci], '*-');
   hold on
   [jm, jci] = process('ssJqtp_out', 2);
   [j2m, j2ci] = process('ssJqtp2_out', 2);
-  errorbar([100, 400], [jm, j2m], [jci, j2ci], '+--');
+  errorbar([60, 120], [jm, j2m], [jci, j2ci], '+--');
 
-  legend('AQTP', 'JQTP');
+  legend('AQTP-QE', 'E-JQTP');
   xlabel('Number of States');
   ylabel('Optimal Q-Value');
 
@@ -33,20 +33,20 @@ function main()
 
   [am, aci] = process('ssAqtp_out', 3);
   [a2m, a2ci] = process('ssAqtp2_out', 3);
-  errorbar([100, 400], [am, a2m], [aci, a2ci], '*-');
+  errorbar([60, 120], [am, a2m], [aci, a2ci], '*-');
   hold on
   [jm, jci] = process('ssJqtp_out', 3);
   [j2m, j2ci] = process('ssJqtp2_out', 3);
-  errorbar([100, 400], [jm, j2m], [jci, j2ci], '+--');
+  errorbar([60, 120], [jm, j2m], [jci, j2ci], '+--');
 
-  legend('AQTP', 'JQTP', 'Location', 'northwest');
+  legend('AQTP-QE', 'E-JQTP', 'Location', 'northwest');
   xlabel('Number of States');
   ylabel('Computation Time (sec.)');
 end
 
 function [m, ci] = process(filename, lineId)
   ret = [];
-  for i=0:799
+  for i=0:399
     [status results] = system(['tail -n 3 ', filename, '.', num2str(i)]);
     results = str2num(results);
     if status == 0 && size(results, 1) == 3

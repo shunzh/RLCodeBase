@@ -8,8 +8,8 @@ import config
 import random
 
 class QTPAgent:
-  def __init__(self, cmp, rewardSet, initialPhi, gamma=0.9,\
-               queryIgnored=False, clusterDistance=0):
+  def __init__(self, cmp, rewardSet, initialPhi, relevance,
+               gamma=0.9, queryIgnored=False, clusterDistance=0):
     """
     queryIgnored
       Query is asked, but the agent forgets such query is asked and planning using the prior belief.
@@ -22,6 +22,7 @@ class QTPAgent:
     self.gamma = gamma
     # init belief on rewards in rewardSet
     self.phi = initialPhi
+    self.relevance = relevance
     self.queryIgnored = queryIgnored
 
     self.clusterDistance = clusterDistance
@@ -222,12 +223,7 @@ class IterativeQTPAgent(QTPAgent):
       for query in self.cmp.queries:
         # FIXME
         # overfit sightseeing problem
-        if fState[2] == 1:
-          if query[0] > fState[0] and query[2] == 1:
-            queries.append(query)
-        else:
-          if query[0] < fState[0] and query[2] == -1:
-            queries.append(query)
+        if self.relevance(fState, query): queries.append(query)
     else:
       queries = self.cmp.queries
     

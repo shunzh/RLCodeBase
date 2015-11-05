@@ -21,10 +21,10 @@ class RobotNavigation(ControlledMarkovProcess):
     return [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
   
   def getTransitionStatesAndProbs(self, state, action):
-    newState = self.stateSanityCheck((state[0] + action[0], state[1] + action[1]))
+    newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
     return [(newState, 1)]
   
-  def stateSanityCheck(self, state):
+  def adjustState(self, state):
     state = list(state)
 
     if state[0] < 0: state[0] = 0
