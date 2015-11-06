@@ -63,7 +63,7 @@ class QTPAgent:
 
   def getVIAgent(self, phi):
     """
-    Return a trained value iteratoin agent with given phi.
+    Return a trained value iteration agent with given phi.
     So we can use getValue, getPolicy, getQValue, etc.
     """
     rewardFunc = self.getRewardFunc(phi)

@@ -20,14 +20,14 @@ responseTime = 10 * scale
 
 random.seed(sys.argv[3])
 
+locations = [(random.randint(1, width - 1), random.randint(0, height - 1)) for _ in xrange(6 * scale)]
+# sort by x coordinate for convenience
+locations.sort(key=lambda _: _[0])
 queries = []
 for _ in xrange(6 * scale):
-  x = random.randint(1, width - 1)
-  y = random.randint(0, height - 1)
+  x, y = locations[_]
   queries.append((x, y, 1, 0))
   queries.append((x, y, -1, 0))
-# sort queries by x coordinate for convenience
-queries.sort(key=lambda _: _[0])
 
 def main():
   rewards = []
@@ -37,10 +37,8 @@ def main():
   for _ in xrange(rewardNum):
     # for each reward candidate, 5 possible sights
     reward = util.Counter()
-    for idx in xrange(4 * _, 4 * _ + 4):
-      query = queries[idx]
-      x, y, dir, status = query
-      reward[(x, y)] = 1
+    for idx in xrange(2 * scale * _, 2 * scale * (_ + 1)):
+      reward[locations[idx]] = 1
     rewards.append(reward)
 
   rewardSet = [rewardGen(reward) for reward in rewards]
