@@ -21,21 +21,24 @@ responseTime = 10 * scale
 random.seed(sys.argv[3])
 
 queries = []
-for _ in xrange(10 * scale):
-  x = int(width * random.random())
-  y = int(height * random.random())
+for _ in xrange(6 * scale):
+  x = random.randint(1, width - 1)
+  y = random.randint(0, height - 1)
   queries.append((x, y, 1, 0))
   queries.append((x, y, -1, 0))
+# sort queries by x coordinate for convenience
+queries.sort(key=lambda _: _[0])
 
 def main():
   rewards = []
-  rewardNum = 5
+  rewardNum = 3
 
+  # divide features by regions
   for _ in xrange(rewardNum):
     # for each reward candidate, 5 possible sights
     reward = util.Counter()
-    for idx in xrange(5 * scale):
-      query = random.choice(queries)
+    for idx in xrange(4 * _, 4 * _ + 4):
+      query = queries[idx]
       x, y, dir, status = query
       reward[(x, y)] = 1
     rewards.append(reward)
@@ -53,7 +56,7 @@ def main():
   else:
     raise Exception("Unknown Agent " + sys.argv[2])
 
-  cmp = Sightseeing(queries, rewardSet[0], gamma, responseTime, width, height)
+  cmp = Sightseeing(queries, random.choice(rewardSet), gamma, responseTime, width, height)
   agent = Agent(cmp, rewardSet, initialPhi, relevance, gamma=gamma)
  
   ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet)
@@ -64,10 +67,12 @@ def main():
 def relevance(fState, query):
   # see whether feature, query are relevant
   if fState[2] == 1:
-    if query[0] > fState[0] and query[2] == 1:
+    # forward
+    if query[0] >= fState[0] and query[2] == 1:
       return True
   else:
-    if query[0] < fState[0] and query[2] == -1:
+    # backward
+    if query[0] <= fState[0] and query[2] == -1:
       return True
 
 def rewardGen(rewards): 

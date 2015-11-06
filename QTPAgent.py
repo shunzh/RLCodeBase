@@ -152,15 +152,11 @@ class QTPAgent:
       for state in self.cmp.getStates():
         v[state] += fViAgent.getValue(state) * fPhiProb
 
-    if config.DEBUG:
-      print query, "future v"
-      pprint.pprint([(s, v[s]) for s in self.cmp.getStates()])
-
     cmp = copy.deepcopy(self.cmp)
     cmp.getReward = self.getRewardFunc(self.phi)
     responseTime = cmp.responseTime
 
-    # backpropogate `responseTime` time steps
+    # `responseTime` time steps
     viAgent = ValueIterationAgent(cmp, discount=self.gamma, iterations=responseTime, initValues=v)
     viAgent.learn()
     # this is a non-stationary policy
@@ -218,7 +214,7 @@ class IterativeQTPAgent(QTPAgent):
       # FIXME
       # assuming deterministic
       fState = possibleStatesAndProbs[0][0]
-
+      
       queries = []
       for query in self.cmp.queries:
         # FIXME
@@ -249,7 +245,8 @@ class IterativeQTPAgent(QTPAgent):
       q  = self.optimizeQuery(state, pi)
       if config.VERBOSE:
         print "Iteration #", counter
-        print "optimized q", q
+        print "optimized pi", self.cmp.state, pi(self.cmp.state, 0)
+        print "optimized q ", q
       
       if q == prevQ:
         # converged
