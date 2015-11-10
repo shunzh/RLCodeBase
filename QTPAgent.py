@@ -1,14 +1,13 @@
 from learningAgents import ReinforcementAgent
 from valueIterationAgents import ValueIterationAgent
 import copy
-import numpy
 import util
 import pprint
 import config
 import random
 
 class QTPAgent:
-  def __init__(self, cmp, rewardSet, initialPhi, relevance,
+  def __init__(self, cmp, rewardSet, initialPhi,
                gamma=0.9, queryIgnored=False, clusterDistance=0):
     """
     queryIgnored
@@ -22,7 +21,6 @@ class QTPAgent:
     self.gamma = gamma
     # init belief on rewards in rewardSet
     self.phi = initialPhi
-    self.relevance = relevance
     self.queryIgnored = queryIgnored
 
     self.clusterDistance = clusterDistance
@@ -204,12 +202,25 @@ class JointQTPAgent(QTPAgent):
     return q, pi, self.getQValue(state, pi, q)
 
 
-class IterativeQTPAgent(QTPAgent):
+class AlternatingQTPAgent(QTPAgent):
+  def __init__(self, cmp, rewardSet, initialPhi, relevance, gamma,\
+               filterQuery = True, restarts = 0):
+    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, gamma)
+    self.relevance = relevance
+    self.filterQuery = filterQuery
+    self.restarts = restarts
+
+  def setFilterQuery(self, bool):
+    self.filterQuery = bool
+    
+  def setRestarts(self, num):
+    self.restarts = num
+
   def optimizeQuery(self, state, policy):
     """
     Enumerate relevant considering the states reachable by the transient policy.
     """
-    if config.FILTER_QUERY:
+    if self.filterQuery:
       possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, self.cmp.responseTime)
       # FIXME
       # assuming deterministic
@@ -261,7 +272,7 @@ class IterativeQTPAgent(QTPAgent):
   
   def learn(self):
     results = []
-    for _ in xrange(config.AQTP_RESTARTS + 1):
+    for _ in xrange(self.restarts + 1):
       results.append(self.learnInstance())
     
     # return the results with maximum q value

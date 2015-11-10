@@ -1,4 +1,4 @@
-from QTPAgent import IterativeQTPAgent, JointQTPAgent
+from QTPAgent import AlternatingQTPAgent, JointQTPAgent
 from windyCorridor import WindyCorridor
 from CMPExp import Experiment
 import util
@@ -52,7 +52,7 @@ def main():
   initialPhi = [1.0 / rewardNum] * rewardNum
 
   Agent = JointQTPAgent
-  #Agent = IterativeQTPAgent
+  #Agent = AlternatingQTPAgent
   cmp = WindyCorridor(queries, rewardSet[0], gamma, responseTime, interLength, interNum, circular)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  

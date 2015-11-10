@@ -1,5 +1,5 @@
 from machineConfig import MachineConfiguration
-from QTPAgent import IterativeQTPAgent, JointQTPAgent
+from QTPAgent import AlternatingQTPAgent, JointQTPAgent
 import random
 import util
 import config
@@ -59,7 +59,7 @@ def main():
   initialPhi = [1.0 / rewardNum] * rewardNum
 
   Agent = JointQTPAgent
-  #Agent = IterativeQTPAgent
+  #Agent = AlternatingQTPAgent
 
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\

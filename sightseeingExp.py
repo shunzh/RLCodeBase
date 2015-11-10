@@ -1,4 +1,4 @@
-from QTPAgent import IterativeQTPAgent, JointQTPAgent
+from QTPAgent import AlternatingQTPAgent, JointQTPAgent
 from CMPExp import Experiment
 import util
 from sightseeing import Sightseeing
@@ -47,9 +47,9 @@ def main():
   if sys.argv[2] == 'JQTP':
     Agent = JointQTPAgent
   elif sys.argv[2] == 'AQTP':
-    Agent = IterativeQTPAgent
+    Agent = AlternatingQTPAgent
   elif sys.argv[2] == 'AQTP-NE':
-    Agent = IterativeQTPAgent
+    Agent = AlternatingQTPAgent
     config.FILTER_QUERY = False
   else:
     raise Exception("Unknown Agent " + sys.argv[2])
