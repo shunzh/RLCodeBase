@@ -1,6 +1,12 @@
 from mdp import MarkovDecisionProcess
 from valueIterationAgents import ValueIterationAgent
+import numpy
 
+# possible type of queries
+# TODO some are not implemented
+class QueryType:
+  POLICY, REWARD_SIGN = range(2)
+  
 class ControlledMarkovProcess(MarkovDecisionProcess):
   def __init__(self, queries, trueReward, gamma, responseTime):
     MarkovDecisionProcess.__init__(self)
@@ -10,6 +16,9 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     self.queries = queries
     self.responseTime = responseTime
     
+    # let agent know use finite or infinite horizon vi
+    self.finiteHorizon = False
+    
     # the real reward function
     # learn a VI agent on this reward setting, and policy will be decided.
     self.getReward = trueReward
@@ -18,7 +27,8 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
 
   def query(self, q):
     """
-    Ask the policy of this state
+    q = (QueryType, state)
+    type = ['policy','reward','rewardSign']
     """
     self.outsandingQuery = (q, self.timer + self.responseTime)
   
@@ -34,7 +44,14 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     """
     if self.outsandingQuery != None and self.timer >= self.outsandingQuery[1]:
       # issues a response
-      res = self.viAgent.getPolicy(self.outsandingQuery[0])
+      type, s = self.outsandingQuery[0]
+      if type == QueryType.POLICY:
+        res = self.viAgent.getPolicy()
+      elif type == QueryType.REWARD_SIGN:
+        res = numpy.sign(self.getReward(s))
+      else:
+        raise Exception('Unkown type of query ' + str(type))
+      
       self.outsandingQuery = None
       return res
     else: return None

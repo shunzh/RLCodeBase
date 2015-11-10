@@ -1,10 +1,13 @@
 import config
 import time
 
-def Experiment(cmp, agent, gamma, rewardSet, horizon=float('inf')):
+def Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   t = time.time()
   q, pi, qValue = agent.learn()
   timeElapsed = time.time() - t
+  
+  # add query type here
+  q = [queryType, q]
  
   # init state
   state = cmp.state

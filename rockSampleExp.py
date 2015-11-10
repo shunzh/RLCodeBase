@@ -6,9 +6,9 @@ from rockSample import RockSample
 import random
 import getopt
 import config
+from cmp import QueryType
 
 """
-Plan:
 Algorithms:
 - E-JQTP
 - AQTP
@@ -31,9 +31,10 @@ def main():
   height = 10
   # the time step that the agent receives the response
   responseTime = 10
-  horizon = 20
+  horizon = 30
   objNum = 5
   rewardCandNum = 3
+  objNumPerFeat = 2
   # discount factor
   gamma = 0.9
   stepCost = 0
@@ -69,8 +70,8 @@ def main():
   rewards = []
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
-    rewardSignal = random.random()
-    for idx in xrange(2):
+    rewardSignal = -1 + 2 * random.random()
+    for idx in xrange(objNumPerFeat):
       q = random.choice(queries)
       reward[q] = rewardSignal 
     rewards.append(reward)
@@ -88,20 +89,23 @@ def main():
 
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+  # ask whether reward is good or not
+  queryType = QueryType.REWARD_SIGN
 
-  cmp = RockSample(queries, rewardSet[0], gamma, responseTime, width, height)
+  # the true reward function is chosen randomly
+  cmp = RockSample(queries, random.choice(rewardSet), gamma, responseTime, width, height)
   if agentName == 'JQTP':
-    agent = JointQTPAgent(cmp, rewardSet, initialPhi, gamma=gamma)
+    agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma=gamma)
   elif agentName == 'AQTP':
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, relevance, gamma=gamma)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma=gamma)
   elif agentName == 'AQTP-NF':
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, relevance, gamma=gamma, filterQuery=False)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma=gamma, filterQuery=False)
   elif agentName == 'AQTP-RS':
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, relevance, gamma=gamma, restarts=1)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma=gamma, restarts=1)
   else:
     raise Exception("Unknown Agent " + agentName)
 
-  ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, horizon=horizon)
+  ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon)
   print ret
   print qValue
   print time

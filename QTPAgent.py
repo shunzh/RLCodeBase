@@ -5,9 +5,11 @@ import util
 import pprint
 import config
 import random
+from cmp import QueryType
+import numpy
 
 class QTPAgent:
-  def __init__(self, cmp, rewardSet, initialPhi,
+  def __init__(self, cmp, rewardSet, initialPhi, queryType,
                gamma=0.9, queryIgnored=False, clusterDistance=0):
     """
     queryIgnored
@@ -21,6 +23,7 @@ class QTPAgent:
     self.gamma = gamma
     # init belief on rewards in rewardSet
     self.phi = initialPhi
+    self.queryType = queryType
     self.queryIgnored = queryIgnored
 
     self.clusterDistance = clusterDistance
@@ -91,25 +94,45 @@ class QTPAgent:
     # belief -> prob dict
     distr = util.Counter()
 
-    # consider all possible actions (responses), find out their probabilities,
-    # and compute the probability of observing the next phi
-    for action in actions:
-      # the probability of observing this action
-      actProb = 0
-      phi = self.phi[:]
-      for idx in range(self.rewardSetSize):
-        if action in self.viAgentSet[idx].getPolicies(query):
-          actProb += phi[idx]
+    if self.queryType == QueryType.POLICY:
+      # consider all possible actions (responses), find out their probabilities,
+      # and compute the probability of observing the next phi
+      for action in actions:
+        # the probability of observing this action
+        actProb = 0
+        phi = self.phi[:]
+        for idx in range(self.rewardSetSize):
+          if action in self.viAgentSet[idx].getPolicies(query):
+            actProb += phi[idx]
 
-      # given that this response is observed, compute the next phi
-      for idx in range(self.rewardSetSize):
-        if not action in self.viAgentSet[idx].getPolicies(query):
-          phi[idx] = 0
-      # normalize phi, only record possible phis
-      if sum(phi) != 0:
-        phi = [x / sum(phi) for x in phi]
-        distr[tuple(phi)] = actProb
-        self.responseToPhi[action] = tuple(phi)
+        # given that this response is observed, compute the next phi
+        for idx in range(self.rewardSetSize):
+          if not action in self.viAgentSet[idx].getPolicies(query):
+            phi[idx] = 0
+        # normalize phi, only record possible phis
+        if sum(phi) != 0:
+          phi = [x / sum(phi) for x in phi]
+          distr[tuple(phi)] = actProb
+          self.responseToPhi[action] = tuple(phi)
+    elif self.queryType == QueryType.REWARD_SIGN:
+      for sign in [-1, 0, 1]:
+        signProb = 0
+        phi = self.phi[:]
+        # what's the probability of observing this sign?
+        for idx in range(self.rewardSetSize):
+          if numpy.sign(self.rewardSet[idx](query)) == sign:
+            signProb += phi[idx]
+        
+        # what's phi'?
+        for idx in range(self.rewardSetSize):
+          if numpy.sign(self.rewardSet[idx](query)) != sign:
+            phi[idx] = 0
+        if sum(phi) != 0:
+          phi = [x / sum(phi) for x in phi]
+          distr[tuple(phi)] = signProb
+          self.responseToPhi[sign] = tuple(phi)           
+    else:
+      raise Exception('unknown type of query ' + self.queryType)
     
     return distr.items()
 
