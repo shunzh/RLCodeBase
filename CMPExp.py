@@ -16,7 +16,7 @@ def Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   # accumulated return
   ret = cmp.getReward(state)
   while True:
-    if cmp.isTerminal(state) or cmp.timer > horizon:
+    if cmp.isTerminal(state) or cmp.timer >= horizon:
       break
     
     # query the model in the first time step
@@ -33,7 +33,7 @@ def Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
     
     action = pi(state, cmp.timer)
     state, reward = cmp.doAction(action)
-    if config.VERBOSE: print 's', state, 'a', action, 'r', reward
+    if config.VERBOSE: print cmp.timer, 's', state, 'a', action, 'r', reward
 
     cmp.timeElapse()
     ret += reward * gamma ** cmp.timer

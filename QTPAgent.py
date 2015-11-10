@@ -68,7 +68,7 @@ class QTPAgent:
     So we can use getValue, getPolicy, getQValue, etc.
     """
     rewardFunc = self.getRewardFunc(phi)
-    cmp = copy.deepcopy(self.cmp)
+    cmp = self.cmp
     cmp.getReward = rewardFunc
     vi = ValueIterationAgent(cmp, discount=self.gamma)
     vi.learn()
@@ -76,7 +76,7 @@ class QTPAgent:
   
   def getFiniteVIAgent(self, phi, horizon, terminalReward):
     rewardFunc = self.getRewardFunc(phi)
-    cmp = copy.deepcopy(self.cmp)
+    cmp = self.cmp
     cmp.getReward = rewardFunc
     vi = ValueIterationAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
     vi.learn()
@@ -171,7 +171,7 @@ class QTPAgent:
         estimatedValue += values(fState) * fStateProb
       vAfterResponse += fPhiProb * estimatedValue
       
-      self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s, t - responseTime)
+      self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s, t - responseTime + 1)
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -220,7 +220,7 @@ class JointQTPAgent(QTPAgent):
     for q in self.cmp.queries:
       pi = self.optimizePolicy(q)
       qValue = self.getQValue(state, pi, q)
-      print q, qValue
+      if config.VERBOSE: print q, qValue
       if qValue > maxQValue:
         maxQValue = qValue
         optQuery = q
@@ -237,6 +237,15 @@ class JointQTPAgent(QTPAgent):
       pi = lambda s, t: self.viAgent.getPolicy(s)
 
     return q, pi, maxQValue
+
+
+class RandomQueryAgent(QTPAgent):
+  def learn(self):
+    state = self.cmp.state
+    q = random.choice(self.cmp.queries)
+    pi = self.optimizePolicy(q)
+    qValue = self.getQValue(state, pi, q)
+    return q, pi, qValue
 
 
 class AlternatingQTPAgent(QTPAgent):
@@ -263,7 +272,11 @@ class AlternatingQTPAgent(QTPAgent):
     if config.VERBOSE:
       print "Considering queries", queries
 
-    return max(queries, key=lambda q: self.getQValue(state, policy, q))
+    if queries == []:
+      # FIXME pick first query when no relevant queries
+      query = self.cmp.queries[0]
+    else:
+      return max(queries, key=lambda q: self.getQValue(state, policy, q))
  
   def learnInstance(self):
     # there could be multiple initializations for AQTP
@@ -271,7 +284,7 @@ class AlternatingQTPAgent(QTPAgent):
     state = self.cmp.state
     # learning with queries
     q = random.choice(self.cmp.queries) # initialize with a query
-    print "init q", q
+    if config.VERBOSE: print "init q", q
     
     # iterate optimize over policy and query
     counter = 0

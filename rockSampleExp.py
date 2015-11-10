@@ -1,4 +1,4 @@
-from QTPAgent import AlternatingQTPAgent, JointQTPAgent
+from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent
 from CMPExp import Experiment
 import util
 import sys
@@ -7,6 +7,7 @@ import random
 import getopt
 import config
 from cmp import QueryType
+import numpy as np
 
 """
 Algorithms:
@@ -119,6 +120,8 @@ def main():
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, lambda fS, q: True, gamma)
   elif agentName == 'AQTP-RS':
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma, restarts=1)
+  elif agentName == 'RQ':
+    agent = RandomQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 
