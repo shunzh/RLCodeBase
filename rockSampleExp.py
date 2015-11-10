@@ -41,11 +41,13 @@ def main():
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "l:s:d:a:n:c:")
+    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:n:c:")
   except getopt.GetoptError:
     sys.exit(2)
   for opt, arg in opts:
-    if opt == '-l':
+    if opt == '-r':
+      random.seed(int(arg))
+    elif opt == '-l':
       responseTime = int(arg)
     elif opt == '-s':
       width = height = int(arg)
@@ -83,6 +85,8 @@ def main():
       else:
         return stepCost
     return rewardFunc
+  terminalReward = util.Counter()
+  terminalReward[(width / 2, 0)] = 100
 
   def relevance(fState, query):
     return abs(fState[0] - query[0]) + abs(fState[1] - query[1]) < horizon - responseTime
@@ -93,15 +97,17 @@ def main():
   queryType = QueryType.REWARD_SIGN
 
   # the true reward function is chosen randomly
-  cmp = RockSample(queries, random.choice(rewardSet), gamma, responseTime, width, height)
+  cmp = RockSample(queries, random.choice(rewardSet), gamma, responseTime, width, height,\
+                   horizon = horizon, terminalReward = terminalReward)
   if agentName == 'JQTP':
-    agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma=gamma)
+    agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP':
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma=gamma)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma)
   elif agentName == 'AQTP-NF':
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma=gamma, filterQuery=False)
+    # don't filter query. Assume all queries are relevant.
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, lambda fS, q: True, gamma)
   elif agentName == 'AQTP-RS':
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma=gamma, restarts=1)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma, restarts=1)
   else:
     raise Exception("Unknown Agent " + agentName)
 

@@ -68,13 +68,20 @@ class QTPAgent:
     So we can use getValue, getPolicy, getQValue, etc.
     """
     rewardFunc = self.getRewardFunc(phi)
-
     cmp = copy.deepcopy(self.cmp)
     cmp.getReward = rewardFunc
     vi = ValueIterationAgent(cmp, discount=self.gamma)
     vi.learn()
     return vi
   
+  def getFiniteVIAgent(self, phi, horizon, terminalReward):
+    rewardFunc = self.getRewardFunc(phi)
+    cmp = copy.deepcopy(self.cmp)
+    cmp.getReward = rewardFunc
+    vi = ValueIterationAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
+    vi.learn()
+    return vi
+ 
   def getValue(self, state, phi, policy, horizon):
     """
     Accumulated rewards by following a fixed policy to a time horizon.
@@ -143,6 +150,8 @@ class QTPAgent:
     cost = self.cmp.cost(query)
 
     responseTime = self.cmp.responseTime
+    horizon = self.cmp.horizon
+    terminalReward = self.cmp.terminalReward
     vBeforeResponse = self.getValue(state, self.phi, policy, responseTime)
     
     possiblePhis = self.getPossiblePhiAndProbs(query)
@@ -150,7 +159,8 @@ class QTPAgent:
     
     vAfterResponse = 0
     for fPhi, fPhiProb in possiblePhis:
-      viAgent = self.getVIAgent(fPhi)
+      if horizon == numpy.inf: viAgent = self.getVIAgent(fPhi)
+      else: viAgent = self.getFiniteVIAgent(fPhi, horizon - responseTime, terminalReward)
       values = lambda state: viAgent.getValue(state)
       estimatedValue = 0
       for fState, fStateProb in possibleStatesAndProbs:
@@ -158,7 +168,7 @@ class QTPAgent:
       vAfterResponse += fPhiProb * estimatedValue
       
       # this is a stationary policy
-      self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s)
+      self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s, t - responseTime)
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -168,17 +178,18 @@ class QTPAgent:
     """
     v = util.Counter()
     possiblePhis = self.getPossiblePhiAndProbs(query)
+    responseTime = self.cmp.responseTime
+    horizon = self.cmp.horizon
+    terminalReward = self.cmp.terminalReward
+
     for fPhi, fPhiProb in possiblePhis:
-      fViAgent = self.getVIAgent(fPhi)
+      if horizon == numpy.inf: fViAgent = self.getVIAgent(fPhi)
+      else: fViAgent = self.getFiniteVIAgent(fPhi, horizon - responseTime, terminalReward)
       for state in self.cmp.getStates():
         v[state] += fViAgent.getValue(state) * fPhiProb
 
-    cmp = copy.deepcopy(self.cmp)
-    cmp.getReward = self.getRewardFunc(self.phi)
-    responseTime = cmp.responseTime
-
     # `responseTime` time steps
-    viAgent = ValueIterationAgent(cmp, discount=self.gamma, iterations=responseTime, initValues=v)
+    viAgent = self.getFiniteVIAgent(self.phi, responseTime, v)
     viAgent.learn()
     # this is a non-stationary policy
     pi = lambda s, t: viAgent.getPolicy(s, t+1) 
@@ -227,35 +238,25 @@ class JointQTPAgent(QTPAgent):
 
 class AlternatingQTPAgent(QTPAgent):
   def __init__(self, cmp, rewardSet, initialPhi, relevance, gamma,\
-               filterQuery = True, restarts = 0):
+               restarts = 0):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, gamma)
     self.relevance = relevance
-    self.filterQuery = filterQuery
     self.restarts = restarts
-
-  def setFilterQuery(self, bool):
-    self.filterQuery = bool
-    
-  def setRestarts(self, num):
-    self.restarts = num
 
   def optimizeQuery(self, state, policy):
     """
     Enumerate relevant considering the states reachable by the transient policy.
     """
-    if self.filterQuery:
-      possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, self.cmp.responseTime)
+    possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, self.cmp.responseTime)
+    # FIXME
+    # assuming deterministic
+    fState = possibleStatesAndProbs[0][0]
+    
+    queries = []
+    for query in self.cmp.queries:
       # FIXME
-      # assuming deterministic
-      fState = possibleStatesAndProbs[0][0]
-      
-      queries = []
-      for query in self.cmp.queries:
-        # FIXME
-        # overfit sightseeing problem
-        if self.relevance(fState, query): queries.append(query)
-    else:
-      queries = self.cmp.queries
+      # overfit sightseeing problem
+      if self.relevance(fState, query): queries.append(query)
     
     if config.VERBOSE:
       print "Considering queries", queries

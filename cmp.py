@@ -8,7 +8,7 @@ class QueryType:
   POLICY, REWARD_SIGN = range(2)
   
 class ControlledMarkovProcess(MarkovDecisionProcess):
-  def __init__(self, queries, trueReward, gamma, responseTime):
+  def __init__(self, queries, trueReward, gamma, responseTime, horizon=numpy.inf, terminalReward=None):
     MarkovDecisionProcess.__init__(self)
     
     self.outsandingQuery = None
@@ -17,7 +17,8 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     self.responseTime = responseTime
     
     # let agent know use finite or infinite horizon vi
-    self.finiteHorizon = False
+    self.horizon = horizon
+    self.terminalReward = terminalReward
     
     # the real reward function
     # learn a VI agent on this reward setting, and policy will be decided.

@@ -1,17 +1,18 @@
 from cmp import ControlledMarkovProcess
 
 class RockSample(ControlledMarkovProcess):
-  def __init__(self, queries, trueReward, gamma, responseTime, width, height):
+  def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height
-    ControlledMarkovProcess.__init__(self, queries, trueReward, gamma, responseTime)
+    # horizon is assumed to be finite in this domain
+    ControlledMarkovProcess.__init__(self, queries, trueReward, gamma, responseTime, horizon, terminalReward)
 
   def cost(self, query):
     return 0
 
   def reset(self):
     # initial state: this far to the first intersection
-    self.state = (0, 0)
+    self.state = (self.width / 2, 0)
     
   def getStates(self):
     return [(x, y) for x in xrange(self.width) for y in xrange(self.height)]
@@ -24,13 +25,13 @@ class RockSample(ControlledMarkovProcess):
     newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
     return [(newState, 1)]
   
-  def adjustState(self, state):
-    state = list(state)
+  def adjustState(self, loc):
+    loc = list(loc)
 
-    if state[0] < 0: state[0] = 0
-    elif state[0] >= self.width: state[0] = self.width - 1
+    if loc[0] < 0: loc[0] = 0
+    elif loc[0] >= self.width: loc[0] = self.width - 1
     
-    if state[1] < 0: state[1] = 0
-    elif state[1] >= self.height: state[1] = self.height - 1
+    if loc[1] < 0: loc[1] = 0
+    elif loc[1] >= self.height: loc[1] = self.height - 1
     
-    return tuple(state)
+    return tuple(loc)
