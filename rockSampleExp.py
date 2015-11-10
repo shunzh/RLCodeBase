@@ -89,7 +89,8 @@ def main():
   terminalReward[(width / 2, 0)] = 100
 
   def relevance(fState, query):
-    return abs(fState[0] - query[0]) + abs(fState[1] - query[1]) < horizon - responseTime
+    return abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
+         + abs(query[0] - 5) + abs(query[1] - 0) < horizon - responseTime
 
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum

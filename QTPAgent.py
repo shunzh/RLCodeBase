@@ -10,7 +10,7 @@ import numpy
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
-               gamma=0.9, queryIgnored=False, clusterDistance=0):
+               gamma, queryIgnored=False, clusterDistance=0):
     """
     queryIgnored
       Query is asked, but the agent forgets such query is asked and planning using the prior belief.
@@ -237,9 +237,8 @@ class JointQTPAgent(QTPAgent):
 
 
 class AlternatingQTPAgent(QTPAgent):
-  def __init__(self, cmp, rewardSet, initialPhi, relevance, gamma,\
-               restarts = 0):
-    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, gamma)
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, relevance, gamma, restarts = 0):
+    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     self.relevance = relevance
     self.restarts = restarts
 
