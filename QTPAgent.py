@@ -138,6 +138,10 @@ class QTPAgent:
           phi = [x / sum(phi) for x in phi]
           distr[tuple(phi)] = signProb
           self.responseToPhi[sign] = tuple(phi)           
+    elif self.queryType == QueryType.NONE:
+      # no querying
+      distr[tuple(self.phi)] = 1
+      self.responseToPhi[0] = tuple(self.phi)           
     else:
       raise Exception('unknown type of query ' + self.queryType)
     
@@ -167,7 +171,6 @@ class QTPAgent:
         estimatedValue += values(fState) * fStateProb
       vAfterResponse += fPhiProb * estimatedValue
       
-      # this is a stationary policy
       self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s, t - responseTime)
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
@@ -233,7 +236,7 @@ class JointQTPAgent(QTPAgent):
       # in both settings, plan on prior belief
       pi = lambda s, t: self.viAgent.getPolicy(s)
 
-    return q, pi, self.getQValue(state, pi, q)
+    return q, pi, maxQValue
 
 
 class AlternatingQTPAgent(QTPAgent):

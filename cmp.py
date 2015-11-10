@@ -5,7 +5,7 @@ import numpy
 # possible type of queries
 # TODO some are not implemented
 class QueryType:
-  POLICY, REWARD_SIGN = range(2)
+  POLICY, REWARD_SIGN, NONE = range(3)
   
 class ControlledMarkovProcess(MarkovDecisionProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, horizon=numpy.inf, terminalReward=None):
@@ -50,6 +50,8 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
         res = self.viAgent.getPolicy()
       elif type == QueryType.REWARD_SIGN:
         res = numpy.sign(self.getReward(s))
+      elif type == QueryType.NONE:
+        res = 0 # return a dummy value
       else:
         raise Exception('Unkown type of query ' + str(type))
       

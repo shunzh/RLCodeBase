@@ -25,16 +25,19 @@ Show:
 - expectation Q
 - computation time
 - paired difference between JQTP and AQTP
+
+TODO:
+make this class more general, not just for rocksample exp
 """
 def main():
-  width = 10
-  height = 10
+  width = 15
+  height = 15
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 30
-  objNum = 5
+  objNum = 8
   rewardCandNum = 3
-  objNumPerFeat = 2
+  objNumPerFeat = 3
   # discount factor
   gamma = 0.9
   stepCost = 0
@@ -65,10 +68,14 @@ def main():
   assert horizon > responseTime
 
   queries = []
-  for _ in xrange(objNum):
-    x = int(width * random.random())
-    y = int(height * random.random())
-    queries.append((x, y))
+  if agentName != 'NQ':
+    for _ in xrange(objNum):
+      x = int(width * random.random())
+      y = int(height * random.random())
+      queries.append((x, y))
+  else:
+    queries = [0] # add a dummy query
+
   rewards = []
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
@@ -95,12 +102,15 @@ def main():
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
   # ask whether reward is good or not
-  queryType = QueryType.REWARD_SIGN
+  if agentName == 'NQ':
+    queryType = QueryType.NONE
+  else:
+    queryType = QueryType.REWARD_SIGN
 
   # the true reward function is chosen randomly
   cmp = RockSample(queries, random.choice(rewardSet), gamma, responseTime, width, height,\
                    horizon = horizon, terminalReward = terminalReward)
-  if agentName == 'JQTP':
+  if agentName == 'JQTP' or agentName == 'NQ':
     agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP':
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma)
