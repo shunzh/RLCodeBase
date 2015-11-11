@@ -35,7 +35,7 @@ def main():
   height = 15
   # the time step that the agent receives the response
   responseTime = 10
-  horizon = 30
+  horizon = 40
   objNum = 8
   rewardCandNum = 3
   objNumPerFeat = 3

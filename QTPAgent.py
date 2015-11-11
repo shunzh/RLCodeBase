@@ -295,7 +295,6 @@ class AlternatingQTPAgent(QTPAgent):
       q  = self.optimizeQuery(state, pi)
       if config.VERBOSE:
         print "Iteration #", counter
-        print "optimized pi", self.cmp.state, pi(self.cmp.state, 0)
         print "optimized q ", q
       
       if q == prevQ:
