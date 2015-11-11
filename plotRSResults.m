@@ -18,7 +18,7 @@ function main()
   legend('E-JQTP', 'AQTP', 'Random Query', 'No Query');
   xlabel('Response Time');
   ylabel('Q-Value');
-
+  xlim([-1, 25]); 
   
   figure;
 
@@ -35,17 +35,31 @@ function main()
 
   legend('E-JQTP', 'AQTP', 'Random Query', 'No Query');
   xlabel('Response Time');
-  ylabel('Computation Time');
+  ylabel('Computation Time (sec)');
+  xlim([-1, 25]); 
+
+
+  figure;
+
+  jd = getData(filename, [5]);
+  ad = getData(filename, [14]);
+  hist(max(jd - ad, 0));
+  xlabel('Difference in Q value between E-JQTP and AQTP');
+  ylabel('Frequency');
 end
 
-function [m, ci] = process(filename, lines)
+function data = getData(filename, lines)
   data = [];
   for i=0:399
     raw = load([filename, '.', num2str(i)]);
     data = [data, raw(lines)];
   end
+end
 
-  n = 400;
+function [m, ci] = process(filename, lines)
+  data = getData(filename, lines);
+  n = size(data, 2);
   m = mean(data, 2);
   ci = 1.96 * std(data, 0, 2) / sqrt(n);
 end
+
