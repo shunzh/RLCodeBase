@@ -18,7 +18,6 @@ function main()
   legend('E-JQTP', 'AQTP', 'Random Query', 'No Query');
   xlabel('Response Time');
   ylabel('Q-Value');
-  axis([-1, 25, 4, 6]);
 
   
   figure;
@@ -37,7 +36,6 @@ function main()
   legend('E-JQTP', 'AQTP', 'Random Query', 'No Query');
   xlabel('Response Time');
   ylabel('Computation Time');
-  axis([-1, 25, 0, 15]);
 end
 
 function [m, ci] = process(filename, lines)
