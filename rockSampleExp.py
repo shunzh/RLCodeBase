@@ -7,7 +7,6 @@ import random
 import getopt
 import config
 from cmp import QueryType
-import numpy as np
 
 """
 Algorithms:
@@ -36,16 +35,15 @@ def main():
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
-  objNum = 8
-  rewardCandNum = 3
-  objNumPerFeat = 3
   # discount factor
   gamma = 0.9
   stepCost = 0
+  rewardCandNum = 5
+  objNumPerFeat = 2
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:n:c:")
+    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:c:")
   except getopt.GetoptError:
     sys.exit(2)
   for opt, arg in opts:
@@ -60,27 +58,22 @@ def main():
       gamma = float(arg)
     elif opt == '-a':
       agentName = arg
-    elif opt == '-n':
-      objNum = int(arg)
     elif opt == '-c':
       stepCost = float(arg)
   
   # sanity check
   assert horizon > responseTime
 
-  queries = []
-  if agentName != 'NQ':
-    for _ in xrange(objNum):
-      x = int(width * random.random())
-      y = int(height * random.random())
-      queries.append((x, y))
-  else:
-    queries = [0] # add a dummy query
+  queries = [(0, height - 1), (width / 2, height - 1), (width - 1, height - 1),\
+             (0, height / 2), (width - 1, height / 2),\
+             (0, 0), (width / 2 + 1, 0)]
 
   rewards = []
+  bestReward = 0
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
-    rewardSignal = -1 + 2 * random.random()
+    rewardSignal = random.random()
+    if rewardSignal > bestReward: bestReward = rewardSignal
     for idx in xrange(objNumPerFeat):
       q = random.choice(queries)
       reward[q] = rewardSignal 
@@ -98,15 +91,16 @@ def main():
 
   def relevance(fState, query):
     return abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
-         + abs(query[0] - 5) + abs(query[1] - 0) < horizon - responseTime
+         + abs(query[0] - width / 2) + abs(query[1] - 0) < horizon - responseTime
 
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
   # ask whether reward is good or not
   if agentName == 'NQ':
+    queries = [0] # make a dummy query set
     queryType = QueryType.NONE
   else:
-    queryType = QueryType.REWARD_SIGN
+    queryType = QueryType.GOOD_REWARD
 
   # the true reward function is chosen randomly
   cmp = RockSample(queries, random.choice(rewardSet), gamma, responseTime, width, height,\

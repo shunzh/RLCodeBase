@@ -5,6 +5,7 @@ from sightseeing import Sightseeing
 import random
 import sys
 import config
+from cmp import QueryType
 
 # arguments: sightseeingExp.py scale algorithm
 
@@ -57,7 +58,7 @@ def main():
   cmp = Sightseeing(queries, random.choice(rewardSet), gamma, responseTime, width, height)
   agent = Agent(cmp, rewardSet, initialPhi, relevance, gamma=gamma)
  
-  ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet)
+  ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet, QueryType.POLICY)
   print ret
   print qValue
   print timeElapsed
