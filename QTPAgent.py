@@ -121,18 +121,18 @@ class QTPAgent:
           phi = [x / sum(phi) for x in phi]
           distr[tuple(phi)] = actProb
           self.responseToPhi[action] = tuple(phi)
-    elif self.queryType == QueryType.GOOD_REWARD:
+    elif self.queryType == QueryType.REWARD_SIGN:
       for sign in [-1, 0, 1]:
         signProb = 0
         phi = self.phi[:]
         # what's the probability of observing this sign?
         for idx in range(self.rewardSetSize):
-          if numpy.sign(self.rewardSet[idx](query) - 0.6) == sign:
+          if numpy.sign(self.rewardSet[idx](query)) == sign:
             signProb += phi[idx]
         
         # what's phi'?
         for idx in range(self.rewardSetSize):
-          if numpy.sign(self.rewardSet[idx](query) - 0.6) != sign:
+          if numpy.sign(self.rewardSet[idx](query)) != sign:
             phi[idx] = 0
         if sum(phi) != 0:
           phi = [x / sum(phi) for x in phi]

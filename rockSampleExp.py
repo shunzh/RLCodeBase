@@ -69,11 +69,9 @@ def main():
              (0, 0), (width / 2 + 1, 0)]
 
   rewards = []
-  bestReward = 0
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
     rewardSignal = random.random()
-    if rewardSignal > bestReward: bestReward = rewardSignal
     for idx in xrange(objNumPerFeat):
       q = random.choice(queries)
       reward[q] = rewardSignal 
@@ -100,7 +98,7 @@ def main():
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
   else:
-    queryType = QueryType.GOOD_REWARD
+    queryType = QueryType.REWARD_SIGN
 
   # the true reward function is chosen randomly
   cmp = RockSample(queries, random.choice(rewardSet), gamma, responseTime, width, height,\
