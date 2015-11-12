@@ -43,7 +43,7 @@ def main():
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:c:")
+    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:c:v")
   except getopt.GetoptError:
     sys.exit(2)
   for opt, arg in opts:
@@ -60,6 +60,8 @@ def main():
       agentName = arg
     elif opt == '-c':
       stepCost = float(arg)
+    elif opt == '-v':
+      config.VERBOSE = True
   
   # sanity check
   assert horizon > responseTime

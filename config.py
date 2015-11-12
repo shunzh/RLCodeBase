@@ -1,5 +1,5 @@
 DEBUG = False
 
-VERBOSE = True
+VERBOSE = False
 
 SAVE_TO_FILE = True

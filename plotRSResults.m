@@ -1,4 +1,7 @@
 function main()
+  system('scp $ut:/u/menie482/workspace/CMP/results.tar.gz .');
+  system('tar xvzf results.tar.gz');
+
   clear all; close all;
 
   responseTimes = [0, 10, 20];
