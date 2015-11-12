@@ -213,6 +213,7 @@ class JointQTPAgent(QTPAgent):
       pi = self.optimizePolicy(q)
       qValue = self.getQValue(state, pi, q)
       if config.VERBOSE: print q, qValue
+
       if qValue > maxQValue:
         maxQValue = qValue
         optQuery = q
@@ -229,15 +230,6 @@ class JointQTPAgent(QTPAgent):
       pi = lambda s, t: self.viAgent.getPolicy(s)
 
     return q, pi, maxQValue
-
-
-class RandomQueryAgent(QTPAgent):
-  def learn(self):
-    state = self.cmp.state
-    q = random.choice(self.cmp.queries)
-    pi = self.optimizePolicy(q)
-    qValue = self.getQValue(state, pi, q)
-    return q, pi, qValue
 
 
 class AlternatingQTPAgent(QTPAgent):
@@ -307,6 +299,16 @@ class AlternatingQTPAgent(QTPAgent):
     
     # return the results with maximum q value
     return max(results, key=lambda x: x[2])
+
+
+class RandomQueryAgent(QTPAgent):
+  def learn(self):
+    state = self.cmp.state
+    q = random.choice(self.cmp.queries)
+    pi = self.optimizePolicy(q)
+    qValue = self.getQValue(state, pi, q)
+    return q, pi, qValue
+
 
 def getMultipleTransitionDistr(cmp, state, policy, time):
   """

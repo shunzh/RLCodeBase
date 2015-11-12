@@ -30,15 +30,15 @@ TODO:
 make this class more general, not just for rocksample exp
 """
 def main():
-  width = 15
-  height = 15
+  width = 20
+  height = 20
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
   # discount factor
   gamma = 0.9
   stepCost = 0
-  rewardCandNum = 3
+  rewardCandNum = 4
   agentName = 'JQTP'
   
   try:
@@ -66,8 +66,7 @@ def main():
   assert horizon > responseTime
 
   queries = [(0, height - 1), (width / 2, height - 1), (width - 1, height - 1),\
-             (0, height / 2), (width - 1, height / 2),\
-             (0, 0), (width / 2 + 1, 0)]
+             (0, 0), (width / 2, 0), (width - 1, 0)]
 
   rewards = []
   for _ in xrange(rewardCandNum):
@@ -77,7 +76,8 @@ def main():
     q = random.choice(rocks)
     reward[q] = 1
     rocks.remove(q)
-    for idx in xrange(4):
+    # choose other rewards
+    for idx in xrange(3):
       q = random.choice(rocks)
       reward[q] = 0.1
       rocks.remove(q)
@@ -91,11 +91,11 @@ def main():
         return stepCost
     return rewardFunc
   terminalReward = util.Counter()
-  terminalReward[(width / 2, 0)] = 100
+  terminalReward[(width / 2, height / 2)] = 100
 
   def relevance(fState, query):
     return abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
-         + abs(query[0] - width / 2) + abs(query[1] - 0) < horizon - responseTime
+         + abs(query[0] - width / 2) + abs(query[1] - height / 2) < horizon - responseTime
 
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
