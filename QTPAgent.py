@@ -163,7 +163,7 @@ class QTPAgent:
         estimatedValue += values(fState) * fStateProb
       vAfterResponse += fPhiProb * estimatedValue
       
-      self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s, t - responseTime + 1)
+      self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s, t - responseTime)
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -185,9 +185,8 @@ class QTPAgent:
 
     # `responseTime` time steps
     viAgent = self.getFiniteVIAgent(self.phi, responseTime, v)
-    viAgent.learn()
     # this is a non-stationary policy
-    pi = lambda s, t: viAgent.getPolicy(s, t+1) 
+    pi = lambda s, t: viAgent.getPolicy(s, t) 
     
     if config.DEBUG:
       print query, "v func"
@@ -288,7 +287,7 @@ class AlternatingQTPAgent(QTPAgent):
     
     if self.queryIgnored:
       # in both settings, plan on prior belief
-      pi = lambda s: self.viAgent.getPolicy(s)
+      pi = lambda s, t: self.viAgent.getPolicy(s, t)
     
     return q, pi, self.getQValue(state, pi, q)
   

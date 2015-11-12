@@ -53,7 +53,7 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
       # issues a response
       type, s = self.outsandingQuery[0]
       if type == QueryType.POLICY:
-        res = self.viAgent.getPolicy()
+        res = self.viAgent.getPolicy(s, self.timer)
       elif type == QueryType.REWARD:
         res = self.getReward(s)
       elif type == QueryType.NONE:

@@ -100,7 +100,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       maxValue = -INF
       actions = self.mdp.getPossibleActions(state)
       for action in actions:
-        q = self.getQValue(state, action, t)
+        q = self.getQValue(state, action, t+1)
         if q > maxValue:
           maxValue = q
-      return filter(lambda act: self.getQValue(state, act, t) == maxValue, actions)
+      return filter(lambda act: self.getQValue(state, act, t+1) == maxValue, actions)
