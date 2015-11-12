@@ -81,7 +81,9 @@ function data = getData(filename, lines)
   for i=0:399
     try
       raw = load([filename, '.', num2str(i)]);
-      data = [data, raw(lines)];
+      if size(raw, 1) == 39
+        data = [data, raw(lines)];
+      end
     catch
       disp(['Unable to load ', num2str(i)]);
     end

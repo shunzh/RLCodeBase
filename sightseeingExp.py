@@ -82,7 +82,11 @@ def main():
 
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardNum] * rewardNum
-  queryType = QueryType.POLICY
+  if agentName == 'NQ':
+    queries = [0] # make a dummy query set
+    queryType = QueryType.NONE
+  else:
+    queryType = QueryType.POLICY
 
   cmp = Sightseeing(queries, random.choice(rewardSet), gamma, responseTime, width, height)
 
