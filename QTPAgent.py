@@ -163,7 +163,8 @@ class QTPAgent:
         estimatedValue += values(fState) * fStateProb
       vAfterResponse += fPhiProb * estimatedValue
       
-      self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s, t - responseTime)
+      if horizon == numpy.inf: self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s)
+      else: self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s, t - responseTime)
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -257,7 +258,7 @@ class AlternatingQTPAgent(QTPAgent):
 
     if queries == []:
       # FIXME pick first query when no relevant queries
-      query = self.cmp.queries[0]
+      return self.cmp.queries[0]
     else:
       return max(queries, key=lambda q: self.getQValue(state, policy, q))
  

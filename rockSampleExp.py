@@ -7,7 +7,6 @@ import random
 import getopt
 import config
 from cmp import QueryType
-from machineConfigExp import queryIgnored
 
 """
 Algorithms:

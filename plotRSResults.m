@@ -71,7 +71,7 @@ function main()
 
   jd = getData(filename, [5]);
   ad = getData(filename, [14]);
-  hist(max(jd - ad, 0));
+  hist(jd - ad);
   xlabel('Difference in Q value between E-JQTP and AQTP');
   ylabel('Frequency');
 end
