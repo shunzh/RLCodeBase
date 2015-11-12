@@ -7,6 +7,7 @@ import random
 import getopt
 import config
 from cmp import QueryType
+from machineConfigExp import queryIgnored
 
 """
 Algorithms:
@@ -121,6 +122,8 @@ def main():
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma, restarts=1)
   elif agentName == 'RQ':
     agent = RandomQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == 'TPNQ':
+    agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, queryIgnored=True)
   else:
     raise Exception("Unknown Agent " + agentName)
 
