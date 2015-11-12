@@ -38,8 +38,7 @@ def main():
   # discount factor
   gamma = 0.9
   stepCost = 0
-  rewardCandNum = 5
-  objNumPerFeat = 2
+  rewardCandNum = 3
   agentName = 'JQTP'
   
   try:
@@ -73,10 +72,15 @@ def main():
   rewards = []
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
-    rewardSignal = random.random()
-    for idx in xrange(objNumPerFeat):
-      q = random.choice(queries)
-      reward[q] = rewardSignal 
+    rocks = queries[:]
+    # choose bonus rocks
+    q = random.choice(rocks)
+    reward[q] = 1
+    rocks.remove(q)
+    for idx in xrange(4):
+      q = random.choice(rocks)
+      reward[q] = 0.1
+      rocks.remove(q)
     rewards.append(reward)
     
   def rewardGen(rewards): 
@@ -100,11 +104,12 @@ def main():
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
   else:
-    queryType = QueryType.REWARD_SIGN
+    queryType = QueryType.REWARD
 
   # the true reward function is chosen randomly
   cmp = RockSample(queries, random.choice(rewardSet), gamma, responseTime, width, height,\
                    horizon = horizon, terminalReward = terminalReward)
+  cmp.setPossibleRewardValues([0, 0.1, 1])
   if agentName == 'JQTP' or agentName == 'NQ':
     agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP':

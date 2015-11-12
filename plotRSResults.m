@@ -7,6 +7,25 @@ function main()
   responseTimes = [0, 10, 20];
   filename = 'rs_out';
 
+  [jm, jc] = process(filename, [1, 4, 7])
+  [am, ac] = process(filename, [10, 13, 16])
+  [rm, rc] = process(filename, [19, 22, 25])
+  [nm, nc] = process(filename, [28, 28, 28])
+
+  errorbar(responseTimes, jm, jc, '*-');
+  hold on;
+  errorbar(responseTimes, am, ac, 'o-');
+  errorbar(responseTimes, rm, rc, '+-');
+  errorbar(responseTimes, nm, nc, '--');
+
+  legend('E-JQTP', 'AQTP', 'Random Query', 'No Query');
+  xlabel('Response Time');
+  ylabel('Accumulated Return');
+  xlim([-1, 25]); 
+ 
+
+  figure;
+
   [jm, jc] = process(filename, [2, 5, 8])
   [am, ac] = process(filename, [11, 14, 17])
   [rm, rc] = process(filename, [20, 23, 26])
@@ -54,8 +73,12 @@ end
 function data = getData(filename, lines)
   data = [];
   for i=0:399
-    raw = load([filename, '.', num2str(i)]);
-    data = [data, raw(lines)];
+    try
+      raw = load([filename, '.', num2str(i)]);
+      data = [data, raw(lines)];
+    catch
+      disp(['Unable to load ', num2str(i)]);
+    end
   end
 end
 

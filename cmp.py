@@ -5,7 +5,7 @@ import numpy
 # possible type of queries
 # TODO some are not implemented
 class QueryType:
-  POLICY, REWARD_SIGN, NONE = range(3)
+  POLICY, REWARD, REWARD_SIGN, NONE = range(4)
   
 class ControlledMarkovProcess(MarkovDecisionProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, horizon=numpy.inf, terminalReward=None):
@@ -20,11 +20,17 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     self.horizon = horizon
     self.terminalReward = terminalReward
     
+    # this field is needed for reward queries
+    self.possibleRewardValues = None
+    
     # the real reward function
     # learn a VI agent on this reward setting, and policy will be decided.
     self.getReward = trueReward
     self.viAgent = ValueIterationAgent(self, gamma)
     self.viAgent.learn()
+
+  def setPossibleRewardValues(self, rewards):
+    self.possibleRewardValues = rewards
 
   def query(self, q):
     """
@@ -48,8 +54,8 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
       type, s = self.outsandingQuery[0]
       if type == QueryType.POLICY:
         res = self.viAgent.getPolicy()
-      elif type == QueryType.REWARD_SIGN:
-        res = numpy.sign(self.getReward(s))
+      elif type == QueryType.REWARD:
+        res = self.getReward(s)
       elif type == QueryType.NONE:
         res = 0 # return a dummy value
       else:

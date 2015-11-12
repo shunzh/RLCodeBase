@@ -7,6 +7,7 @@ import config
 import random
 from cmp import QueryType
 import numpy
+from copy import deepcopy
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
@@ -68,7 +69,7 @@ class QTPAgent:
     So we can use getValue, getPolicy, getQValue, etc.
     """
     rewardFunc = self.getRewardFunc(phi)
-    cmp = self.cmp
+    cmp = deepcopy(self.cmp)
     cmp.getReward = rewardFunc
     vi = ValueIterationAgent(cmp, discount=self.gamma)
     vi.learn()
@@ -76,7 +77,7 @@ class QTPAgent:
   
   def getFiniteVIAgent(self, phi, horizon, terminalReward):
     rewardFunc = self.getRewardFunc(phi)
-    cmp = self.cmp
+    cmp = deepcopy(self.cmp)
     cmp.getReward = rewardFunc
     vi = ValueIterationAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
     vi.learn()
@@ -102,48 +103,39 @@ class QTPAgent:
     distr = util.Counter()
 
     if self.queryType == QueryType.POLICY:
-      # consider all possible actions (responses), find out their probabilities,
-      # and compute the probability of observing the next phi
-      for action in actions:
-        # the probability of observing this action
-        actProb = 0
-        phi = self.phi[:]
-        for idx in range(self.rewardSetSize):
-          if action in self.viAgentSet[idx].getPolicies(query):
-            actProb += phi[idx]
-
-        # given that this response is observed, compute the next phi
-        for idx in range(self.rewardSetSize):
-          if not action in self.viAgentSet[idx].getPolicies(query):
-            phi[idx] = 0
-        # normalize phi, only record possible phis
-        if sum(phi) != 0:
-          phi = [x / sum(phi) for x in phi]
-          distr[tuple(phi)] = actProb
-          self.responseToPhi[action] = tuple(phi)
+      resSet = actions
+      consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query)
     elif self.queryType == QueryType.REWARD_SIGN:
-      for sign in [-1, 0, 1]:
-        signProb = 0
-        phi = self.phi[:]
-        # what's the probability of observing this sign?
-        for idx in range(self.rewardSetSize):
-          if numpy.sign(self.rewardSet[idx](query)) == sign:
-            signProb += phi[idx]
-        
-        # what's phi'?
-        for idx in range(self.rewardSetSize):
-          if numpy.sign(self.rewardSet[idx](query)) != sign:
-            phi[idx] = 0
-        if sum(phi) != 0:
-          phi = [x / sum(phi) for x in phi]
-          distr[tuple(phi)] = signProb
-          self.responseToPhi[sign] = tuple(phi)           
+      resSet = [-1, 0, 1]
+      consistCond = lambda res, idx: numpy.sign(self.rewardSet[idx](query)) == res
+    elif self.queryType == QueryType.REWARD:
+      resSet = self.cmp.possibleRewardValues
+      consistCond = lambda res, idx: self.rewardSet[idx](query) == res
     elif self.queryType == QueryType.NONE:
-      # no querying
-      distr[tuple(self.phi)] = 1
-      self.responseToPhi[0] = tuple(self.phi)           
+      resSet = [0]
+      consistCond = lambda res, idx: True
     else:
       raise Exception('unknown type of query ' + self.queryType)
+
+    # consider all possible responses, find out their probabilities,
+    # and compute the probability of observing the next phi
+    for res in resSet:
+      # the probability of observing this res
+      resProb = 0
+      phi = self.phi[:]
+      for idx in range(self.rewardSetSize):
+        if consistCond(res, idx):
+          resProb += phi[idx]
+
+      # given that this response is observed, compute the next phi
+      for idx in range(self.rewardSetSize):
+        if not consistCond(res, idx):
+          phi[idx] = 0
+      # normalize phi, only record possible phis
+      if sum(phi) != 0:
+        phi = [x / sum(phi) for x in phi]
+        distr[tuple(phi)] = resProb
+        self.responseToPhi[res] = tuple(phi)
     
     return distr.items()
 
