@@ -35,10 +35,14 @@ def main():
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
+  objNum = 5
+
   # discount factor
   gamma = 0.9
   stepCost = 0
   rewardCandNum = 4
+  objNumPerFeat = 2
+
   agentName = 'JQTP'
   
   try:
@@ -65,22 +69,31 @@ def main():
   # sanity check
   assert horizon > responseTime
 
-  queries = [(0, height - 1), (width / 2, height - 1), (width - 1, height - 1),\
-             (0, 0), (width / 2, 0), (width - 1, 0)]
+  queries = []
+  for _ in xrange(objNum):
+    posCoin = random.random()
+    if posCoin < .25:
+      x = 0
+      y = int(height * random.random())
+    elif posCoin < .5:
+      x = width - 1
+      y = int(height * random.random())
+    elif posCoin < .75:
+      x = int(width * random.random())
+      y = 0
+    else:
+      x = int(width * random.random())
+      y = height - 1
+    queries.append((x, y))
 
   rewards = []
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
-    rocks = queries[:]
-    # choose bonus rocks
-    q = random.choice(rocks)
-    reward[q] = 1
-    rocks.remove(q)
-    # choose other rewards
-    for idx in xrange(3):
-      q = random.choice(rocks)
+    q = random.choice(queries)
+    reward[q] = 1 
+    for idx in xrange(objNumPerFeat):
+      q = random.choice(queries)
       reward[q] = 0.1
-      rocks.remove(q)
     rewards.append(reward)
     
   def rewardGen(rewards): 
