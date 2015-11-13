@@ -35,12 +35,12 @@ def main():
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
-  objNum = 5
+  objNum = 4
 
   # discount factor
   gamma = 0.9
-  rewardCandNum = 5
-  objNumPerFeat = 3
+  rewardCandNum = 4
+  objNumPerFeat = 2
   cornerPlacement = False
 
   agentName = 'JQTP'
@@ -73,8 +73,19 @@ def main():
   rewards = []
   if not cornerPlacement:
     for _ in xrange(objNum):
-      x = int(width * random.random())
-      y = int(height * random.random())
+      posCoin = random.random()
+      if posCoin < .25:
+        x = 0
+        y = int(height * random.random())
+      elif posCoin < .5:
+        x = width - 1
+        y = int(height * random.random())
+      elif posCoin < .75:
+        x = int(width * random.random())
+        y = 0
+      else:
+        x = int(width * random.random())
+        y = height - 1
       queries.append((x, y))
 
     for _ in xrange(rewardCandNum):
