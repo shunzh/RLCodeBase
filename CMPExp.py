@@ -29,7 +29,7 @@ def Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
     if response != None:
       if config.VERBOSE: print 'o', response
       # update policy
-      pi = agent.respond(q, response)
+      pi = agent.respond(q[1], response)
     
     action = pi(state, cmp.timer)
     state, reward = cmp.doAction(action)

@@ -126,16 +126,17 @@ class QTPAgent:
       for idx in range(self.rewardSetSize):
         if consistCond(res, idx):
           resProb += phi[idx]
-
+      
       # given that this response is observed, compute the next phi
       for idx in range(self.rewardSetSize):
         if not consistCond(res, idx):
           phi[idx] = 0
+      
       # normalize phi, only record possible phis
       if sum(phi) != 0:
         phi = [x / sum(phi) for x in phi]
         distr[tuple(phi)] = resProb
-        self.responseToPhi[res] = tuple(phi)
+        self.responseToPhi[(query, res)] = tuple(phi)
     
     return distr.items()
 
@@ -199,7 +200,7 @@ class QTPAgent:
     The response is informed to the agent regarding a previous query
     """
     # such response was imagined by the agent before and the solution is bookkept
-    pi = self.phiToPolicy[self.responseToPhi[response]]
+    pi = self.phiToPolicy[self.responseToPhi[(query, response)]]
     return pi
 
 

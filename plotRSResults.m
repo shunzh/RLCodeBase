@@ -20,7 +20,7 @@ function main()
   errorbar(responseTimes, rm, rc, '+-');
   errorbar(responseTimes, nm, nc, '--');
 
-  legend('E-JQTP', 'AQTP', 'Random Query, Optimal TP', 'Optimal Query, Prior TP', 'No Query');
+  legend('E-JQTP', 'AQTP', 'Optimal Query, Prior TP', 'Random Query, Optimal TP', 'No Query');
   xlabel('Response Time');
   ylabel('Accumulated Return');
   xlim([-1, 25]); 
@@ -41,7 +41,7 @@ function main()
   errorbar(responseTimes, rm, rc, '+-');
   errorbar(responseTimes, nm, nc, '--');
 
-  legend('E-JQTP', 'AQTP', 'Random Query, Optimal TP', 'Optimal Query, Prior TP', 'No Query');
+  legend('E-JQTP', 'AQTP', 'Optimal Query, Prior TP', 'Random Query, Optimal TP', 'No Query');
   xlabel('Response Time');
   ylabel('Q-Value');
   xlim([-1, 25]); 
@@ -61,7 +61,7 @@ function main()
   errorbar(responseTimes, rm, rc, '+-');
   errorbar(responseTimes, nm, nc, '--');
 
-  legend('E-JQTP', 'AQTP', 'Random Query, Optimal TP', 'Optimal Query, Prior TP', 'No Query');
+  legend('E-JQTP', 'AQTP', 'Optimal Query, Prior TP', 'Random Query, Optimal TP', 'No Query');
   xlabel('Response Time');
   ylabel('Computation Time (sec)');
   xlim([-1, 25]); 
@@ -69,8 +69,8 @@ function main()
 
   figure;
 
-  jd = getData(filename, [5]);
-  ad = getData(filename, [14]);
+  jd = getData(filename, [4]);
+  ad = getData(filename, [13]);
   hist(jd - ad);
   xlabel('Difference in Q value between E-JQTP and AQTP');
   ylabel('Frequency');

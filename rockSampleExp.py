@@ -30,8 +30,8 @@ TODO:
 make this class more general, not just for rocksample exp
 """
 def main():
-  width = 20
-  height = 20
+  width = 19
+  height = 19
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
@@ -39,14 +39,14 @@ def main():
 
   # discount factor
   gamma = 0.9
-  stepCost = 0
-  rewardCandNum = 4
-  objNumPerFeat = 2
+  rewardCandNum = 5
+  objNumPerFeat = 3
+  cornerPlacement = False
 
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:c:v")
+    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:cv")
   except getopt.GetoptError:
     sys.exit(2)
   for opt, arg in opts:
@@ -62,49 +62,50 @@ def main():
     elif opt == '-a':
       agentName = arg
     elif opt == '-c':
-      stepCost = float(arg)
+      cornerPlacement = True
     elif opt == '-v':
       config.VERBOSE = True
-  
+    
   # sanity check
   assert horizon > responseTime
 
   queries = []
-  for _ in xrange(objNum):
-    posCoin = random.random()
-    if posCoin < .25:
-      x = 0
-      y = int(height * random.random())
-    elif posCoin < .5:
-      x = width - 1
-      y = int(height * random.random())
-    elif posCoin < .75:
-      x = int(width * random.random())
-      y = 0
-    else:
-      x = int(width * random.random())
-      y = height - 1
-    queries.append((x, y))
-
   rewards = []
-  for _ in xrange(rewardCandNum):
-    reward = util.Counter()
-    q = random.choice(queries)
-    reward[q] = 1 
-    for idx in xrange(objNumPerFeat):
+  if not cornerPlacement:
+    for _ in xrange(objNum):
+      x = int(width * random.random())
+      y = int(height * random.random())
+      queries.append((x, y))
+
+    for _ in xrange(rewardCandNum):
+      reward = util.Counter()
       q = random.choice(queries)
-      reward[q] = 0.1
-    rewards.append(reward)
-    
+      reward[q] = 5
+      for idx in xrange(objNumPerFeat - 1):
+        q = random.choice(queries)
+        reward[q] = 0.1
+      rewards.append(reward)
+  else:
+    rewardCandNum = 2
+    objNum = 4
+    queries = [(0, 0), (0, height - 1), (width - 1, 0), (width - 1, height - 1)]
+
+    for _ in xrange(rewardCandNum):
+      reward = util.Counter()
+      for idx in xrange(objNum):
+        reward[queries[idx]] = 0.1
+      reward[queries[_]] = 5
+      rewards.append(reward)
+   
   def rewardGen(rewards): 
     def rewardFunc(s):
       if s in rewards.keys():
         return rewards[s]
       else:
-        return stepCost
+        return 0
     return rewardFunc
   terminalReward = util.Counter()
-  terminalReward[(width / 2, height / 2)] = 100
+  terminalReward[(width / 2, height / 2)] = 1000
 
   def relevance(fState, query):
     return abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
@@ -122,7 +123,7 @@ def main():
   # the true reward function is chosen randomly
   cmp = RockSample(queries, random.choice(rewardSet), gamma, responseTime, width, height,\
                    horizon = horizon, terminalReward = terminalReward)
-  cmp.setPossibleRewardValues([0, 0.1, 1])
+  cmp.setPossibleRewardValues([0, 0.1, 5])
   if agentName == 'JQTP' or agentName == 'NQ':
     agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP':
