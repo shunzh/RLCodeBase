@@ -33,9 +33,9 @@ def Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
     
     action = pi(state, cmp.timer)
     state, reward = cmp.doAction(action)
-    if config.VERBOSE: print cmp.timer, 's', state, 'a', action, 'r', reward
-
     cmp.timeElapse()
+    if config.VERBOSE: print cmp.timer, 'a', action, 's', state, 'r', reward
+
     ret += reward * gamma ** cmp.timer
   
   return ret, qValue, timeElapsed

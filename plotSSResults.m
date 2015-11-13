@@ -11,6 +11,7 @@ function main()
   [am, ac] = process(filename, [10, 13, 16])
   [tm, tc] = process(filename, [19, 22, 25])
   [rm, rc] = process(filename, [28, 31, 34])
+  %FIXME
   [nm, nc] = process(filename, [28, 28, 28])
 
   errorbar(responseTimes, jm, jc, '*-');

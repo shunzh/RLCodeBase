@@ -84,28 +84,22 @@ def main():
         x = int(width * random.random())
         y = height - 1
       queries.append((x, y))
-
-    for _ in xrange(rewardCandNum):
-      reward = util.Counter()
-      q = random.choice(queries)
-      reward[q] = 5
-      for idx in xrange(objNumPerFeat - 1):
-        q = random.choice(queries)
-        reward[q] = 0.1
-      rewards.append(reward)
-    
   else:
-    rewardCandNum = 2
     objNum = 4
+    rewardCandNum = 2
+    objNumPerFeat = objNum
     queries = [(0, 0), (0, height - 1), (width - 1, 0), (width - 1, height - 1)]
 
-    for _ in xrange(rewardCandNum):
-      reward = util.Counter()
-      for idx in xrange(objNum):
-        reward[queries[idx]] = 0.1
-      reward[queries[_]] = 5
-      rewards.append(reward)
-   
+  for _ in xrange(rewardCandNum):
+    reward = util.Counter()
+    locs = queries[:]
+    random.shuffle(locs)
+
+    reward[locs[0]] = 5
+    for idx in xrange(1, objNumPerFeat):
+      reward[locs[idx]] = 0.1
+    rewards.append(reward)
+    
   def rewardGen(rewards): 
     def rewardFunc(s):
       if s in rewards.keys():
