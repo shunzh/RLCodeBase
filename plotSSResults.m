@@ -11,8 +11,7 @@ function main()
   [am, ac] = process(filename, [10, 13, 16])
   [tm, tc] = process(filename, [19, 22, 25])
   [rm, rc] = process(filename, [28, 31, 34])
-  %FIXME
-  [nm, nc] = process(filename, [28, 28, 28])
+  [nm, nc] = process(filename, [37, 37, 37])
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;
@@ -33,7 +32,7 @@ function main()
   [am, ac] = process(filename, [11, 14, 17])
   [tm, tc] = process(filename, [20, 23, 26])
   [rm, rc] = process(filename, [29, 32, 35])
-  [nm, nc] = process(filename, [29, 29, 29])
+  [nm, nc] = process(filename, [38, 38, 38])
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;
@@ -53,7 +52,7 @@ function main()
   [am, ac] = process(filename, [12, 15, 18])
   [tm, tc] = process(filename, [21, 24, 27])
   [rm, rc] = process(filename, [30, 33, 36])
-  [nm, nc] = process(filename, [30, 30, 30])
+  [nm, nc] = process(filename, [39, 39, 39])
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;
@@ -87,7 +86,7 @@ function data = getData(filename, lines)
       end
       data = [data, raw(lines)];
     catch
-      disp(i);
+      disp(['Unable to load ', num2str(i)]);
     end
   end
 end

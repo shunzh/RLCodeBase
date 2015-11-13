@@ -48,7 +48,7 @@ def main():
   try:
     opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ov")
   except getopt.GetoptError:
-    print 'unkown flag encountered'
+    print 'unknown flag encountered'
     sys.exit(2)
   for opt, arg in opts:
     if opt == '-r':
@@ -127,7 +127,8 @@ def main():
     queryType = QueryType.REWARD
 
   # the true reward function is chosen randomly
-  cmp = RockSample(queries, random.choice(rewardSet), gamma, responseTime, width, height,\
+  trueReward = random.choice(rewardSet)
+  cmp = RockSample(queries, trueReward, gamma, responseTime, width, height,\
                    horizon = horizon, terminalReward = terminalReward)
   cmp.setPossibleRewardValues([0, 0.1, 5])
   if agentName == 'JQTP' or agentName == 'NQ':
@@ -143,6 +144,8 @@ def main():
     agent = RandomQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'TPNQ':
     agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, queryIgnored=True)
+  elif agentName == 'KNOWN':
+    agent = JointQTPAgent(cmp, [trueReward], [1], queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 
