@@ -34,20 +34,21 @@ def main():
   height = 20
   # the time step that the agent receives the response
   responseTime = 10
-  horizon = 30
-  objNum = 4
+  horizon = 40
+  objNum = 5
 
   # discount factor
   gamma = 0.9
-  rewardCandNum = 4
-  objNumPerFeat = 2
-  cornerPlacement = False
+  rewardCandNum = 3
+  objNumPerFeat = 3
+  obstacleEnabled = False
 
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:cv")
+    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ov")
   except getopt.GetoptError:
+    print 'unkown flag encountered'
     sys.exit(2)
   for opt, arg in opts:
     if opt == '-r':
@@ -61,35 +62,29 @@ def main():
       gamma = float(arg)
     elif opt == '-a':
       agentName = arg
-    elif opt == '-c':
-      cornerPlacement = True
+    elif opt == '-o':
+      obstacleReward = True
     elif opt == '-v':
       config.VERBOSE = True
     
   queries = []
   rewards = []
-  if not cornerPlacement:
-    for _ in xrange(objNum):
-      posCoin = random.random()
-      if posCoin < .25:
-        x = 0
-        y = int(height * random.random())
-      elif posCoin < .5:
-        x = width - 1
-        y = int(height * random.random())
-      elif posCoin < .75:
-        x = int(width * random.random())
-        y = 0
-      else:
-        x = int(width * random.random())
-        y = height - 1
-      queries.append((x, y))
-  else:
-    objNum = 4
-    rewardCandNum = 2
-    objNumPerFeat = objNum
-    queries = [(0, 0), (0, height - 1), (width - 1, 0), (width - 1, height - 1)]
-
+  for _ in xrange(objNum):
+    posCoin = random.random()
+    if posCoin < .25:
+      x = 0
+      y = int(height * random.random())
+    elif posCoin < .5:
+      x = width - 1
+      y = int(height * random.random())
+    elif posCoin < .75:
+      x = int(width * random.random())
+      y = 0
+    else:
+      x = int(width * random.random())
+      y = height - 1
+    queries.append((x, y))
+  
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
     locs = queries[:]
@@ -104,6 +99,8 @@ def main():
     def rewardFunc(s):
       if s in rewards.keys():
         return rewards[s]
+      elif obstacleEnabled and s[0] == width / 2 and s[1] != height / 2:
+        return -50
       else:
         return 0
     return rewardFunc
@@ -111,8 +108,14 @@ def main():
   terminalReward[(width / 2, height / 2)] = 1000
 
   def relevance(fState, query):
-    return abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
-         + abs(query[0] - width / 2) + abs(query[1] - height / 2) < horizon - responseTime
+    withinReach = abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
+                + abs(query[0] - width / 2) + abs(query[1] - height / 2) < horizon - responseTime
+    if obstacleEnabled:
+      onSameSide = fState[0] < width / 2 and query[0] < width / 2\
+                or fState[0] > width / 2 and query[0] > width / 2
+    else:
+      onSameSide = True
+    return withinReach and onSameSide
 
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
