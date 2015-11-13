@@ -93,6 +93,7 @@ def main():
         q = random.choice(queries)
         reward[q] = 0.1
       rewards.append(reward)
+    
   else:
     rewardCandNum = 2
     objNum = 4
