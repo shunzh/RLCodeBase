@@ -34,7 +34,7 @@ def main():
   height = 20
   # the time step that the agent receives the response
   responseTime = 10
-  horizon = 40
+  horizon = 30
   objNum = 4
 
   # discount factor
