@@ -30,8 +30,8 @@ TODO:
 make this class more general, not just for rocksample exp
 """
 def main():
-  width = 19
-  height = 19
+  width = 20
+  height = 20
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
@@ -66,9 +66,6 @@ def main():
     elif opt == '-v':
       config.VERBOSE = True
     
-  # sanity check
-  assert horizon > responseTime
-
   queries = []
   rewards = []
   if not cornerPlacement:

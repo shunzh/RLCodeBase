@@ -69,8 +69,8 @@ function main()
 
   figure;
 
-  jd = getData(filename, [4]);
-  ad = getData(filename, [13]);
+  jd = getData(filename, [5]);
+  ad = getData(filename, [14]);
   hist(jd - ad);
   xlabel('Difference in Q value between E-JQTP and AQTP');
   ylabel('Frequency');
