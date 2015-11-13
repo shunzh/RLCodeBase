@@ -128,10 +128,15 @@ def main():
 
   # the true reward function is chosen randomly
   trueReward = random.choice(rewardSet)
-  cmp = RockSample(queries, trueReward, gamma, responseTime, width, height,\
-                   horizon = horizon, terminalReward = terminalReward)
+  if agentName == 'WAIT':
+    # the agent sleeps over and when it's awake, it finds itself did nothing and now it's response time!
+    cmp = RockSample(queries, trueReward, gamma, 0, width, height,\
+                     horizon = horizon - responseTime, terminalReward = terminalReward)
+  else:
+    cmp = RockSample(queries, trueReward, gamma, responseTime, width, height,\
+                     horizon = horizon, terminalReward = terminalReward)
   cmp.setPossibleRewardValues([0, 0.1, 5])
-  if agentName == 'JQTP' or agentName == 'NQ':
+  if agentName == 'JQTP' or agentName == 'NQ' or agentName == 'WAIT':
     agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP':
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma)
@@ -149,7 +154,13 @@ def main():
   else:
     raise Exception("Unknown Agent " + agentName)
 
-  ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon)
+  if agentName == 'WAIT':
+    ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon- responseTime)
+    ret = ret * gamma ** responseTime
+    qValue = ret * gamma ** responseTime
+  else:
+    ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon)
+
   print ret
   print qValue
   print time
