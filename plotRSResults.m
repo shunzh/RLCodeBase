@@ -11,8 +11,7 @@ function main()
   [am, ac] = process(filename, [10, 13, 16])
   [tm, tc] = process(filename, [19, 22, 25])
   [rm, rc] = process(filename, [28, 31, 34])
-  [wm, wc] = process(filename, [37, 40, 43])
-  [nm, nc] = process(filename, [46, 46, 46])
+  [nm, nc] = process(filename, [37, 37, 37])
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;
@@ -33,8 +32,7 @@ function main()
   [am, ac] = process(filename, [11, 14, 17])
   [tm, tc] = process(filename, [20, 23, 26])
   [rm, rc] = process(filename, [29, 32, 35])
-  [wm, wc] = process(filename, [38, 41, 44])
-  [nm, nc] = process(filename, [47, 47, 47])
+  [nm, nc] = process(filename, [38, 38, 38])
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;
@@ -54,8 +52,7 @@ function main()
   [am, ac] = process(filename, [12, 15, 18])
   [tm, tc] = process(filename, [21, 24, 27])
   [rm, rc] = process(filename, [30, 33, 36])
-  [wm, wc] = process(filename, [39, 42, 45])
-  [nm, nc] = process(filename, [48, 48, 48])
+  [nm, nc] = process(filename, [39, 39, 39])
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;

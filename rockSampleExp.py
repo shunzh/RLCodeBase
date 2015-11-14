@@ -35,7 +35,7 @@ def main():
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
-  objNum = 5
+  objNum = 8
 
   # discount factor
   gamma = 0.9
