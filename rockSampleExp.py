@@ -63,7 +63,7 @@ def main():
     elif opt == '-a':
       agentName = arg
     elif opt == '-o':
-      obstacleReward = True
+      obstacleEnabled = True
     elif opt == '-v':
       config.VERBOSE = True
     
@@ -155,6 +155,7 @@ def main():
     raise Exception("Unknown Agent " + agentName)
 
   if agentName == 'WAIT':
+    # only simulate the episodes after the response
     ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon- responseTime)
     ret = ret * gamma ** responseTime
     qValue = ret * gamma ** responseTime
