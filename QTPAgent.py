@@ -49,6 +49,11 @@ class QTPAgent:
       self.viAgentSet.append(viAgent)
     
     if self.queryIgnored:
+      # thought there is no query, planning on mean reward
+      horizon = self.cmp.horizon
+      terminalReward = self.cmp.terminalReward
+      self.viAgent = self.getFiniteVIAgent(self.phi, horizon, terminalReward)
+    else:
       # plan on the mean rewards in this case
       self.viAgent = self.getVIAgent(self.phi)
 
