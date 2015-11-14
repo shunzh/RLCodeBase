@@ -38,8 +38,7 @@ def main():
 
   # discount factor
   gamma = 0.9
-  rewardCandNum = 5
-  objNumPerFeat = 4
+  rewardCandNum = 4
   obstacleEnabled = False
 
   agentName = 'JQTP'
@@ -66,20 +65,16 @@ def main():
     elif opt == '-v':
       config.VERBOSE = True
     
-  queries = [(0, 0), (width / 2 - 1, 0), (width - 1, 0),\
-             (0, height / 2), (width - 1, height/ 2),\
-             (0, height - 1), (width / 2 + 1, height - 1), (width - 1, height - 1)]
+  queries = [(1, 0), (0, 1),
+             (width - 2, 0), (width - 1, 1), \
+             (1, height - 1), (0, height - 2),\
+             (width - 2, height - 1), (width - 1, height - 2)]
 
   rewards = []
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
-    locs = queries[:]
-    random.shuffle(locs)
-
-    for idx in xrange(2):
-      reward[locs[idx]] = 5
-    for idx in xrange(2, objNumPerFeat):
-      reward[locs[idx]] = 0.1
+    for idx in xrange(2 * _, 2 * _ + 1):
+      reward[queries[idx]] = 1
     rewards.append(reward)
     
   def rewardGen(rewards): 
@@ -105,16 +100,20 @@ def main():
     return withinReach and onSameSide
 
   rewardSet = [rewardGen(reward) for reward in rewards]
-  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+  initialPhi = []
+  for _ in xrange(rewardCandNum):
+    initialPhi.append(random.random())
+  initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
+
   # ask whether reward is good or not
   if agentName == 'NQ':
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
   else:
-    queryType = QueryType.REWARD
+    queryType = QueryType.REWARD_SIGN
 
-  # the true reward function is chosen randomly
-  trueReward = random.choice(rewardSet)
+  # the true reward function is chosen according to initialPhi
+  trueReward = util.sample(initialPhi, rewardSet)
   if agentName == 'WAIT':
     # the agent sleeps over and when it's awake, it finds itself did nothing and now it's response time!
     cmp = RockSample(queries, trueReward, gamma, 0, width, height,\
@@ -123,6 +122,7 @@ def main():
     cmp = RockSample(queries, trueReward, gamma, responseTime, width, height,\
                      horizon = horizon, terminalReward = terminalReward)
   cmp.setPossibleRewardValues([0, 0.1, 5])
+
   if agentName == 'JQTP' or agentName == 'NQ' or agentName == 'WAIT':
     agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP':

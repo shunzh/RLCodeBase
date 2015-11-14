@@ -1,6 +1,6 @@
 from mdp import MarkovDecisionProcess
 from valueIterationAgents import ValueIterationAgent
-import numpy
+import numpy as np
 
 # possible type of queries
 # TODO some are not implemented
@@ -8,7 +8,7 @@ class QueryType:
   POLICY, REWARD, REWARD_SIGN, NONE = range(4)
   
 class ControlledMarkovProcess(MarkovDecisionProcess):
-  def __init__(self, queries, trueReward, gamma, responseTime, horizon=numpy.inf, terminalReward=None):
+  def __init__(self, queries, trueReward, gamma, responseTime, horizon=np.inf, terminalReward=None):
     MarkovDecisionProcess.__init__(self)
     
     self.outsandingQuery = None
@@ -56,6 +56,8 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
         res = self.viAgent.getPolicy(s, self.timer)
       elif type == QueryType.REWARD:
         res = self.getReward(s)
+      elif type == QueryType.REWARD_SIGN:
+        res = np.sign(self.getReward(s))
       elif type == QueryType.NONE:
         res = 0 # return a dummy value
       else:
