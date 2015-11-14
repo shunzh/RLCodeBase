@@ -35,12 +35,11 @@ def main():
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
-  objNum = 8
 
   # discount factor
   gamma = 0.9
-  rewardCandNum = 3
-  objNumPerFeat = 3
+  rewardCandNum = 5
+  objNumPerFeat = 4
   obstacleEnabled = False
 
   agentName = 'JQTP'
@@ -67,31 +66,19 @@ def main():
     elif opt == '-v':
       config.VERBOSE = True
     
-  queries = []
+  queries = [(0, 0), (width / 2 - 1, 0), (width - 1, 0),\
+             (0, height / 2), (width - 1, height/ 2),\
+             (0, height - 1), (width / 2 + 1, height - 1), (width - 1, height - 1)]
+
   rewards = []
-  for _ in xrange(objNum):
-    posCoin = random.random()
-    if posCoin < .25:
-      x = 0
-      y = int(height * random.random())
-    elif posCoin < .5:
-      x = width - 1
-      y = int(height * random.random())
-    elif posCoin < .75:
-      x = int(width * random.random())
-      y = 0
-    else:
-      x = int(width * random.random())
-      y = height - 1
-    queries.append((x, y))
-  
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
     locs = queries[:]
     random.shuffle(locs)
 
-    reward[locs[0]] = 5
-    for idx in xrange(1, objNumPerFeat):
+    for idx in xrange(2):
+      reward[locs[idx]] = 5
+    for idx in xrange(2, objNumPerFeat):
       reward[locs[idx]] = 0.1
     rewards.append(reward)
     
@@ -111,8 +98,8 @@ def main():
     withinReach = abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
                 + abs(query[0] - width / 2) + abs(query[1] - height / 2) < horizon - responseTime
     if obstacleEnabled:
-      onSameSide = fState[0] < width / 2 and query[0] < width / 2\
-                or fState[0] > width / 2 and query[0] > width / 2
+      onSameSide = fState[0] <= width / 2 and query[0] <= width / 2\
+                or fState[0] >= width / 2 and query[0] >= width / 2
     else:
       onSameSide = True
     return withinReach and onSameSide
