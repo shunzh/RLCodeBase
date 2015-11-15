@@ -87,7 +87,7 @@ def main():
         return 0
     return rewardFunc
   terminalReward = util.Counter()
-  terminalReward[(width / 2, height / 2)] = 1000
+  terminalReward[(width / 2, height / 2)] = 100
 
   def relevance(fState, query):
     withinReach = abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
@@ -150,7 +150,7 @@ def main():
     ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon)
 
   print ret
-  print qValue
+  print qValue - 100 * gamma ** horizon
   print time
 
 if __name__ == '__main__':
