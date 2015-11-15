@@ -264,6 +264,8 @@ class AlternatingQTPAgent(QTPAgent):
     if config.VERBOSE:
       print "Considering queries", queries
 
+    if config.PRINT == 'queries': print len(queries)
+
     if queries == []:
       # FIXME pick first query when no relevant queries
       return self.cmp.queries[0]

@@ -44,7 +44,7 @@ def main():
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ov")
+    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ovp:")
   except getopt.GetoptError:
     print 'unknown flag encountered'
     sys.exit(2)
@@ -64,6 +64,8 @@ def main():
       obstacleEnabled = True
     elif opt == '-v':
       config.VERBOSE = True
+    elif opt == '-p':
+      config.PRINT = arg
     
   queries = [(1, 0), (0, 1),
              (width - 2, 0), (width - 1, 1), \
@@ -148,9 +150,10 @@ def main():
   else:
     ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon)
 
-  print ret
-  print qValue - 100 * gamma ** horizon
-  print time
+  if config.PRINT == 'perf':
+    print ret
+    print qValue - 100 * gamma ** horizon
+    print time
 
 if __name__ == '__main__':
   main()
