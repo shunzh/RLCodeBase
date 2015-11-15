@@ -234,6 +234,8 @@ class JointQTPAgent(QTPAgent):
     if self.queryIgnored:
       # forget the optimal pi, but plan on prior belief in this case
       pi = lambda s, t: self.viAgent.getPolicy(s, t)
+      # get the qvalue under this assumption
+      qValue = self.getQValue(state, pi, q)
 
     return q, pi, maxQValue
 

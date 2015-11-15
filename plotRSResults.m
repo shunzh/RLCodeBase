@@ -80,7 +80,7 @@ end
 
 function data = getData(filename, lines)
   data = [];
-  for i=0:199
+  for i=0:499
     try
       raw = load([filename, '.', num2str(i)]);
       if size(raw, 1) == 39

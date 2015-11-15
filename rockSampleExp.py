@@ -82,7 +82,7 @@ def main():
       if s in rewards.keys():
         return rewards[s]
       elif obstacleEnabled and s[0] == width / 2 and s[1] != height / 2:
-        return -50
+        return -10
       else:
         return 0
     return rewardFunc
