@@ -38,7 +38,7 @@ def main():
 
   # discount factor
   gamma = 0.9
-  rewardCandNum = 4
+  rewardCandNum = 6
   obstacleEnabled = False
 
   agentName = 'JQTP'
@@ -67,14 +67,13 @@ def main():
     
   queries = [(1, 0), (0, 1),
              (width - 2, 0), (width - 1, 1), \
-             (1, height - 1), (0, height - 2),\
-             (width - 2, height - 1), (width - 1, height - 2)]
+             (0, height - 1),\
+             (width - 1, height - 1)]
 
   rewards = []
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
-    for idx in xrange(2 * _, 2 * _ + 1):
-      reward[queries[idx]] = 1
+    reward[queries[_]] = 1
     rewards.append(reward)
     
   def rewardGen(rewards): 
