@@ -67,15 +67,15 @@ def main():
     elif opt == '-p':
       config.PRINT = arg
     
-  queries = [(1, 0), (0, 1),
-             (width - 2, 0), (width - 1, 1), \
-             (0, height - 1),\
-             (width - 1, height - 1)]
+  rocks = [(1, 0), (0, 1),
+           (width - 2, 0), (width - 1, 1), \
+           (0, height - 1),\
+           (width - 1, height - 1)]
 
   rewards = []
   for _ in xrange(rewardCandNum):
     reward = util.Counter()
-    reward[queries[_]] = 1
+    reward[rocks[_]] = 1
     rewards.append(reward)
     
   def rewardGen(rewards): 
@@ -111,7 +111,11 @@ def main():
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
   else:
+    queries = rocks
     queryType = QueryType.REWARD_SIGN
+    
+    #queries = cmp.getStates()
+    #queryType = QueryType.POLICY
 
   # the true reward function is chosen according to initialPhi
   trueReward = util.sample(initialPhi, rewardSet)

@@ -88,7 +88,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       terminal state, you should return None.
     """
     return random.choice(self.getPolicies(state, t))
-    #return self.getPolicies(state)[0] # enable this when i only want to fix randomness
+    #return self.getPolicies(state)[0] # enable this to fix randomness
   
   def getPolicies(self, state, t=0):
     """

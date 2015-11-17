@@ -7,13 +7,13 @@ function main()
   responseTimes = [0, 5, 10, 15, 20];
   filename = 'rs_out';
 
-  retMat = 1:3:200
-  jMat = retMat(1:5)
-  aMat = retMat(6:10)
-  anfMat = retMat(11:15)
-  pMat = retMat(16:20)
-  rMat = retMat(21:25)
-  nMat = retMat([26 26 26 26 26])
+  retMat = 1:3:200;
+  jMat = retMat(1:5);
+  aMat = retMat(6:10);
+  anfMat = retMat(11:15);
+  pMat = retMat(16:20);
+  rMat = retMat(21:25);
+  nMat = retMat([26 26 26 26 26]);
 
   [jm, jc] = process(filename, jMat + 1)
   [am, ac] = process(filename, aMat + 1)
@@ -57,10 +57,10 @@ function main()
   ylabel('Computation Time (sec.)');
   xlim([-1, 25]); 
 
+  keyboard
 
   figure;
 
-  keyboard
   jd = getData(filename, [jMat(3)] + 1);
   ad = getData(filename, [aMat(3)] + 1);
   hist(jd - ad);
@@ -75,7 +75,9 @@ function data = getData(filename, lines)
   for i=0:499
     try
       raw = load([filename, '.', num2str(i)]);
-      data = [data, raw(lines)];
+      if size(raw, 1) == 78
+        data = [data, raw(lines)];
+      end
     catch
       disp(['Unable to load ', num2str(i)]);
     end

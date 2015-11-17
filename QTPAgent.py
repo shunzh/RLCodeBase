@@ -90,12 +90,13 @@ class QTPAgent:
 
   def getPossiblePhiAndProbs(self, query):
     actions = self.cmp.getPossibleActions(query)
+    responseTime = self.cmp.responseTime
     # belief -> prob dict
     distr = util.Counter()
 
     if self.queryType == QueryType.POLICY:
       resSet = actions
-      consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query)
+      consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query, responseTime)
     elif self.queryType == QueryType.REWARD_SIGN:
       resSet = [-1, 0, 1]
       consistCond = lambda res, idx: numpy.sign(self.rewardSet[idx](query)) == res
