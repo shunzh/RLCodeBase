@@ -304,10 +304,10 @@ class PriorTPAgent(QTPAgent):
     # mean reward planner
     horizon = self.cmp.horizon
     if horizon == numpy.inf:
+      meanViAgent = self.getVIAgent(self.phi)
+    else:
       terminalReward = self.cmp.terminalReward
       meanViAgent = self.getFiniteVIAgent(self.phi, horizon, terminalReward)
-    else:
-      meanViAgent = self.getVIAgent(self.phi)
     
     # respond with best query
     state = self.cmp.state
