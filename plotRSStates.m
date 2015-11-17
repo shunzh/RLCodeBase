@@ -6,9 +6,10 @@ function main()
 
   filename = 'rs_out';
 
-  m0 = zeros(20, 20);
-  m10 = zeros(20, 20);
-  m20 = zeros(20, 20);
+  m = {};
+  for j = 1:5
+    m{j} = zeros(21, 21);
+  end
 
   for i=0:499
     try
@@ -17,33 +18,22 @@ function main()
       disp(['Unable to load ', num2str(i)]);
     end
 
+    j = 1;
     r = 1;
-    while raw(r,:) ~= [-1, -1]
-      m0(raw(r,1)+1, raw(r,2)+1) = m0(raw(r,1)+1, raw(r,2)+1) + 1;
+    while j <= 5
+      while raw(r,:) ~= [-1, -1]
+        m{j}(raw(r,1)+1, raw(r,2)+1) = m{j}(raw(r,1)+1, raw(r,2)+1) + 1;
+        r = r + 1;
+      end
       r = r + 1;
-    end
-    r = r + 1;
-    while raw(r,:) ~= [-1, -1]
-      m10(raw(r,1)+1, raw(r,2)+1) = m10(raw(r,1)+1, raw(r,2)+1) + 1;
-      r = r + 1;
-    end
-    r = r + 1;
-    while raw(r,:) ~= [-1, -1]
-      m20(raw(r,1)+1, raw(r,2)+1) = m20(raw(r,1)+1, raw(r,2)+1) + 1;
-      r = r + 1;
+      j = j + 1;
     end
   end
 
-  subplot(1,3,1);
-  imagesc(log(m0' + 1));
-  colormap bone;
-
-  subplot(1,3,2);
-  imagesc(log(m10' + 1));
-  colormap bone;
-
-  subplot(1,3,3);
-  imagesc(log(m20' + 1));
-  colormap bone;
+  for j = 1:5
+    subplot(1,5,j);
+    imagesc(log(m{j}' + 1));
+    colormap bone;
+  end
 end
 

@@ -223,27 +223,22 @@ class QTPAgent:
 class JointQTPAgent(QTPAgent):
   def learn(self):
     state = self.cmp.state
-    maxQValue = -float('INF')
-    optQuery = None; optPi = None
+    qList = []
 
     for q in self.cmp.queries:
       pi = self.optimizePolicy(q)
       qValue = self.getQValue(state, pi, q)
       if config.PRINT == 'qs': print qValue
       if config.VERBOSE: print q, qValue
-
-      if qValue > maxQValue:
-        maxQValue = qValue
-        optQuery = q
-        optPi = pi
+      qList.append((q, pi, qValue))
     
-    q = optQuery
-    pi = optPi
+    maxQValue = max(map(lambda _:_[2], qList))
+    qList = filter(lambda _: _[2] == maxQValue, qList)
 
     if config.VERBOSE:
-      print "optimized q", q
+      print "optimized", qList
 
-    return q, pi, maxQValue
+    return random.choice(qList)
 
 
 class AlternatingQTPAgent(QTPAgent):
