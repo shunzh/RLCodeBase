@@ -130,7 +130,7 @@ class QTPAgent:
         distr[tuple(phi)] = resProb
         self.responseToPhi[(query, res)] = tuple(phi)
     
-    return distr.items()
+    return map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
 
   def getQValue(self, state, policy, query):
     """

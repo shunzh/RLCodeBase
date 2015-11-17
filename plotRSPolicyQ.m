@@ -4,12 +4,13 @@ function main()
 
   clear all; close all;
 
-  responseTimes = [5, 10, 15];
+  responseTimes = [0, 5, 10, 15, 20];
   filename = 'rsP_out';
 
   retMat = 1:3:200;
-  jMat = retMat(1:3);
-  aMat = retMat(4:6);
+  jMat = retMat(1:5);
+  aMat = retMat(6:10);
+  aMat = retMat(10:15);
 
   [jm, jc] = process(filename, jMat + 1)
   [am, ac] = process(filename, aMat + 1)

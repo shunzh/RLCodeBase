@@ -62,7 +62,6 @@ function main()
   jd = getData(filename, [jMat(3)] + 1);
   ad = getData(filename, [aMat(3)] + 1);
   hist(jd - ad);
-  disp('supports');
   hold on
   plot(0, sum(jd - ad == 0), '*r');
   xlabel('Difference in Q value between E-JQTP and AQTP');
