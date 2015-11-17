@@ -1,5 +1,5 @@
 #!/bin/bash
-flag="-p queries"
+flag="-P queries"
 
 python rockSampleExp.py -a AQTP -r $1 -l 0 $flag
 echo "-1"

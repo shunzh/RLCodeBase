@@ -1,5 +1,5 @@
 #!/bin/bash
-flag="-p states"
+flag="-P states"
 
 python rockSampleExp.py -a JQTP -r $1 -l 0 $flag
 echo "-1 -1"

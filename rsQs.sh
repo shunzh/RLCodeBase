@@ -1,5 +1,5 @@
 #!/bin/bash
-flag="-p qs"
+flag="-P qs"
 
 for i in `seq 0 19`;
 do

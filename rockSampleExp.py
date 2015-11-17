@@ -45,7 +45,7 @@ def main():
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ovp")
+    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ovpP:")
   except getopt.GetoptError:
     print 'unknown flag encountered'
     sys.exit(2)
@@ -65,6 +65,8 @@ def main():
       obstacleEnabled = True
     elif opt == '-v':
       config.VERBOSE = True
+    elif opt == '-P':
+      config.PRINT = arg
     elif opt == '-p':
       policyQuery = True
     
