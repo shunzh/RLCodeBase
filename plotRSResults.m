@@ -88,8 +88,8 @@ function [m, ci] = process(filename, lines)
   m = []; ci = [];
   for i=1:size(data,1)
     dataRow = data(i, :);
-    filter = dataRow < 60; % condor may suspend my jobs
-    dataRow = dataRow(filter);
+    %filter = dataRow < 60; % condor may suspend my jobs
+    %dataRow = dataRow(filter);
 
     m(end + 1) = mean(dataRow);
     ci(end + 1) = 1.96 * std(dataRow) / sqrt(n);
