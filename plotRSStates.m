@@ -21,12 +21,21 @@ function main()
     j = 1;
     r = 1;
     while j <= 5
+      if r > size(raw, 1)
+        break
+      end
       while raw(r,:) ~= [-1, -1]
+        if r > size(raw, 1)
+          break
+        end
         m{j}(raw(r,1)+1, raw(r,2)+1) = m{j}(raw(r,1)+1, raw(r,2)+1) + 1;
         r = r + 1;
       end
       r = r + 1;
       j = j + 1;
+      if r > size(raw, 1)
+        break
+      end
     end
   end
 
