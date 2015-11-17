@@ -57,8 +57,6 @@ function main()
   ylabel('Computation Time (sec.)');
   xlim([-1, 25]); 
 
-  keyboard
-
   figure;
 
   jd = getData(filename, [jMat(3)] + 1);
@@ -87,7 +85,14 @@ end
 function [m, ci] = process(filename, lines)
   data = getData(filename, lines);
   n = size(data, 2);
-  m = mean(data, 2);
-  ci = 1.96 * std(data, 0, 2) / sqrt(n);
+  m = []; ci = [];
+  for i=1:size(data,1)
+    dataRow = data(i, :);
+    filter = dataRow < 60; % condor may suspend my jobs
+    dataRow = dataRow(filter);
+
+    m(end + 1) = mean(dataRow);
+    ci(end + 1) = 1.96 * std(dataRow) / sqrt(n);
+  end
 end
 
