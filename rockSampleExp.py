@@ -40,12 +40,12 @@ def main():
   gamma = 0.9
   rewardCandNum = 6
   obstacleEnabled = False
-  policyQuery = False
+  queryFlag = 'default'
 
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ovpP:")
+    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ovq:P:")
   except getopt.GetoptError:
     print 'unknown flag encountered'
     sys.exit(2)
@@ -67,8 +67,8 @@ def main():
       config.VERBOSE = True
     elif opt == '-P':
       config.PRINT = arg
-    elif opt == '-p':
-      policyQuery = True
+    elif opt == '-q':
+      queryFlag = arg
     
   rocks = [(1, 0), (0, 1),
            (width - 2, 0), (width - 1, 1), \
@@ -113,12 +113,18 @@ def main():
   if agentName == 'NQ':
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
-  elif policyQuery:
-    queries = [(x, y) for x in xrange(width) for y in xrange(height)]
-    queryType = QueryType.POLICY
   else:
-    queries = rocks
-    queryType = QueryType.REWARD_SIGN
+    if queryFlag == 'default':
+      queries = rocks
+      queryType = QueryType.REWARD_SIGN
+    elif queryFlag == 'test':
+      queries = [(x, y) for x in range(0, width, width / 4) for y in range(0, height, height / 4)]
+      queryType = QueryType.POLICY
+    elif queryFlag == 'full':
+      queries = [(x, y) for x in xrange(width) for y in xrange(height)]
+      queryType = QueryType.POLICY
+    else:
+      raise Exception('unkown query flag ' + queryFlag)
 
   # the true reward function is chosen according to initialPhi
   trueReward = util.sample(initialPhi, rewardSet)

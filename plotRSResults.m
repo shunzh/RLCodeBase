@@ -30,7 +30,7 @@ function main()
   errorbar(responseTimes, rm, rc, '+-');
   errorbar(responseTimes, nm, nc, '--');
 
-  legend('E-JQTP', 'AQTP', 'AQTP No Filtering', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
+  legend('E-JQTP', 'AQTP-QF', 'AQTP-NQF', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
   xlabel('Response Time');
   ylabel('Q-Value');
   xlim([-1, 25]); 
