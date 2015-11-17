@@ -111,11 +111,13 @@ def main():
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
   else:
-    #queries = rocks
-    #queryType = QueryType.REWARD_SIGN
+    queries = rocks
+    queryType = QueryType.REWARD_SIGN
     
+    """
     queries = [(x, y) for x in xrange(width) for y in xrange(height)]
     queryType = QueryType.POLICY
+    """
 
   # the true reward function is chosen according to initialPhi
   trueReward = util.sample(initialPhi, rewardSet)
