@@ -12,11 +12,6 @@ from copy import deepcopy
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
                gamma, queryIgnored=False, clusterDistance=0):
-    """
-    queryIgnored
-      Query is asked, but the agent forgets such query is asked and planning using the prior belief.
-      After a response is received, the agent will update its policy.
-    """
     # underlying cmp
     self.cmp = cmp
     # set of possible reward functions
@@ -48,15 +43,6 @@ class QTPAgent:
       viAgent = self.getVIAgent(phi)
       self.viAgentSet.append(viAgent)
     
-    if self.queryIgnored:
-      # thought there is no query, planning on mean reward
-      horizon = self.cmp.horizon
-      terminalReward = self.cmp.terminalReward
-      self.viAgent = self.getFiniteVIAgent(self.phi, horizon, terminalReward)
-    else:
-      # plan on the mean rewards in this case
-      self.viAgent = self.getVIAgent(self.phi)
-
   def getRewardFunc(self, phi):
     """
     return the mean reward function under the given belief
@@ -200,6 +186,30 @@ class QTPAgent:
       pprint.pprint([(s, viAgent.getValue(s), viAgent.getPolicies(s)) for s in cmp.getStates()])
     return pi
 
+  def optimizeQuery(self, state, policy):
+    """
+    Enumerate relevant considering the states reachable by the transient policy.
+    """
+    possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, self.cmp.responseTime)
+    # FIXME
+    # assuming deterministic
+    fState = possibleStatesAndProbs[0][0]
+    
+    queries = []
+    for query in self.cmp.queries:
+      if self.relevance(fState, query): queries.append(query)
+    
+    if config.VERBOSE:
+      print "Considering queries", queries
+
+    if config.PRINT == 'queries': print len(queries)
+
+    if queries == []:
+      # FIXME pick first query when no relevant queries
+      return self.cmp.queries[0]
+    else:
+      return max(queries, key=lambda q: self.getQValue(state, policy, q))
+ 
   def respond(self, query, response):
     """
     The response is informed to the agent regarding a previous query
@@ -218,6 +228,7 @@ class JointQTPAgent(QTPAgent):
     for q in self.cmp.queries:
       pi = self.optimizePolicy(q)
       qValue = self.getQValue(state, pi, q)
+      if config.PRINT == 'qs': print qValue
       if config.VERBOSE: print q, qValue
 
       if qValue > maxQValue:
@@ -231,12 +242,6 @@ class JointQTPAgent(QTPAgent):
     if config.VERBOSE:
       print "optimized q", q
 
-    if self.queryIgnored:
-      # forget the optimal pi, but plan on prior belief in this case
-      pi = lambda s, t: self.viAgent.getPolicy(s, t)
-      # get the qvalue under this assumption
-      maxQValue = self.getQValue(state, pi, q)
-
     return q, pi, maxQValue
 
 
@@ -246,32 +251,6 @@ class AlternatingQTPAgent(QTPAgent):
     self.relevance = relevance
     self.restarts = restarts
 
-  def optimizeQuery(self, state, policy):
-    """
-    Enumerate relevant considering the states reachable by the transient policy.
-    """
-    possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, self.cmp.responseTime)
-    # FIXME
-    # assuming deterministic
-    fState = possibleStatesAndProbs[0][0]
-    
-    queries = []
-    for query in self.cmp.queries:
-      # FIXME
-      # overfit sightseeing problem
-      if self.relevance(fState, query): queries.append(query)
-    
-    if config.VERBOSE:
-      print "Considering queries", queries
-
-    if config.PRINT == 'queries': print len(queries)
-
-    if queries == []:
-      # FIXME pick first query when no relevant queries
-      return self.cmp.queries[0]
-    else:
-      return max(queries, key=lambda q: self.getQValue(state, policy, q))
- 
   def learnInstance(self):
     # there could be multiple initializations for AQTP
     # this is learning with one initial query
@@ -296,10 +275,6 @@ class AlternatingQTPAgent(QTPAgent):
         break
       counter += 1
     
-    if self.queryIgnored:
-      # in both settings, plan on prior belief
-      pi = lambda s, t: self.viAgent.getPolicy(s, t)
-    
     return q, pi, self.getQValue(state, pi, q)
   
   def learn(self):
@@ -317,6 +292,29 @@ class RandomQueryAgent(QTPAgent):
     q = random.choice(self.cmp.queries)
     pi = self.optimizePolicy(q)
     qValue = self.getQValue(state, pi, q)
+    return q, pi, qValue
+
+
+class PriorTPAgent(QTPAgent):
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, relevance):
+    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
+    self.relevance = relevance
+  
+  def learn(self):
+    # mean reward planner
+    horizon = self.cmp.horizon
+    if horizon == numpy.inf:
+      terminalReward = self.cmp.terminalReward
+      meanViAgent = self.getFiniteVIAgent(self.phi, horizon, terminalReward)
+    else:
+      meanViAgent = self.getVIAgent(self.phi)
+    
+    # respond with best query
+    state = self.cmp.state
+    pi = lambda s, t: meanViAgent.getPolicy(s, t) 
+    q  = self.optimizeQuery(state, pi)
+    qValue = self.getQValue(state, pi, q)
+
     return q, pi, qValue
 
 

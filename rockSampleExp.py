@@ -1,4 +1,5 @@
-from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent
+from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
+  PriorTPAgent
 from CMPExp import Experiment
 import util
 import sys
@@ -13,7 +14,6 @@ Algorithms:
 - E-JQTP
 - AQTP
 - AQTP-NF
-- AQTP-RS (?)
 - opt query
 - random query
 - no query
@@ -30,8 +30,8 @@ TODO:
 make this class more general, not just for rocksample exp
 """
 def main():
-  width = 20
-  height = 20
+  width = 21
+  height = 21
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
@@ -135,8 +135,8 @@ def main():
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma, restarts=1)
   elif agentName == 'RQ':
     agent = RandomQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == 'TPNQ':
-    agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, queryIgnored=True)
+  elif agentName == 'PTP':
+    agent = PriorTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, relevance)
   elif agentName == 'KNOWN':
     agent = JointQTPAgent(cmp, [trueReward], [1], queryType, gamma)
   else:
