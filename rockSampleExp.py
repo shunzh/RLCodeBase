@@ -92,7 +92,7 @@ def main():
 
   def relevance(fState, query):
     withinReach = abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
-                + abs(query[0] - width / 2) + abs(query[1] - height / 2) < horizon - responseTime
+                + abs(query[0] - width / 2) + abs(query[1] - height / 2) <= horizon - responseTime
     if obstacleEnabled:
       onSameSide = fState[0] <= width / 2 and query[0] <= width / 2\
                 or fState[0] >= width / 2 and query[0] >= width / 2

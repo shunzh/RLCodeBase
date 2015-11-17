@@ -31,7 +31,7 @@ function main()
   end
 
   for j = 1:5
-    j, mean(m{j}), std(m{j})
+    j, mean(m{j}), 1.96 * std(m{j}) / sqrt(size(m{j}, 2))
   end
 end
 
