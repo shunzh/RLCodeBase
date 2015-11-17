@@ -40,11 +40,12 @@ def main():
   gamma = 0.9
   rewardCandNum = 6
   obstacleEnabled = False
+  policyQuery = False
 
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ovp:")
+    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ovp")
   except getopt.GetoptError:
     print 'unknown flag encountered'
     sys.exit(2)
@@ -65,7 +66,7 @@ def main():
     elif opt == '-v':
       config.VERBOSE = True
     elif opt == '-p':
-      config.PRINT = arg
+      policyQuery = True
     
   rocks = [(1, 0), (0, 1),
            (width - 2, 0), (width - 1, 1), \
@@ -110,14 +111,12 @@ def main():
   if agentName == 'NQ':
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
+  elif policyQuery:
+    queries = [(x, y) for x in xrange(width) for y in xrange(height)]
+    queryType = QueryType.POLICY
   else:
     queries = rocks
     queryType = QueryType.REWARD_SIGN
-    
-    """
-    queries = [(x, y) for x in xrange(width) for y in xrange(height)]
-    queryType = QueryType.POLICY
-    """
 
   # the true reward function is chosen according to initialPhi
   trueReward = util.sample(initialPhi, rewardSet)

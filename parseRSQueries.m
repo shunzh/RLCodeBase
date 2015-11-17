@@ -4,7 +4,7 @@ function main()
 
   clear all; close all;
 
-  filename = 'rs_out';
+  filename = 'rsQ_out';
 
   m = {};
   for j = 1:5
@@ -22,16 +22,24 @@ function main()
     r = 1;
     while j <= 5
       while raw(r) ~= -1
+        if r > size(raw, 1)
+          break
+        end
         m{j}(end + 1) = raw(r);
         r = r + 1;
       end
       r = r + 1;
       j = j + 1;
+
+      if r > size(raw, 1)
+        break
+      end
     end
   end
 
   for j = 1:5
     j, mean(m{j}), 1.96 * std(m{j}) / sqrt(size(m{j}, 2))
   end
+  keyboard
 end
 
