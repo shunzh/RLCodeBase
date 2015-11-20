@@ -5,19 +5,21 @@ function main()
   clear all; close all;
 
   responseTimes = [0, 5, 10, 15, 20];
-  filename = 'rsP_out';
+  filename = 'rsTest_out';
 
   retMat = 1:3:200;
   jMat = retMat(1:5);
   aMat = retMat(6:10);
-  aMat = retMat(10:15);
+  anfMat = retMat(11:15);
 
   [jm, jc] = process(filename, jMat + 1)
   [am, ac] = process(filename, aMat + 1)
+  [anm, anc] = process(filename, anfMat + 1)
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;
   errorbar(responseTimes, am, ac, 'o-');
+  errorbar(responseTimes, anm, anc, 'o--');
 
   legend('E-JQTP', 'AQTP');
   xlabel('Response Time');
@@ -29,10 +31,12 @@ function main()
 
   [jm, jc] = process(filename, jMat + 2)
   [am, ac] = process(filename, aMat + 2)
+  [anm, anc] = process(filename, anfMat + 2)
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;
   errorbar(responseTimes, am, ac, 'o-');
+  errorbar(responseTimes, anm, anc, 'o--');
 
   legend('E-JQTP', 'AQTP');
   xlabel('Response Time');
@@ -53,10 +57,10 @@ end
 
 function data = getData(filename, lines)
   data = [];
-  for i=0:499
+  for i=0:49
     try
       raw = load([filename, '.', num2str(i)]);
-      if size(raw, 1) == 18
+      if size(raw, 1) == 45
         data = [data, raw(lines)];
       end
     catch
