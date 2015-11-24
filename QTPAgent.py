@@ -169,9 +169,6 @@ class QTPAgent:
       for fState, fStateProb in possibleStatesAndProbs:
         estimatedValue += values(fState) * fStateProb
       vAfterResponse += fPhiProb * estimatedValue
-      
-      if horizon == numpy.inf: self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s)
-      else: self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=viAgent: agent.getPolicy(s, t - responseTime)
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
   
@@ -190,6 +187,9 @@ class QTPAgent:
       else: fViAgent = self.getFiniteVIAgent(fPhi, horizon - responseTime, terminalReward, posterior=True)
       for state in self.cmp.getStates():
         v[state] += fViAgent.getValue(state) * fPhiProb
+      
+      if horizon == numpy.inf: self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=fViAgent: agent.getPolicy(s)
+      else: self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=fViAgent: agent.getPolicy(s, t - responseTime)
 
     # `responseTime` time steps
     viAgent = self.getFiniteVIAgent(self.phi, responseTime, v)
@@ -199,7 +199,8 @@ class QTPAgent:
     if config.DEBUG:
       print query, "v func"
       pprint.pprint([(s, viAgent.getValue(s), viAgent.getPolicies(s)) for s in cmp.getStates()])
-    return pi
+      
+    return pi, viAgent.getValue(self.cmp.state, 0)
 
   def optimizeQuery(self, state, policy):
     """
@@ -256,15 +257,12 @@ class QTPAgent:
     pi = self.phiToPolicy[self.responseToPhi[(query, response)]]
     return pi
 
-
 class JointQTPAgent(QTPAgent):
   def learn(self):
-    state = self.cmp.state
     qList = []
 
     for q in self.cmp.queries:
-      pi = self.optimizePolicy(q)
-      qValue = self.getQValue(state, pi, q)
+      pi, qValue = self.optimizePolicy(q)
       if config.PRINT == 'qs': print qValue
       if config.VERBOSE: print q, qValue
       qList.append((q, pi, qValue))
@@ -297,7 +295,7 @@ class AlternatingQTPAgent(QTPAgent):
     while True:
       prevQ = copy.deepcopy(q)
 
-      pi = self.optimizePolicy(q)
+      pi, qValue = self.optimizePolicy(q)
       q  = self.optimizeQuery(state, pi)
       if config.VERBOSE:
         print "Iteration #", counter
@@ -308,7 +306,7 @@ class AlternatingQTPAgent(QTPAgent):
         break
       counter += 1
     
-    return q, pi, self.getQValue(state, pi, q)
+    return q, pi, qValue
   
   def learn(self):
     results = []
@@ -323,8 +321,7 @@ class RandomQueryAgent(QTPAgent):
   def learn(self):
     state = self.cmp.state
     q = random.choice(self.cmp.queries)
-    pi = self.optimizePolicy(q)
-    qValue = self.getQValue(state, pi, q)
+    pi, qValue = self.optimizePolicy(q)
     return q, pi, qValue
 
 
