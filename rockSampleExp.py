@@ -127,6 +127,8 @@ def main():
       queryType = QueryType.POLICY
     else:
       raise Exception('unkown query flag ' + queryFlag)
+  if config.VERBOSE:
+    print "Query type:", queryFlag
 
   # the true reward function is chosen according to initialPhi
   trueReward = util.sample(initialPhi, rewardSet)

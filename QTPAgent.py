@@ -38,13 +38,15 @@ class QTPAgent:
     # initialize VI agent for reward set for future use
     self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
+    """
+    #FIXME
     for idx in range(self.rewardSetSize):
       phi = [0] * self.rewardSetSize
       phi[idx] = 1
       
-      # not going to use it here, just bookkeep it
       if horizon == numpy.inf: self.getVIAgent(phi)
       else: self.getFiniteVIAgent(phi, horizon, terminalReward)
+    """
 
   def getRewardFunc(self, phi):
     """
