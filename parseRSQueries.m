@@ -11,7 +11,7 @@ function main()
     m{j} = [];
   end
 
-  for i=0:499
+  for i=0:199
     try
       raw = load([filename, '.', num2str(i)]);
     catch
