@@ -32,18 +32,20 @@ class QTPAgent:
     # bookkeep our in-mind planning
     self.responseToPhi = util.Counter()
     self.phiToPolicy = util.Counter()
+    horizon = self.cmp.horizon
+    terminalReward = self.cmp.terminalReward
 
     # initialize VI agent for reward set for future use
-    self.viAgentSet = []
+    self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
     for idx in range(self.rewardSetSize):
       phi = [0] * self.rewardSetSize
       phi[idx] = 1
       
-      # a VI agent based on one reward
-      viAgent = self.getVIAgent(phi)
-      self.viAgentSet.append(viAgent)
-    
+      # not going to use it here, just bookkeep it
+      if horizon == numpy.inf: self.getVIAgent(phi)
+      else: self.getFiniteVIAgent(phi, horizon, terminalReward)
+
   def getRewardFunc(self, phi):
     """
     return the mean reward function under the given belief
@@ -60,20 +62,28 @@ class QTPAgent:
     Return a trained value iteration agent with given phi.
     So we can use getValue, getPolicy, getQValue, etc.
     """
-    rewardFunc = self.getRewardFunc(phi)
-    cmp = deepcopy(self.cmp)
-    cmp.getReward = rewardFunc
-    vi = ValueIterationAgent(cmp, discount=self.gamma)
-    vi.learn()
-    return vi
+    if tuple(phi) in self.viAgentSet.keys():
+      return self.viAgentSet[tuple(phi)]
+    else:
+      rewardFunc = self.getRewardFunc(phi)
+      cmp = deepcopy(self.cmp)
+      cmp.getReward = rewardFunc
+      vi = ValueIterationAgent(cmp, discount=self.gamma)
+      vi.learn()
+      self.viAgentSet[tuple(phi)] = vi # bookkeep
+      return vi
   
   def getFiniteVIAgent(self, phi, horizon, terminalReward):
-    rewardFunc = self.getRewardFunc(phi)
-    cmp = deepcopy(self.cmp)
-    cmp.getReward = rewardFunc
-    vi = ValueIterationAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
-    vi.learn()
-    return vi
+    if tuple(phi) in self.viAgentSet.keys():
+      return self.viAgentSet[tuple(phi)]
+    else:
+      rewardFunc = self.getRewardFunc(phi)
+      cmp = deepcopy(self.cmp)
+      cmp.getReward = rewardFunc
+      vi = ValueIterationAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
+      vi.learn()
+      self.viAgentSet[tuple(phi)] = vi # bookkeep
+      return vi
  
   def getValue(self, state, phi, policy, horizon):
     """
@@ -97,7 +107,10 @@ class QTPAgent:
 
     if self.queryType == QueryType.POLICY:
       resSet = actions
-      consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query, responseTime)
+      def consistCond(res, idx):
+        phi = [0] * self.rewardSetSize
+        phi[idx] = 1
+        return res in self.viAgentSet[tuple(phi)].getPolicies(query, responseTime)
     elif self.queryType == QueryType.REWARD_SIGN:
       resSet = [-1, 0, 1]
       consistCond = lambda res, idx: numpy.sign(self.rewardSet[idx](query)) == res
