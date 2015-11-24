@@ -40,6 +40,7 @@ class QTPAgent:
     self.rewardSetSize = len(self.rewardSet)
     """
     #FIXME
+    # don't need to run this for now
     for idx in range(self.rewardSetSize):
       phi = [0] * self.rewardSetSize
       phi[idx] = 1
@@ -59,12 +60,12 @@ class QTPAgent:
     dist /= len(self.cmp.getStates())
     return dist
 
-  def getVIAgent(self, phi):
+  def getVIAgent(self, phi, posterior=False):
     """
     Return a trained value iteration agent with given phi.
     So we can use getValue, getPolicy, getQValue, etc.
     """
-    if tuple(phi) in self.viAgentSet.keys():
+    if posterior and tuple(phi) in self.viAgentSet.keys():
       return self.viAgentSet[tuple(phi)]
     else:
       rewardFunc = self.getRewardFunc(phi)
@@ -72,11 +73,11 @@ class QTPAgent:
       cmp.getReward = rewardFunc
       vi = ValueIterationAgent(cmp, discount=self.gamma)
       vi.learn()
-      self.viAgentSet[tuple(phi)] = vi # bookkeep
+      if posterior: self.viAgentSet[tuple(phi)] = vi # bookkeep
       return vi
   
-  def getFiniteVIAgent(self, phi, horizon, terminalReward):
-    if tuple(phi) in self.viAgentSet.keys():
+  def getFiniteVIAgent(self, phi, horizon, terminalReward, posterior=False):
+    if posterior and tuple(phi) in self.viAgentSet.keys():
       return self.viAgentSet[tuple(phi)]
     else:
       rewardFunc = self.getRewardFunc(phi)
@@ -84,7 +85,7 @@ class QTPAgent:
       cmp.getReward = rewardFunc
       vi = ValueIterationAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
       vi.learn()
-      self.viAgentSet[tuple(phi)] = vi # bookkeep
+      if posterior: self.viAgentSet[tuple(phi)] = vi # bookkeep
       return vi
  
   def getValue(self, state, phi, policy, horizon):
@@ -162,7 +163,7 @@ class QTPAgent:
     vAfterResponse = 0
     for fPhi, fPhiProb in possiblePhis:
       if horizon == numpy.inf: viAgent = self.getVIAgent(fPhi)
-      else: viAgent = self.getFiniteVIAgent(fPhi, horizon - responseTime, terminalReward)
+      else: viAgent = self.getFiniteVIAgent(fPhi, horizon - responseTime, terminalReward, posterior=True)
       values = lambda state: viAgent.getValue(state)
       estimatedValue = 0
       for fState, fStateProb in possibleStatesAndProbs:
@@ -186,7 +187,7 @@ class QTPAgent:
 
     for fPhi, fPhiProb in possiblePhis:
       if horizon == numpy.inf: fViAgent = self.getVIAgent(fPhi)
-      else: fViAgent = self.getFiniteVIAgent(fPhi, horizon - responseTime, terminalReward)
+      else: fViAgent = self.getFiniteVIAgent(fPhi, horizon - responseTime, terminalReward, posterior=True)
       for state in self.cmp.getStates():
         v[state] += fViAgent.getValue(state) * fPhiProb
 
@@ -339,7 +340,7 @@ class PriorTPAgent(QTPAgent):
       meanViAgent = self.getVIAgent(self.phi)
     else:
       terminalReward = self.cmp.terminalReward
-      meanViAgent = self.getFiniteVIAgent(self.phi, horizon, terminalReward)
+      meanViAgent = self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True)
     
     # respond with best query
     state = self.cmp.state
