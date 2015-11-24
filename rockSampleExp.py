@@ -128,7 +128,7 @@ def main():
     else:
       raise Exception('unkown query flag ' + queryFlag)
   if config.VERBOSE:
-    print "Query type:", queryFlag
+    print "Query type:", queryType
 
   # the true reward function is chosen according to initialPhi
   trueReward = util.sample(initialPhi, rewardSet)

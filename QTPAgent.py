@@ -109,10 +109,7 @@ class QTPAgent:
 
     if self.queryType == QueryType.POLICY:
       resSet = actions
-      def consistCond(res, idx):
-        phi = [0] * self.rewardSetSize
-        phi[idx] = 1
-        return res in self.viAgentSet[tuple(phi)].getPolicies(query, responseTime)
+      consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query, responseTime)
     elif self.queryType == QueryType.REWARD_SIGN:
       resSet = [-1, 0, 1]
       consistCond = lambda res, idx: numpy.sign(self.rewardSet[idx](query)) == res
