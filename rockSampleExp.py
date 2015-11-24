@@ -93,6 +93,7 @@ def main():
   terminalReward = util.Counter()
   terminalReward[(width / 2, height / 2)] = 100
 
+  """
   def relevance(fState, query):
     withinReach = abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
                 + abs(query[0] - width / 2) + abs(query[1] - height / 2) <= horizon - responseTime
@@ -102,6 +103,7 @@ def main():
     else:
       onSameSide = True
     return withinReach and onSameSide
+  """
 
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = []
@@ -136,20 +138,21 @@ def main():
     cmp = RockSample(queries, trueReward, gamma, responseTime, width, height,\
                      horizon = horizon, terminalReward = terminalReward)
   cmp.setPossibleRewardValues([0, 0.1, 5])
+  cmp.possibleRewardLocations = rocks
 
   if agentName == 'JQTP' or agentName == 'NQ' or agentName == 'WAIT':
     agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP':
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP-NF':
     # don't filter query. Assume all queries are relevant.
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, lambda fS, q: True, gamma)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, lambda fS, q: True)
   elif agentName == 'AQTP-RS':
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, relevance, gamma, restarts=1)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, restarts=1)
   elif agentName == 'RQ':
     agent = RandomQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'PTP':
-    agent = PriorTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, relevance)
+    agent = PriorTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'KNOWN':
     agent = JointQTPAgent(cmp, [trueReward], [1], queryType, gamma)
   else:

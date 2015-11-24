@@ -8,6 +8,7 @@ import random
 from cmp import QueryType
 import numpy
 from copy import deepcopy
+import scipy.stats
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
@@ -191,14 +192,37 @@ class QTPAgent:
     """
     Enumerate relevant considering the states reachable by the transient policy.
     """
-    possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, self.cmp.responseTime)
+    responseTime = self.cmp.responseTime
+    horizon = self.cmp.horizon
+    possibleRewardLocs = self.cmp.possibleRewardLocations
+    possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, responseTime)
     # FIXME
     # assuming deterministic
     fState = possibleStatesAndProbs[0][0]
+
+    # FIXME
+    # overfit finite horizon for simplicity
+    reachableSet = filter(lambda loc: abs(loc[0] - fState[0]) + abs(loc[1] - fState[1]) < horizon - responseTime, possibleRewardLocs)
     
     queries = []
-    for query in self.cmp.queries:
-      if self.relevance(fState, query): queries.append(query)
+    if self.relevance == None:
+      rewardFunc = self.getRewardFunc(self.phi)
+      rewardVec = [rewardFunc(loc) for loc in reachableSet]
+
+      # use the default method for query filtering
+      for query in self.cmp.queries:
+        possiblePhis = self.getPossiblePhiAndProbs(query)
+        infGain = False
+        for fPhi, fPhiProb in possiblePhis:
+          rewardFunc = self.getRewardFunc(fPhi)
+          postRewardVec = [rewardFunc(loc) for loc in reachableSet]
+          if sum(postRewardVec) > 0 and scipy.stats.entropy(rewardVec, postRewardVec) > 1e-2:
+            infGain = True
+            break
+        if infGain: queries.append(query)
+    else:
+      for query in self.cmp.queries:
+        if self.relevance(fState, query): queries.append(query)
     
     if config.VERBOSE:
       print "Considering queries", queries
@@ -242,7 +266,7 @@ class JointQTPAgent(QTPAgent):
 
 
 class AlternatingQTPAgent(QTPAgent):
-  def __init__(self, cmp, rewardSet, initialPhi, queryType, relevance, gamma, restarts = 0):
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, relevance = None, restarts = 0):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     self.relevance = relevance
     self.restarts = restarts
@@ -292,7 +316,7 @@ class RandomQueryAgent(QTPAgent):
 
 
 class PriorTPAgent(QTPAgent):
-  def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, relevance):
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, relevance = None):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     self.relevance = relevance
   
