@@ -4,13 +4,13 @@ function main()
 
   clear all; close all;
 
-  responseTimes = [0, 5, 10, 15, 20];
-  filename = 'rs_out';
+  responseTimes = [6, 10, 20];
+  filename = 'nw_out';
 
   retMat = 1:3:200;
-  jMat = retMat(1:5);
-  aMat = retMat(6:10);
-  anfMat = retMat(11:15);
+  jMat = retMat(1:3);
+  aMat = retMat(4:6);
+  anfMat = retMat(7:9);
 
   [jm, jc] = process(filename, jMat + 1)
   [am, ac] = process(filename, aMat + 1)
@@ -58,7 +58,7 @@ function data = getData(filename, lines)
   for i=0:199
     try
       raw = load([filename, '.', num2str(i)]);
-      if size(raw, 1) == 45
+      if size(raw, 1) == 27
         data = [data, raw(lines)];
       end
     catch
@@ -73,8 +73,6 @@ function [m, ci] = process(filename, lines)
   m = []; ci = [];
   for i=1:size(data,1)
     dataRow = data(i, :);
-    filter = dataRow < 60; % condor may suspend my jobs
-    dataRow = dataRow(filter);
 
     m(end + 1) = mean(dataRow);
     ci(end + 1) = 1.96 * std(dataRow) / sqrt(n);

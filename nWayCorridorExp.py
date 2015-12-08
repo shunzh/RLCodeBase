@@ -5,7 +5,7 @@ import numpy
 from nWayCorridor import NWayCorridor
 
 if __name__ == '__main__':
-  width = 10
+  width = 8
   height = 11
   # the time step that the agent receives the response
   responseTime = 5
