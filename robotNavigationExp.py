@@ -44,8 +44,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     elif opt == '-l':
       responseTime = int(arg)
     elif opt == '-s':
-      width = height = int(arg)
-      horizon = width + height
+      width = int(arg)
     elif opt == '-d':
       gamma = float(arg)
     elif opt == '-a':

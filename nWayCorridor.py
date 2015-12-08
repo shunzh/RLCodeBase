@@ -2,7 +2,6 @@ from robotNavigation import RobotNavigation
 
 class NWayCorridor(RobotNavigation):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
-    self.corridorLen = height - 2
     RobotNavigation.__init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward)
   
   def reset(self):
@@ -12,7 +11,10 @@ class NWayCorridor(RobotNavigation):
     return state[1] == self.height - 1
   
   def getPossibleActions(self, state):
-    if state[1] > self.height - self.corridorLen:
-      return [(0, 1)]
-    else:
-      return RobotNavigation.getPossibleActions(self, state)
+    actions = [(0, 1)]
+
+    if state[1] == 0:
+      actions = RobotNavigation.getPossibleActions(self, state)
+      #actions.append((1, 0)
+    
+    return actions
