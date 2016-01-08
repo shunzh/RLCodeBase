@@ -257,6 +257,7 @@ class QTPAgent:
     pi = self.phiToPolicy[self.responseToPhi[(query, response)]]
     return pi
 
+
 class JointQTPAgent(QTPAgent):
   def learn(self):
     qList = []

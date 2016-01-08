@@ -3,7 +3,6 @@ from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
 from CMPExp import Experiment
 import util
 import sys
-from robotNavigation import RobotNavigation
 import random
 import getopt
 import config
@@ -44,7 +43,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     elif opt == '-l':
       responseTime = int(arg)
     elif opt == '-s':
-      config.CORRIDOR_WIDTH = int(arg)
+      config.PARAMETER = int(arg)
     elif opt == '-d':
       gamma = float(arg)
     elif opt == '-a':
@@ -97,6 +96,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     queryType = QueryType.NONE
   else:
     if queryFlag == 'default':
+      # use potential reward locations as query set
       queries = rocks
       queryType = QueryType.REWARD_SIGN
     elif queryFlag == 'test':
@@ -106,7 +106,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
       queries = [(x, y) for x in xrange(width) for y in xrange(height)]
       queryType = QueryType.POLICY
     else:
-      raise Exception('unkown query flag ' + queryFlag)
+      raise Exception('unknown query flag ' + queryFlag)
   if config.VERBOSE:
     print "Query type:", queryType
 

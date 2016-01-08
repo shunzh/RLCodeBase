@@ -3,7 +3,7 @@ import config
 
 class NWayCorridor(RobotNavigation):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
-    self.corridorWidth = config.CORRIDOR_WIDTH
+    self.corridorWidth = config.PARAMETER # this is passed as the domain parameter
     RobotNavigation.__init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward)
   
   def reset(self):
