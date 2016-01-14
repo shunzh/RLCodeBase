@@ -1,6 +1,6 @@
 from cmp import ControlledMarkovProcess
 
-class RobotNavigation(ControlledMarkovProcess):
+class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height

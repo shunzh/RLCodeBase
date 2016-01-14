@@ -38,16 +38,13 @@ class QTPAgent:
     # initialize VI agent for reward set for future use
     self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
-    """
-    #FIXME
-    # don't need to run this for now
+
     for idx in range(self.rewardSetSize):
       phi = [0] * self.rewardSetSize
       phi[idx] = 1
       
-      if horizon == numpy.inf: self.getVIAgent(phi)
-      else: self.getFiniteVIAgent(phi, horizon, terminalReward)
-    """
+      if horizon == numpy.inf: self.viAgentSet[idx] = self.getVIAgent(phi)
+      else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward)
 
   def getRewardFunc(self, phi):
     """
@@ -55,6 +52,7 @@ class QTPAgent:
     """
     return lambda state: sum([reward(state) * p for reward, p in zip(self.rewardSet, phi)])
   
+  # DUMMY?
   def getRewardDistance(self, rewardFunc0, rewardFunc1):
     dist = sum([abs(rewardFunc0(s) - rewardFunc1(s)) for s in self.cmp.getStates()])
     dist /= len(self.cmp.getStates())
@@ -216,7 +214,7 @@ class QTPAgent:
 
     # FIXME
     # overfit finite horizon for simplicity
-    reachableSet = possibleRewardLocs
+    reachableSet = filter(lambda loc: abs(loc[0] - fState[0]) + abs(loc[1] - fState[1]) < horizon - responseTime, possibleRewardLocs)
     
     queries = []
     if self.relevance == None:
@@ -344,6 +342,7 @@ class PriorTPAgent(QTPAgent):
     state = self.cmp.state
     pi = lambda s, t: meanViAgent.getPolicy(s, t) 
     q  = self.optimizeQuery(state, pi)
+    self.optimizePolicy(q) # compute possible posterior beliefs, but not using the BR TP
     qValue = self.getQValue(state, pi, q)
 
     return q, pi, qValue

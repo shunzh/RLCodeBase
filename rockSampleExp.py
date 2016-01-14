@@ -1,6 +1,6 @@
 import util
-from robotNavigation import RobotNavigation
-from robotNavigationExp import experiment
+from tabularNavigation import TabularNavigation
+from tabularNavigationExp import experiment
 
 if __name__ == '__main__':
   width = 21
@@ -15,6 +15,6 @@ if __name__ == '__main__':
   rewardCandNum = 6
   terminalReward = util.Counter()
   terminalReward[(width / 2, height / 2)] = 100
-  Domain = RobotNavigation
+  Domain = TabularNavigation
 
   experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, terminalReward)

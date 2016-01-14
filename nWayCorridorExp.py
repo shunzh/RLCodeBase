@@ -1,6 +1,6 @@
 import util
-from robotNavigation import RobotNavigation
-from robotNavigationExp import experiment
+from tabularNavigation import TabularNavigation
+from tabularNavigationExp import experiment
 import numpy
 from nWayCorridor import NWayCorridor
 
