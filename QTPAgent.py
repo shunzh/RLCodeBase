@@ -318,7 +318,6 @@ class AlternatingQTPAgent(QTPAgent):
 
 class RandomQueryAgent(QTPAgent):
   def learn(self):
-    state = self.cmp.state
     q = random.choice(self.cmp.queries)
     pi, qValue = self.optimizePolicy(q)
     return q, pi, qValue
@@ -340,9 +339,8 @@ class PriorTPAgent(QTPAgent):
     
     # respond with best query
     state = self.cmp.state
-    pi = lambda s, t: meanViAgent.getPolicy(s, t) 
+    pi = lambda s, t: meanViAgent.getPolicy(s, t)
     q  = self.optimizeQuery(state, pi)
-    self.optimizePolicy(q) # compute possible posterior beliefs, but not using the BR TP
     qValue = self.getQValue(state, pi, q)
 
     return q, pi, qValue

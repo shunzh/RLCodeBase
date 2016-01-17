@@ -18,20 +18,19 @@ function main()
   [jm, jc] = process(filename, jMat + 1)
   [am, ac] = process(filename, aMat + 1)
   [anm, anc] = process(filename, anfMat + 1)
-  %[pm, pc] = process(filename, pMat + 1)
-  %[rm, rc] = process(filename, rMat + 1)
-  %[nm, nc] = process(filename, nMat + 1)
+  [pm, pc] = process(filename, pMat + 1)
+  [rm, rc] = process(filename, rMat + 1)
+  [nm, nc] = process(filename, nMat + 1)
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;
   errorbar(responseTimes, am, ac, 'o-');
   errorbar(responseTimes, anm, anc, 'o--');
-  %errorbar(responseTimes, pm, pc, 'x-');
-  %errorbar(responseTimes, rm, rc, '+-');
-  %errorbar(responseTimes, nm, nc, '--');
+  errorbar(responseTimes, pm, pc, 'x-');
+  errorbar(responseTimes, rm, rc, '+-');
+  errorbar(responseTimes, nm, nc, '--');
 
-  %legend('E-JQTP', 'AQTP-QF', 'AQTP-NQF', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
-  legend('E-JQTP', 'AQTP-QF', 'AQTP-NQF');
+  legend('E-JQTP', 'AQTP-QF', 'AQTP-NQF', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
   xlabel('Response Time');
   ylabel('Q-Value');
   xlim([-1, 25]); 
@@ -41,20 +40,19 @@ function main()
   [jm, jc] = process(filename, jMat + 2)
   [am, ac] = process(filename, aMat + 2)
   [anm, anc] = process(filename, anfMat + 2)
-  %[pm, pc] = process(filename, pMat + 2)
-  %[rm, rc] = process(filename, rMat + 2)
-  %[nm, nc] = process(filename, nMat + 2)
+  [pm, pc] = process(filename, pMat + 2)
+  [rm, rc] = process(filename, rMat + 2)
+  [nm, nc] = process(filename, nMat + 2)
 
   errorbar(responseTimes, jm, jc, '*-');
   hold on;
   errorbar(responseTimes, am, ac, 'o-');
   errorbar(responseTimes, anm, anc, 'o--');
-  %errorbar(responseTimes, pm, pc, 'x-');
-  %errorbar(responseTimes, rm, rc, '+-');
-  %errorbar(responseTimes, nm, nc, '--');
+  errorbar(responseTimes, pm, pc, 'x-');
+  errorbar(responseTimes, rm, rc, '+-');
+  errorbar(responseTimes, nm, nc, '--');
 
-  %legend('E-JQTP', 'AQTP', 'AQTP No Filtering', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
-  legend('E-JQTP', 'AQTP-QF', 'AQTP-NQF');
+  legend('E-JQTP', 'AQTP-QF', 'AQTP-NQF', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
   xlabel('Response Time');
   ylabel('Computation Time (sec.)');
   xlim([-1, 25]); 
@@ -75,8 +73,10 @@ function data = getData(filename, lines)
   for i=0:199
     try
       raw = load([filename, '.', num2str(i)]);
-      if size(raw, 1) == 45
+      if size(raw, 1) == 78
         data = [data, raw(lines)];
+      else
+        disp(['Invalid datum #', num2str(i)]);
       end
     catch
       disp(['Unable to load ', num2str(i)]);

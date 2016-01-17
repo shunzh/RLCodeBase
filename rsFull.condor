@@ -7,7 +7,7 @@ Notify_user = menie482@cs.utexas.edu
 Output     = rsFull_out.$(Process)
 Error      = rsFull_err.$(Process)
 
-num_of_processes=200
+num_of_processes=500
 
 Arguments = rsFull.sh $(Process)
 Queue $(num_of_processes)
