@@ -331,6 +331,7 @@ class PriorTPAgent(QTPAgent):
   def learn(self):
     # mean reward planner
     horizon = self.cmp.horizon
+    responseTime = self.cmp.responseTime
     if horizon == numpy.inf:
       meanViAgent = self.getVIAgent(self.phi)
     else:
@@ -342,6 +343,15 @@ class PriorTPAgent(QTPAgent):
     pi = lambda s, t: meanViAgent.getPolicy(s, t)
     q  = self.optimizeQuery(state, pi)
     qValue = self.getQValue(state, pi, q)
+
+    # update phi to policy 
+    possiblePhis = self.getPossiblePhiAndProbs(q)
+    for fPhi, fPhiProb in possiblePhis:
+      if horizon == numpy.inf: fViAgent = self.getVIAgent(fPhi)
+      else: fViAgent = self.getFiniteVIAgent(fPhi, horizon - responseTime, terminalReward, posterior=True)
+      
+      if horizon == numpy.inf: self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=fViAgent: agent.getPolicy(s)
+      else: self.phiToPolicy[tuple(fPhi)] = lambda s, t, agent=fViAgent: agent.getPolicy(s, t - responseTime)
 
     return q, pi, qValue
 

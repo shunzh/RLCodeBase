@@ -112,6 +112,8 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
 
   # the true reward function is chosen according to initialPhi
   trueReward = util.sample(initialPhi, rewardSet)
+  if config.VERBOSE:
+    print 'true reward', rewardSet.index(trueReward)
   cmp = Domain(queries, trueReward, gamma, responseTime, width, height,\
                horizon = horizon, terminalReward = terminalReward)
   cmp.setPossibleRewardValues([0, 1])

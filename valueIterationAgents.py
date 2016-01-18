@@ -53,7 +53,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       self.allValues.append(values)
 
       # Can stop for infinite horizon and converged
-      if self.iterations == INF and util.getValueDistance(values, self.allValues[-2]) < .1:
+      if self.iterations == INF and util.getValueDistance(values, self.allValues[-2]) < .01:
         break
 
     self.allValues.reverse()
