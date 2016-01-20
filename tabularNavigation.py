@@ -35,3 +35,24 @@ class TabularNavigation(ControlledMarkovProcess):
     elif loc[1] >= self.height: loc[1] = self.height - 1
     
     return tuple(loc)
+
+  def measure(self, state1, state2):
+    return abs(state1[0] - state2[0]) + abs(state1[1] - state2[1])
+
+class TabularNavigationMaze(TabularNavigation):
+  def getTransitionStatesAndProbs(self, state, action):
+    newState = TabularNavigation.getTransitionStatesAndProbs(self, state, action)[0][0]
+    if newState[0] == self.width / 2 ^ newState[1] == self.height / 2:
+      newState = state
+    
+    return [(newState, 1)]
+
+  def measure(self, state1, state2):
+    # mind the obstacles
+    mid = (self.width / 2, self.height / 2)
+    if (state1[0] - mid[0]) * (state2[0] - mid[0]) > 0 and\
+       (state1[1] - mid[1]) * (state2[1] - mid[1]) > 0:
+      return TabularNavigation.measure(self, state1, state2)
+    else:
+      return TabularNavigation.measure(self, state1, mid)\
+           + TabularNavigation.measure(self, state2, mid)

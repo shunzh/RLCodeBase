@@ -8,6 +8,8 @@ import getopt
 import config
 from cmp import QueryType
 
+flags = "r:l:s:d:a:ovq:P:"
+
 """
 Algorithms:
 - E-JQTP
@@ -33,7 +35,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
   agentName = 'JQTP'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "r:l:s:d:a:ovq:P:")
+    opts, args = getopt.getopt(sys.argv[1:], flags)
   except getopt.GetoptError:
     print 'unknown flag encountered'
     sys.exit(2)
@@ -42,8 +44,6 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
       random.seed(int(arg))
     elif opt == '-l':
       responseTime = int(arg)
-    elif opt == '-s':
-      config.PARAMETER = int(arg)
     elif opt == '-d':
       gamma = float(arg)
     elif opt == '-a':
@@ -72,17 +72,6 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
       else:
         return 0
     return rewardFunc
-  """
-  def relevance(fState, query):
-    withinReach = abs(fState[0] - query[0]) + abs(fState[1] - query[1])\
-                + abs(query[0] - width / 2) + abs(query[1] - height / 2) <= horizon - responseTime
-    if obstacleEnabled:
-      onSameSide = fState[0] <= width / 2 and query[0] <= width / 2\
-                or fState[0] >= width / 2 and query[0] >= width / 2
-    else:
-      onSameSide = True
-    return withinReach and onSameSide
-  """
 
   rewardSet = [rewardGen(reward) for reward in rewards]
   initialPhi = []
@@ -122,6 +111,10 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
   if agentName == 'JQTP' or agentName == 'NQ' or agentName == 'WAIT':
     agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP':
+    # filter queries if same rewards
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == 'AQTP-P':
+    # filter queries if same policies
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP-NF':
     # don't filter query. Assume all queries are relevant.

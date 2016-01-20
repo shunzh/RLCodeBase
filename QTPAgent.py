@@ -214,7 +214,7 @@ class QTPAgent:
 
     # FIXME
     # overfit finite horizon for simplicity
-    reachableSet = filter(lambda loc: abs(loc[0] - fState[0]) + abs(loc[1] - fState[1]) < horizon - responseTime, possibleRewardLocs)
+    reachableSet = filter(lambda loc: self.cmp.measure(loc, fState) < horizon - responseTime, possibleRewardLocs)
     
     queries = []
     if self.relevance == None:
