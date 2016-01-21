@@ -11,11 +11,12 @@ if __name__ == '__main__':
   # the time step that the agent receives the response
   responseTime = 10
   horizon = 40
+  rockType = 'default'
   
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "t:" + tabularNavigationExp.flags)
+    opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
   except getopt.GetoptError:
-    print 'unknown flag encountered at domain parsing'
+    print 'unknown flag encountered'
   for opt, arg in opts:
     if opt == '-t':
       rockType = arg
@@ -27,7 +28,7 @@ if __name__ == '__main__':
            (width - 1, height - 1)]
   if rockType == 'corner':
     rocks = [(0, 0), (1, 0), (2, 0),\
-             (1, 0), (1, 1),\
+             (0, 1), (1, 1),\
              (0, 2)]
   elif rockType == 'split':
     Domain = TabularNavigationMaze

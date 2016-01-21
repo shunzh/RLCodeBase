@@ -4,10 +4,10 @@ Executable = /usr/local/bin/bash
 +Group = "grad"
 Notification = Never
 Notify_user = menie482@cs.utexas.edu
-Output     = rsP_out.$(Process)
-Error      = rsP_err.$(Process)
+Output     = rsCorner_out.$(Process)
+Error      = rsCorner_err.$(Process)
 
-num_of_processes=100
+num_of_processes=200
 
-Arguments = rsPolicy.sh $(Process)
+Arguments = rs.sh $(Process) '-t corner'
 Queue $(num_of_processes)

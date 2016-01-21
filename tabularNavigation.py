@@ -40,15 +40,22 @@ class TabularNavigation(ControlledMarkovProcess):
     return abs(state1[0] - state2[0]) + abs(state1[1] - state2[1])
 
 class TabularNavigationMaze(TabularNavigation):
+  def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
+    self.walls = [(x, height / 2) for x in range(width / 2 - 1) + range(width / 2 + 2, width)]
+    self.walls += [(width / 2, y) for y in range(height / 2 - 1) + range(height / 2 + 2, height)]
+    TabularNavigation.__init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward)
+
   def getTransitionStatesAndProbs(self, state, action):
     newState = TabularNavigation.getTransitionStatesAndProbs(self, state, action)[0][0]
-    if newState[0] == self.width / 2 ^ newState[1] == self.height / 2:
+    if newState in self.walls:
+      # bump into walls
       newState = state
     
     return [(newState, 1)]
 
   def measure(self, state1, state2):
     # mind the obstacles
+    #FXIME overfit the current map
     mid = (self.width / 2, self.height / 2)
     if (state1[0] - mid[0]) * (state2[0] - mid[0]) > 0 and\
        (state1[1] - mid[1]) * (state2[1] - mid[1]) > 0:

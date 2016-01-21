@@ -1,5 +1,5 @@
 #!/bin/bash
-flag=""
+flag=$2
 
 python rockSampleExp.py -a JQTP -r $1 -l 0 $flag
 python rockSampleExp.py -a JQTP -r $1 -l 5 $flag
