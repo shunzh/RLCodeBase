@@ -5,7 +5,7 @@ function main()
   clear all; close all;
 
   responseTimes = [0, 5, 10, 15, 20];
-  filename = 'rs_out';
+  filename = 'rsSplit_out';
 
   retMat = 1:3:200;
   jMat = retMat(1:5);

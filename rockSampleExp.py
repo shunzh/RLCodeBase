@@ -16,7 +16,7 @@ if __name__ == '__main__':
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
   except getopt.GetoptError:
-    print 'unknown flag encountered'
+    raise Exception('Unknown flag')
   for opt, arg in opts:
     if opt == '-t':
       rockType = arg
@@ -32,6 +32,10 @@ if __name__ == '__main__':
              (0, 2)]
   elif rockType == 'split':
     Domain = TabularNavigationMaze
+  elif rockType == 'default':
+    pass
+  else:
+    raise Exception('Unknown rock type')
 
   rewardCandNum = 6
   terminalReward = util.Counter()
