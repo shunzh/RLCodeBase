@@ -9,5 +9,5 @@ Error      = rsSplit_err.$(Process)
 
 num_of_processes=200
 
-Arguments = rs.sh $(Process) '-t split'
+Arguments = rs.sh $(Process) split
 Queue $(num_of_processes)

@@ -9,5 +9,5 @@ Error      = rsCorner_err.$(Process)
 
 num_of_processes=200
 
-Arguments = rs.sh $(Process) '-t corner'
+Arguments = rs.sh $(Process) corner
 Queue $(num_of_processes)
