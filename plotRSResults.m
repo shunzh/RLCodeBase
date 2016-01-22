@@ -61,8 +61,9 @@ function main()
 
   jd = getData(filename, [jMat(3)] + 1);
   ad = getData(filename, [aMat(3)] + 1);
-  histogram(jd - ad, 'FaceColor', [.8, .8, .8]);
+  histogram(jd - ad, 'FaceColor', [.8, .8, .8], 'BinWidth', 0.01);
   hold on
+  xlim([0, 0.1]);
   plot(0, sum(jd - ad == 0), '*k');
   xlabel('Difference in Q value between E-JQTP and AQTP-QF');
   ylabel('Frequency');

@@ -9,5 +9,5 @@ Error      = rs_err.$(Process)
 
 num_of_processes=200
 
-Arguments = rs.sh $(Process)
+Arguments = rs.sh $(Process) default
 Queue $(num_of_processes)
