@@ -27,7 +27,7 @@ Show:
 - computation time
 - paired difference between JQTP and AQTP
 """
-def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, possibleReward, terminalReward):
+def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, terminalReward):
   # discount factor
   gamma = 0.9
   obstacleEnabled = False
@@ -56,12 +56,6 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
       config.PRINT = arg
     elif opt == '-q':
       queryFlag = arg
-    
-  rewards = []
-  for _ in xrange(rewardCandNum):
-    reward = util.Counter()
-    reward[rocks[_]] = possibleReward[rocks[_]]
-    rewards.append(reward)
     
   def rewardGen(rewards): 
     def rewardFunc(s):
