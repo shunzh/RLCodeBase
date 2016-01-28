@@ -27,7 +27,7 @@ Show:
 - computation time
 - paired difference between JQTP and AQTP
 """
-def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, terminalReward):
+def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, initialPhi, terminalReward):
   # discount factor
   gamma = 0.9
   obstacleEnabled = False
@@ -68,12 +68,6 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     return rewardFunc
 
   rewardSet = [rewardGen(reward) for reward in rewards]
-  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
-  """
-  for _ in xrange(rewardCandNum):
-    initialPhi.append(random.random())
-  initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
-  """
 
   # ask whether reward is good or not
   if agentName == 'NQ':

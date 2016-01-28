@@ -4,6 +4,7 @@ from tabularNavigationExp import experiment
 import getopt
 import sys
 import tabularNavigationExp
+import random
 
 if __name__ == '__main__':
   width = 21
@@ -34,33 +35,28 @@ if __name__ == '__main__':
     reward[rocks[_]] = 1
     rewards.append(reward)
 
+  initialPhi = []
+  for _ in xrange(rewardCandNum):
+    initialPhi.append(random.random())
+  initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
+
   if rockType == 'corner':
     rocks = [(0, 0), (1, 0), (2, 0),\
              (0, 1), (1, 1),\
              (0, 2)]
   elif rockType == 'split':
     Domain = TabularNavigationMaze
-    rewardCandNum = 8
-    rewards = []
-    for i in xrange(rewardCandNum):
-      reward = util.Counter()
-      v1 = i & 1
-      reward[rocks[0]] = -5 + 10 * v1
-      reward[rocks[1]] = 5 - 10 * v1
 
-      v2 = (i & 2) >> 1
-      print v2
-      reward[rocks[2]] = -0.5 + v2
-      reward[rocks[3]] = 0.5 - v2
+    initialPhi = [1, 1]
+    for _ in xrange(rewardCandNum - 2):
+      initialPhi.append(random.random())
+    initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
 
-      v3 = (i & 4) >> 2
-      reward[rocks[4]] = -0.5 + v3
-      reward[rocks[5]] = 0.5 - v3
-      rewards.append(reward)
-    for reward in rewards:
-      for rock in rocks:
-        print reward[rock],
-      print
+    rewards[0][rocks[0]] = 2
+    rewards[0][rocks[1]] = -2
+
+    rewards[1][rocks[0]] = -2
+    rewards[1][rocks[1]] = 2
   elif rockType == 'default':
     pass
   else:
@@ -69,4 +65,4 @@ if __name__ == '__main__':
   terminalReward = util.Counter()
   terminalReward[(width / 2, height / 2)] = 100
 
-  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, terminalReward)
+  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, initialPhi, terminalReward)
