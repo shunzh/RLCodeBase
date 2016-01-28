@@ -40,11 +40,27 @@ if __name__ == '__main__':
              (0, 2)]
   elif rockType == 'split':
     Domain = TabularNavigationMaze
-    rewards[0][rocks[0]] = 2
-    rewards[0][rocks[1]] = -1
+    rewardCandNum = 8
+    rewards = []
+    for i in xrange(rewardCandNum):
+      reward = util.Counter()
+      v1 = i & 1
+      reward[rocks[0]] = -5 + 10 * v1
+      reward[rocks[1]] = 5 - 10 * v1
 
-    rewards[1][rocks[0]] = -1
-    rewards[1][rocks[1]] = 2
+      v2 = (i & 2) >> 1
+      print v2
+      reward[rocks[2]] = -0.5 + v2
+      reward[rocks[3]] = 0.5 - v2
+
+      v3 = (i & 4) >> 2
+      reward[rocks[4]] = -0.5 + v3
+      reward[rocks[5]] = 0.5 - v3
+      rewards.append(reward)
+    for reward in rewards:
+      for rock in rocks:
+        print reward[rock],
+      print
   elif rockType == 'default':
     pass
   else:

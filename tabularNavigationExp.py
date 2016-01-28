@@ -68,10 +68,12 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     return rewardFunc
 
   rewardSet = [rewardGen(reward) for reward in rewards]
-  initialPhi = []
+  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+  """
   for _ in xrange(rewardCandNum):
     initialPhi.append(random.random())
   initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
+  """
 
   # ask whether reward is good or not
   if agentName == 'NQ':
