@@ -21,6 +21,8 @@ if __name__ == '__main__':
   for opt, arg in opts:
     if opt == '-t':
       rockType = arg
+    elif opt == '-r':
+      random.seed(int(arg))
 
   Domain = TabularNavigation
   rocks = [(1, 0), (0, 1),
@@ -52,16 +54,22 @@ if __name__ == '__main__':
       initialPhi.append(random.random())
     initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
 
-    rewards[0][rocks[0]] = 2
-    rewards[0][rocks[1]] = -2
+    rewards[0][rocks[0]] = 1.5
+    rewards[0][rocks[1]] = -1.5
 
-    rewards[1][rocks[0]] = -2
-    rewards[1][rocks[1]] = 2
+    rewards[1][rocks[0]] = -1.5
+    rewards[1][rocks[1]] = 1.5
   elif rockType == 'default':
     pass
   else:
     raise Exception('Unknown rock type')
 
+  """
+  for reward in rewards:
+    for rock in rocks:
+      print reward[rock],
+    print
+  """
   terminalReward = util.Counter()
   terminalReward[(width / 2, height / 2)] = 100
 
