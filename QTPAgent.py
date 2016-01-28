@@ -228,7 +228,7 @@ class QTPAgent:
         for fPhi, fPhiProb in possiblePhis:
           rewardFunc = self.getRewardFunc(fPhi)
           postRewardVec = [rewardFunc(loc) for loc in reachableSet]
-          if any(v > 1e-3 for v in postRewardVec) and scipy.stats.entropy(rewardVec, postRewardVec) > 1e-3:
+          if any(abs(v) > 1e-3 for v in postRewardVec) and scipy.stats.entropy(rewardVec, postRewardVec) > 1e-3:
             infGain = True
             break
         if infGain: queries.append(query)
