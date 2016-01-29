@@ -243,7 +243,7 @@ class QTPAgent:
 
     if queries == []:
       # FIXME pick first query when no relevant queries
-      return self.cmp.queries[0]
+      return self.cmp.queries[-1]
     else:
       return max(queries, key=lambda q: self.getQValue(state, policy, q))
  

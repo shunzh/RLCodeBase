@@ -13,6 +13,7 @@ if __name__ == '__main__':
   responseTime = 10
   horizon = 40
   rockType = 'default'
+  extra = 0
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -32,9 +33,9 @@ if __name__ == '__main__':
     
   rewardCandNum = 6
   rewards = []
-  for _ in xrange(rewardCandNum):
+  for candId in xrange(rewardCandNum):
     reward = util.Counter()
-    reward[rocks[_]] = 1
+    reward[rocks[candId]] = 1
     rewards.append(reward)
 
   initialPhi = []
@@ -59,7 +60,32 @@ if __name__ == '__main__':
 
     rewards[1][rocks[0]] = -1.5
     rewards[1][rocks[1]] = 1.5
+  elif rockType == 'splitRoom':
+    Domain = TabularNavigationMaze
+
+    rewardCandNum = 8
+    initialPhi = []
+    for _ in xrange(rewardCandNum):
+      initialPhi.append(random.random())
+    initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
+
+    rewards = []
+    for _ in xrange(rewardCandNum):
+      reward = util.Counter()
+      v1 = _ & 1
+      reward[rocks[0]] = -2 + 3 * v1
+      reward[rocks[1]] = 1 - 3 * v1
+
+      v2 = (_ & 2) >> 1
+      reward[rocks[2]] = -0.5 + v2
+      reward[rocks[3]] = 0.5 - v2
+
+      v3 = (_ & 4) >> 2
+      reward[rocks[4]] = -0.5 + v3
+      reward[rocks[5]] = 0.5 - v3
+      rewards.append(reward)
   elif rockType == 'default':
+    # we are all good
     pass
   else:
     raise Exception('Unknown rock type')
