@@ -105,7 +105,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'AQTP-P':
     # filter queries if same policies
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, relevance='ipp')
   elif agentName == 'AQTP-NF':
     # don't filter query. Assume all queries are relevant.
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, lambda fS, q: True)

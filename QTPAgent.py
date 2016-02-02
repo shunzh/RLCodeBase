@@ -232,6 +232,24 @@ class QTPAgent:
             infGain = True
             break
         if infGain: queries.append(query)
+    elif self.relevance == 'ipp':
+      # FIXME OVERFIT
+      reachableSet = filter(lambda loc: self.cmp.measure(loc, fState) + self.cmp.measure(loc, (self.cmp.width / 2, self.cmp.height / 2))\
+                                        <= horizon - responseTime, possibleRewardLocs)
+      rewardFunc = self.getRewardFunc(self.phi)
+      rewardVec = [rewardFunc(loc) for loc in reachableSet]
+
+      # use the default method for query filtering
+      for query in self.cmp.queries:
+        possiblePhis = self.getPossiblePhiAndProbs(query)
+        infGain = False
+        for fPhi, fPhiProb in possiblePhis:
+          rewardFunc = self.getRewardFunc(fPhi)
+          postRewardVec = [rewardFunc(loc) for loc in reachableSet]
+          if any(abs(v) > 1e-3 for v in postRewardVec) and rewardVec.index(max(rewardVec)) != postRewardVec.index(max(postRewardVec)):
+            infGain = True
+            break
+        if infGain: queries.append(query)
     else:
       for query in self.cmp.queries:
         if self.relevance(fState, query): queries.append(query)

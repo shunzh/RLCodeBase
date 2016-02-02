@@ -5,7 +5,7 @@ function main()
   clear all; close all;
 
   responseTimes = [0, 5, 10, 15, 20];
-  filename = 'rsSplit_out';
+  filename = 'rs_out';
 
   retMat = 1:3:200;
   jMat = retMat(1:5);
@@ -92,7 +92,7 @@ function [m, ci] = process(filename, lines)
   m = []; ci = [];
   for i=1:size(data,1)
     dataRow = data(i, :);
-    filter = dataRow < 60; % condor may suspend my jobs
+    filter = dataRow < 40; % condor may suspend my jobs
     dataRow = dataRow(filter);
 
     m(end + 1) = mean(dataRow);
