@@ -5,7 +5,7 @@ function main()
   clear all; close all;
 
   responseTimes = [0, 5, 10, 15, 20];
-  filename = 'rs_out';
+  filename = 'rsCorner_out';
 
   retMat = 1:3:200;
   jMat = retMat(1:5);
@@ -30,10 +30,13 @@ function main()
   errorbar(responseTimes, rm, rc, '+-');
   errorbar(responseTimes, nm, nc, '--');
 
-  legend('E-JQTP', 'AQTP-QF', 'AQTP-NQF', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
+  %legend('E-JQTP', 'AQTP-QF', 'AQTP', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
   xlabel('Response Time');
   ylabel('Q-Value');
   xlim([-1, 25]); 
+  set(gcf, 'PaperUnits', 'inches');
+  set(gcf, 'PaperPosition', [2.5 2.5 4 3]);
+  print('-depsc2', '-painters', 'rsCornerQ.eps');
   
   figure;
 
@@ -52,22 +55,25 @@ function main()
   errorbar(responseTimes, rm, rc, '+-');
   errorbar(responseTimes, nm, nc, '--');
 
-  legend('E-JQTP', 'AQTP-QF', 'AQTP-NQF', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
+  %legend('E-JQTP', 'AQTP-QF', 'AQTP-NQF', 'Prior TP, BR Query', 'Random Query, BR TP', 'No Query');
   xlabel('Response Time');
   ylabel('Computation Time (sec.)');
   xlim([-1, 25]); 
+  set(gcf, 'PaperUnits', 'inches');
+  set(gcf, 'PaperPosition', [2.5 2.5 4 3]);
+  print('-depsc2', '-painters', 'rsCornerTime.eps');
 
-  figure;
+  % figure;
 
-  jd = getData(filename, [jMat(3)] + 1);
-  ad = getData(filename, [aMat(3)] + 1);
-  histogram(jd - ad, 'FaceColor', [.8, .8, .8], 'BinWidth', 0.01);
-  hold on
-  xlim([0, 0.1]);
-  ylim([0, 200]);
-  plot(0, sum(jd - ad == 0), '*k');
-  xlabel('Difference in Q value between E-JQTP and AQTP-QF');
-  ylabel('Frequency');
+  % jd = getData(filename, [jMat(3)] + 1);
+  % ad = getData(filename, [aMat(3)] + 1);
+  % histogram(jd - ad, 'FaceColor', [.8, .8, .8], 'BinWidth', 0.01);
+  % hold on
+  % xlim([0, 0.1]);
+  % ylim([0, 200]);
+  % plot(0, sum(jd - ad == 0), '*k');
+  % xlabel('Difference in Q value between E-JQTP and AQTP-QF');
+  % ylabel('Frequency');
 end
 
 function data = getData(filename, lines)
@@ -92,7 +98,7 @@ function [m, ci] = process(filename, lines)
   m = []; ci = [];
   for i=1:size(data,1)
     dataRow = data(i, :);
-    filter = dataRow < 40; % condor may suspend my jobs
+    filter = dataRow < 60; % condor may suspend my jobs
     dataRow = dataRow(filter);
 
     m(end + 1) = mean(dataRow);

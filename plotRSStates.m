@@ -4,14 +4,14 @@ function main()
 
   clear all; close all;
 
-  filename = 'rs_out';
+  filename = 'rsStates_out';
 
   m = {};
   for j = 1:5
     m{j} = zeros(21, 21);
   end
 
-  for i=0:499
+  for i=0:299
     try
       raw = load([filename, '.', num2str(i)]);
     catch
@@ -40,9 +40,12 @@ function main()
   end
 
   for j = 1:5
-    subplot(1,5,j);
-    imagesc(log(m{j}' + 1));
-    colormap bone;
+     subplot(1,5,j);
+     imagesc(log(m{j}' + 1));
+     colormap bone;
   end
+
+  %imagesc(log(m{3}' + 1));
+  %colormap bone;
 end
 
