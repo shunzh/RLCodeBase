@@ -102,7 +102,7 @@ class QTPAgent:
 
   def getPossiblePhiAndProbs(self, query):
     actions = self.cmp.getPossibleActions(query)
-    responseTime = self.cmp.responseTime
+    responseTime = self.cmp.getResponseTime()
     # belief -> prob dict
     distr = util.Counter()
 
@@ -150,7 +150,7 @@ class QTPAgent:
     """
     cost = self.cmp.cost(query)
 
-    responseTime = self.cmp.responseTime
+    responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
     terminalReward = self.cmp.terminalReward
     vBeforeResponse = self.getValue(state, self.phi, policy, responseTime)
@@ -176,7 +176,7 @@ class QTPAgent:
     """
     v = util.Counter()
     possiblePhis = self.getPossiblePhiAndProbs(query)
-    responseTime = self.cmp.responseTime
+    responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
     terminalReward = self.cmp.terminalReward
 
@@ -204,7 +204,7 @@ class QTPAgent:
     """
     Enumerate relevant considering the states reachable by the transient policy.
     """
-    responseTime = self.cmp.responseTime
+    responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
     possibleRewardLocs = self.cmp.possibleRewardLocations
     possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, responseTime)
@@ -349,7 +349,7 @@ class PriorTPAgent(QTPAgent):
   def learn(self):
     # mean reward planner
     horizon = self.cmp.horizon
-    responseTime = self.cmp.responseTime
+    responseTime = self.cmp.getResponseTime()
     if horizon == numpy.inf:
       meanViAgent = self.getVIAgent(self.phi)
     else:

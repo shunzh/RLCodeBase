@@ -8,13 +8,19 @@ class QueryType:
   POLICY, REWARD, REWARD_SIGN, NONE = range(4)
   
 class ControlledMarkovProcess(MarkovDecisionProcess):
-  def __init__(self, queries, trueReward, gamma, responseTime, horizon=np.inf, terminalReward=None):
+  def __init__(self, queries, trueReward, gamma, responseTimes, horizon=np.inf, terminalReward=None):
     MarkovDecisionProcess.__init__(self)
     
     self.outsandingQuery = None
     # possible queries
     self.queries = queries
-    self.responseTime = responseTime
+    if type(responseTimes) == int: 
+      # deterministic response time
+      self.responseTimes = [(responseTimes, 1)]
+    elif type(responseTimes) == list:
+      self.responseTimes = responseTimes
+    else:
+      raise Exception('unknown type of responeTimes')
     
     # let agent know use finite or infinite horizon vi
     self.horizon = horizon
@@ -32,18 +38,22 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
   def setPossibleRewardValues(self, rewards):
     self.possibleRewardValues = rewards
 
+  def getResponseTime(self):
+    # TODO stochastic case
+    return self.responseTimes[0][0]
+
   def query(self, q):
     """
-    q = (QueryType, state)
-    type = ['policy','reward','rewardSign']
+    q = (type, state)
+    type \in {'policy','reward','rewardSign'}
     """
-    self.outsandingQuery = (q, self.timer + self.responseTime)
+    self.outsandingQuery = (q, self.timer + self.getResponseTime())
   
   def cost(self, q):
     """
     Return cost of querying this given q
     """
-    abstract
+    raise Exception('undefined')
   
   def responseCallback(self):
     """
