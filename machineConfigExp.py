@@ -5,11 +5,12 @@ import util
 import config
 import sys
 from CMPExp import Experiment
+from cmp import QueryType
 
 # reward for incomplete configurations
-cost = -0.2
+cost = 0
 # discount factor
-gamma = 0.9
+gamma = 0.8
 # the time step that the agent receives the response
 responseTime = 2
 
@@ -20,10 +21,8 @@ numConfigs = 2
 queries = [[0] * numMachines for _ in xrange(numMachines)]
 for _ in xrange(numMachines): queries[_][_] = 'S'
 queries = [tuple(query) for query in queries]
-#queries = [(0, 0, 0)]
 
-# for OQPP
-queryIgnored = False
+config.VERBOSE = True
 
 def main():
   factoredRewards = []
@@ -62,10 +61,9 @@ def main():
   #Agent = AlternatingQTPAgent
 
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
-  agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma,\
-                queryIgnored=queryIgnored)
+  agent = Agent(cmp, rewardSet, initialPhi, QueryType.POLICY, gamma)
  
-  ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet)
+  ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet, QueryType.POLICY)
   print ret
   print qValue
 
@@ -88,7 +86,7 @@ def rewardFuncGen(factorRewardFunc, size):
       #return cost + gamma * sum([factorRewardFunc(i, s[i]) for i in range(size)]) # rob's way
       return sum([factorRewardFunc(i, s[i]) for i in range(size)])
     else:
-      return cost
+      return 0
   return func
 
 if __name__ == '__main__':
