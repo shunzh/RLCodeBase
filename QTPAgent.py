@@ -12,7 +12,7 @@ import scipy.stats
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
-               gamma, queryIgnored=False, clusterDistance=0):
+               gamma, clusterDistance=0):
     # underlying cmp
     self.cmp = cmp
     # set of possible reward functions
@@ -21,7 +21,6 @@ class QTPAgent:
     # init belief on rewards in rewardSet
     self.phi = initialPhi
     self.queryType = queryType
-    self.queryIgnored = queryIgnored
 
     self.clusterDistance = clusterDistance
     self.rewardClusters = util.Counter()
@@ -102,13 +101,13 @@ class QTPAgent:
 
   def getPossiblePhiAndProbs(self, query):
     actions = self.cmp.getPossibleActions(query)
+    responseTime = self.cmp.getResponseTime()
     # belief -> prob dict
     distr = util.Counter()
 
     if self.queryType == QueryType.POLICY:
       resSet = actions
-      # get the optimal police at the state that the query asked.
-      consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query)
+      consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query, responseTime)
     elif self.queryType == QueryType.REWARD_SIGN:
       resSet = [-1, 0, 1]
       consistCond = lambda res, idx: numpy.sign(self.rewardSet[idx](query)) == res
@@ -192,7 +191,7 @@ class QTPAgent:
     # `responseTime` time steps
     viAgent = self.getFiniteVIAgent(self.phi, responseTime, v)
     # this is a non-stationary policy
-    pi = lambda s, t: viAgent.getPolicy(s, t)
+    pi = lambda s, t: viAgent.getPolicy(s, t) 
     
     if config.DEBUG:
       print query, "v func"
@@ -204,7 +203,6 @@ class QTPAgent:
     """
     Enumerate relevant considering the states reachable by the transient policy.
     """
-    # TODO stochastic response time
     responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
     possibleRewardLocs = self.cmp.possibleRewardLocations
@@ -350,7 +348,6 @@ class PriorTPAgent(QTPAgent):
   def learn(self):
     # mean reward planner
     horizon = self.cmp.horizon
-    # TODO stochastic response time
     responseTime = self.cmp.getResponseTime()
     if horizon == numpy.inf:
       meanViAgent = self.getVIAgent(self.phi)

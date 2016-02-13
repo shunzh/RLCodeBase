@@ -12,7 +12,7 @@ cost = 0
 # discount factor
 gamma = 0.8
 # the time step that the agent receives the response
-responseTime = 2
+responseTime = 4
 
 numMachines = 3
 numConfigs = 2
