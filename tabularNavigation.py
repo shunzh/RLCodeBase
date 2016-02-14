@@ -1,4 +1,5 @@
 from cmp import ControlledMarkovProcess
+import util
 
 class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
@@ -40,13 +41,30 @@ class TabularNavigation(ControlledMarkovProcess):
     return abs(state1[0] - state2[0]) + abs(state1[1] - state2[1])
 
 
-class TabularNavigationWithRewadTernmial(TabularNavigation):
-  def __init__(self, queries, trueReward, gamma, width, height, horizon):
+class TabularNavigationToy(TabularNavigation):
+  def __init__(self, queries, trueReward, gamma, width, height, horizon, transNoise = 0):
+    self.transNoise = transNoise
     TabularNavigation.__init__(self, queries, trueReward, gamma, 0, width, height, horizon, None)
   
+  def reset(self):
+    # initial state: this far to the first intersection
+    self.state = (self.width / 2, self.height - 1)
+ 
   def isTerminal(self, state):
-    return self.getReward(state) != 0
+    return state[0] == 0 or state[0] == self.width - 1 or state[1] == 0
 
+  def getTransitionStatesAndProbs(self, state, action):
+    trans = util.Counter()
+    actions = self.getPossibleActions(state)
+    for act in actions:
+      newState = self.adjustState((state[0] + act[0], state[1] + act[1]))
+      trans[newState] += self.transNoise / (len(actions) - 1)
+
+    newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
+    trans[newState] = 1 - self.transNoise
+    
+    return trans.items()
+    
 
 class TabularNavigationMaze(TabularNavigation):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):

@@ -70,6 +70,7 @@ class AugmentedCMP(MarkovDecisionProcess):
       reward = self.oCmp.cost(act)
 
       res = self.oCmp.responseCallback()
+      print 'res', res
       assert res != None
 
       psi = self.qtpAgent.responseToPhi[(act, res)]
