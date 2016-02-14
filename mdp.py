@@ -11,8 +11,6 @@ class MarkovDecisionProcess:
   def __init__(self):
     self.timer = 0
     self.reset()
-    # make it undefined as a base class
-    self.getReward = lambda state: None
  
   def getStates(self):
     """
@@ -61,6 +59,9 @@ class MarkovDecisionProcess:
     """
     abstract
         
+  def getReward(self, state):
+    abstract
+
   def isTerminal(self, state):
     """
     Returns true if the current state is a terminal state.  By convention,

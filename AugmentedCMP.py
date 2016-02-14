@@ -1,8 +1,7 @@
-from cmp import ControlledMarkovProcess
 from QTPAgent import QTPAgent
 from mdp import MarkovDecisionProcess
 
-class AugmentedCMP(ControlledMarkovProcess):
+class AugmentedCMP(MarkovDecisionProcess):
   """
   Augment the state, action space of a given CMP, to be an MDP.
   This makes the joint action, query problem to be a pure planning problem.
@@ -29,7 +28,7 @@ class AugmentedCMP(ControlledMarkovProcess):
     self.state = (self.oCmp.state, self.initialPsi, self.lLimit)
   
   def getStates(self):
-    cmpStates = self.oCmp.getStates(self)
+    cmpStates = self.oCmp.getStates()
     states = []
 
     for l in xrange(self.lLimit + 1):
@@ -91,4 +90,4 @@ class AugmentedCMP(ControlledMarkovProcess):
   
   def isTerminal(self, state):
     cmpState, psi, l = state
-    return self.oCmp.isTerminal(self, cmpState)
+    return self.oCmp.isTerminal(cmpState)
