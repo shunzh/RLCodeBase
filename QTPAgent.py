@@ -51,12 +51,6 @@ class QTPAgent:
     """
     return lambda state: sum([reward(state) * p for reward, p in zip(self.rewardSet, phi)])
   
-  # DUMMY?
-  def getRewardDistance(self, rewardFunc0, rewardFunc1):
-    dist = sum([abs(rewardFunc0(s) - rewardFunc1(s)) for s in self.cmp.getStates()])
-    dist /= len(self.cmp.getStates())
-    return dist
-
   def getVIAgent(self, phi, posterior=False):
     """
     Return a trained value iteration agent with given phi.
