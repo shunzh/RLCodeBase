@@ -21,6 +21,7 @@ def main():
   print 's', state
   ret = 0
 
+  # outdated, didn't use CMPExp
   while True:
     if cmp.isTerminal(state):
       break

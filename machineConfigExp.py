@@ -4,7 +4,7 @@ import random
 import util
 import config
 import sys
-from CMPExp import Experiment
+from CMPExp import experiment
 from cmp import QueryType
 
 # reward for incomplete configurations
@@ -63,7 +63,7 @@ def main():
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
   agent = Agent(cmp, rewardSet, initialPhi, QueryType.POLICY, gamma)
  
-  ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet, QueryType.POLICY)
+  ret, qValue, timeElapsed = experiment(cmp, agent, gamma, rewardSet, QueryType.POLICY)
   print ret
   print qValue
 

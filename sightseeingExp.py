@@ -1,5 +1,5 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent
-from CMPExp import Experiment
+from CMPExp import experiment
 import util
 from sightseeing import Sightseeing
 import random
@@ -106,7 +106,7 @@ def main():
   else:
     raise Exception("Unknown Agent " + agentName)
 
-  ret, qValue, timeElapsed = Experiment(cmp, agent, gamma, rewardSet, queryType)
+  ret, qValue, timeElapsed = experiment(cmp, agent, gamma, rewardSet, queryType)
   print ret
   print qValue
   print timeElapsed

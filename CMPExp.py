@@ -1,7 +1,7 @@
 import config
 import time
 
-def Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
+def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   t = time.time()
   q, pi, qValue = agent.learn()
   timeElapsed = time.time() - t

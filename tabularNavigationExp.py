@@ -1,6 +1,6 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
   PriorTPAgent
-from CMPExp import Experiment
+from CMPExp import experiment
 import util
 import sys
 import random
@@ -122,11 +122,11 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
 
   if agentName == 'WAIT':
     # only simulate the episodes after the response
-    ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon- responseTime)
+    ret, qValue, time = experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon- responseTime)
     ret = ret * gamma ** responseTime
     qValue = ret * gamma ** responseTime
   else:
-    ret, qValue, time = Experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon)
+    ret, qValue, time = experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon)
 
   if config.PRINT == 'perf':
     print ret

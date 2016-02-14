@@ -1,6 +1,6 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent
 from windyCorridor import WindyCorridor
-from CMPExp import Experiment
+from CMPExp import experiment
 import util
 
 # discount factor
@@ -56,7 +56,7 @@ def main():
   cmp = WindyCorridor(queries, rewardSet[0], gamma, responseTime, interLength, interNum, circular)
   agent = Agent(cmp, rewardSet, initialPhi, gamma=gamma)
  
-  ret, qValue = Experiment(cmp, agent, gamma, rewardSet, horizon=interLength * interNum * 2)
+  ret, qValue = experiment(cmp, agent, gamma, rewardSet, horizon=interLength * interNum * 2)
   print ret
   print qValue
 
