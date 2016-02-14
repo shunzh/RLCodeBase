@@ -42,3 +42,12 @@ if __name__ == '__main__':
   
   agent = ValueIterationAgent(domain, discount=gamma)
   agent.learn()
+  state = domain.state
+  print 's', state
+  while True:
+    if domain.isTerminal(state):
+      break
+    
+    action = agent.getPolicy(state)
+    state, reward = domain.doAction(action)
+    print action, 's', state, 'r', reward

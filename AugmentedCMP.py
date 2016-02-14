@@ -15,6 +15,7 @@ class AugmentedCMP(MarkovDecisionProcess):
     self.qtpAgent = QTPAgent(cmp, rewardSet, initialPsi, queryType, gamma)
     self.initialPsi = initialPsi
     self.lLimit = lLimit
+    self.queryType = queryType
     self.possiblePsis = set()
 
     for query in self.oCmp.queries:
@@ -34,7 +35,7 @@ class AugmentedCMP(MarkovDecisionProcess):
     for l in xrange(self.lLimit + 1):
       for psi in self.possiblePsis:
         for cmpState in cmpStates:
-          states.append((cmpState, psi, l))
+          states.append((cmpState, tuple(psi), l))
     return states
   
   def getPossibleActions(self, state):
@@ -54,18 +55,18 @@ class AugmentedCMP(MarkovDecisionProcess):
     if dec == 'q':
       # transition in reward-knowledge state
       possiblePsiProbs = self.qtpAgent.getPossiblePhiAndProbs(act)
-      return map(lambda (psi, psiProb): ((cmpState, psi, l-1), psiProb), possiblePsiProbs)
+      return map(lambda (psi, psiProb): ((cmpState, tuple(psi), l-1), psiProb), possiblePsiProbs)
     else:
       # transition in decision making
       cmpStates = self.oCmp.getTransitionStatesAndProbs(cmpState, act)
-      return map(lambda (s, prob): ((s, psi, l), prob), cmpStates)
+      return map(lambda (s, prob): ((s, tuple(psi), l), prob), cmpStates)
   
   def doAction(self, action):
     cmpState, psi, l = self.state
     dec, act = action
     if dec == 'q':
       # inform the agent a response when asked
-      self.oCmp.query(act)
+      self.oCmp.query((self.queryType, act))
       reward = self.oCmp.cost(act)
 
       res = self.oCmp.responseCallback()
@@ -76,10 +77,10 @@ class AugmentedCMP(MarkovDecisionProcess):
 
       l -= 1
     else:
-      cmpState, reward = self.oCmp.doAction(self, act)
+      cmpState, reward = self.oCmp.doAction(act)
       self.oCmp.state = cmpState
 
-    self.state = (cmpState, psi, l)
+    self.state = (cmpState, tuple(psi), l)
     
     return (self.state, reward)
 
