@@ -1,31 +1,19 @@
 import util
-from tabularNavigation import TabularNavigation
-from tabularNavigationExp import experiment
-import getopt
-import sys
-import tabularNavigationExp
-import random
+from tabularNavigation import TabularNavigationWithRewadTernmial
 from AugmentedCMP import AugmentedCMP
+from cmp import QueryType
 
 if __name__ == '__main__':
-  width = 21
-  height = 21
+  width = 11
+  height = 11
   # the time step that the agent receives the response
-  responseTime = 10
-  horizon = 40
+  horizon = 30
+  queryType = QueryType.REWARD_SIGN
+  gamma = 0.1
   
-  try:
-    opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
-  except getopt.GetoptError:
-    raise Exception('Unknown flag')
-  for opt, arg in opts:
-    if opt == '-t':
-      rockType = arg
-    elif opt == '-r':
-      random.seed(int(arg))
-
   rocks = [(1, 0), (0, 1),
            (width - 2, 0), (width - 1, 1)]
+  queries = rocks
   rewardCandNum = 4
   rewards = []
   for candId in xrange(rewardCandNum):
@@ -33,7 +21,21 @@ if __name__ == '__main__':
     reward[rocks[candId]] = 1
     rewards.append(reward)
 
-  initialPhi = [1] * len(rocks)
-  initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
+  def rewardGen(rewards): 
+    def rewardFunc(s):
+      if s in rewards.keys():
+        return rewards[s]
+      else:
+        return 0
+    return rewardFunc
 
-  Domain = AugmentedCMP(TabularNavigation, rewardSet, initialPhi, queryType, gamma, 1)
+  rewardSet = [rewardGen(reward) for reward in rewards]
+
+  trueReward = rewardSet[0]
+  print reward
+
+  initialPsi = [1.0] * len(rocks)
+  initialPsi = map(lambda _: _ / sum(initialPsi), initialPsi)
+
+  cmpDomain = TabularNavigationWithRewadTernmial(queries, trueReward, gamma, width, height, horizon)
+  domain = AugmentedCMP(cmpDomain, rewardSet, initialPsi, queryType, gamma, 1)

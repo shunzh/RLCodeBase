@@ -39,6 +39,15 @@ class TabularNavigation(ControlledMarkovProcess):
   def measure(self, state1, state2):
     return abs(state1[0] - state2[0]) + abs(state1[1] - state2[1])
 
+
+class TabularNavigationWithRewadTernmial(TabularNavigation):
+  def __init__(self, queries, trueReward, gamma, width, height, horizon):
+    TabularNavigation.__init__(self, queries, trueReward, gamma, 0, width, height, horizon, None)
+  
+  def isTerminal(self, state):
+    return self.getReward(state) != 0
+
+
 class TabularNavigationMaze(TabularNavigation):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
     self.walls = [(x, height / 2) for x in range(width / 2 - 1) + range(width / 2 + 2, width)]
