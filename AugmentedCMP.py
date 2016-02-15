@@ -32,10 +32,14 @@ class AugmentedCMP(MarkovDecisionProcess):
     cmpStates = self.oCmp.getStates()
     states = []
 
-    for l in xrange(self.lLimit + 1):
+    for l in xrange(self.lLimit):
       for psi in self.possiblePsis:
         for cmpState in cmpStates:
           states.append((cmpState, tuple(psi), l))
+    
+    for cmpState in cmpStates:
+      states.append((cmpState, tuple(self.initialPsi), self.lLimit))
+
     return states
   
   def getPossibleActions(self, state):
@@ -45,9 +49,11 @@ class AugmentedCMP(MarkovDecisionProcess):
     cmpState, psi, l = state
     actions = self.oCmp.getPossibleActions(cmpState)
     if l > 0:
-      return decorate(actions, 'a') + decorate(self.oCmp.queries, 'q')
+      actions = decorate(actions, 'a') + decorate(self.oCmp.queries, 'q')
     else:
-      return decorate(actions, 'a')
+      actions = decorate(actions, 'a')
+    
+    return actions
 
   def getTransitionStatesAndProbs(self, state, action):
     cmpState, psi, l = state
