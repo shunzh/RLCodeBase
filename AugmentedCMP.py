@@ -1,5 +1,6 @@
 from QTPAgent import QTPAgent
 from mdp import MarkovDecisionProcess
+import util
 
 class AugmentedCMP(MarkovDecisionProcess):
   """
@@ -7,7 +8,7 @@ class AugmentedCMP(MarkovDecisionProcess):
   This makes the joint action, query problem to be a pure planning problem.
   Decoration pattern.
   """
-  def __init__(self, cmp, rewardSet, initialPsi, queryType, gamma, lLimit):
+  def __init__(self, cmp, rewardSet, initialPsi, queryType, gamma, lLimit, awina=False):
     """
     Initialize with this cmp 
     """
@@ -17,16 +18,41 @@ class AugmentedCMP(MarkovDecisionProcess):
     self.lLimit = lLimit
     self.queryType = queryType
     self.possiblePsis = set()
+    self.awina = awina
 
     for query in self.oCmp.queries:
       psis = map(lambda (psi, psiProb): tuple(psi), self.qtpAgent.getPossiblePhiAndProbs(query))
       self.possiblePsis.update(psis)
+    
+    self.viInitial = util.Counter()
+    if awina:
+      self.viSet = util.Counter()
+      for psi in self.possiblePsis:
+        vi = self.qtpAgent.getVIAgent(psi)
+        for state in self.oCmp.getStates():
+          self.viInitial[(state, psi, 0)] = vi.getValue(state)
+        self.viSet[psi] = vi
 
-    MarkovDecisionProcess.__init__(self)
+      self.eliminateQueries = util.Counter()
+      for state in self.oCmp.getStates():
+        self.eliminateQueries[state] = []
+        for query in self.oCmp.queries:
+          policySet = set()
+          policySet.update(self.oCmp.getPossibleActions(state))
+          psis = self.qtpAgent.getPossiblePhiAndProbs(query)
+          for psi in psis:
+            policySet.intersection_update(self.viSet[psi[0]].getPolicies(state))
+          if len(policySet) > 0:
+            self.eliminateQueries[state].append(query)
   
+    MarkovDecisionProcess.__init__(self)
+
   def reset(self):
     self.oCmp.reset()
     self.state = (self.oCmp.state, self.initialPsi, self.lLimit)
+  
+  def getVIInitial(self):
+    return self.viInitial
   
   def getStates(self):
     cmpStates = self.oCmp.getStates()
@@ -49,7 +75,11 @@ class AugmentedCMP(MarkovDecisionProcess):
     cmpState, psi, l = state
     actions = self.oCmp.getPossibleActions(cmpState)
     if l > 0:
-      actions = decorate(actions, 'a') + decorate(self.oCmp.queries, 'q')
+      if self.awina:
+        queries = list(set(self.oCmp.queries) - set(self.eliminateQueries[cmpState]))
+      else:
+        queries = self.oCmp.queries
+      actions = decorate(actions, 'a') + decorate(queries, 'q')
     else:
       actions = decorate(actions, 'a')
     
@@ -76,7 +106,6 @@ class AugmentedCMP(MarkovDecisionProcess):
       reward = self.oCmp.cost(act)
 
       res = self.oCmp.responseCallback()
-      print 'res', res
       assert res != None
 
       psi = self.qtpAgent.responseToPhi[(act, res)]

@@ -57,12 +57,15 @@ class TabularNavigationToy(TabularNavigation):
   def getTransitionStatesAndProbs(self, state, action):
     # create a "windy" area
     trans = util.Counter()
-    for act in [(1, 0), (-1, 0)]:
+    #actions = [(1, 0), (-1, 0)]
+    actions = self.getPossibleActions(state)
+    noise = self.transNoise / len(actions)
+    for act in actions:
       newState = self.adjustState((state[0] + act[0], state[1] + act[1]))
-      trans[newState] += self.transNoise / (2 * self.transNoise + 1)
+      trans[newState] += noise
 
     newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
-    trans[newState] += 1.0 / (2 * self.transNoise + 1)
+    trans[newState] += 1 - self.transNoise
     
     return trans.items()
     
