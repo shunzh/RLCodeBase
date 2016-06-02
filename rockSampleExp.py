@@ -24,6 +24,12 @@ if __name__ == '__main__':
       rockType = arg
     elif opt == '-r':
       random.seed(int(arg))
+  
+  if rockType == 'crazy':
+    width = 41
+    height = 41
+    responseTime = 20
+    horizon = 45
 
   Domain = TabularNavigation
   rocks = [(1, 0), (0, 1),
@@ -47,6 +53,20 @@ if __name__ == '__main__':
     rocks = [(0, 0), (1, 0), (2, 0),\
              (0, 1), (1, 1),\
              (0, 2)]
+  elif rockType == 'crazy':
+    rocks = []
+    for x in xrange(4, width, 4):
+      rocks.extend([(x, 0), (0, x), (x, height - 1), (width - 1, x)])
+    
+    rewardCandNum = len(rocks)
+    for candId in xrange(rewardCandNum):
+      reward = util.Counter()
+      reward[rocks[candId]] = 1
+      rewards.append(reward)
+
+    for _ in xrange(rewardCandNum):
+      initialPhi.append(random.random())
+    initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
   elif rockType == 'split':
     Domain = TabularNavigationMaze
 
