@@ -94,3 +94,11 @@ class TabularNavigationMaze(TabularNavigation):
     else:
       return TabularNavigation.measure(self, state1, mid)\
            + TabularNavigation.measure(self, state2, mid)
+
+
+class PuddleWorld(TabularNavigation):
+  def reset(self):
+    self.state = (self.width / 2, 0)
+  
+  def getPossibleActions(self, state):
+    return [(-1, 1), (0, 1), (1, 1)]

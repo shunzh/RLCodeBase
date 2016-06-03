@@ -1,9 +1,6 @@
 import util
-from tabularNavigation import TabularNavigation, TabularNavigationMaze
+from tabularNavigation import PuddleWorld
 from tabularNavigationExp import experiment
-import getopt
-import sys
-import tabularNavigationExp
 import random
 
 if __name__ == '__main__':
@@ -11,24 +8,40 @@ if __name__ == '__main__':
   height = 21
   # the time step that the agent receives the response
   responseTime = 0
-  horizon = 40
+  horizon = height
   
-  Domain = TabularNavigation
+  Domain = PuddleWorld
+  
+  # rocks have different values
+  rocksNum = 10
   rocks = []
+  for _ in xrange(rocksNum):
+    loc = (random.randint(0, width - 1), random.randint(0, height - 1))
+    if not loc in rocks:
+      rocks.append(loc)
+  rewardBasic = util.Counter()
+  for id in xrange(len(rocks)):
+    rewardBasic[rocks[id]] = id + 1
     
-  rewardCandNum = 6
+  puddleNum = 5
+  puddleSize = 3
+  puddles = []
+  for _ in xrange(puddleNum):
+    loc = (random.randint(0, width - puddleSize - 1), random.randint(0, height - puddleSize - 1))
+    if not loc in puddles:
+      puddles.append(loc)
+
+  # reward cand indicates belief on where the puddle is
+  rewardCandNum = puddleNum
   rewards = []
   for candId in xrange(rewardCandNum):
-    reward = util.Counter()
-    reward[rocks[candId]] = 1
+    reward = rewardBasic.copy()
+    for puddle in puddles:
+      for x in range(puddle[0], puddle[0] + puddleSize):
+        for y in range(puddle[1], puddle[1] + puddleSize):
+          reward[(x, y)] -= 5 
     rewards.append(reward)
 
-  initialPhi = []
-  for _ in xrange(rewardCandNum):
-    initialPhi.append(random.random())
-  initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
+  initialPhi = [1.0 / len(rewards)] * len(rewards)
 
-  terminalReward = util.Counter()
-  terminalReward[(width / 2, height / 2)] = 100
-
-  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, initialPhi, terminalReward)
+  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, initialPhi, None)
