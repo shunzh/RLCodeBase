@@ -43,5 +43,7 @@ if __name__ == '__main__':
     rewards.append(reward)
 
   initialPhi = [1.0 / len(rewards)] * len(rewards)
+  
+  terminalReward = util.Counter()
 
-  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, initialPhi, None)
+  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, initialPhi, terminalReward)
