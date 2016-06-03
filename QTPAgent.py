@@ -282,9 +282,6 @@ class JointQTPAgent(QTPAgent):
     maxQValue = max(map(lambda _:_[2], qList))
     qList = filter(lambda _: _[2] == maxQValue, qList)
 
-    if config.VERBOSE:
-      print "optimized", qList
-
     return random.choice(qList)
 
 

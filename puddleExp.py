@@ -4,8 +4,8 @@ from tabularNavigationExp import experiment
 import random
 
 if __name__ == '__main__':
-  width = 21
-  height = 21
+  width = 11
+  height = 11
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height
@@ -36,14 +36,14 @@ if __name__ == '__main__':
   rewards = []
   for candId in xrange(rewardCandNum):
     reward = rewardBasic.copy()
-    for puddle in puddles:
-      for x in range(puddle[0], puddle[0] + puddleSize):
-        for y in range(puddle[1], puddle[1] + puddleSize):
-          reward[(x, y)] -= 5 
+    puddle = puddles[candId]
+    for x in range(puddle[0], puddle[0] + puddleSize):
+      for y in range(puddle[1], puddle[1] + puddleSize):
+        reward[(x, y)] -= 5
     rewards.append(reward)
 
   initialPhi = [1.0 / len(rewards)] * len(rewards)
   
   terminalReward = util.Counter()
 
-  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, initialPhi, terminalReward)
+  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, puddles, rewards, initialPhi, terminalReward)
