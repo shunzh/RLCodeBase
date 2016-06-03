@@ -4,8 +4,8 @@ from tabularNavigationExp import experiment
 import random
 
 if __name__ == '__main__':
-  width = 11
-  height = 11
+  width = 21
+  height = 21
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height
@@ -13,7 +13,7 @@ if __name__ == '__main__':
   Domain = PuddleWorld
   
   # rocks have different values
-  rocksNum = 10
+  rocksNum = 20
   rocks = []
   for _ in xrange(rocksNum):
     loc = (random.randint(0, width - 1), random.randint(0, height - 1))
@@ -29,7 +29,7 @@ if __name__ == '__main__':
   for _ in xrange(puddleNum):
     loc = (random.randint(0, width - puddleSize - 1), random.randint(0, height - puddleSize - 1))
     if not loc in puddles:
-      puddles.append(loc)
+      puddles.append([(x, y) for x in range(loc[0], loc[0] + puddleSize) for y in range(loc[1], loc[1] + puddleSize)])
 
   # reward cand indicates belief on where the puddle is
   rewardCandNum = puddleNum
@@ -37,13 +37,13 @@ if __name__ == '__main__':
   for candId in xrange(rewardCandNum):
     reward = rewardBasic.copy()
     puddle = puddles[candId]
-    for x in range(puddle[0], puddle[0] + puddleSize):
-      for y in range(puddle[1], puddle[1] + puddleSize):
-        reward[(x, y)] -= 5
+    for loc in puddle: reward[loc] -= 10
     rewards.append(reward)
 
   initialPhi = [1.0 / len(rewards)] * len(rewards)
   
   terminalReward = util.Counter()
 
-  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, puddles, rewards, initialPhi, terminalReward)
+  allPuddles = sum(puddles, []) # concatenate its elements (which are lists)
+  
+  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, allPuddles, rewards, initialPhi, terminalReward)
