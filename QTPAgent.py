@@ -290,14 +290,10 @@ class HeuristicAgent(QTPAgent):
                gamma, clusterDistance=0):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, clusterDistance)
 
-    horizon = self.cmp.horizon
-    if horizon == numpy.inf:
-      self.meanViAgent = self.getVIAgent(self.phi)
-    else:
-      terminalReward = self.cmp.terminalReward
-      self.meanViAgent = self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True)
-      
+    self.meanReward = self.getRewardFunc(self.phi)
     (self.xmin, self.xmax) = self.cmp.getReachability()
+    
+    self.m = 5
 
   def h(self, q):
     possiblePhis = self.getPossiblePhiAndProbs(q)
@@ -307,9 +303,9 @@ class HeuristicAgent(QTPAgent):
       rewardFunc = self.getRewardFunc(fPhi)
       values = []
       for s in self.cmp.getStates():
-        values.append(max(self.xmax[s] * rewardFunc(s), self.xmin[s] * rewardFunc(s)) - self.meanViAgent.getValue(s))
+        values.append(max(self.xmax[s] * rewardFunc(s), self.xmin[s] * rewardFunc(s)) - self.meanReward(s))
       ret += fPhiProb * max(values)
-    
+
     return ret
 
   def learn(self):
@@ -317,12 +313,18 @@ class HeuristicAgent(QTPAgent):
 
     for q in self.cmp.queries:
       hList.append((q, self.h(q)))
-    maxHValue = max(map(lambda _:_[1], hList))
-    hList = filter(lambda _: _[1] == maxHValue, hList)
-    q = random.choice(hList)[0]
-    pi, qValue = self.optimizePolicy(q)
+    hList = sorted(hList, reverse=True, key=lambda _: _[1])
+    hList = hList[:self.m]
+    
+    qList = []
+    for q, h in hList:
+      pi, qValue = self.optimizePolicy(q)
+      qList.append((q, pi, qValue))
 
-    return (q, pi, qValue)
+    maxQValue = max(map(lambda _:_[2], qList))
+    qList = filter(lambda _: _[2] == maxQValue, qList)
+
+    return random.choice(qList)
 
 
 class ActiveSamplingAgent(HeuristicAgent):

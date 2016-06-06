@@ -27,17 +27,19 @@ if __name__ == '__main__':
       random.seed(int(arg))
  
   # rocks have different values
-  rocksNum = 10
   rocks = []
 
-  puddleNum = 5
-  puddleSize = 3
+  #puddleNum = 3; puddleLocs = [(width / 4, height / 4), (width / 2, height / 4), (width / 2, height / 2)]
+  puddleNum = 6
+  puddleSize = 2
+  rockPerPuddle = 2
   puddles = []
   for _ in xrange(puddleNum):
     loc = (random.randint(0, width - puddleSize - 1), random.randint(0, height - puddleSize - 1))
+    #loc = puddleLocs[_]
     puddle = [(x, y) for x in range(loc[0], loc[0] + puddleSize) for y in range(loc[1], loc[1] + puddleSize)]
     puddles.append(puddle)
-    for rockInPuddle in xrange(2):
+    for rockID in xrange(rockPerPuddle):
       rocks.append(random.choice(puddle))
 
   rewardBasic = util.Counter()
@@ -50,7 +52,7 @@ if __name__ == '__main__':
   for candId in xrange(rewardCandNum):
     reward = rewardBasic.copy()
     puddle = puddles[candId]
-    for loc in puddle: reward[loc] -= 10
+    for loc in puddle: reward[loc] = -10
     rewards.append(reward)
 
   initialPhi = [1.0 / len(rewards)] * len(rewards)
