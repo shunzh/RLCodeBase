@@ -311,6 +311,7 @@ class HeuristicAgent(QTPAgent):
 
     return (q, pi, qValue)
 
+
 class AlternatingQTPAgent(QTPAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, relevance = None, restarts = 0):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)

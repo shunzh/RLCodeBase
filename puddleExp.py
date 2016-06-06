@@ -5,13 +5,14 @@ import random
 import getopt
 import sys
 import tabularNavigationExp
+import numpy as np
 
 if __name__ == '__main__':
   width = 21
   height = 21
   # the time step that the agent receives the response
   responseTime = 0
-  horizon = height
+  horizon = height - 1
   
   Domain = PuddleWorld
 
@@ -29,7 +30,7 @@ if __name__ == '__main__':
   rocksNum = 20
   rocks = []
   for _ in xrange(rocksNum):
-    loc = (random.randint(0, width - 1), random.randint(0, height - 1))
+    loc = (random.randint(0, width - 1), random.randint(0, height - 2))
     if not loc in rocks:
       rocks.append(loc)
   rewardBasic = util.Counter()
@@ -56,6 +57,7 @@ if __name__ == '__main__':
   initialPhi = [1.0 / len(rewards)] * len(rewards)
   
   terminalReward = util.Counter()
+  for x in range(width / 3) + range(width * 2 / 3, width): terminalReward[(x, height - 1)] = -1000
 
   allPuddles = sum(puddles, []) # concatenate its elements (which are lists)
   

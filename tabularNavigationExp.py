@@ -29,7 +29,7 @@ Show:
 """
 def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, initialPhi, terminalReward):
   # discount factor
-  gamma = 0.9
+  gamma = 1
   obstacleEnabled = False
   queryFlag = 'default'
   agentName = 'JQTP'
@@ -132,6 +132,6 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
 
   if config.PRINT == 'perf':
     print ret
-    print qValue - 100 * gamma ** horizon
+    print qValue
     print time
 
