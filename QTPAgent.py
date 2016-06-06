@@ -187,7 +187,7 @@ class QTPAgent:
     # `responseTime` time steps
     viAgent = self.getFiniteVIAgent(self.phi, responseTime, v)
     # this is a non-stationary policy
-    pi = lambda s, t: viAgent.getPolicy(s, t) 
+    pi = lambda s, t: viAgent.getPolicy(s, t)
     
     if config.DEBUG:
       print query, "v func"
@@ -284,6 +284,32 @@ class JointQTPAgent(QTPAgent):
 
     return random.choice(qList)
 
+
+class HeuristicAgent(QTPAgent):
+  def h(self, q):
+    # compute heuristic value of q
+    possiblePhis = self.getPossiblePhiAndProbs(q)
+    ret = 0
+
+    for fPhi, fPhiProb in possiblePhis:
+      rewardFunc = self.getRewardFunc(fPhi)
+      #FIXME x
+      values = [rewardFunc(s) for s in self.cmp.getStates()]
+      ret += fPhiProb * max(values)
+    
+    return ret
+
+  def learn(self):
+    hList = []
+
+    for q in self.cmp.queries:
+      hList.append((q, self.h(q)))
+    maxHValue = max(map(lambda _:_[1], hList))
+    hList = filter(lambda _: _[1] == maxHValue, hList)
+    q = random.choice(hList)[0]
+    pi, qValue = self.optimizePolicy(q)
+
+    return (q, pi, qValue)
 
 class AlternatingQTPAgent(QTPAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, relevance = None, restarts = 0):

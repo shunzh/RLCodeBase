@@ -2,6 +2,9 @@ import util
 from tabularNavigation import PuddleWorld
 from tabularNavigationExp import experiment
 import random
+import getopt
+import sys
+import tabularNavigationExp
 
 if __name__ == '__main__':
   width = 21
@@ -11,7 +14,17 @@ if __name__ == '__main__':
   horizon = height
   
   Domain = PuddleWorld
-  
+
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
+  except getopt.GetoptError:
+    raise Exception('Unknown flag')
+  for opt, arg in opts:
+    if opt == '-t':
+      rockType = arg
+    elif opt == '-r':
+      random.seed(int(arg))
+ 
   # rocks have different values
   rocksNum = 20
   rocks = []
