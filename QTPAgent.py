@@ -38,14 +38,12 @@ class QTPAgent:
     self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
 
-    """
     for idx in range(self.rewardSetSize):
       phi = [0] * self.rewardSetSize
       phi[idx] = 1
       
       if horizon == numpy.inf: self.viAgentSet[idx] = self.getVIAgent(phi)
       else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward)
-    """
 
   def getRewardFunc(self, phi):
     """
@@ -332,8 +330,38 @@ class ActiveSamplingAgent(HeuristicAgent):
                gamma, clusterDistance=0):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, clusterDistance)
 
-  def h(self, q):
-    pass
+    self.m = 5
+
+  def learn(self):
+    hList = []
+
+    # must be action queries
+    for s in self.cmp.getStates():
+      hValue = 0
+      for a in self.cmp.getPossibleActions(self.cmp.state):
+        bins = [0] * 10
+        for idx in range(self.rewardSetSize):
+          policies = self.viAgentSet[idx].getPolicies(s)
+          if a in policies:
+            id = min(int(10 / len(policies)), 9)
+            bins[id] += 1
+          else: bins[0] += 1
+        hValue += scipy.stats.entropy(bins)
+        
+      hList.append((s, hValue))
+
+    hList = sorted(hList, reverse=True, key=lambda _: _[1])
+    hList = hList[:self.m]
+    
+    qList = []
+    for q, h in hList:
+      pi, qValue = self.optimizePolicy(q)
+      qList.append((q, pi, qValue))
+
+    maxQValue = max(map(lambda _:_[2], qList))
+    qList = filter(lambda _: _[2] == maxQValue, qList)
+
+    return random.choice(qList)
 
 
 class AlternatingQTPAgent(QTPAgent):

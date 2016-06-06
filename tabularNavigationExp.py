@@ -1,5 +1,5 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
-  PriorTPAgent, HeuristicAgent
+  PriorTPAgent, HeuristicAgent, ActiveSamplingAgent
 import CMPExp
 import util
 import sys
@@ -119,6 +119,8 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     agent = JointQTPAgent(cmp, [trueReward], [1], queryType, gamma)
   elif agentName == "H":
     agent = HeuristicAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "AS":
+    agent = ActiveSamplingAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 

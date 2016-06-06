@@ -1,14 +1,5 @@
-for i in `seq 0 20`;
+for i in `seq 0 9`;
 do
-  python puddleExp.py -r $i
+  python puddleExp.py -q full -r $i -a AS
 done
 
-for i in `seq 0 20`;
-do
-  python puddleExp.py -r $i -a H
-done
-
-for i in `seq 0 20`;
-do
-  python puddleExp.py -r $i -a RQ
-done
