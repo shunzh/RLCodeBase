@@ -286,15 +286,28 @@ class JointQTPAgent(QTPAgent):
 
 
 class HeuristicAgent(QTPAgent):
+  def __init__(self, cmp, rewardSet, initialPhi, queryType,
+               gamma, clusterDistance=0):
+    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, clusterDistance)
+
+    horizon = self.cmp.horizon
+    if horizon == numpy.inf:
+      self.meanViAgent = self.getVIAgent(self.phi)
+    else:
+      terminalReward = self.cmp.terminalReward
+      self.meanViAgent = self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True)
+      
+    (self.xmin, self.xmax) = self.cmp.getReachability()
+
   def h(self, q):
-    # compute heuristic value of q
     possiblePhis = self.getPossiblePhiAndProbs(q)
     ret = 0
 
     for fPhi, fPhiProb in possiblePhis:
       rewardFunc = self.getRewardFunc(fPhi)
-      #FIXME x
-      values = [rewardFunc(s) for s in self.cmp.getStates()]
+      values = []
+      for s in self.cmp.getStates():
+        values.append(max(self.xmax[s] * rewardFunc(s), self.xmin[s] * rewardFunc(s)) - self.meanViAgent.getValue(s))
       ret += fPhiProb * max(values)
     
     return ret
@@ -310,6 +323,15 @@ class HeuristicAgent(QTPAgent):
     pi, qValue = self.optimizePolicy(q)
 
     return (q, pi, qValue)
+
+
+class ActiveSamplingAgent(HeuristicAgent):
+  def __init__(self, cmp, rewardSet, initialPhi, queryType,
+               gamma, clusterDistance=0):
+    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, clusterDistance)
+
+  def h(self, q):
+    pass
 
 
 class AlternatingQTPAgent(QTPAgent):

@@ -131,7 +131,5 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     ret, qValue, time = CMPExp.experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon)
 
   if config.PRINT == 'perf':
-    print ret
-    print qValue
-    print time
+    print ret, qValue, time
 

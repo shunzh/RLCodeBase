@@ -1,5 +1,6 @@
 from cmp import ControlledMarkovProcess
 import util
+import pprint
 
 class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
@@ -102,3 +103,32 @@ class PuddleWorld(TabularNavigation):
   
   def getPossibleActions(self, state):
     return [(-1, 1), (0, 1), (1, 1)]
+
+  def getReachability(self):
+    xmax = util.Counter()
+    xmin = util.Counter()
+    xmin[self.state] = 1
+    xmax[self.state] = 1
+    
+    # compute reachability
+    for y in range(1, self.height):
+      for x in range(self.width):
+        xmax[(x, y)] = max([xmax[(prevX, y - 1)] for prevX in [x-1, x, x+1]])
+
+    # compute commitment-satisfying condition
+    for x in range(self.width):
+      if self.terminalReward[(x, self.height - 1)] < 0:
+        xmax[(x, self.height - 1)] = 0
+
+    for y in reversed(range(self.height - 1)):
+      for x in range(self.width):
+        if max([xmax[(nextX, y + 1)] for nextX in [x-1, x, x+1]]) == 0:
+          xmax[(x, y)] = 0
+
+    """
+    for y in reversed(range(self.height - 1)):
+      for x in range(self.width):
+        print xmax[(x, y)],
+      print 
+    """
+    return xmin, xmax

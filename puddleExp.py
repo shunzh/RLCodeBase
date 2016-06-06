@@ -27,23 +27,22 @@ if __name__ == '__main__':
       random.seed(int(arg))
  
   # rocks have different values
-  rocksNum = 20
+  rocksNum = 10
   rocks = []
-  for _ in xrange(rocksNum):
-    loc = (random.randint(0, width - 1), random.randint(0, height - 2))
-    if not loc in rocks:
-      rocks.append(loc)
-  rewardBasic = util.Counter()
-  for id in xrange(len(rocks)):
-    rewardBasic[rocks[id]] = id + 1
-    
+
   puddleNum = 5
   puddleSize = 3
   puddles = []
   for _ in xrange(puddleNum):
     loc = (random.randint(0, width - puddleSize - 1), random.randint(0, height - puddleSize - 1))
-    if not loc in puddles:
-      puddles.append([(x, y) for x in range(loc[0], loc[0] + puddleSize) for y in range(loc[1], loc[1] + puddleSize)])
+    puddle = [(x, y) for x in range(loc[0], loc[0] + puddleSize) for y in range(loc[1], loc[1] + puddleSize)]
+    puddles.append(puddle)
+    for rockInPuddle in xrange(2):
+      rocks.append(random.choice(puddle))
+
+  rewardBasic = util.Counter()
+  for id in xrange(len(rocks)):
+    rewardBasic[rocks[id]] = id + 1
 
   # reward cand indicates belief on where the puddle is
   rewardCandNum = puddleNum
