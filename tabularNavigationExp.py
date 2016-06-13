@@ -8,7 +8,7 @@ import getopt
 import config
 from cmp import QueryType
 
-flags = "r:l:s:d:a:ovq:P:t:"
+flags = "r:l:s:d:a:ovq:P:t:m:"
 
 """
 Algorithms:
@@ -56,6 +56,8 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
       config.PRINT = arg
     elif opt == '-q':
       queryFlag = arg
+    elif opt == '-m':
+      config.para = int(arg)
     
   def rewardGen(rewards): 
     def rewardFunc(s):

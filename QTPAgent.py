@@ -9,6 +9,7 @@ from cmp import QueryType
 import numpy
 from copy import deepcopy
 import scipy.stats
+import operator
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
@@ -291,33 +292,31 @@ class HeuristicAgent(QTPAgent):
     self.meanReward = self.getRewardFunc(self.phi)
     (self.xmin, self.xmax) = self.cmp.getReachability()
     
-    self.m = 5
-
-  def h(self, q):
-    possiblePhis = self.getPossiblePhiAndProbs(q)
-    ret = 0
-
-    for fPhi, fPhiProb in possiblePhis:
-      rewardFunc = self.getRewardFunc(fPhi)
-      values = []
-      for s in self.cmp.getStates():
-        values.append(max(self.xmax[s] * rewardFunc(s), self.xmin[s] * rewardFunc(s)) - self.meanReward(s))
-      ret += fPhiProb * max(values)
-
-    return ret
+    self.m = config.para
 
   def learn(self):
-    hList = []
+    values = []
 
     for q in self.cmp.queries:
-      hList.append((q, self.h(q)))
-    hList = sorted(hList, reverse=True, key=lambda _: _[1])
-    hList = hList[:self.m]
+      possiblePhis = self.getPossiblePhiAndProbs(q)
+      v = util.Counter()
+      for fPhi, fPhiProb in possiblePhis:
+        rewardFunc = self.getRewardFunc(fPhi)
+        for s in self.cmp.getStates():
+          v[q, s] += fPhiProb * (max(self.xmax[s] * rewardFunc(s), self.xmin[s] * rewardFunc(s)) - self.meanReward(s))
+      v = sorted(v.items(), key=operator.itemgetter(1), reverse=True)
+      values += v[:self.m]
     
+    values = sorted(values, key=operator.itemgetter(1), reverse=True)
     qList = []
-    for q, h in hList:
-      pi, qValue = self.optimizePolicy(q)
-      qList.append((q, pi, qValue))
+    sList = []
+    for item in values:
+      (q, s) = item[0]
+      if not s in sList and not q in map(lambda _: _[0], qList):
+        pi, qValue = self.optimizePolicy(q)
+        qList.append((q, pi, qValue))
+        sList.append(s)
+        if len(qList) >= self.m: break
 
     maxQValue = max(map(lambda _:_[2], qList))
     qList = filter(lambda _: _[2] == maxQValue, qList)
@@ -330,7 +329,7 @@ class ActiveSamplingAgent(HeuristicAgent):
                gamma, clusterDistance=0):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, clusterDistance)
 
-    self.m = 5
+    self.m = config.para
 
   def learn(self):
     hList = []
