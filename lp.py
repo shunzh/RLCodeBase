@@ -16,7 +16,8 @@ def lp(S, A, R, T, s0, psi, maxV):
   rLen = len(R)
   M = 10000 # a large number
   SA = iprod(S, A)
-
+  
+  beginModel()
   # decision variables
   x = var(SA, 'x', bounds=(0, None))
   z = var(xrange(rLen), 'z', bool)
@@ -24,7 +25,7 @@ def lp(S, A, R, T, s0, psi, maxV):
   y = var(xrange(rLen))
 
   # obj
-  minimize(sum([psi[i] * y[i] for i in xrange(rLen)]))
+  maximize(sum([psi[i] * y[i] for i in xrange(rLen)]))
   
   # constraints on y
   st([y[i] <= sum([x[s, a] * R[i](s, a) for s in S for a in A]) - maxV[i] + z[i] * M for i in xrange(rLen)])
@@ -37,9 +38,11 @@ def lp(S, A, R, T, s0, psi, maxV):
     else:
       st(sum([x[sp, ap] for ap in A]) == sum([x[s, a] * T(s, a, sp) for s in S for a in A]))
   
+  solvopt(integer='advanced')
   solve()
   print "Solver status:", status()
   print 'Obj =', vobj()
+  print z
   
   endModel()
   return x, z
@@ -48,7 +51,7 @@ def computeValue(pi, r, S, A):
   sum = 0
   for s in S:
     for a in A:
-      sum += pi[s, a].value * r(s, a)
+      sum += pi[s, a] * r(s, a)
   return sum
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ def getRockDomain(size, numRocks, rewardCandNum, fixedRocks = False, randSeed = 
 
   ret['S'] = [(x, y) for x in xrange(size) for y in xrange(size)]
   ret['A'] = [(-1, 1), (0, 1), (1, 1)]
-  def transition(s, a):
+  def transition(s, a, sp):
     loc = [s[0] + a[0], s[1] + a[1]]
 
     if loc[0] < 0: loc[0] = 0
@@ -21,7 +21,8 @@ def getRockDomain(size, numRocks, rewardCandNum, fixedRocks = False, randSeed = 
     if loc[1] < 0: loc[1] = 0
     elif loc[1] >= size: loc[1] = size - 1
     
-    return tuple(loc)
+    if tuple(loc) == sp: return 1
+    else: return 0
   ret['T'] = transition
 
   ret['R'] = []
