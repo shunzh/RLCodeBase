@@ -1,4 +1,5 @@
 from pymprog import *
+import easyDomains
 
 def lp(S, A, R, T, s0, psi, maxV):
   """
@@ -34,3 +35,13 @@ def lp(S, A, R, T, s0, psi, maxV):
       st(sum([x(sp, ap) for ap in A]) == 1)
     else:
       st(sum([x(sp, ap) for ap in A]) == sum([x(s, a) * T(s, a, sp) for s in S for a in A]))
+
+if __name__ == '__main__':
+  # pass domain here
+  args = easyDomains.getRockDomain(10, 5, 10)
+  
+  for i in range(k):
+    if i == 0: args['maxV'] = 0
+    else: args['maxV'] = 
+
+    lp(**args)
