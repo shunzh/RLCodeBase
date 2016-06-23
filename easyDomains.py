@@ -1,6 +1,9 @@
 import random
 import numpy as np
 
+def rewardConstruct(rocks):
+  return lambda s, a: 1 if s in rocks else 0
+
 def getRockDomain(size, numRocks, rewardCandNum, fixedRocks = False, randSeed = 0):
   """
   Return a domain with a number of random rocks.
@@ -11,12 +14,12 @@ def getRockDomain(size, numRocks, rewardCandNum, fixedRocks = False, randSeed = 
   ret = {}
 
   ret['S'] = [(x, y) for x in xrange(size) for y in xrange(size)]
-  ret['A'] = [(-1, 1), (0, 1), (1, 1)]
+  ret['A'] = [(1, -1), (1, 0), (1, 1)]
   def transit(s, a):
     loc = [s[0] + a[0], s[1] + a[1]]
 
-    if loc[0] < 0: loc[0] = 0
-    elif loc[0] >= size: loc[0] = size - 1
+    if loc[1] < 0: loc[1] = 0
+    elif loc[1] >= size: loc[1] = size - 1
     
     return tuple(loc)
     
@@ -24,21 +27,16 @@ def getRockDomain(size, numRocks, rewardCandNum, fixedRocks = False, randSeed = 
 
   ret['R'] = []
   if fixedRocks:
-    possibleRocks = [(0, size - 1),\
-                     ((size - 1) / 3, size - 1),\
-                     ((size - 1) * 2 / 3, size - 1),\
-                     (size - 1, size - 1)]
-    for i in xrange(4):
-      r = lambda s, a: 1 if s == possibleRocks[i] else 0
-      ret['R'].append(r)
+    possibleRocks = [(size - 1, 0), (size - 1, (size - 1) / 2), (size - 1, size - 1)]
+    for i in xrange(len(possibleRocks)):
+      ret['R'].append(rewardConstruct(possibleRocks[i:i+1]))
   else:
     for _ in xrange(rewardCandNum):
       # select rocks randomly from S
       rocks = np.random.permutation(ret['S'])[:numRocks]
-      r = lambda s, a: 1 if s in rocks else 0
-      ret['R'].append(r)
+      ret['R'].append(rewardConstruct(rocks))
 
-  ret['s0'] = (size / 2, 0)
+  ret['s0'] = (0, size / 2)
   ret['psi'] = [1.0 / rewardCandNum] * rewardCandNum
 
   return ret

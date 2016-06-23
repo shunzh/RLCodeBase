@@ -41,8 +41,9 @@ def lp(S, A, R, T, s0, psi, maxV):
   solvopt(integer='advanced')
   solve()
   print 'Obj =', vobj()
-  print z
+  print y, z
   
+  #pprint.pprint(x)
   endModel()
   return x, z
 
@@ -50,15 +51,15 @@ def computeValue(pi, r, S, A):
   sum = 0
   for s in S:
     for a in A:
-      sum += pi[s, a] * r(s, a)
+      sum += pi[s, a].primal * r(s, a)
   return sum
 
 def rockDomain():
-  size = 10
+  size = 5
   numRocks = 1
-  rewardCandNum = 4
+  rewardCandNum = 3
   args = easyDomains.getRockDomain(size, numRocks, rewardCandNum, fixedRocks=True)
-  k = 4 # number of responses
+  k = 3 # number of responses
   
   q = [] # query set
 
