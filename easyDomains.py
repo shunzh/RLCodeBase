@@ -18,12 +18,9 @@ def getRockDomain(size, numRocks, rewardCandNum, fixedRocks = False, randSeed = 
     if loc[0] < 0: loc[0] = 0
     elif loc[0] >= size: loc[0] = size - 1
     
-    if loc[1] < 0: loc[1] = 0
-    elif loc[1] >= size: loc[1] = size - 1
-    
     return tuple(loc)
     
-  ret['T'] = lambda s, a, sp: transit(s, a) == sp
+  ret['T'] = lambda s, a, sp: 1 if transit(s, a) == sp else 0
 
   ret['R'] = []
   if fixedRocks:
@@ -32,7 +29,7 @@ def getRockDomain(size, numRocks, rewardCandNum, fixedRocks = False, randSeed = 
                      ((size - 1) * 2 / 3, size - 1),\
                      (size - 1, size - 1)]
     for i in xrange(4):
-      r = lambda s, a: 1 if transit(s, a) == possibleRocks[i] else 0
+      r = lambda s, a: 1 if s == possibleRocks[i] else 0
       ret['R'].append(r)
   else:
     for _ in xrange(rewardCandNum):
@@ -53,16 +50,15 @@ def getChainDomain(length):
   ret = {}
 
   ret['S'] = range(length)
-  ret['A'] = [1]
+  ret['A'] = [-1, 1]
   
   def transit(s, a):
     sp = s + a
-    if sp >= length: sp = length - 1
     return sp
 
   ret['T'] = lambda s, a, sp: 1 if transit(s, a) == sp else 0
-  ret['R'] = [lambda s, a: 0]
-  ret['s0'] = 0
+  ret['R'] = [lambda s, a: 1 if s == length - 1 and a == 1 else 0]
+  ret['s0'] = length / 2
   ret['psi'] = [1]
   
   return ret

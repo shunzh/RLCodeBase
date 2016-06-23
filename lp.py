@@ -41,7 +41,6 @@ def lp(S, A, R, T, s0, psi, maxV):
   solvopt(integer='advanced')
   solve()
   print 'Obj =', vobj()
-  pprint.pprint(x)
   print z
   
   endModel()
@@ -59,7 +58,7 @@ def rockDomain():
   numRocks = 1
   rewardCandNum = 4
   args = easyDomains.getRockDomain(size, numRocks, rewardCandNum, fixedRocks=True)
-  k = 1 # number of responses
+  k = 4 # number of responses
   
   q = [] # query set
 
@@ -75,8 +74,10 @@ def rockDomain():
     (x, z) = lp(**args)
     q.append(x)
 
-if __name__ == '__main__':
-  #rockDomain()
+def toyDomain():
   args = easyDomains.getChainDomain(10)
   args['maxV'] = [0]
   lp(**args)
+
+if __name__ == '__main__':
+  rockDomain()
