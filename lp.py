@@ -1,5 +1,6 @@
 from pymprog import *
 import easyDomains
+import pprint
 
 def lp(S, A, R, T, s0, psi, maxV):
   """
@@ -19,9 +20,8 @@ def lp(S, A, R, T, s0, psi, maxV):
   
   beginModel()
   # decision variables
-  x = var(SA, 'x', bounds=(0, None))
+  x = var(SA, 'x', bounds=(0, 1))
   z = var(xrange(rLen), 'z', bool)
-  
   y = var(xrange(rLen))
 
   # obj
@@ -40,8 +40,8 @@ def lp(S, A, R, T, s0, psi, maxV):
   
   solvopt(integer='advanced')
   solve()
-  print "Solver status:", status()
   print 'Obj =', vobj()
+  pprint.pprint(x)
   print z
   
   endModel()
@@ -54,12 +54,12 @@ def computeValue(pi, r, S, A):
       sum += pi[s, a] * r(s, a)
   return sum
 
-if __name__ == '__main__':
+def rockDomain():
   size = 10
   numRocks = 1
   rewardCandNum = 4
   args = easyDomains.getRockDomain(size, numRocks, rewardCandNum, fixedRocks=True)
-  k = 4 # number of responses
+  k = 1 # number of responses
   
   q = [] # query set
 
@@ -74,3 +74,9 @@ if __name__ == '__main__':
 
     (x, z) = lp(**args)
     q.append(x)
+
+if __name__ == '__main__':
+  #rockDomain()
+  args = easyDomains.getChainDomain(10)
+  args['maxV'] = [0]
+  lp(**args)
