@@ -22,7 +22,7 @@ def lp(S, A, R, T, s0, psi, maxV):
   # decision variables
   x = var(SA, 'x', bounds=(0, 1))
   z = var(xrange(rLen), 'z', bool)
-  y = var(xrange(rLen))
+  y = var(xrange(rLen), 'y')
 
   # obj
   maximize(sum([psi[i] * y[i] for i in xrange(rLen)]))
@@ -45,7 +45,7 @@ def lp(S, A, R, T, s0, psi, maxV):
   
   #pprint.pprint(x)
   endModel()
-  return x, z
+  return x
 
 def computeValue(pi, r, S, A):
   sum = 0
@@ -55,11 +55,11 @@ def computeValue(pi, r, S, A):
   return sum
 
 def rockDomain():
-  size = 5
-  numRocks = 1
-  rewardCandNum = 3
-  args = easyDomains.getRockDomain(size, numRocks, rewardCandNum, fixedRocks=True)
-  k = 3 # number of responses
+  size = 10
+  numRocks = 5
+  rewardCandNum = 10
+  args = easyDomains.getRockDomain(size, numRocks, rewardCandNum)
+  k = 5 # number of responses
   
   q = [] # query set
 
@@ -72,7 +72,7 @@ def rockDomain():
       for rewardId in xrange(rewardCandNum):
         args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
-    (x, z) = lp(**args)
+    x = lp(**args)
     q.append(x)
 
 def toyDomain():
