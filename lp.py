@@ -1,7 +1,10 @@
 from pymprog import *
 import easyDomains
 import pprint
-from QTPAgent import QTPAgent
+from QTPAgent import ActiveSamplingAgent
+from cmp import QueryType
+import scipy.stats
+import random
 
 def lp(S, A, R, T, s0, psi, maxV):
   """
@@ -81,17 +84,15 @@ def toyDomain():
   args['maxV'] = [0]
   lp(**args)
 
-class MILPAgent(QTPAgent):
+class MILPAgent(ActiveSamplingAgent):
   def learn(self):
-    args = easyDomains.convert(cmp)
-    args['R'] = self.rewardSet
-    args['psi'] = self.initialPhi
+    args = easyDomains.convert(cmp, self.rewardSet, self.initialPhi)
     args['maxV'] = [0]
     rewardCandNum = len(self.rewardSet)
 
+    # now q is a set of policy queries
     q = []
-    # k is the number of possible responses of a query
-    for i in range(k):
+    for i in range(self.m):
       if i == 0:
         args['maxV'] = [0] * rewardCandNum
       else:
@@ -103,8 +104,32 @@ class MILPAgent(QTPAgent):
       x = lp(**args)
       q.append(x)
 
-    # now q is a set of policy queries
+    if self.queryType == QueryType.ACTION:
+      hList = []
+      for s in self.cmp.getStates():
+        hValue = 0
+        for a in self.cmp.getPossibleActions(self.cmp.state):
+          bins = [0] * 10
+          for pi in q:
+            id = min(10 * pi(s, a), 9)
+            bins[id] += 1
+          hValue += scipy.stats.entropy(bins)
+        hList.append((s, hValue))
 
+      hList = sorted(hList, reverse=True, key=lambda _: _[1])
+      hList = hList[:self.m]
+    else:
+      raise Exception('Query type not implemented for MILP.')
+
+    qList = []
+    for q, h in hList:
+      pi, qValue = self.optimizePolicy(q)
+      qList.append((q, pi, qValue))
+
+    maxQValue = max(map(lambda _:_[2], qList))
+    qList = filter(lambda _: _[2] == maxQValue, qList)
+
+    return random.choice(qList)
 
 if __name__ == '__main__':
   rockDomain()

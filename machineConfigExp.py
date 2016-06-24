@@ -61,9 +61,9 @@ def main():
   #Agent = AlternatingQTPAgent
 
   cmp = MachineConfiguration(numMachines, numConfigs, rewardSet[0], queries, gamma, responseTime)
-  agent = Agent(cmp, rewardSet, initialPhi, QueryType.POLICY, gamma)
+  agent = Agent(cmp, rewardSet, initialPhi, QueryType.ACTION, gamma)
  
-  ret, qValue, timeElapsed = experiment(cmp, agent, gamma, rewardSet, QueryType.POLICY)
+  ret, qValue, timeElapsed = experiment(cmp, agent, gamma, rewardSet, QueryType.ACTION)
   print ret
   print qValue
 

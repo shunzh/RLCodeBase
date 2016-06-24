@@ -1,6 +1,25 @@
 import random
 import numpy as np
 
+def convert(cmp, rewardSet, psi):
+  """
+  Convert a CMP instance to `args` that can be understood by the imlp solver 
+  Note that R and psi are not provided in cmp and need to be supplemented later
+  """
+  ret = {}
+  ret['S'] = cmp.getStates()
+  ret['A'] = cmp.getPossibleActions(cmp.state) # assume state actions are available for all states
+  def transition(s, a, sp):
+    trans = cmp.getTransitionStatesAndProbs(s, a)
+    trans = filter(lambda (state, prob): state == sp, trans)
+    if len(trans) > 0: return trans[0][1]
+    else: return 0
+  ret['T'] = transition
+  ret['R'] = rewardSet
+  ret['s0'] = cmp.state
+  ret['psi'] = psi
+  return ret
+
 def rewardConstruct(rocks):
   return lambda s, a: 1 if s in rocks else 0
 

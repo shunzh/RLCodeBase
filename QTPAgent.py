@@ -100,7 +100,7 @@ class QTPAgent:
     # belief -> prob dict
     distr = util.Counter()
 
-    if self.queryType == QueryType.POLICY:
+    if self.queryType == QueryType.ACTION:
       resSet = actions
       consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query, responseTime)
     elif self.queryType == QueryType.REWARD_SIGN:

@@ -83,10 +83,10 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
       queryType = QueryType.REWARD_SIGN
     elif queryFlag == 'test':
       queries = [(x, y) for x in range(0, width, width / 2) for y in range(0, height, height / 2)]
-      queryType = QueryType.POLICY
+      queryType = QueryType.ACTION
     elif queryFlag == 'full':
       queries = [(x, y) for x in xrange(width) for y in xrange(height)]
-      queryType = QueryType.POLICY
+      queryType = QueryType.ACTION
     else:
       raise Exception('unknown query flag ' + queryFlag)
   if config.VERBOSE:

@@ -5,7 +5,7 @@ import numpy as np
 # possible type of queries
 # TODO some are not implemented
 class QueryType:
-  POLICY, REWARD, REWARD_SIGN, NONE = range(4)
+  ACTION, REWARD, REWARD_SIGN, PREFERENCE, NONE = range(4)
   
 class ControlledMarkovProcess(MarkovDecisionProcess):
   def __init__(self, queries, trueReward, gamma, responseTimes, horizon=np.inf, terminalReward=None):
@@ -62,7 +62,7 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     if self.outsandingQuery != None and self.timer >= self.outsandingQuery[1]:
       # issues a response
       type, s = self.outsandingQuery[0]
-      if type == QueryType.POLICY:
+      if type == QueryType.ACTION:
         # give policy at the response time
         res = self.viAgent.getPolicy(s, self.timer)
       elif type == QueryType.REWARD:

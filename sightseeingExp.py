@@ -86,7 +86,7 @@ def main():
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
   else:
-    queryType = QueryType.POLICY
+    queryType = QueryType.ACTION
 
   cmp = Sightseeing(queries, random.choice(rewardSet), gamma, responseTime, width, height)
 
