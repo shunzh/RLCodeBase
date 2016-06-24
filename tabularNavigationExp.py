@@ -7,6 +7,7 @@ import random
 import getopt
 import config
 from cmp import QueryType
+from lp import MILPAgent
 
 flags = "r:l:s:d:a:ovq:P:t:m:"
 
@@ -110,7 +111,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, relevance='ipp')
   elif agentName == 'AQTP-NF':
     # don't filter query. Assume all queries are relevant.
-    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, lambda fS, q: True)
+    agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, relevance=lambda fS, q: True)
   elif agentName == 'AQTP-RS':
     agent = AlternatingQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma, restarts=1)
   elif agentName == 'RQ':
@@ -124,7 +125,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
   elif agentName == "AS":
     agent = ActiveSamplingAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP":
-    pass #TODO
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 

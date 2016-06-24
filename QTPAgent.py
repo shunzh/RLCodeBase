@@ -245,6 +245,7 @@ class QTPAgent:
             break
         if infGain: queries.append(query)
     else:
+      # relevance must be a function
       for query in self.cmp.queries:
         if self.relevance(fState, query): queries.append(query)
     

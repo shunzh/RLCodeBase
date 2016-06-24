@@ -1,6 +1,7 @@
 from pymprog import *
 import easyDomains
 import pprint
+from QTPAgent import QTPAgent
 
 def lp(S, A, R, T, s0, psi, maxV):
   """
@@ -80,11 +81,29 @@ def toyDomain():
   args['maxV'] = [0]
   lp(**args)
 
-class MILPAgent:
+class MILPAgent(QTPAgent):
   def learn(self):
-    args = easyDomains.getChainDomain(10)
+    args = easyDomains.convert(cmp)
+    args['R'] = self.rewardSet
+    args['psi'] = self.initialPhi
     args['maxV'] = [0]
-    lp(**args)
+    rewardCandNum = len(self.rewardSet)
+
+    q = []
+    # k is the number of possible responses of a query
+    for i in range(k):
+      if i == 0:
+        args['maxV'] = [0] * rewardCandNum
+      else:
+        # find the optimal policy so far that achieves the best on each reward candidate
+        args['maxV'] = []
+        for rewardId in xrange(rewardCandNum):
+          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
+
+      x = lp(**args)
+      q.append(x)
+
+    # now q is a set of policy queries
 
 
 if __name__ == '__main__':
