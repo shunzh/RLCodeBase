@@ -123,6 +123,8 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     agent = HeuristicAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "AS":
     agent = ActiveSamplingAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP":
+    pass #TODO
   else:
     raise Exception("Unknown Agent " + agentName)
 

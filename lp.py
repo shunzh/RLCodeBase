@@ -80,5 +80,12 @@ def toyDomain():
   args['maxV'] = [0]
   lp(**args)
 
+class MILPAgent:
+  def learn(self):
+    args = easyDomains.getChainDomain(10)
+    args['maxV'] = [0]
+    lp(**args)
+
+
 if __name__ == '__main__':
   rockDomain()
