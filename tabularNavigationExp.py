@@ -28,7 +28,7 @@ Show:
 - computation time
 - paired difference between JQTP and AQTP
 """
-def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewards, initialPhi, terminalReward):
+def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewardSet, initialPhi, terminalReward):
   # discount factor
   gamma = 1
   obstacleEnabled = False
@@ -60,18 +60,6 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
     elif opt == '-m':
       config.para = int(arg)
     
-  def rewardGen(rewards): 
-    def rewardFunc(s):
-      if s in rewards.keys():
-        return rewards[s]
-      elif obstacleEnabled and s[0] == width / 2 and s[1] != height / 2:
-        return -10
-      else:
-        return 0
-    return rewardFunc
-
-  rewardSet = [rewardGen(reward) for reward in rewards]
-
   # ask whether reward is good or not
   if agentName == 'NQ':
     queries = [0] # make a dummy query set
@@ -79,14 +67,11 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
   else:
     if queryFlag == 'default':
       # use potential reward locations as query set
-      queries = rocks
-      queryType = QueryType.REWARD_SIGN
-    elif queryFlag == 'test':
-      queries = [(x, y) for x in range(0, width, width / 2) for y in range(0, height, height / 2)]
-      queryType = QueryType.ACTION
-    elif queryFlag == 'full':
       queries = [(x, y) for x in xrange(width) for y in xrange(height)]
       queryType = QueryType.ACTION
+    elif queryFlag == 'reward':
+      queries = [(x, y) for x in xrange(width) for y in xrange(height)]
+      queryType = QueryType.REWARD_SIGN
     else:
       raise Exception('unknown query flag ' + queryFlag)
   if config.VERBOSE:

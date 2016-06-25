@@ -46,6 +46,7 @@ if __name__ == '__main__':
   for id in xrange(len(rocks)):
     rewardBasic[rocks[id]] = id + 1
 
+  # TODO use reward gen
   # reward cand indicates belief on where the puddle is
   rewardCandNum = puddleNum
   rewards = []

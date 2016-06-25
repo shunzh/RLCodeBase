@@ -104,6 +104,16 @@ class PuddleWorld(TabularNavigation):
   def getPossibleActions(self, state):
     return [(-1, 1), (0, 1), (1, 1)]
 
+  def getTransitionStatesAndProbs(self, state, action):
+    if self.isTerminal(state):
+      # no possible transitions 
+      return []
+    else:
+      return TabularNavigation.getTransitionStatesAndProbs(self, state, action)
+
+  def isTerminal(self, state):
+    return state[1] == self.height - 1
+
   def getReachability(self):
     xmax = util.Counter()
     xmin = util.Counter()

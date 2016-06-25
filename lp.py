@@ -106,12 +106,12 @@ class MILPAgent(ActiveSamplingAgent):
 
     if self.queryType == QueryType.ACTION:
       hList = []
-      for s in self.cmp.getStates():
+      for s in args['S']:
         hValue = 0
-        for a in self.cmp.getPossibleActions(self.cmp.state):
+        for a in args['A']:
           bins = [0] * 10
           for pi in q:
-            id = min(10 * pi(s, a), 9)
+            id = min(int(10 * pi(s, a)), 9)
             bins[id] += 1
           hValue += scipy.stats.entropy(bins)
         hList.append((s, hValue))
