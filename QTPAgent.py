@@ -50,7 +50,7 @@ class QTPAgent:
     """
     return the mean reward function under the given belief
     """
-    return lambda state: sum([reward(state) * p for reward, p in zip(self.rewardSet, phi)])
+    return lambda state, action: sum([reward(state, action) * p for reward, p in zip(self.rewardSet, phi)])
   
   def getVIAgent(self, phi, posterior=False):
     """

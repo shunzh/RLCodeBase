@@ -29,17 +29,17 @@ if __name__ == '__main__':
 
   def rewardGen(rewards): 
     def rewardFunc(s, a):
-      if s in rewards.keys():
-        return rewards[s]
+      if s in rewards:
+        return 1
       else:
         return 0
     return rewardFunc
 
   rewardSet = []
   rewardCandNum = 6
+  rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(rewardCandNum)]
   for candId in xrange(rewardCandNum):
-    rocks = [(random.randint(width), width.randint(height)) for _ in xrange(rewardCandNum)]
-    rewardSet.append(rewardGen(rocks))
+    rewardSet.append(rewardGen(rocks[candId: candId + 1]))
 
   initialPhi = []
   for _ in xrange(rewardCandNum):
@@ -49,4 +49,4 @@ if __name__ == '__main__':
   terminalReward = util.Counter()
   terminalReward[(width / 2, height / 2)] = 100
 
-  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewardSet, initialPhi, terminalReward)
+  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewardSet, initialPhi, terminalReward)

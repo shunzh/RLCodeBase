@@ -28,10 +28,9 @@ Show:
 - computation time
 - paired difference between JQTP and AQTP
 """
-def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rocks, rewardSet, initialPhi, terminalReward):
+def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewardSet, initialPhi, terminalReward):
   # discount factor
   gamma = 1
-  obstacleEnabled = False
   queryFlag = 'default'
   agentName = 'JQTP'
   
@@ -84,7 +83,6 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rock
   cmp = Domain(queries, trueReward, gamma, responseTime, width, height,\
                horizon = horizon, terminalReward = terminalReward)
   cmp.setPossibleRewardValues([0, 1])
-  cmp.possibleRewardLocations = rocks
 
   if agentName == 'JQTP' or agentName == 'NQ' or agentName == 'WAIT':
     agent = JointQTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)

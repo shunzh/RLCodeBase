@@ -45,13 +45,14 @@ class ValueIterationAgent(ValueEstimationAgent):
       values = util.Counter()
       for state in self.mdp.getStates():
         if self.mdp.isTerminal(state):
-          values[state] = self.mdp.getReward(state)
+          values[state] = self.mdp.getReward(state, None) #FIXME
         else:
           values[state] = max([self.getQValue(state, action, t)\
                                for action in self.mdp.getPossibleActions(state)])
 
       self.allValues.append(values)
 
+      #print util.getValueDistance(values, self.allValues[-2])
       # Can stop for infinite horizon and converged
       if self.iterations == INF and util.getValueDistance(values, self.allValues[-2]) < .01:
         break
@@ -76,7 +77,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     "*** YOUR CODE HERE ***"
     q = 0
     for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
-      q += prob * (self.mdp.getReward(state) + self.discount * self.getValue(nextState, t))
+      q += prob * (self.mdp.getReward(state, action) + self.discount * self.getValue(nextState, t))
     return q
     
   def getPolicy(self, state, t=0):

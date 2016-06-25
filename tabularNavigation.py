@@ -21,11 +21,16 @@ class TabularNavigation(ControlledMarkovProcess):
   
   def getPossibleActions(self, state):
     # actions are coordinate diff
-    return [(-1, 0), (1, 0), (0, 1), (0, -1), (0, 0)]
-  
+    return [(-1, 1), (1, 1), (0, 1)]
+
+  def isTerminal(self, state):
+    return state[1] == self.height - 1
+ 
   def getTransitionStatesAndProbs(self, state, action):
-    newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
-    return [(newState, 1)]
+    if self.isTerminal(state): return []
+    else:
+      newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
+      return [(newState, 1)]
   
   def adjustState(self, loc):
     loc = list(loc)
@@ -103,16 +108,6 @@ class PuddleWorld(TabularNavigation):
   
   def getPossibleActions(self, state):
     return [(-1, 1), (0, 1), (1, 1)]
-
-  def getTransitionStatesAndProbs(self, state, action):
-    if self.isTerminal(state):
-      # no possible transitions 
-      return []
-    else:
-      return TabularNavigation.getTransitionStatesAndProbs(self, state, action)
-
-  def isTerminal(self, state):
-    return state[1] == self.height - 1
 
   def getReachability(self):
     xmax = util.Counter()
