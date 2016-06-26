@@ -44,9 +44,9 @@ def lp(S, A, R, T, s0, psi, maxV):
   
   solvopt(integer='advanced')
   solve()
-  print 'Obj =', vobj()
-  print y, z
-  
+  if config.VERBOSE:
+    print 'Obj =', vobj()
+    print y, z
   #pprint.pprint(x)
   endModel()
   return x
@@ -60,10 +60,10 @@ def computeValue(pi, r, S, A):
 
 def rockDomain():
   size = 10
-  numRocks = 5
-  rewardCandNum = 10
-  args = easyDomains.getRockDomain(size, numRocks, rewardCandNum)
-  k = 5 # number of responses
+  numRocks = 3
+  rewardCandNum = 3
+  args = easyDomains.getRockDomain(size, numRocks, rewardCandNum, fixedRocks=True)
+  k = 3 # number of responses
   
   q = [] # query set
 
@@ -78,6 +78,19 @@ def rockDomain():
 
     x = lp(**args)
     q.append(x)
+
+    hList = []
+    for s in args['S']:
+      hValue = 0
+      for a in args['A']:
+        bins = [0] * 10
+        for pi in q:
+          id = min([int(10 * pi[s, a].primal), 9])
+          bins[id] += 1
+        hValue += scipy.stats.entropy(bins)
+      hList.append((s, hValue))
+
+    hList = sorted(hList, reverse=True, key=lambda _: _[1])
 
 def toyDomain():
   args = easyDomains.getChainDomain(10)

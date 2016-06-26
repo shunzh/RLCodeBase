@@ -6,6 +6,8 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   q, pi, qValue = agent.learn()
   timeElapsed = time.time() - t
   
+  if config.VERBOSE: print q
+  
   """
   # add query type here
   q = [queryType, q]

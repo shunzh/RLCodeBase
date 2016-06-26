@@ -26,6 +26,15 @@ if __name__ == '__main__':
       random.seed(int(arg))
   
   Domain = TabularNavigation
+  
+  if rockType == 'corner':
+    rewardCandNum = 3
+    rocks = [(0, height - 1), (width / 2, height - 1), (width - 1, height - 1)]
+  elif rockType == 'default':
+    rewardCandNum = 6
+    rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(rewardCandNum)]
+  else:
+    raise Exception('Unknown rock type')
 
   def rewardGen(rewards): 
     def rewardFunc(s, a):
@@ -36,17 +45,11 @@ if __name__ == '__main__':
     return rewardFunc
 
   rewardSet = []
-  rewardCandNum = 6
-  rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(rewardCandNum)]
   for candId in xrange(rewardCandNum):
     rewardSet.append(rewardGen(rocks[candId: candId + 1]))
 
-  initialPhi = []
-  for _ in xrange(rewardCandNum):
-    initialPhi.append(random.random())
-  initialPhi = map(lambda _: _ / sum(initialPhi), initialPhi)
+  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
   terminalReward = util.Counter()
-  terminalReward[(width / 2, height / 2)] = 100
 
   experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewardSet, initialPhi, terminalReward)
