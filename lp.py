@@ -5,6 +5,7 @@ from QTPAgent import ActiveSamplingAgent
 from cmp import QueryType
 import scipy.stats
 import random
+import config
 
 def lp(S, A, R, T, s0, psi, maxV):
   """
@@ -42,7 +43,7 @@ def lp(S, A, R, T, s0, psi, maxV):
     else:
       st(sum([x[sp, ap] for ap in A]) == sum([x[s, a] * T(s, a, sp) for s in S for a in A]))
   
-  solvopt(integer='advanced')
+  solvopt(integer='advanced', verbosity=None)
   solve()
   if config.VERBOSE:
     print 'Obj =', vobj()
@@ -105,7 +106,7 @@ class MILPAgent(ActiveSamplingAgent):
 
     # now q is a set of policy queries
     q = []
-    for i in range(self.m):
+    for i in range(len(args['A'])):
       if i == 0:
         args['maxV'] = [0] * rewardCandNum
       else:
