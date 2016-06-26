@@ -86,7 +86,7 @@ def toyDomain():
 
 class MILPAgent(ActiveSamplingAgent):
   def learn(self):
-    args = easyDomains.convert(cmp, self.rewardSet, self.initialPhi)
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     args['maxV'] = [0]
     rewardCandNum = len(self.rewardSet)
 
@@ -111,7 +111,7 @@ class MILPAgent(ActiveSamplingAgent):
         for a in args['A']:
           bins = [0] * 10
           for pi in q:
-            id = min(int(10 * pi(s, a)), 9)
+            id = min([int(10 * pi[s, a].primal), 9])
             bins[id] += 1
           hValue += scipy.stats.entropy(bins)
         hList.append((s, hValue))

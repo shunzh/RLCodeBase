@@ -8,4 +8,4 @@ SAVE_TO_FILE = True
 PRINT = 'perf'
 
 # multipurpose
-para = 1
+para = 3
