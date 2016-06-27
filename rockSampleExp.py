@@ -7,11 +7,11 @@ import tabularNavigationExp
 import random
 
 if __name__ == '__main__':
-  width = 10
-  height = 10
+  width = 15
+  height = 15
   # the time step that the agent receives the response
   responseTime = 0
-  horizon = height + 1
+  horizon = height + width + 1
   rockType = 'default'
   extra = 0
   

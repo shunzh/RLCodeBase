@@ -129,7 +129,7 @@ class MILPAgent(ActiveSamplingAgent):
         hValue = 0
         for a in args['A']:
           # for all possible responses of the action query
-          bins = [0] * len(q)
+          bins = [0] * 10
           for pi in q:
             id = min([int(10 * pi[s, a].primal), 9])
             bins[id] += 1
