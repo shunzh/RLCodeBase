@@ -344,8 +344,9 @@ class ActiveSamplingAgent(HeuristicAgent):
           policies = self.viAgentSet[idx].getPolicies(s)
           if a in policies:
             id = min(int(10 / len(policies)), 9)
-            bins[id] += 1
+            bins[id] += self.phi[idx]
           else: bins[0] += 1
+        #print s, a, bins
         hValue += scipy.stats.entropy(bins)
         
       hList.append((s, hValue))

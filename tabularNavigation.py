@@ -14,10 +14,10 @@ class TabularNavigation(ControlledMarkovProcess):
 
   def reset(self):
     # initial state: this far to the first intersection
-    self.state = (self.width / 2, 0)
+    self.state = 'S'
     
   def getStates(self):
-    return [(x, y) for x in xrange(self.width) for y in xrange(self.height)] + ['T']
+    return [(x, y) for x in xrange(self.width) for y in xrange(self.height)] + ['S', 'T']
   
   def getPossibleActions(self, state):
     # actions are coordinate diff
@@ -27,11 +27,13 @@ class TabularNavigation(ControlledMarkovProcess):
     return state == 'T'
  
   def getTransitionStatesAndProbs(self, state, action):
-    if self.isTerminal(state): return []
+    if state == 'S': return [((x, 0), 1.0 / self.width) for x in xrange(self.width)]
+    elif self.isTerminal(state): return []
     elif state[1] == self.height - 1: return [('T', 1)]
     else:
+      nullState = self.adjustState((state[0], state[1] + 1))
       newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
-      return [(newState, 1)]
+      return [(nullState, 0.1), (newState, 0.9)]
   
   def adjustState(self, loc):
     loc = list(loc)
