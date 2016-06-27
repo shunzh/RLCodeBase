@@ -345,13 +345,14 @@ class ActiveSamplingAgent(HeuristicAgent):
           if a in policies:
             id = min(int(10 / len(policies)), 9)
             bins[id] += self.phi[idx]
-          else: bins[0] += 1
+          else: bins[0] += self.phi[idx]
         #print s, a, bins
         hValue += scipy.stats.entropy(bins)
         
       hList.append((s, hValue))
 
     hList = sorted(hList, reverse=True, key=lambda _: _[1])
+    #print hList
     hList = hList[:self.m]
     
     qList = []

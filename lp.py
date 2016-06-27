@@ -126,17 +126,19 @@ class MILPAgent(ActiveSamplingAgent):
     if self.queryType == QueryType.ACTION:
       hList = []
       for s in args['S']:
-        if s == 'T': break
         hValue = 0
         for a in args['A']:
-          bins = [0] * 10
+          # for all possible responses of the action query
+          bins = [0] * len(q)
           for pi in q:
             id = min([int(10 * pi[s, a].primal), 9])
             bins[id] += 1
           hValue += scipy.stats.entropy(bins)
+          #print s, a, bins
         hList.append((s, hValue))
 
       hList = sorted(hList, reverse=True, key=lambda _: _[1])
+      #print hList
       hList = hList[:self.m]
     else:
       raise Exception('Query type not implemented for MILP.')

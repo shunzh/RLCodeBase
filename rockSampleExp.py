@@ -7,11 +7,11 @@ import tabularNavigationExp
 import random
 
 if __name__ == '__main__':
-  width = 11
-  height = 11
+  width = 10
+  height = 10
   # the time step that the agent receives the response
   responseTime = 0
-  horizon = width + height + 1
+  horizon = height + 1
   rockType = 'default'
   extra = 0
   
@@ -36,10 +36,10 @@ if __name__ == '__main__':
   else:
     raise Exception('Unknown rock type')
 
-  def rewardGen(rewards): 
+  def rewardGen(rewards, numerical): 
     def rewardFunc(s, a):
       if s in rewards:
-        return 1
+        return numerical
       else:
         return 0
     return rewardFunc
@@ -47,7 +47,10 @@ if __name__ == '__main__':
   rewardSet = []
   for candId in xrange(rewardCandNum):
     # one rock is active at one time
-    rewardSet.append(rewardGen(rocks[candId: candId + 1]))
+    if candId < rewardCandNum / 2:
+      rewardSet.append(rewardGen(rocks[candId: candId + 1], 5))
+    else:
+      rewardSet.append(rewardGen(rocks[candId: candId + 1], 1))
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
