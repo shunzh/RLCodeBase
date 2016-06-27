@@ -6,18 +6,15 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   q, pi, qValue = agent.learn()
   timeElapsed = time.time() - t
   
-  if config.VERBOSE: print q
-  
-  """
   # add query type here
   q = [queryType, q]
  
   # init state
   state = cmp.state
-  if config.VERBOSE: print 's', state, 'r', cmp.getReward(state)
+  if config.VERBOSE: print 's', state
 
   # accumulated return
-  ret = cmp.getReward(state)
+  ret = 0
   while True:
     if cmp.isTerminal(state) or cmp.timer >= horizon:
       break
@@ -41,7 +38,5 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
     if config.PRINT == 'states': print state[0], state[1]
 
     ret += reward * gamma ** cmp.timer
-  """
   
-  ret = 0 # dummy
   return ret, qValue, timeElapsed

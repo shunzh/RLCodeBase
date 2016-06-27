@@ -45,7 +45,9 @@ class ValueIterationAgent(ValueEstimationAgent):
       values = util.Counter()
       for state in self.mdp.getStates():
         if self.mdp.isTerminal(state):
-          values[state] = self.mdp.getReward(state, None) #FIXME
+          # the state that represents end of a episode
+          # the value is 0 on this state
+          values[state] = 0
         else:
           values[state] = max([self.getQValue(state, action, t)\
                                for action in self.mdp.getPossibleActions(state)])

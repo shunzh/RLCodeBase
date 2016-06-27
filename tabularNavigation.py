@@ -17,17 +17,18 @@ class TabularNavigation(ControlledMarkovProcess):
     self.state = (self.width / 2, 0)
     
   def getStates(self):
-    return [(x, y) for x in xrange(self.width) for y in xrange(self.height)]
+    return [(x, y) for x in xrange(self.width) for y in xrange(self.height)] + ['T']
   
   def getPossibleActions(self, state):
     # actions are coordinate diff
     return [(-1, 1), (1, 1), (0, 1)]
 
   def isTerminal(self, state):
-    return state[1] == self.height - 1
+    return state == 'T'
  
   def getTransitionStatesAndProbs(self, state, action):
     if self.isTerminal(state): return []
+    elif state[1] == self.height - 1: return [('T', 1)]
     else:
       newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
       return [(newState, 1)]

@@ -83,7 +83,7 @@ class MarkovDecisionProcess:
       if sum > 1.0:
         raise 'Total transition probability more than one; sample failure.' 
       if rand < sum:
-        reward = self.getReward(nextState)
+        reward = self.getReward(state, action)
         self.state = nextState
         return (nextState, reward)
 

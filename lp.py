@@ -116,6 +116,9 @@ class MILPAgent(ActiveSamplingAgent):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
       x = lp(**args)
+      for s in args['S']:
+        for a in args['A']:
+          if x[s, a].primal > 0: print s, a, x[s, a]
       q.append(x)
 
     if self.queryType == QueryType.ACTION:
