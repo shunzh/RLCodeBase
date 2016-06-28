@@ -1,4 +1,4 @@
-from pymprog import *
+from PyCPX import CPlexModel
 import easyDomains
 import pprint
 from QTPAgent import ActiveSamplingAgent
@@ -18,6 +18,7 @@ def lp(S, A, R, T, s0, psi, maxV):
     psi: prior belief on rewards
     maxV: maxV[i] = max_{\pi \in q} V_{r_i}^\pi
   """
+  model = CPlexModel()
   # useful constants
   rLen = len(R)
   M = 10000 # a large number
@@ -28,6 +29,8 @@ def lp(S, A, R, T, s0, psi, maxV):
   x = var(SA, 'x', bounds=(0, 1))
   z = var(xrange(rLen), 'z', bool)
   y = var(xrange(rLen), 'y')
+
+
 
   # obj
   maximize(sum([psi[i] * y[i] for i in xrange(rLen)]))
