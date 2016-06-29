@@ -19,6 +19,8 @@ def lp(S, A, R, T, s0, psi, maxV):
     maxV: maxV[i] = max_{\pi \in q} V_{r_i}^\pi
   """
   m = CPlexModel()
+  if not config.VERBOSE: m.setVerbosity(0)
+
   # useful constants
   rLen = len(R)
   M = 10000 # a large number

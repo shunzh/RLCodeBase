@@ -28,11 +28,13 @@ class TabularNavigation(ControlledMarkovProcess):
  
   def getTransitionStatesAndProbs(self, state, action):
     if self.isTerminal(state): return []
+    elif state[0] == self.width - 1: return [((state[0] + 1, state[1]), 1)]
+    elif state[1] == self.height - 1: return [((state[0], state[1] + 1), 1)]
     else:
-      possibleNewStates = map(lambda a: self.adjustState((state[0] + a[0], state[1] + a[1])), self.getPossibleActions(state))
+      possibleNewStates = map(lambda a: (state[0] + a[0], state[1] + a[1]), self.getPossibleActions(state))
       sap = {s: 0.1 for s in possibleNewStates}
 
-      newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
+      newState = (state[0] + action[0], state[1] + action[1])
       sap[newState] = 0.9
 
       return sap.items()
