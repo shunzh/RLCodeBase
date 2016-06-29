@@ -1,5 +1,5 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
-  PriorTPAgent, HeuristicAgent, ActiveSamplingAgent
+  PriorTPAgent, HeuristicAgent, ActiveSamplingAgent, MILPAgent
 import CMPExp
 import util
 import sys

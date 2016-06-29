@@ -25,21 +25,10 @@ class LPAgent(ValueIterationAgent):
     args['T'] = transition
     args['r'] = self.mdp.getReward
     args['s0'] = self.mdp.state
-    self.x = lp(**args)
+    self.v = lp(**args)
   
-  def getPolicies(self, state, t=0):
-    if self.mdp.isTerminal(state):
-      return []
-    else:
-      actions = self.mdp.getPossibleActions(state)
-      maxProb = max(self.x[state, a] for a in actions)
-      return filter(lambda a: self.x[state, a] == maxProb, actions)
-    
   def getValue(self, state, t=0):
-    raise Exception("Policy sovled by occupancy. Not supposed to be used.")
-
-  def getQValue(self, state, action, t=0):
-    raise Exception("Policy sovled by occupancy. Not supposed to be used.")
+    return self.v[state]
 
 
 #LearningAgent = ValueIterationAgent
@@ -104,12 +93,17 @@ class QTPAgent:
   
   def getFiniteVIAgent(self, phi, horizon, terminalReward, posterior=False):
     if posterior and tuple(phi) in self.viAgentSet.keys():
+      # bookkeep posterior optimal policies
       return self.viAgentSet[tuple(phi)]
     else:
       rewardFunc = self.getRewardFunc(phi)
       cmp = deepcopy(self.cmp)
       cmp.getReward = rewardFunc
-      vi = LearningAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
+      if posterior:
+        vi = LearningAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
+      else:
+        # must use value iteration to derive nonstationary policy for the transient phase
+        vi = ValueIterationAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
       vi.learn()
       if posterior: self.viAgentSet[tuple(phi)] = vi # bookkeep
       return vi
