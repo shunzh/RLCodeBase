@@ -18,41 +18,36 @@ def lp(S, A, R, T, s0, psi, maxV):
     psi: prior belief on rewards
     maxV: maxV[i] = max_{\pi \in q} V_{r_i}^\pi
   """
-  model = CPlexModel()
+  m = CPlexModel()
   # useful constants
   rLen = len(R)
   M = 10000 # a large number
-  SA = iprod(S, A)
+  Sr = range(len(S))
+  Ar = range(len(A))
   
-  beginModel()
   # decision variables
-  x = var(SA, 'x', bounds=(0, 1))
-  z = var(xrange(rLen), 'z', bool)
-  y = var(xrange(rLen), 'y')
+  x = m.new((len(S), len(A)), lb=0, ub=1)
+  z = m.new(rLen, vtyple=bool)
+  y = m.new(rLen)
 
-
-
-  # obj
-  maximize(sum([psi[i] * y[i] for i in xrange(rLen)]))
-  
   # constraints on y
-  st([y[i] <= sum([x[s, a] * R[i](s, a) for s in S for a in A]) - maxV[i] + z[i] * M for i in xrange(rLen)])
-  st([y[i] <= (1 - z[i]) * M for i in xrange(rLen)])
+  m.constrain([y[i] <= sum([x[s, a] * R[i](s, a) for s in S for a in A]) - maxV[i] + z[i] * M for i in xrange(rLen)])
+  m.constrain([y[i] <= (1 - z[i]) * M for i in xrange(rLen)])
   
   # constraints on x (valid occupancy)
-  for sp in S:
-    if sp == s0:
-      st(sum([x[sp, ap] for ap in A]) == 1)
+  for sp in Sr:
+    if sp == S.index(s0):
+      m.constrain(sum([x[sp, ap] for ap in Ar]) == 1)
     else:
-      st(sum([x[sp, ap] for ap in A]) == sum([x[s, a] * T(s, a, sp) for s in S for a in A]))
+      m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(s, a, sp) for s in Sr for a in Ar]))
   
-  solvopt(integer='advanced', verbosity=None)
-  solve()
+  # obj
+  m.maximize(sum([psi[i] * y[i] for i in xrange(rLen)]))
+  
   if config.VERBOSE:
     print 'Obj =', vobj()
     print y, z
   #pprint.pprint(x)
-  endModel()
   return x
 
 def computeValue(pi, r, S, A):
