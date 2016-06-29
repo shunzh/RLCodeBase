@@ -7,8 +7,8 @@ import tabularNavigationExp
 import random
 
 if __name__ == '__main__':
-  width = 15
-  height = 15
+  width = 3
+  height = 3
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1

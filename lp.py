@@ -1,4 +1,4 @@
-from PyCPX import CPlexModel
+from pycpx import CPlexModel
 import easyDomains
 import pprint
 from QTPAgent import ActiveSamplingAgent
@@ -26,35 +26,38 @@ def lp(S, A, R, T, s0, psi, maxV):
   Ar = range(len(A))
   
   # decision variables
-  x = m.new((len(S), len(A)), lb=0, ub=1)
-  z = m.new(rLen, vtyple=bool)
-  y = m.new(rLen)
+  x = m.new((len(S), len(A)), lb=0, ub=1, name='x')
+  z = m.new(rLen, vtype=bool, name='z')
+  y = m.new(rLen, name='y')
 
   # constraints on y
-  m.constrain([y[i] <= sum([x[s, a] * R[i](s, a) for s in S for a in A]) - maxV[i] + z[i] * M for i in xrange(rLen)])
+  m.constrain([y[i] <= sum([x[s, a] * R[i](S[s], A[a]) for s in Sr for a in Ar]) - maxV[i] + z[i] * M for i in xrange(rLen)])
   m.constrain([y[i] <= (1 - z[i]) * M for i in xrange(rLen)])
   
   # constraints on x (valid occupancy)
   for sp in Sr:
-    if sp == S.index(s0):
+    if S[sp] == s0:
       m.constrain(sum([x[sp, ap] for ap in Ar]) == 1)
     else:
-      m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(s, a, sp) for s in Sr for a in Ar]))
+      m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
   
   # obj
-  m.maximize(sum([psi[i] * y[i] for i in xrange(rLen)]))
-  
+  obj = m.maximize(sum([psi[i] * y[i] for i in xrange(rLen)]))
+
   if config.VERBOSE:
-    print 'Obj =', vobj()
-    print y, z
-  #pprint.pprint(x)
-  return x
+    print 'obj', obj
+    print 'x', m[x]
+    print 'y', m[y]
+    print 'z', m[z]
+  
+  # build occupancy as S x A -> x[.,.]
+  return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 
 def computeValue(pi, r, S, A):
   sum = 0
   for s in S:
     for a in A:
-      sum += pi[s, a].primal * r(s, a)
+      sum += pi[s, a] * r(s, a)
   return sum
 
 def rockDomain():
@@ -84,7 +87,7 @@ def rockDomain():
       for a in args['A']:
         bins = [0] * 10
         for pi in q:
-          id = min([int(10 * pi[s, a].primal), 9])
+          id = min([int(10 * pi[s, a]), 9])
           bins[id] += 1
         hValue += scipy.stats.entropy(bins)
       hList.append((s, hValue))
@@ -129,7 +132,7 @@ class MILPAgent(ActiveSamplingAgent):
           # for all possible responses of the action query
           bins = [0] * 10
           for pi in q:
-            id = min([int(10 * pi[s, a].primal), 9])
+            id = min([int(10 * pi[s, a]), 9])
             bins[id] += 1
           hValue += scipy.stats.entropy(bins)
           #print s, a, bins
@@ -152,4 +155,7 @@ class MILPAgent(ActiveSamplingAgent):
     return random.choice(qList)
 
 if __name__ == '__main__':
-  rockDomain()
+  config.VERBOSE = True
+
+  #rockDomain()
+  toyDomain()
