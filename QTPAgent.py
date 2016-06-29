@@ -1,5 +1,3 @@
-from learningAgents import ReinforcementAgent
-from valueIterationAgents import ValueIterationAgent
 import copy
 import util
 import pprint
@@ -10,6 +8,42 @@ import numpy
 from copy import deepcopy
 import scipy.stats
 import operator
+import easyDomains
+from lp import computeValue, milp, lp
+from valueIterationAgents import ValueIterationAgent
+
+class LPAgent(ValueIterationAgent):
+  def learn(self):
+    args = {}
+    args['S'] = self.mdp.getStates()
+    args['A'] = self.mdp.getPossibleActions(self.mdp.state) # assume state actions are available for all states
+    def transition(s, a, sp):
+      trans = self.mdp.getTransitionStatesAndProbs(s, a)
+      trans = filter(lambda (state, prob): state == sp, trans)
+      if len(trans) > 0: return trans[0][1]
+      else: return 0
+    args['T'] = transition
+    args['r'] = self.mdp.getReward
+    args['s0'] = self.mdp.state
+    self.x = lp(**args)
+  
+  def getPolicies(self, state, t=0):
+    if self.mdp.isTerminal(state):
+      return []
+    else:
+      actions = self.mdp.getPossibleActions(state)
+      maxProb = max(self.x[state, a] for a in actions)
+      return filter(lambda a: self.x[state, a] == maxProb, actions)
+    
+  def getValue(self, state, t=0):
+    raise Exception("Policy sovled by occupancy. Not supposed to be used.")
+
+  def getQValue(self, state, action, t=0):
+    raise Exception("Policy sovled by occupancy. Not supposed to be used.")
+
+
+#LearningAgent = ValueIterationAgent
+LearningAgent = LPAgent
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
@@ -63,7 +97,7 @@ class QTPAgent:
       rewardFunc = self.getRewardFunc(phi)
       cmp = deepcopy(self.cmp)
       cmp.getReward = rewardFunc
-      vi = ValueIterationAgent(cmp, discount=self.gamma)
+      vi = LearningAgent(cmp, discount=self.gamma)
       vi.learn()
       if posterior: self.viAgentSet[tuple(phi)] = vi # bookkeep
       return vi
@@ -75,7 +109,7 @@ class QTPAgent:
       rewardFunc = self.getRewardFunc(phi)
       cmp = deepcopy(self.cmp)
       cmp.getReward = rewardFunc
-      vi = ValueIterationAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
+      vi = LearningAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
       vi.learn()
       if posterior: self.viAgentSet[tuple(phi)] = vi # bookkeep
       return vi
@@ -355,6 +389,62 @@ class ActiveSamplingAgent(HeuristicAgent):
     #print hList
     hList = hList[:self.m]
     
+    qList = []
+    for q, h in hList:
+      pi, qValue = self.optimizePolicy(q)
+      qList.append((q, pi, qValue))
+
+    maxQValue = max(map(lambda _:_[2], qList))
+    qList = filter(lambda _: _[2] == maxQValue, qList)
+
+    return random.choice(qList)
+
+
+class MILPAgent(ActiveSamplingAgent):
+  def learn(self):
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
+    args['maxV'] = [0]
+    rewardCandNum = len(self.rewardSet)
+
+    # now q is a set of policy queries
+    q = []
+    for i in range(len(args['A'])):
+      if i == 0:
+        args['maxV'] = [0] * rewardCandNum
+      else:
+        # find the optimal policy so far that achieves the best on each reward candidate
+        args['maxV'] = []
+        for rewardId in xrange(rewardCandNum):
+          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
+
+      x = milp(**args)
+      """
+      for s in args['S']:
+        for a in args['A']:
+          if x[s, a].primal > 0: print s, a, x[s, a]
+      """
+      q.append(x)
+
+    if self.queryType == QueryType.ACTION:
+      hList = []
+      for s in args['S']:
+        hValue = 0
+        for a in args['A']:
+          # for all possible responses of the action query
+          bins = [0] * 10
+          for pi in q:
+            id = min([int(10 * pi[s, a]), 9])
+            bins[id] += 1
+          hValue += scipy.stats.entropy(bins)
+          #print s, a, bins
+        hList.append((s, hValue))
+
+      hList = sorted(hList, reverse=True, key=lambda _: _[1])
+      #print hList
+      hList = hList[:self.m]
+    else:
+      raise Exception('Query type not implemented for MILP.')
+
     qList = []
     for q, h in hList:
       pi, qValue = self.optimizePolicy(q)

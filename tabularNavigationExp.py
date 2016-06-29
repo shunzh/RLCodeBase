@@ -7,7 +7,6 @@ import random
 import getopt
 import config
 from cmp import QueryType
-from lp import MILPAgent
 
 flags = "r:l:s:d:a:ovq:P:t:m:"
 

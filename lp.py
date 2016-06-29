@@ -1,14 +1,44 @@
 from pycpx import CPlexModel
 import easyDomains
-import pprint
-from QTPAgent import ActiveSamplingAgent
 from cmp import QueryType
 import scipy.stats
 import random
 import config
 
-def lp(S, A, R, T, s0, psi, maxV):
+def lp(S, A, r, T, s0):
   """
+  Solve the LP problem to find out the optimal occupancy
+  
+  Args:
+    S: state set
+    A: action set
+    r: reward
+    T: transition function
+    s0: init state
+  """
+  m = CPlexModel()
+  if not config.VERBOSE: m.setVerbosity(0)
+
+  # useful constants
+  Sr = range(len(S))
+  Ar = range(len(A))
+ 
+  x = m.new((len(S), len(A)), lb=0, ub=1, name='x')
+
+  for sp in Sr:
+    if S[sp] == s0:
+      m.constrain(sum([x[sp, ap] for ap in Ar]) == 1)
+    else:
+      m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
+  
+  # obj
+  obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
+  return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
+
+def milp(S, A, R, T, s0, psi, maxV):
+  """
+  Solve the MILP problem in greedy construction of policy query
+  
   Args:
     S: state set
     A: action set
@@ -80,7 +110,7 @@ def rockDomain():
       for rewardId in xrange(rewardCandNum):
         args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
-    x = lp(**args)
+    x = milp(**args)
     q.append(x)
 
     hList = []
@@ -99,62 +129,8 @@ def rockDomain():
 def toyDomain():
   args = easyDomains.getChainDomain(10)
   args['maxV'] = [0]
-  lp(**args)
+  milp(**args)
 
-class MILPAgent(ActiveSamplingAgent):
-  def learn(self):
-    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
-    args['maxV'] = [0]
-    rewardCandNum = len(self.rewardSet)
-
-    # now q is a set of policy queries
-    q = []
-    for i in range(len(args['A'])):
-      if i == 0:
-        args['maxV'] = [0] * rewardCandNum
-      else:
-        # find the optimal policy so far that achieves the best on each reward candidate
-        args['maxV'] = []
-        for rewardId in xrange(rewardCandNum):
-          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
-
-      x = lp(**args)
-      """
-      for s in args['S']:
-        for a in args['A']:
-          if x[s, a].primal > 0: print s, a, x[s, a]
-      """
-      q.append(x)
-
-    if self.queryType == QueryType.ACTION:
-      hList = []
-      for s in args['S']:
-        hValue = 0
-        for a in args['A']:
-          # for all possible responses of the action query
-          bins = [0] * 10
-          for pi in q:
-            id = min([int(10 * pi[s, a]), 9])
-            bins[id] += 1
-          hValue += scipy.stats.entropy(bins)
-          #print s, a, bins
-        hList.append((s, hValue))
-
-      hList = sorted(hList, reverse=True, key=lambda _: _[1])
-      #print hList
-      hList = hList[:self.m]
-    else:
-      raise Exception('Query type not implemented for MILP.')
-
-    qList = []
-    for q, h in hList:
-      pi, qValue = self.optimizePolicy(q)
-      qList.append((q, pi, qValue))
-
-    maxQValue = max(map(lambda _:_[2], qList))
-    qList = filter(lambda _: _[2] == maxQValue, qList)
-
-    return random.choice(qList)
 
 if __name__ == '__main__':
   config.VERBOSE = True
