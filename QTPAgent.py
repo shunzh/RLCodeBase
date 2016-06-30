@@ -450,17 +450,31 @@ class MILPAgent(ActiveSamplingAgent):
       hList = []
       for s in args['S']:
         hValue = 0
+
+        possiblePsis = self.getPossiblePhiAndProbs(s)
+        possiblePsisProb = {a: prob for (a, prob) in possiblePsis}
+        # for all possible responses of the action query
         for a in args['A']:
-          # for all possible responses of the action query
-          bins = [0] * 10
-          for pi in q:
-            id = min([int(10 * pi[s, a]), 9])
-            bins[id] += 1
-          hValue += scipy.stats.entropy(bins)
-          #print s, a, bins
+          # a could be an impossible response
+          if not a in possiblePsisProb.keys(): continue
+          # probability of s -> a
+          prob = possiblePsisProb[a]
+
+          # entropy of q_pi | s -> a
+          postPsi = self.responseToPhi[(s, a)]
+          r = self.getRewardFunc(postPsi)
+
+          piValues = {idx: computeValue(q[idx], r, args['S'], args['A']) for idx in xrange(len(q))}
+          maxValue = max(piValues.values())
+          bins = [1 if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
+
+          hValue += prob * scipy.stats.entropy(bins)
+          print s, a, bins
+
         hList.append((s, hValue))
 
-      hList = sorted(hList, reverse=True, key=lambda _: _[1])
+      # sort them nondecreasingly
+      hList = sorted(hList, key=lambda _: _[1])
       #print hList
       hList = hList[:self.m]
     else:
