@@ -33,7 +33,7 @@ def lp(S, A, r, T, s0):
   obj = m.minimize(v[s0])
   ret = util.Counter()
   for s in Sr:
-    ret[s] = m[v][s]
+    ret[S[s]] = m[v][s]
   return ret
 
 def milp(S, A, R, T, s0, psi, maxV):
