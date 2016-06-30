@@ -9,7 +9,7 @@ from copy import deepcopy
 import scipy.stats
 import operator
 import easyDomains
-from lp import computeValue, milp, lp
+from lp import computeValue, milp, lp, lpDual
 from valueIterationAgents import ValueIterationAgent
 
 class LPAgent(ValueIterationAgent):
@@ -30,9 +30,35 @@ class LPAgent(ValueIterationAgent):
   def getValue(self, state, t=0):
     return self.v[state]
 
+class LPDualAgent(ValueIterationAgent):
+  def learn(self):
+    args = {}
+    args['S'] = self.mdp.getStates()
+    args['A'] = self.mdp.getPossibleActions(self.mdp.state) # assume state actions are available for all states
+    def transition(s, a, sp):
+      trans = self.mdp.getTransitionStatesAndProbs(s, a)
+      trans = filter(lambda (state, prob): state == sp, trans)
+      if len(trans) > 0: return trans[0][1]
+      else: return 0
+    args['T'] = transition
+    args['r'] = self.mdp.getReward
+    args['s0'] = self.mdp.state
+    self.opt, self.x = lpDual(**args)
+  
+  def getValue(self, state, t=0):
+    if state == self.mdp.state:
+      return self.opt
+    else:
+      raise Exception("getValue for arbitrary state is undefined " + str(state))
 
-#LearningAgent = ValueIterationAgent
-LearningAgent = LPAgent
+  def getPolicies(self, state, t=0):
+    actions = self.mdp.getPossibleActions(state)
+    maxProb = max(self.x[state, a] for a in actions)
+    return filter(lambda a: self.x[state, a] == maxProb, actions)
+
+LearningAgent = ValueIterationAgent
+#LearningAgent = LPAgent
+#LearningAgent = LPDualAgent
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
@@ -300,9 +326,10 @@ class QTPAgent:
 class JointQTPAgent(QTPAgent):
   def learn(self):
     qList = []
-
+    
     for q in self.cmp.queries:
       pi, qValue = self.optimizePolicy(q)
+
       if config.PRINT == 'qs': print qValue
       if config.VERBOSE: print q, qValue
       qList.append((q, pi, qValue))

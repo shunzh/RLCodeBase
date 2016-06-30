@@ -1,6 +1,5 @@
 from cmp import ControlledMarkovProcess
 import util
-import pprint
 
 class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):

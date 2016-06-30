@@ -7,8 +7,8 @@ import tabularNavigationExp
 import random
 
 if __name__ == '__main__':
-  width = 5
-  height = 5
+  width = 20
+  height = 20
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1
@@ -28,8 +28,8 @@ if __name__ == '__main__':
   Domain = TabularNavigation
   
   if rockType == 'corner':
-    rewardCandNum = 3
-    rocks = [(0, height - 1), (width / 2, height - 1), (width - 1, height - 1)]
+    rewardCandNum = 2
+    rocks = [(0, height - 1), (width - 1, 0)]
   elif rockType == 'default':
     rewardCandNum = 10
     rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(rewardCandNum)]

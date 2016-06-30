@@ -36,6 +36,31 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
+def lpDual(S, A, r, T, s0):
+  """
+  Solve the dual problem of lp
+  Same arguments
+  """
+  m = CPlexModel()
+  if not config.VERBOSE: m.setVerbosity(0)
+
+  # useful constants
+  Sr = range(len(S))
+  Ar = range(len(A))
+ 
+  x = m.new((len(S), len(A)), lb=0, ub=1, name='x')
+
+  for sp in Sr:
+    if S[sp] == s0:
+      m.constrain(sum([x[sp, ap] for ap in Ar]) == 1)
+    else:
+      m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
+  
+  # obj
+  obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
+  return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
+
+
 def milp(S, A, R, T, s0, psi, maxV):
   """
   Solve the MILP problem in greedy construction of policy query
