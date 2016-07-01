@@ -72,6 +72,8 @@ class QTPAgent:
     self.phi = initialPhi
     self.queryType = queryType
 
+    self.qResProb = util.Counter()
+
     self.clusterDistance = clusterDistance
     self.rewardClusters = util.Counter()
     
@@ -153,6 +155,7 @@ class QTPAgent:
     responseTime = self.cmp.getResponseTime()
     # belief -> prob dict
     distr = util.Counter()
+    resProbDict = util.Counter()
 
     if self.queryType == QueryType.ACTION:
       resSet = actions
@@ -178,6 +181,7 @@ class QTPAgent:
       for idx in range(self.rewardSetSize):
         if consistCond(res, idx):
           resProb += phi[idx]
+      resProbDict[res] = resProb
       
       # given that this response is observed, compute the next phi
       for idx in range(self.rewardSetSize):
@@ -187,9 +191,10 @@ class QTPAgent:
       # normalize phi, only record possible phis
       if sum(phi) != 0:
         phi = [x / sum(phi) for x in phi]
-        distr[tuple(phi)] = resProb
+        distr[tuple(phi)] += resProb
         self.responseToPhi[(query, res)] = tuple(phi)
     
+    self.qResProb[query] = {k: v/sum(resProbDict.values()) for k, v in resProbDict.items()}
     return map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
 
   def getQValue(self, state, policy, query):
@@ -424,7 +429,6 @@ class ActiveSamplingAgent(HeuristicAgent):
 class MILPAgent(ActiveSamplingAgent):
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
-    args['maxV'] = [0]
     rewardCandNum = len(self.rewardSet)
 
     # now q is a set of policy queries
@@ -451,14 +455,12 @@ class MILPAgent(ActiveSamplingAgent):
       for s in args['S']:
         hValue = 0
 
-        possiblePsis = self.getPossiblePhiAndProbs(s)
-        possiblePsisProb = {a: prob for (a, prob) in possiblePsis}
+        self.getPossiblePhiAndProbs(s) # this initializes qResProb[s]
+        resProb = self.qResProb[s]
         # for all possible responses of the action query
         for a in args['A']:
-          # a could be an impossible response
-          if not a in possiblePsisProb.keys(): continue
           # probability of s -> a
-          prob = possiblePsisProb[a]
+          prob = resProb[a]
 
           # entropy of q_pi | s -> a
           postPsi = self.responseToPhi[(s, a)]
