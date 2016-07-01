@@ -72,8 +72,6 @@ class QTPAgent:
     self.phi = initialPhi
     self.queryType = queryType
 
-    self.qResProb = util.Counter()
-
     self.clusterDistance = clusterDistance
     self.rewardClusters = util.Counter()
     
@@ -155,7 +153,6 @@ class QTPAgent:
     responseTime = self.cmp.getResponseTime()
     # belief -> prob dict
     distr = util.Counter()
-    resProbDict = util.Counter()
 
     if self.queryType == QueryType.ACTION:
       resSet = actions
@@ -181,7 +178,6 @@ class QTPAgent:
       for idx in range(self.rewardSetSize):
         if consistCond(res, idx):
           resProb += phi[idx]
-      resProbDict[res] = resProb
       
       # given that this response is observed, compute the next phi
       for idx in range(self.rewardSetSize):
@@ -194,7 +190,6 @@ class QTPAgent:
         distr[tuple(phi)] += resProb
         self.responseToPhi[(query, res)] = tuple(phi)
     
-    self.qResProb[query] = {k: v/sum(resProbDict.values()) for k, v in resProbDict.items()}
     return map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
 
   def getQValue(self, state, policy, query):
@@ -452,26 +447,28 @@ class MILPAgent(ActiveSamplingAgent):
 
     if self.queryType == QueryType.ACTION:
       hList = []
+
+      # what policies in q are optimal for each reward candidate?
+      policyBins = util.Counter()
+      for rewardId in xrange(rewardCandNum):
+        piValues = {idx: computeValue(q[idx], args['R'][rewardId], args['S'], args['A']) for idx in xrange(len(q))}
+        maxValue = max(piValues.values())
+        numMax = sum([1 if piValues[idx] == maxValue else 0 for idx in xrange(len(q))])
+        policyBins[rewardId] = [1.0 / numMax if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
+
       for s in args['S']:
         hValue = 0
-
-        self.getPossiblePhiAndProbs(s) # this initializes qResProb[s]
-        resProb = self.qResProb[s]
-        # for all possible responses of the action query
         for a in args['A']:
-          # probability of s -> a
-          prob = resProb[a]
+          resProb = 0
+          bins = [0] * len(q)
+          for idx in xrange(rewardCandNum):
+            if a in self.viAgentSet[idx].getPolicies(s):
+              # increase the probability of observing this 
+              resProb += self.phi[idx]
+              # put opt policies into bins
+              bins = [sum(_) for _ in zip(bins, policyBins[idx])]
 
-          # entropy of q_pi | s -> a
-          postPsi = self.responseToPhi[(s, a)]
-          r = self.getRewardFunc(postPsi)
-
-          piValues = {idx: computeValue(q[idx], r, args['S'], args['A']) for idx in xrange(len(q))}
-          maxValue = max(piValues.values())
-          bins = [1 if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
-
-          hValue += prob * scipy.stats.entropy(bins)
-          print s, a, bins
+          hValue += resProb * scipy.stats.entropy(bins)
 
         hList.append((s, hValue))
 
