@@ -1,4 +1,4 @@
-for i in `seq 0 9`
+for i in `seq 0 19`
 do
   python rockSampleExp.py -r $i
   python rockSampleExp.py -r $i -a RQ
