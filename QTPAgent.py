@@ -9,8 +9,10 @@ from copy import deepcopy
 import scipy.stats
 import operator
 import easyDomains
-from lp import computeValue, milp, lp, lpDual
 from valueIterationAgents import ValueIterationAgent
+try:
+  from lp import computeValue, milp, lp, lpDual
+except ImportError: print "lp import error"
 
 class LPAgent(ValueIterationAgent):
   def learn(self):
