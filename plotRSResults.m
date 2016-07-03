@@ -36,7 +36,7 @@ function main()
   plot(x, ones(1, len) * rq(2), 'o-');
   legend('Exhaustive', 'Query Projection', 'Active Sampling', 'Random Query');
   xlabel('# of Queries to Compute EVOI');
-  ylabel('Computation Time');
+  ylabel('Computation Time (sec.)');
 end
 
 function [m, ci] = process(data)
