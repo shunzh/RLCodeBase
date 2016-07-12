@@ -5,7 +5,7 @@ import numpy as np
 # possible type of queries
 # TODO some are not implemented
 class QueryType:
-  ACTION, REWARD, REWARD_SIGN, PREFERENCE, NONE = range(5)
+  ACTION, REWARD, REWARD_SIGN, POLICY, PREFERENCE, NONE = range(6)
   
 class ControlledMarkovProcess(MarkovDecisionProcess):
   def __init__(self, queries, trueReward, gamma, responseTimes, horizon=np.inf, terminalReward=None):

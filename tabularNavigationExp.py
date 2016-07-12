@@ -63,13 +63,16 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
   else:
+    queries = [(x, y) for x in xrange(width) for y in xrange(height)]
     if queryFlag == 'default':
       # use potential reward locations as query set
-      queries = [(x, y) for x in xrange(width) for y in xrange(height)]
       queryType = QueryType.ACTION
     elif queryFlag == 'reward':
-      queries = [(x, y) for x in xrange(width) for y in xrange(height)]
       queryType = QueryType.REWARD_SIGN
+    elif queryFlag == 'prefer':
+      queryType = QueryType.PREFERENCE
+    elif queryFlag == 'policy':
+      queryType = QueryType.POLICY
     else:
       raise Exception('unknown query flag ' + queryFlag)
   if config.VERBOSE:
@@ -107,7 +110,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   elif agentName == "AS":
     agent = ActiveSamplingAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP":
-    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=False)
   else:
     raise Exception("Unknown Agent " + agentName)
 

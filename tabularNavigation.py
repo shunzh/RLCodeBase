@@ -18,7 +18,7 @@ class TabularNavigation(ControlledMarkovProcess):
   def getStates(self):
     return [(x, y) for x in xrange(self.width) for y in xrange(self.height)]
   
-  def getPossibleActions(self, state):
+  def getPossibleActions(self, state=None):
     # actions are coordinate diff
     return [(1, 0), (0, 1)]
 

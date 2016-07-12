@@ -10,6 +10,7 @@ import scipy.stats
 import operator
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
+import time
 try:
   from lp import computeValue, milp, lp, lpDual
 except ImportError: print "lp import error"
@@ -90,12 +91,14 @@ class QTPAgent:
     self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
 
-    for idx in range(self.rewardSetSize):
-      phi = [0] * self.rewardSetSize
-      phi[idx] = 1
-      
-      if horizon == numpy.inf: self.viAgentSet[idx] = self.getVIAgent(phi)
-      else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward)
+    if self.queryType == QueryType.ACTION:
+      # find optimal policies for action queries
+      for idx in range(self.rewardSetSize):
+        phi = [0] * self.rewardSetSize
+        phi[idx] = 1
+        
+        if horizon == numpy.inf: self.viAgentSet[idx] = self.getVIAgent(phi)
+        else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward)
 
   def getRewardFunc(self, phi):
     """
@@ -158,6 +161,20 @@ class QTPAgent:
 
     if self.queryType == QueryType.ACTION:
       resSet = actions
+      consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query, responseTime)
+    elif self.queryType == QueryType.POLICY:
+      # query itself is a set of policies
+      resSet = query
+      # consistent if the true reward has the largest value on this policy
+      def consistCond(res, idx):
+        piValues = {pi: computeValue(pi,\
+                                     self.getRewardFun(idx),\
+                                     self.cmp.getStates(),\
+                                     self.cmp.getPossibleActions())\
+                    for pi in query}
+        maxValue = max(piValues.values())
+        optPis = filter(lambda pi: piValues[pi] == maxValue, query)
+        return res in optPis
       consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query, responseTime)
     elif self.queryType == QueryType.REWARD_SIGN:
       resSet = [-1, 0, 1]
@@ -383,9 +400,8 @@ class HeuristicAgent(QTPAgent):
 
 
 class ActiveSamplingAgent(HeuristicAgent):
-  def __init__(self, cmp, rewardSet, initialPhi, queryType,
-               gamma, clusterDistance=0):
-    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, clusterDistance)
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma):
+    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
     self.m = config.para
 
@@ -423,14 +439,32 @@ class ActiveSamplingAgent(HeuristicAgent):
     return random.choice(qList)
 
 
+class OptimalPolicyQueryAgent(QTPAgent):
+  def learn(self):
+    # find all possible policies
+    pass
+
+
 class MILPAgent(ActiveSamplingAgent):
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=False):
+    ActiveSamplingAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
+    # do query iteration?
+    self.qi = qi
+
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     rewardCandNum = len(self.rewardSet)
 
+    if self.queryType == QueryType.ACTION:
+      k = len(args['A'])
+    elif self.queryType == QueryType.PREFERENCE:
+      k = 3
+    else:
+      raise Exception("query type not implemented")
+
     # now q is a set of policy queries
     q = []
-    for i in range(len(args['A'])):
+    for i in range(k):
       if i == 0:
         args['maxV'] = [0] * rewardCandNum
       else:
@@ -446,8 +480,17 @@ class MILPAgent(ActiveSamplingAgent):
           if x[s, a].primal > 0: print s, a, x[s, a]
       """
       q.append(x)
+    
+    if self.qi:
+      # query iteration
+      for x in q:
+        # compute the reward candidates that it dominates
 
-    if self.queryType == QueryType.ACTION:
+
+    if self.queryType == QueryType.POLICY:
+      # if asking policies directly, then return q
+      return q
+    elif self.queryType == QueryType.ACTION:
       hList = []
 
       # what policies in q are optimal for each reward candidate?
@@ -478,6 +521,11 @@ class MILPAgent(ActiveSamplingAgent):
       hList = sorted(hList, key=lambda _: _[1])
       #print hList
       hList = hList[:self.m]
+    elif self.queryType == QueryType.PREFERENCE:
+      for s in args['S']:
+        for a in args['A']:
+          xList = [x[s, a] for x in q]
+          print xList.index(max(xList))
     else:
       raise Exception('Query type not implemented for MILP.')
 
