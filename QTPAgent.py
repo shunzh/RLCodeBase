@@ -470,7 +470,6 @@ class MILPAgent(ActiveSamplingAgent):
 
     # now q is a set of policy queries
     q = []
-    dominance = [0] * rewardCandNum
     for i in range(k):
       if i == 0:
         args['maxV'] = [0] * rewardCandNum
@@ -487,22 +486,22 @@ class MILPAgent(ActiveSamplingAgent):
           if x[s, a].primal > 0: print s, a, x[s, a]
       """
       q.append(x)
-      
-      for idx in xrange(rewardCandNum):
-        # dominance[idx] == i if i dominates the idx-th reward candidate
-        if z[idx] == 1: dominance[idx] = i
         
+    # query iteration
     if self.qi:
-      # query iteration
+      # compute dominance
+      dominance = []
+
+      # one iteration
       newQ = []
+      
       for i in range(k):
-        psi = map(lambda _: 1 if _ == i else 0, dominance)
-        viAgent = self.getFiniteVIAgent(psi, horizon - responseTime, terminalReward, posterior=True)
-        x = util.Counter()
-        for s in self.cmp.getStates():
-          a = viAgent.getPolicy(s)
-          x[(s, a)] = 1
-        newQ.append(x)
+        psi = []
+        # agent here must solve the optimal occupancy
+        agent = self.getFiniteVIAgent(psi, horizon - responseTime, terminalReward, posterior=True)
+        newQ.append(agent.x)
+
+      # compute new eus
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
