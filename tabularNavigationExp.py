@@ -110,7 +110,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   elif agentName == "AS":
     agent = ActiveSamplingAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP":
-    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=False)
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
   else:
     raise Exception("Unknown Agent " + agentName)
 

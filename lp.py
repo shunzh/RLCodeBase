@@ -110,7 +110,17 @@ def milp(S, A, R, T, s0, psi, maxV):
   
   # build occupancy as S x A -> x[.,.]
   # z[i] == 1 then this policy is better than maxV on the i-th reward candidate
-  return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}, m[z]
+  return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}, obj
+
+def computeObj(q, psi, S, A, R):
+  rLen = len(R)
+  obj = 0
+
+  for i in xrange(rLen):
+    values = [computeValue(pi, R[i], S, A) for pi in q]
+    obj += psi[i] * max(values)
+  
+  return obj
 
 def computeValue(pi, r, S, A):
   sum = 0

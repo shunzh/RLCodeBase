@@ -10,6 +10,7 @@ import scipy.stats
 import operator
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
+from lp import computeObj
 try:
   from lp import computeValue, milp, lp, lpDual
 except ImportError: print "lp import error"
@@ -58,9 +59,9 @@ class LPDualAgent(ValueIterationAgent):
     maxProb = max(self.x[state, a] for a in actions)
     return filter(lambda a: self.x[state, a] == maxProb, actions)
 
-LearningAgent = ValueIterationAgent
+#LearningAgent = ValueIterationAgent
 #LearningAgent = LPAgent
-#LearningAgent = LPDualAgent
+LearningAgent = LPDualAgent
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
@@ -453,6 +454,37 @@ class MILPAgent(ActiveSamplingAgent):
     # do query iteration?
     self.qi = qi
 
+  @staticmethod
+  def computeDominatingPisInRewards(args, q):
+    """
+    args, q: from context in learn
+    policyBins[idx][i] == 1 iff i-th policy dominates reward idx
+    """
+    policyBins = util.Counter()
+    rewardCandNum = len(args['R'])
+    for rewardId in xrange(rewardCandNum):
+      piValues = {idx: computeValue(q[idx], args['R'][rewardId], args['S'], args['A']) for idx in xrange(len(q))}
+      maxValue = max(piValues.values())
+      numMax = sum([1 if piValues[idx] == maxValue else 0 for idx in xrange(len(q))])
+      policyBins[rewardId] = [1.0 / numMax if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
+    return policyBins
+  
+  @staticmethod
+  def computeDominatingPisInResponses(args, q):
+    """
+    args, q: from context in learn
+    policyBins[idx][i] == 1 iff i-th policy dominates response idx
+    """
+    policyBins = util.Counter()
+    k = len(q)
+    rewardCandNum = len(args['R'])
+    for idx in xrange(k):
+      piValues = {rewardId: computeValue(q[idx], args['R'][rewardId], args['S'], args['A']) for rewardId in xrange(rewardCandNum)}
+      maxValue = max(piValues.values())
+      numMax = sum([1 if piValues[rewardId] == maxValue else 0 for rewardId in xrange(rewardCandNum)])
+      policyBins[idx] = [1.0 / numMax if piValues[rewardId] == maxValue else 0 for rewardId in xrange(rewardCandNum)]
+    return policyBins
+
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     rewardCandNum = len(self.rewardSet)
@@ -479,7 +511,7 @@ class MILPAgent(ActiveSamplingAgent):
         for rewardId in xrange(rewardCandNum):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
-      x, z = milp(**args)
+      x, objValue = milp(**args)
       """
       for s in args['S']:
         for a in args['A']:
@@ -489,33 +521,29 @@ class MILPAgent(ActiveSamplingAgent):
         
     # query iteration
     if self.qi:
-      # compute dominance
-      dominance = []
+      while True:
+        # compute dominance
+        policyBins = self.computeDominatingPisInResponses(args, q)
 
-      # one iteration
-      newQ = []
-      
-      for i in range(k):
-        psi = []
-        # agent here must solve the optimal occupancy
-        agent = self.getFiniteVIAgent(psi, horizon - responseTime, terminalReward, posterior=True)
-        newQ.append(agent.x)
+        # one iteration
+        newQ = []
+        for i in range(k):
+          # agent here must solve the optimal occupancy
+          agent = self.getFiniteVIAgent(policyBins[i], horizon - responseTime, terminalReward, posterior=True)
+          newQ.append(agent.x)
 
-      # compute new eus
+        # compute new eus
+        newObjValue = computeObj(q, self.phi, args['S'], args['A'], args['R'])
+        if newObjValue == objValue: break
+        else: objValue = newObjValue
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
       return q
     elif self.queryType == QueryType.ACTION:
       hList = []
-
-      # what policies in q are optimal for each reward candidate?
-      policyBins = util.Counter()
-      for rewardId in xrange(rewardCandNum):
-        piValues = {idx: computeValue(q[idx], args['R'][rewardId], args['S'], args['A']) for idx in xrange(len(q))}
-        maxValue = max(piValues.values())
-        numMax = sum([1 if piValues[idx] == maxValue else 0 for idx in xrange(len(q))])
-        policyBins[rewardId] = [1.0 / numMax if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
+      
+      policyBins = self.computeDominatingPisInRewards(args, q)
 
       for s in args['S']:
         hValue = 0
