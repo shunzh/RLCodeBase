@@ -220,7 +220,8 @@ class QTPAgent:
     responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
     terminalReward = self.cmp.terminalReward
-    vBeforeResponse = self.getValue(state, self.phi, policy, responseTime)
+    if responseTime == 0: vBeforeResponse = 0
+    else: vBeforeResponse = self.getValue(state, self.phi, policy, responseTime)
     
     possiblePhis = self.getPossiblePhiAndProbs(query)
     possibleStatesAndProbs = getMultipleTransitionDistr(self.cmp, state, policy, responseTime)
@@ -512,11 +513,6 @@ class MILPAgent(ActiveSamplingAgent):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
       x, objValue = milp(**args)
-      """
-      for s in args['S']:
-        for a in args['A']:
-          if x[s, a].primal > 0: print s, a, x[s, a]
-      """
       q.append(x)
         
     # query iteration
@@ -575,8 +571,8 @@ class MILPAgent(ActiveSamplingAgent):
 
     qList = []
     for q, h in hList:
-      pi, qValue = self.optimizePolicy(q)
-      qList.append((q, pi, qValue))
+      qValue = self.getQValue(self.cmp.state, None, q)
+      qList.append((q, None, qValue))
 
     maxQValue = max(map(lambda _:_[2], qList))
     qList = filter(lambda _: _[2] == maxQValue, qList)
