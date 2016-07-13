@@ -89,8 +89,8 @@ def milp(S, A, R, T, s0, psi, maxV):
   y = m.new(rLen, name='y')
 
   # constraints on y
-  m.constrain([y[i] <= sum([x[s, a] * R[i](S[s], A[a]) for s in Sr for a in Ar]) - maxV[i] + z[i] * M for i in xrange(rLen)])
-  m.constrain([y[i] <= (1 - z[i]) * M for i in xrange(rLen)])
+  m.constrain([y[i] <= sum([x[s, a] * R[i](S[s], A[a]) for s in Sr for a in Ar]) - maxV[i] + (1 - z[i]) * M for i in xrange(rLen)])
+  m.constrain([y[i] <= z[i] * M for i in xrange(rLen)])
   
   # constraints on x (valid occupancy)
   for sp in Sr:
@@ -109,7 +109,8 @@ def milp(S, A, R, T, s0, psi, maxV):
     print 'z', m[z]
   
   # build occupancy as S x A -> x[.,.]
-  return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
+  # z[i] == 1 then this policy is better than maxV on the i-th reward candidate
+  return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}, m[z]
 
 def computeValue(pi, r, S, A):
   sum = 0

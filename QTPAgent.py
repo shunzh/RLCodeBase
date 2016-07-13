@@ -10,7 +10,6 @@ import scipy.stats
 import operator
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
-import time
 try:
   from lp import computeValue, milp, lp, lpDual
 except ImportError: print "lp import error"
@@ -447,6 +446,9 @@ class OptimalPolicyQueryAgent(QTPAgent):
 
 class MILPAgent(ActiveSamplingAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=False):
+    """
+    qi: query iteration
+    """
     ActiveSamplingAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     # do query iteration?
     self.qi = qi
@@ -454,6 +456,10 @@ class MILPAgent(ActiveSamplingAgent):
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     rewardCandNum = len(self.rewardSet)
+
+    responseTime = self.cmp.getResponseTime()
+    horizon = self.cmp.horizon
+    terminalReward = self.cmp.terminalReward
 
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
@@ -464,6 +470,7 @@ class MILPAgent(ActiveSamplingAgent):
 
     # now q is a set of policy queries
     q = []
+    dominance = [0] * rewardCandNum
     for i in range(k):
       if i == 0:
         args['maxV'] = [0] * rewardCandNum
@@ -473,19 +480,29 @@ class MILPAgent(ActiveSamplingAgent):
         for rewardId in xrange(rewardCandNum):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
-      x = milp(**args)
+      x, z = milp(**args)
       """
       for s in args['S']:
         for a in args['A']:
           if x[s, a].primal > 0: print s, a, x[s, a]
       """
       q.append(x)
-    
+      
+      for idx in xrange(rewardCandNum):
+        # dominance[idx] == i if i dominates the idx-th reward candidate
+        if z[idx] == 1: dominance[idx] = i
+        
     if self.qi:
       # query iteration
-      for x in q:
-        # compute the reward candidates that it dominates
-
+      newQ = []
+      for i in range(k):
+        psi = map(lambda _: 1 if _ == i else 0, dominance)
+        viAgent = self.getFiniteVIAgent(psi, horizon - responseTime, terminalReward, posterior=True)
+        x = util.Counter()
+        for s in self.cmp.getStates():
+          a = viAgent.getPolicy(s)
+          x[(s, a)] = 1
+        newQ.append(x)
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
