@@ -1,5 +1,6 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
-  PriorTPAgent, HeuristicAgent, ActiveSamplingAgent, MILPAgent
+  PriorTPAgent, HeuristicAgent, ActiveSamplingAgent, MILPAgent,\
+  OptimalPolicyQueryAgent
 import CMPExp
 import util
 import sys
@@ -111,6 +112,9 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
     agent = ActiveSamplingAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP":
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
+  elif agentName == "OPT-POLICY":
+    agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+    queryType = QueryType.POLICY
   else:
     raise Exception("Unknown Agent " + agentName)
 

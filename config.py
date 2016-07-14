@@ -9,3 +9,5 @@ PRINT = 'perf'
 
 # multipurpose
 para = 1
+
+NUMBER_OF_RESPONSES = 2

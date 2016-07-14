@@ -348,11 +348,13 @@ class JointQTPAgent(QTPAgent):
     qList = []
     
     for q in self.cmp.queries:
-      pi, qValue = self.optimizePolicy(q)
+      # FIXME forget about transient phase
+      #pi, qValue = self.optimizePolicy(q)
+      qValue = self.getQValue(self.cmp.state, None, q)
 
       if config.PRINT == 'qs': print qValue
       if config.VERBOSE: print q, qValue
-      qList.append((q, pi, qValue))
+      qList.append((q, None, qValue))
     
     maxQValue = max(map(lambda _:_[2], qList))
     qList = filter(lambda _: _[2] == maxQValue, qList)
@@ -441,9 +443,40 @@ class ActiveSamplingAgent(HeuristicAgent):
 
 
 class OptimalPolicyQueryAgent(QTPAgent):
+  """
+  A brute force algorithm that checks all possible partitions of reward candidates.
+  Don't worry about its computation time :)
+  """
   def learn(self):
-    # find all possible policies
-    pass
+    k = config.NUMBER_OF_RESPONSES
+    responseTime = self.cmp.getResponseTime()
+    horizon = self.cmp.horizon
+    terminalReward = self.cmp.terminalReward
+    # FIXME let's overfit k=2
+    from itertools import combinations
+
+    rewardCandNum = len(self.rewardSet)
+    maxObjValue = 0
+    optQ = None
+    
+    policies = []
+    for i in xrange(rewardCandNum + 1):
+      for l in combinations(range(rewardCandNum), i):
+        l = [self.phi[i] if i in l else 0 for i in range(rewardCandNum)]
+        if sum(l) > 0: l = map(lambda _: _ / sum(l), l)
+        if config.VERBOSE: print l
+        agent = self.getFiniteVIAgent(l, horizon - responseTime, terminalReward, posterior=True)
+        policies.append(agent.x)
+    
+    for q in combinations(policies, k):
+      objValue = computeObj(q, self.phi,\
+                            self.cmp.getStates(),\
+                            self.cmp.getPossibleActions(),\
+                            self.rewardSet)
+      if objValue > maxObjValue:
+        maxObjValue = objValue
+        optQ = q
+    return (optQ, None, maxObjValue)
 
 
 class MILPAgent(ActiveSamplingAgent):
@@ -496,8 +529,8 @@ class MILPAgent(ActiveSamplingAgent):
 
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
-    elif self.queryType == QueryType.PREFERENCE:
-      k = 3
+    elif self.queryType in [QueryType.PREFERENCE, QueryType.POLICY]:
+      k = config.NUMBER_OF_RESPONSES
     else:
       raise Exception("query type not implemented")
 
@@ -512,9 +545,10 @@ class MILPAgent(ActiveSamplingAgent):
         for rewardId in xrange(rewardCandNum):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
-      x, objValue = milp(**args)
+      x = milp(**args)
       q.append(x)
         
+    objValue = computeObj(q, self.phi, args['S'], args['A'], args['R'])
     # query iteration
     if self.qi:
       while True:
@@ -535,7 +569,7 @@ class MILPAgent(ActiveSamplingAgent):
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
-      return q
+      return (q, None, objValue)
     elif self.queryType == QueryType.ACTION:
       hList = []
       
