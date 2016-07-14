@@ -433,8 +433,9 @@ class ActiveSamplingAgent(HeuristicAgent):
     
     qList = []
     for q, h in hList:
-      pi, qValue = self.optimizePolicy(q)
-      qList.append((q, pi, qValue))
+      # FIXME ignore transient phase
+      qValue = self.getQValue(self.cmp.state, None, q)
+      qList.append((q, None, qValue))
 
     maxQValue = max(map(lambda _:_[2], qList))
     qList = filter(lambda _: _[2] == maxQValue, qList)
@@ -489,7 +490,7 @@ class MILPAgent(ActiveSamplingAgent):
     self.qi = qi
 
   @staticmethod
-  def computeDominatingPisInRewards(args, q):
+  def computeDominatingPis(args, q):
     """
     args, q: from context in learn
     policyBins[idx][i] == 1 iff i-th policy dominates reward idx
@@ -503,22 +504,6 @@ class MILPAgent(ActiveSamplingAgent):
       policyBins[rewardId] = [1.0 / numMax if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
     return policyBins
   
-  @staticmethod
-  def computeDominatingPisInResponses(args, q):
-    """
-    args, q: from context in learn
-    policyBins[idx][i] == 1 iff i-th policy dominates response idx
-    """
-    policyBins = util.Counter()
-    k = len(q)
-    rewardCandNum = len(args['R'])
-    for idx in xrange(k):
-      piValues = {rewardId: computeValue(q[idx], args['R'][rewardId], args['S'], args['A']) for rewardId in xrange(rewardCandNum)}
-      maxValue = max(piValues.values())
-      numMax = sum([1 if piValues[rewardId] == maxValue else 0 for rewardId in xrange(rewardCandNum)])
-      policyBins[idx] = [1.0 / numMax if piValues[rewardId] == maxValue else 0 for rewardId in xrange(rewardCandNum)]
-    return policyBins
-
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     rewardCandNum = len(self.rewardSet)
@@ -550,20 +535,24 @@ class MILPAgent(ActiveSamplingAgent):
         
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R'])
     # query iteration
+    # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
     if self.qi:
       while True:
         # compute dominance
-        policyBins = self.computeDominatingPisInResponses(args, q)
+        policyBins = self.computeDominatingPis(args, q)
 
         # one iteration
         newQ = []
         for i in range(k):
-          # agent here must solve the optimal occupancy
-          agent = self.getFiniteVIAgent(policyBins[i], horizon - responseTime, terminalReward, posterior=True)
+          # which reward candidates the i-th policy dominates?
+          # psi is not normalized, which is fine, since we only needs the optimizing policy
+          psi = [self.phi[idx] if policyBins[idx][i] == 1 else 0 for idx in xrange(rewardCandNum)]
+          agent = self.getFiniteVIAgent(psi, horizon - responseTime, terminalReward, posterior=True)
           newQ.append(agent.x)
 
         # compute new eus
-        newObjValue = computeObj(q, self.phi, args['S'], args['A'], args['R'])
+        newObjValue = computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
+        assert newObjValue >= objValue
         if newObjValue == objValue: break
         else: objValue = newObjValue
 
@@ -573,7 +562,7 @@ class MILPAgent(ActiveSamplingAgent):
     elif self.queryType == QueryType.ACTION:
       hList = []
       
-      policyBins = self.computeDominatingPisInRewards(args, q)
+      policyBins = self.computeDominatingPis(args, q)
 
       for s in args['S']:
         hValue = 0
@@ -595,16 +584,12 @@ class MILPAgent(ActiveSamplingAgent):
       hList = sorted(hList, key=lambda _: _[1])
       #print hList
       hList = hList[:self.m]
-    elif self.queryType == QueryType.PREFERENCE:
-      for s in args['S']:
-        for a in args['A']:
-          xList = [x[s, a] for x in q]
-          print xList.index(max(xList))
     else:
       raise Exception('Query type not implemented for MILP.')
 
     qList = []
     for q, h in hList:
+      # FIXME ignore transient phase
       qValue = self.getQValue(self.cmp.state, None, q)
       qList.append((q, None, qValue))
 
@@ -658,8 +643,9 @@ class AlternatingQTPAgent(QTPAgent):
 class RandomQueryAgent(QTPAgent):
   def learn(self):
     q = random.choice(self.cmp.queries)
-    pi, qValue = self.optimizePolicy(q)
-    return q, pi, qValue
+    # FIXME ignore transient phase
+    qValue = self.getQValue(self.cmp.state, None, q)
+    return q, None, qValue
 
 
 class PriorTPAgent(QTPAgent):

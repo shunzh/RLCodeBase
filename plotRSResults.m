@@ -2,22 +2,28 @@ function main()
   load RQ1.out;
   load JQTP1.out;
   load AS1.out;
-  load AS3.out;
-  load AS5.out;
   load MILP1.out;
-  load MILP3.out;
-  load MILP5.out;
+  load MILP-POLICY1.out;
+  load MILP-QI1.out;
+  load MILP-QI-POLICY1.out;
+  load OPT-POLICY1.out;
 
-  x = [1, 3, 5];
+  keyboard
+
   len = 3;
-  rq = mean(RQ1)
+  op = mean(OPT_POLICY1)
   e = mean(JQTP1)
-  as = mean(AS1)
-  as3 = mean(AS3)
-  as5 = mean(AS5)
+  piqi = mean(MILP_QI_POLICY1)
+  pi = mean(MILP_POLICY1)
+  milpqi = mean(MILP_QI1)
   milp = mean(MILP1)
-  milp3 = mean(MILP3)
-  milp5 = mean(MILP5)
+  as = mean(AS1)
+  rq = mean(RQ1)
+
+  %as3 = mean(AS3)
+  %as5 = mean(AS5)
+  %milp3 = mean(MILP3)
+  %milp5 = mean(MILP5)
 
   plot(x, ones(1, len) * e(1), '*-');
   hold on;

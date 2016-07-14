@@ -111,10 +111,18 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   elif agentName == "AS":
     agent = ActiveSamplingAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP":
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP-QI":
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
+  elif agentName == "MILP-POLICY":
+    queryType = QueryType.POLICY
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP-QI-POLICY":
+    queryType = QueryType.POLICY
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
   elif agentName == "OPT-POLICY":
-    agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
     queryType = QueryType.POLICY
+    agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 
