@@ -8,8 +8,6 @@ function main()
   load MILP-QI-POLICY1.out;
   load OPT-POLICY1.out;
 
-  keyboard
-
   len = 3;
   op = mean(OPT_POLICY1)
   e = mean(JQTP1)
@@ -19,6 +17,8 @@ function main()
   milp = mean(MILP1)
   as = mean(AS1)
   rq = mean(RQ1)
+
+  keyboard
 
   %as3 = mean(AS3)
   %as5 = mean(AS5)

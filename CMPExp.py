@@ -8,6 +8,7 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   
   # add query type here
   q = [queryType, q]
+  if config.VERBOSE: print 'q', q
  
   # accumulated return
   ret = 0
@@ -24,7 +25,6 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
     
     # query the model in the first time step
     if cmp.timer == 0:
-      if config.VERBOSE: print 'q', q
       cmp.query(q)
   
     # see whether there is any response

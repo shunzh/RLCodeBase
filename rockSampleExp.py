@@ -27,15 +27,6 @@ if __name__ == '__main__':
   
   Domain = TabularNavigation
   
-  if rockType == 'corner':
-    rewardCandNum = 2
-    rocks = [(0, height - 1), (width - 1, 0)]
-  elif rockType == 'default':
-    rewardCandNum = 5
-    rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(10)]
-  else:
-    raise Exception('Unknown rock type')
-
   def rewardGen(rewards, numerical): 
     def rewardFunc(s, a):
       if s in rewards:
@@ -45,9 +36,18 @@ if __name__ == '__main__':
     return rewardFunc
 
   rewardSet = []
-  for candId in xrange(rewardCandNum):
-    # one rock is active at one time
-    rewardSet.append(rewardGen(random.sample(rocks, 3), 1))
+  if rockType == 'corner':
+    rewardCandNum = 3
+    rocks = [(0, height - 2), (width - 2, 0), (width - 2, height - 2)]
+    for candId in xrange(rewardCandNum):
+      rewardSet.append(rewardGen([rocks[candId]], 1))
+  elif rockType == 'default':
+    rewardCandNum = 5
+    rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(10)]
+    for candId in xrange(rewardCandNum):
+      rewardSet.append(rewardGen(random.sample(rocks, 3), 1))
+  else:
+    raise Exception('Unknown rock type')
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 

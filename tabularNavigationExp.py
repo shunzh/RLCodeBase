@@ -76,8 +76,6 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
       queryType = QueryType.POLICY
     else:
       raise Exception('unknown query flag ' + queryFlag)
-  if config.VERBOSE:
-    print "Query type:", queryType
 
   # the true reward function is chosen according to initialPhi
   trueReward = util.sample(initialPhi, rewardSet)
@@ -125,6 +123,9 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
+
+  if config.VERBOSE:
+    print "Query type:", queryType
 
   if agentName == 'WAIT':
     # only simulate the episodes after the response

@@ -5,6 +5,7 @@ class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height
+    self.noise = 0.1
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, queries, trueReward, gamma, responseTime, horizon, terminalReward)
 
@@ -31,10 +32,10 @@ class TabularNavigation(ControlledMarkovProcess):
     elif state[1] == self.height - 1: return [((state[0], state[1] + 1), 1)]
     else:
       possibleNewStates = map(lambda a: (state[0] + a[0], state[1] + a[1]), self.getPossibleActions(state))
-      sap = {s: 0.1 for s in possibleNewStates}
+      sap = {s: self.noise for s in possibleNewStates}
 
       newState = (state[0] + action[0], state[1] + action[1])
-      sap[newState] = 0.9
+      sap[newState] = 1 - self.noise * (len(self.getPossibleActions()) - 1)
 
       return sap.items()
   

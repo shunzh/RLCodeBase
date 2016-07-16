@@ -1,5 +1,6 @@
 for i in `seq 0 19`
 do
+  echo $i
   # optimal policy query
   python rockSampleExp.py -r $i -a OPT-POLICY
   # optimal action query

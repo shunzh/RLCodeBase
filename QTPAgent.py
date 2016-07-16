@@ -175,7 +175,6 @@ class QTPAgent:
         maxValue = max(piValues.values())
         optPis = filter(lambda pi: piValues[pi] == maxValue, query)
         return res in optPis
-      consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query, responseTime)
     elif self.queryType == QueryType.REWARD_SIGN:
       resSet = [-1, 0, 1]
       consistCond = lambda res, idx: numpy.sign(self.rewardSet[idx](query)) == res
@@ -196,12 +195,18 @@ class QTPAgent:
       phi = self.phi[:]
       for idx in range(self.rewardSetSize):
         if consistCond(res, idx):
-          resProb += phi[idx]
+          # if this reward candidate is consistent with multiple responses
+          # then the operator picks one uniformly randomly 
+          numOfConsResponses = sum(1 if consistCond(r, idx) else 0 for r in resSet)
+          resProb += phi[idx] / numOfConsResponses
       
       # given that this response is observed, compute the next phi
       for idx in range(self.rewardSetSize):
         if not consistCond(res, idx):
           phi[idx] = 0
+        else:
+          numOfConsResponses = sum(1 if consistCond(r, idx) else 0 for r in resSet)
+          phi[idx] = phi[idx] / numOfConsResponses
       
       # normalize phi, only record possible phis
       if sum(phi) != 0:
@@ -209,7 +214,8 @@ class QTPAgent:
         distr[tuple(phi)] += resProb
         self.responseToPhi[(query, res)] = tuple(phi)
     
-    return map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
+    l = map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
+    return l
 
   def getQValue(self, state, policy, query):
     """
@@ -234,6 +240,7 @@ class QTPAgent:
       estimatedValue = 0
       for fState, fStateProb in possibleStatesAndProbs:
         estimatedValue += values(fState) * fStateProb
+      #print fPhi, fPhiProb, estimatedValue
       vAfterResponse += fPhiProb * estimatedValue
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
@@ -453,27 +460,30 @@ class OptimalPolicyQueryAgent(QTPAgent):
     responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
     terminalReward = self.cmp.terminalReward
-    # FIXME let's overfit k=2
     from itertools import combinations
 
     rewardCandNum = len(self.rewardSet)
     maxObjValue = 0
     optQ = None
     
-    policies = []
-    for i in xrange(rewardCandNum + 1):
+    policies = util.Counter()
+    for i in xrange(1, rewardCandNum + 1):
       for l in combinations(range(rewardCandNum), i):
         l = [self.phi[i] if i in l else 0 for i in range(rewardCandNum)]
         if sum(l) > 0: l = map(lambda _: _ / sum(l), l)
         if config.VERBOSE: print l
         agent = self.getFiniteVIAgent(l, horizon - responseTime, terminalReward, posterior=True)
-        policies.append(agent.x)
+        policies[tuple(l)] = agent.x
     
-    for q in combinations(policies, k):
+    for subset in combinations(policies.items(), k):
+      q = map(lambda _: _[1], subset)
+      psis = map(lambda _: _[0], subset)
+
       objValue = computeObj(q, self.phi,\
                             self.cmp.getStates(),\
                             self.cmp.getPossibleActions(),\
                             self.rewardSet)
+      #print psis, objValue
       if objValue > maxObjValue:
         maxObjValue = objValue
         optQ = q
