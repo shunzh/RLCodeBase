@@ -562,8 +562,8 @@ class MILPAgent(ActiveSamplingAgent):
 
         # compute new eus
         newObjValue = computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
-        assert newObjValue >= objValue
-        if newObjValue == objValue: break
+        assert newObjValue >= objValue - 0.001
+        if newObjValue <= objValue: break
         else: objValue = newObjValue
 
     if self.queryType == QueryType.POLICY:
