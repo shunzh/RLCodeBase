@@ -1,6 +1,6 @@
-for i in `seq 0 19`
+for i in `seq 0 9`
 do
-for j in 3 5 7
+for j in 3 7
 do
   echo $i
   # optimal policy query

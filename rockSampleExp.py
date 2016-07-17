@@ -5,6 +5,7 @@ import getopt
 import sys
 import tabularNavigationExp
 import random
+import config
 
 if __name__ == '__main__':
   width = 10

@@ -1,48 +1,48 @@
 function main()
-  load RQ1.out;
-  load JQTP1.out;
-  load AS1.out;
-  load MILP1.out;
-  load MILP-POLICY1.out;
-  load MILP-QI1.out;
-  load MILP-QI-POLICY1.out;
-  load OPT-POLICY1.out;
+  agentNames = {'OPT-POLICY', 'JQTP', 'MILP-QI-POLICY', 'MILP-POLICY', 'MILP-QI', 'MILP', 'AS', 'RQ'};
+  numOfRocks = [1, 3, 5];
+  rewardNums = [3, 5, 7];
 
-  len = 3;
-  op = mean(OPT_POLICY1)
-  e = mean(JQTP1)
-  piqi = mean(MILP_QI_POLICY1)
-  pi = mean(MILP_POLICY1)
-  milpqi = mean(MILP_QI1)
-  milp = mean(MILP1)
-  as = mean(AS1)
-  rq = mean(RQ1)
+  qv = zeros(size(agentNames, 2), size(numOfRocks, 2), size(rewardNums, 2));
+  time = zeros(size(agentNames, 2), size(numOfRocks, 2), size(rewardNums, 2));
+  for agentId = 1 : size(agentNames, 2)
+    for numOfRock = numOfRocks
+      filename = strcat(agentNames(agentId), num2str(numOfRock), '_', num2str(5), '.out');
+      data = load(char(filename));
+      qv(agentId, numOfRock, 5) = mean(data(:, 1));
+      time(agentId, numOfRock, 5) = mean(data(:, 2));
+    end
+  end
+  for agentId = 1 : size(agentNames, 2)
+    for rewardNum = rewardNums
+      filename = strcat(agentNames(agentId), num2str(3), '_', num2str(rewardNum), '.out');
+      data = load(char(filename));
+      qv(agentId, 3, rewardNum) = mean(data(:, 1));
+      time(agentId, 3, rewardNum) = mean(data(:, 2));
+    end
+  end
 
-  keyboard
-
-  %as3 = mean(AS3)
-  %as5 = mean(AS5)
-  %milp3 = mean(MILP3)
-  %milp5 = mean(MILP5)
-
-  plot(x, ones(1, len) * e(1), '*-');
-  hold on;
-  plot(x, [milp(1), milp3(1), milp5(1)], '+-');
-  plot(x, [as(1), as3(1), as5(1)], '+--');
-  plot(x, ones(1, len) * rq(1), 'o-');
-  legend('Exhaustive', 'Query Projection', 'Active Sampling', 'Random Query');
-  xlabel('# of Queries to Compute EVOI');
+  markers = {'*-', '+-', 'x-', 'x--', 's-', 's--', '^-', 'd-'}
+  for agentId = 1 : size(agentNames, 2)
+    datum = qv(agentId, numOfRocks, 5)
+    plot(numOfRocks, datum, markers{agentId});
+    hold on;
+  end
+  legend('Optimal Policy Query', 'Optimal Action Query', 'Policy Query w/ QI', 'Policy Query', 'QP w/ QI', 'QP', 'Active Sampling', 'Random Query');
+  xlabel('Number of Rocks');
   ylabel('Q-Value');
  
   figure;
-  plot(x, ones(1, len) * e(2), '*-');
-  hold on;
-  plot(x, [milp(2), milp3(2), milp5(2)], '+-');
-  plot(x, [as(2), as3(2), as5(2)], '+--');
-  plot(x, ones(1, len) * rq(2), 'o-');
-  legend('Exhaustive', 'Query Projection', 'Active Sampling', 'Random Query');
-  xlabel('# of Queries to Compute EVOI');
-  ylabel('Computation Time (sec.)');
+  for agentId = 1 : size(agentNames, 2)
+    datum = qv(agentId, 3, rewardNums)
+    plot(rewardNums, datum(:), markers{agentId});
+    hold on;
+  end
+  legend('Optimal Policy Query', 'Optimal Action Query', 'Policy Query w/ QI', 'Policy Query', 'QP w/ QI', 'QP', 'Active Sampling', 'Random Query');
+  xlabel('Number of Reward Candidates');
+  ylabel('Q-Value');
+ 
+  %ylabel('Computation Time (sec.)');
 end
 
 function [m, ci] = process(data)
