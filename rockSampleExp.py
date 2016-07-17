@@ -12,8 +12,8 @@ if __name__ == '__main__':
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1
-  rockType = 'default'
-  extra = 0
+  rockNum = 3
+  rewardCandNum = 5
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -21,9 +21,12 @@ if __name__ == '__main__':
     raise Exception('Unknown flag')
   for opt, arg in opts:
     if opt == '-t':
-      rockType = arg
+      rockNum = int(arg)
+    elif opt == '-n':
+      rewardCandNum = int(arg)
     elif opt == '-r':
       random.seed(int(arg))
+  config.opts = '_'.join(map(str, [rockNum, rewardCandNum]))
   
   Domain = TabularNavigation
   
@@ -36,18 +39,16 @@ if __name__ == '__main__':
     return rewardFunc
 
   rewardSet = []
-  if rockType == 'corner':
+  if rockNum == 0:
+    # use rockNum == 0 to represent a test case
     rewardCandNum = 3
     rocks = [(0, height - 2), (width - 2, 0), (width - 2, height - 2)]
     for candId in xrange(rewardCandNum):
       rewardSet.append(rewardGen([rocks[candId]], 1))
-  elif rockType == 'default':
-    rewardCandNum = 5
+  else:
     rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(10)]
     for candId in xrange(rewardCandNum):
-      rewardSet.append(rewardGen(random.sample(rocks, 3), 1))
-  else:
-    raise Exception('Unknown rock type')
+      rewardSet.append(rewardGen(random.sample(rocks, rockNum), 1))
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 

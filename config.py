@@ -11,3 +11,6 @@ PRINT = 'perf'
 para = 1
 
 NUMBER_OF_RESPONSES = 2
+
+# keep configuration options for output
+opts = ''

@@ -9,7 +9,7 @@ import getopt
 import config
 from cmp import QueryType
 
-flags = "r:l:s:d:a:ovq:P:t:m:"
+flags = "r:l:s:d:a:ovq:P:t:m:n:"
 
 """
 Algorithms:
@@ -138,6 +138,6 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   if config.PRINT == 'perf':
     print ret, qValue, time
 
-    f = open(agentName + str(config.para) + '.out',"a")
+    f = open(agentName + str(config.opts) + '.out',"a")
     f.write(str(qValue) + ' ' + str(time) + '\n')
     f.close()
