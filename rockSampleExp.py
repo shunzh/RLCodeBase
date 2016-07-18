@@ -25,9 +25,11 @@ if __name__ == '__main__':
       rockNum = int(arg)
     elif opt == '-n':
       rewardCandNum = int(arg)
+    elif opt == '-m':
+      config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-r':
       random.seed(int(arg))
-  config.opts = '_'.join(map(str, [rockNum, rewardCandNum]))
+  config.opts = '_'.join(map(str, [rockNum, rewardCandNum, config.NUMBER_OF_RESPONSES]))
   
   Domain = TabularNavigation
   
@@ -49,7 +51,7 @@ if __name__ == '__main__':
   else:
     rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(10)]
     for candId in xrange(rewardCandNum):
-      rewardSet.append(rewardGen(random.sample(rocks, rockNum), 1))
+      rewardSet.append(rewardGen(random.sample(rocks, rockNum), 1.0 / rockNum))
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 

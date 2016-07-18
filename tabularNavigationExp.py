@@ -9,7 +9,7 @@ import getopt
 import config
 from cmp import QueryType
 
-flags = "r:l:s:d:a:ovq:P:t:m:n:"
+flags = "r:l:s:d:a:vq:P:t:m:n:"
 
 """
 Algorithms:
@@ -48,16 +48,12 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
       gamma = float(arg)
     elif opt == '-a':
       agentName = arg
-    elif opt == '-o':
-      obstacleEnabled = True
     elif opt == '-v':
       config.VERBOSE = True
     elif opt == '-P':
       config.PRINT = arg
     elif opt == '-q':
       queryFlag = arg
-    elif opt == '-m':
-      config.para = int(arg)
     
   # ask whether reward is good or not
   if agentName == 'NQ':

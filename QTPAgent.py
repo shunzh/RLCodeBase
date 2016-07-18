@@ -547,6 +547,7 @@ class MILPAgent(ActiveSamplingAgent):
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
     if self.qi:
+      numOfIters = 0
       while True:
         # compute dominance
         policyBins = self.computeDominatingPis(args, q)
@@ -563,8 +564,12 @@ class MILPAgent(ActiveSamplingAgent):
         # compute new eus
         newObjValue = computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
         assert newObjValue >= objValue - 0.001
+        numOfIters += 1
         if newObjValue <= objValue: break
-        else: objValue = newObjValue
+        else:
+          objValue = newObjValue
+          q = newQ
+      if config.VERBOSE: print numOfIters
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q

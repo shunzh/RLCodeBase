@@ -1,4 +1,4 @@
-for i in `seq 0 9`
+for i in `seq 0 19`
 do
 for j in 3 7
 do
