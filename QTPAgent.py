@@ -546,7 +546,7 @@ class MILPAgent(ActiveSamplingAgent):
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R'])
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
-    print objValue
+    if config.VERBOSE: print objValue
     if self.qi:
       numOfIters = 0
       while True:
@@ -559,13 +559,13 @@ class MILPAgent(ActiveSamplingAgent):
           # which reward candidates the i-th policy dominates?
           # psi is not normalized, which is fine, since we only needs the optimizing policy
           psi = [self.phi[idx] if policyBins[idx][i] == 1 else 0 for idx in xrange(rewardCandNum)]
-          print i, psi
+          if config.VERBOSE: print i, psi
           agent = self.getFiniteVIAgent(psi, horizon - responseTime, terminalReward, posterior=True)
           newQ.append(agent.x)
 
         # compute new eus
         newObjValue = computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
-        print newObjValue
+        if config.VERBOSE: print newObjValue
         assert newObjValue >= objValue - 0.001
         numOfIters += 1
         if newObjValue <= objValue: break
