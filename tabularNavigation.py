@@ -5,7 +5,7 @@ class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height
-    self.noise = 0.1
+    self.noise = 0
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, queries, trueReward, gamma, responseTime, horizon, terminalReward)
 
@@ -55,35 +55,18 @@ class TabularNavigation(ControlledMarkovProcess):
 
 
 class TabularNavigationToy(TabularNavigation):
-  def __init__(self, queries, trueReward, gamma, width, height, horizon, possibleRewardLocations, transNoise = 0):
-    self.transNoise = transNoise
-    self.possibleRewardLocations = possibleRewardLocations
-    TabularNavigation.__init__(self, queries, trueReward, gamma, 0, width, height, horizon, None)
-  
   def reset(self):
     # initial state: this far to the first intersection
-    self.state = (self.width / 2, self.height - 1)
+    self.state = (0, 0)
  
   def isTerminal(self, state):
-    return state in self.possibleRewardLocations
+    return state in [(1, 0), (1, 1), (0, 2), (1, 2)]
 
-  def getTransitionStatesAndProbs(self, state, action):
-    # create a "windy" area
-    trans = util.Counter()
-    #actions = [(1, 0), (-1, 0)]
-    actions = self.getPossibleActions(state)
-    noise = self.transNoise / len(actions)
-    for act in actions:
-      newState = self.adjustState((state[0] + act[0], state[1] + act[1]))
-      trans[newState] += noise
-
-    newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
-    trans[newState] += 1 - self.transNoise
-    
-    return trans.items()
-    
 
 class TabularNavigationMaze(TabularNavigation):
+  """
+  Split the world into 4 rooms
+  """
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
     self.walls = [(x, height / 2) for x in range(width / 2 - 1) + range(width / 2 + 2, width)]
     self.walls += [(width / 2, y) for y in range(height / 2 - 1) + range(height / 2 + 2, height)]

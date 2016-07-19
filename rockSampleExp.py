@@ -1,5 +1,5 @@
 import util
-from tabularNavigation import TabularNavigation
+from tabularNavigation import TabularNavigation, TabularNavigationToy
 from tabularNavigationExp import experiment
 import getopt
 import sys
@@ -31,7 +31,10 @@ if __name__ == '__main__':
       random.seed(int(arg))
   config.opts = '_'.join(map(str, [rockNum, rewardCandNum, config.NUMBER_OF_RESPONSES]))
   
-  Domain = TabularNavigation
+  if rockNum == 0:
+    Domain = TabularNavigationToy
+  else:
+    Domain = TabularNavigation
   
   def rewardGen(rewards, numerical): 
     def rewardFunc(s, a):
@@ -45,9 +48,20 @@ if __name__ == '__main__':
   if rockNum == 0:
     # use rockNum == 0 to represent a test case
     rewardCandNum = 3
-    rocks = [(0, height - 2), (width - 2, 0), (width - 2, height - 2)]
-    for candId in xrange(rewardCandNum):
-      rewardSet.append(rewardGen([rocks[candId]], 1))
+    def r1(s, a):
+      if s == (0, 0) and a == (1, 0): return 0.9
+      elif s == (0, 1) and a == (0, 1): return 0.6
+      else: return 0
+    def r2(s, a):
+      if s == (0, 1) and a == (1, 0): return 1
+      elif s == (0, 1) and a == (0, 1): return 0.6
+      else: return 0
+    def r3(s, a):
+      if s == (0, 0) and a == (1, 0): return 0.45
+      elif s == (0, 1) and a == (1, 0): return 0.5
+      elif s == (0, 1) and a == (0, 1): return 0.6
+      else: return 0
+    rewardSet = [r1, r2, r3]
   else:
     rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(10)]
     for candId in xrange(rewardCandNum):
