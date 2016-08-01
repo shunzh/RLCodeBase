@@ -5,6 +5,7 @@ do
   echo $i
   # optimal policy query
   python rockSampleExp.py -r $i -a OPT-POLICY -n $j
+  python rockSampleExp.py -r $i -a OPT-POLICY-ACT -n $j
   # optimal action query
   python rockSampleExp.py -r $i -a JQTP -n $j
   # greedy construction of policy queries

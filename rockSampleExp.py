@@ -29,7 +29,7 @@ if __name__ == '__main__':
       config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-r':
       random.seed(int(arg))
-  config.opts = '_'.join(map(str, [rockNum, rewardCandNum, config.NUMBER_OF_RESPONSES]))
+  config.opts = '_'.join(map(str, [rockNum, rewardCandNum]))
   
   if rockNum == 0:
     Domain = TabularNavigationToy

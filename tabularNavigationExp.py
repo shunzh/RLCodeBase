@@ -117,6 +117,9 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   elif agentName == "OPT-POLICY":
     queryType = QueryType.POLICY
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "OPT-POLICY-ACT":
+    queryType = QueryType.ACTION
+    agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 

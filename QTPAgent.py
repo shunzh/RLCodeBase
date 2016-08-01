@@ -435,6 +435,7 @@ class ActiveSamplingAgent(HeuristicAgent):
       hList.append((s, hValue))
 
     hList = sorted(hList, reverse=True, key=lambda _: _[1])
+    hList = filter(lambda _: not scipy.isnan(_[1]), hList)
     #print hList
     hList = hList[:self.m]
     
@@ -450,12 +451,13 @@ class ActiveSamplingAgent(HeuristicAgent):
     return random.choice(qList)
 
 
-class OptimalPolicyQueryAgent(QTPAgent):
+class OptimalPolicyQueryAgent(ActiveSamplingAgent):
   """
   A brute force algorithm that checks all possible partitions of reward candidates.
   Don't worry about its computation time :)
   """
   def learn(self):
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     k = config.NUMBER_OF_RESPONSES
     responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
@@ -487,7 +489,49 @@ class OptimalPolicyQueryAgent(QTPAgent):
       if objValue > maxObjValue:
         maxObjValue = objValue
         optQ = q
-    return (optQ, None, maxObjValue)
+    
+    q = optQ
+    if self.queryType == QueryType.POLICY:
+      return (q, None, maxObjValue)
+    elif self.queryType == QueryType.ACTION:
+      hList = []
+      
+      policyBins = MILPAgent.computeDominatingPis(args, q)
+
+      for s in args['S']:
+        hValue = 0
+        for a in args['A']:
+          resProb = 0
+          bins = [0] * len(q)
+          for idx in xrange(rewardCandNum):
+            if a in self.viAgentSet[idx].getPolicies(s):
+              # increase the probability of observing this 
+              resProb += self.phi[idx]
+              # put opt policies into bins
+              bins = [sum(_) for _ in zip(bins, policyBins[idx])]
+
+          hValue += resProb * scipy.stats.entropy(bins)
+
+        hList.append((s, hValue))
+
+      # sort them nondecreasingly
+      hList = filter(lambda _: not scipy.isnan(_[1]), hList)
+      hList = sorted(hList, key=lambda _: _[1])
+      print hList
+      hList = hList[:self.m]
+    else:
+      raise Exception('Query type not implemented for MILP.')
+
+    qList = []
+    for q, h in hList:
+      # FIXME ignore transient phase
+      qValue = self.getQValue(self.cmp.state, None, q)
+      qList.append((q, None, qValue))
+
+    maxQValue = max(map(lambda _:_[2], qList))
+    qList = filter(lambda _: _[2] == maxQValue, qList)
+
+    return random.choice(qList)
 
 
 class MILPAgent(ActiveSamplingAgent):
@@ -600,6 +644,7 @@ class MILPAgent(ActiveSamplingAgent):
 
       # sort them nondecreasingly
       hList = sorted(hList, key=lambda _: _[1])
+      hList = filter(lambda _: not scipy.isnan(_[1]), hList)
       #print hList
       hList = hList[:self.m]
     else:
