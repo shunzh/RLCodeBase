@@ -662,6 +662,42 @@ class MILPAgent(ActiveSamplingAgent):
     return random.choice(qList)
 
 
+def sampleTrajectory(pi):
+  # sample a trajectory by following pi
+  pass
+
+class MILPDemoAgent(MILPAgent):
+  # greedily construct a set of policies for demonstration
+  # assume the first i policies are demonstrated to the operator when deciding the (i+1)-st policy
+  def learn(self):
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
+    rewardCandNum = len(self.rewardSet)
+
+    if self.queryType == QueryType.POLICY:
+      k = config.NUMBER_OF_RESPONSES
+    else:
+      raise Exception("query type not implemented")
+
+    # now q is a set of TRAJECTORIES
+    q = []
+    for i in range(k):
+      if i == 0:
+        args['maxV'] = [0] * rewardCandNum
+      else:
+        # find the optimal policy so far that achieves the best on each reward candidate
+        args['maxV'] = []
+        for rewardId in xrange(rewardCandNum):
+          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
+
+      x = milp(**args)
+      q.append(sampleTrajectory(x))
+    
+    objValue = computeObj(q, self.phi, args['S'], args['A'], args['R'])
+
+    if self.queryType == QueryType.POLICY:
+      return q, None, objValue
+
+
 class AlternatingQTPAgent(QTPAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, relevance = None, restarts = 0):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
