@@ -10,9 +10,8 @@ import scipy.stats
 import operator
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
-from lp import computeObj
 try:
-  from lp import computeValue, milp, lp, lpDual
+  from lp import computeValue, computeObj, computeDemoObj, milp, milpDemo, lp, lpDual
 except ImportError: print "lp import error"
 
 class LPAgent(ValueIterationAgent):
@@ -662,18 +661,31 @@ class MILPAgent(ActiveSamplingAgent):
     return random.choice(qList)
 
 
-def sampleTrajectory(pi):
-  # sample a trajectory by following pi
-  pass
-
 class MILPDemoAgent(MILPAgent):
   # greedily construct a set of policies for demonstration
   # assume the first i policies are demonstrated to the operator when deciding the (i+1)-st policy
+  def sampleTrajectory(self, pi=None):
+    # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
+    # pi: S, A -> prob
+    u = util.Counter()
+    while not self.cmp.isTerminal(self.cmp.state):
+      # remind me later: is reward of the terminal state gathered?
+      # now, sample an action following this policy
+      if pi == None:
+        a = random.choice(self.cmp.getPossibleActions())
+      else:
+        print {a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()}
+        a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
+      u[(self.cmp.state, a)] = 1
+      self.cmp.doAction(a)
+    self.cmp.reset()
+    return u
+
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     rewardCandNum = len(self.rewardSet)
 
-    if self.queryType == QueryType.POLICY:
+    if self.queryType == QueryType.DEMONSTRATION:
       k = config.NUMBER_OF_RESPONSES
     else:
       raise Exception("query type not implemented")
@@ -688,13 +700,13 @@ class MILPDemoAgent(MILPAgent):
         args['maxV'] = []
         for rewardId in xrange(rewardCandNum):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
-
-      x = milp(**args)
-      q.append(sampleTrajectory(x))
+      args['U'] = [self.sampleTrajectory() for _ in xrange(1)]
+      x = milpDemo(**args)
+      q.append(self.sampleTrajectory(x))
     
-    objValue = computeObj(q, self.phi, args['S'], args['A'], args['R'])
+    objValue = computeDemoObj(q, self.phi, args['S'], args['A'], args['R'])
 
-    if self.queryType == QueryType.POLICY:
+    if self.queryType == QueryType.DEMONSTRATION:
       return q, None, objValue
 
 

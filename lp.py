@@ -112,10 +112,6 @@ def milp(S, A, R, T, s0, psi, maxV):
   # z[i] == 1 then this policy is better than maxV on the i-th reward candidate
   return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 
-def probTrajFromPi(pi, u):
-  # compute the probability that u is generated from pi
-  pass
-
 def milpDemo(S, A, R, T, s0, psi, maxV, U):
   """
   Solve the MILP problem in greedy construction of policy query
@@ -130,6 +126,16 @@ def milpDemo(S, A, R, T, s0, psi, maxV, U):
     maxV: maxV[i] = max_{\pi \in q} V_{r_i}^\pi
     U: set of trajectory samples to consider 
   """
+  def probTrajFromPi(pi, u):
+    # compute the probability that u is generated from pi
+    # note that ||u(s, .)||_1 = 1
+    ret = 1
+    for s in Sr:
+      for a in Ar:
+        if u[S[s], A[a]] == 1:
+          ret *= pi[s, a]
+    return ret
+
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
 
@@ -146,10 +152,10 @@ def milpDemo(S, A, R, T, s0, psi, maxV, U):
   y = m.new((rLen, uLen), name='y')
 
   # constraints on y
-  m.constrain([y[i, u] <= sum([u[s, a] * R[i](S[s], A[a]) for s in Sr for a in Ar]) - maxV[i] + (1 - z[i]) * M\
+  m.constrain([y[i, u] <= sum([U[u][S[s], A[a]] * R[i](S[s], A[a]) for s in Sr for a in Ar]) - maxV[i] + (1 - z[i, u]) * M\
                for i in xrange(rLen)\
                for u in xrange(uLen)])
-  m.constrain([y[i, u] <= z[i] * M\
+  m.constrain([y[i, u] <= z[i, u] * M\
                for i in xrange(rLen)\
                for u in xrange(uLen)])
   
@@ -161,7 +167,7 @@ def milpDemo(S, A, R, T, s0, psi, maxV, U):
       m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
   
   # obj
-  obj = m.maximize(sum([psi[i] * probTrajFromPi(x, u) * y[i, u]\
+  obj = m.maximize(sum([psi[i] * y[i, u]\
                    for i in xrange(rLen)\
                    for u in xrange(uLen)]))
 
@@ -176,6 +182,17 @@ def milpDemo(S, A, R, T, s0, psi, maxV, U):
   return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 
 def computeObj(q, psi, S, A, R):
+  rLen = len(R)
+  obj = 0
+
+  for i in xrange(rLen):
+    values = [computeValue(pi, R[i], S, A) for pi in q]
+    #print i, values
+    obj += psi[i] * max(values)
+  
+  return obj
+
+def computeDemoObj(q, psi, S, A, R):
   rLen = len(R)
   obj = 0
 
