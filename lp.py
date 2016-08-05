@@ -5,6 +5,7 @@ import scipy.stats
 import random
 import config
 import util
+from numpy import prod
 
 def lp(S, A, r, T, s0):
   """
@@ -126,16 +127,6 @@ def milpDemo(S, A, R, T, s0, psi, maxV, U):
     maxV: maxV[i] = max_{\pi \in q} V_{r_i}^\pi
     U: set of trajectory samples to consider 
   """
-  def probTrajFromPi(pi, u):
-    # compute the probability that u is generated from pi
-    # note that ||u(s, .)||_1 = 1
-    ret = 1
-    for s in Sr:
-      for a in Ar:
-        if u[S[s], A[a]] == 1:
-          ret *= pi[s, a]
-    return ret
-
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
 
@@ -166,8 +157,11 @@ def milpDemo(S, A, R, T, s0, psi, maxV, U):
     else:
       m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
   
+  # compute the probability that u is generated from pi
+  # note that ||u(s, .)||_1 = 1
+  probTrajFromPi = lambda pi, u: reduce(lambda _, __: _ * __, [pi[s, a] if u[S[s], A[a]] == 1 else 1 for s in Sr for a in Ar])
   # obj
-  obj = m.maximize(sum([psi[i] * y[i, u]\
+  obj = m.maximize(sum([psi[i] * probTrajFromPi(x, U[u]) * y[i, u]\
                    for i in xrange(rLen)\
                    for u in xrange(uLen)]))
 
