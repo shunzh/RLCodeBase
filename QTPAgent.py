@@ -514,7 +514,6 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
       # sort them nondecreasingly
       hList = filter(lambda _: not scipy.isnan(_[1]), hList)
       hList = sorted(hList, key=lambda _: _[1])
-      print hList
       hList = hList[:self.m]
     else:
       raise Exception('Query type not implemented for MILP.')
@@ -565,7 +564,7 @@ class MILPAgent(ActiveSamplingAgent):
 
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
-    elif self.queryType in [QueryType.PREFERENCE, QueryType.POLICY]:
+    elif self.queryType in [QueryType.DEMONSTRATION, QueryType.POLICY]:
       k = config.NUMBER_OF_RESPONSES
     else:
       raise Exception("query type not implemented")

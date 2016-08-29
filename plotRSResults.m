@@ -10,19 +10,12 @@ function main()
     for numOfRock = numOfRocks
       filename = strcat(agentNames(agentId), num2str(numOfRock), '_', num2str(5), '.out');
       data = load(char(filename));
-      % some data are in files with postfix _1 due to an implementation bug
-      filename = strcat(agentNames(agentId), num2str(numOfRock), '_', num2str(5), '_1.out');
-      if exist(char(filename), 'file')
-        data = [data; load(char(filename))];
-      end
       qv(agentId, numOfRock, 5) = mean(data(:, 1));
       time(agentId, numOfRock, 5) = mean(data(:, 2));
 
       dataSet{agentId, numOfRock, 5} = data(:, 1);
     end
   end
-
-  keyboard
 
   markers = {'*-', '*--', '+-', 'x-', 'x--', 's-', 's--', '^-', 'd-'};
   for agentId = 1 : size(agentNames, 2)
@@ -46,14 +39,14 @@ function main()
   ylabel('Computation Time (sec.)');
 
   figure;
-  histogram(dataSet{1, 3, 5} - dataSet{4, 3, 5}, 5, 'FaceColor', [.8, .8, .8]);
+  histogram(round(dataSet{1, 3, 5} - dataSet{4, 3, 5}, 3), 5, 'FaceColor', [.8, .8, .8]);
   hold on
   plot(0, sum(dataSet{1, 3, 5} - dataSet{4, 3, 5} == 0), '*r');
   xlabel('Optimal Policy Query - Policy Query w/ QI')
   ylabel('Frequency')
 
   figure;
-  histogram(dataSet{3, 3, 5} - dataSet{2, 3, 5}, 5, 'FaceColor', [.8, .8, .8]);
+  histogram(round(dataSet{3, 3, 5} - dataSet{2, 3, 5}, 3), 5, 'FaceColor', [.8, .8, .8]);
   hold on
   plot(0, sum(dataSet{3, 3, 5} - dataSet{2, 3, 5} == 0), '*r');
   xlabel('Optimal Action Query - Action Query from OP')
