@@ -186,12 +186,7 @@ class QTPAgent:
     else:
       raise Exception('unknown type of query ' + self.queryType)
 
-    def consistCondTieBroken(res, idx):
-      # makes each response is only conssitent with one reward candiate
-      # otherwise things can be complicated..
-      for i in xrange(idx):
-        if consistCond(res, i): return False
-      return consistCond(res, idx)
+    candAllocated = [False] * self.rewardSetSize
 
     # consider all possible responses, find out their probabilities,
     # and compute the probability of observing the next phi
@@ -200,15 +195,15 @@ class QTPAgent:
       resProb = 0
       phi = self.phi[:]
       for idx in range(self.rewardSetSize):
-        if consistCondTieBroken(res, idx):
-          # if this reward candidate is consistent with multiple responses
-          # then the operator picks one uniformly randomly 
+        if consistCond(res, idx) and not candAllocated[idx]:
           resProb += phi[idx]
       
       # given that this response is observed, compute the next phi
       for idx in range(self.rewardSetSize):
-        if not consistCondTieBroken(res, idx):
+        if not consistCond(res, idx) or candAllocated[idx]:
           phi[idx] = 0
+        else:
+          candAllocated[idx] = True
       
       # normalize phi, only record possible phis
       if sum(phi) != 0:
