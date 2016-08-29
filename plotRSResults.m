@@ -21,6 +21,9 @@ function main()
       dataSet{agentId, numOfRock, 5} = data(:, 1);
     end
   end
+
+  keyboard
+
   markers = {'*-', '*--', '+-', 'x-', 'x--', 's-', 's--', '^-', 'd-'};
   for agentId = 1 : size(agentNames, 2)
     agentNames{agentId}
@@ -31,8 +34,6 @@ function main()
   legend('Optimal Policy Query', 'Action Query from OP', 'Optimal Action Query', 'Policy Query w/ QI', 'Policy Query', 'QP w/ QI', 'QP', 'Active Sampling', 'Random Query');
   xlabel('Number of Rocks');
   ylabel('Q-Value');
-  xlim([2 4]);
-  ylim([0.55 0.6]);
 
   figure;
   for agentId = 1 : size(agentNames, 2)
