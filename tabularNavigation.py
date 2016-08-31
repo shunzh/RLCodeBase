@@ -54,6 +54,20 @@ class TabularNavigation(ControlledMarkovProcess):
     return abs(state1[0] - state2[0]) + abs(state1[1] - state2[1])
 
 
+class TabularNavigationKWay(TabularNavigation):
+  def getPossibleActions(self, state=None):
+    return range(self.width)
+  
+  def getTransitionStatesAndProbs(self, state, action):
+    if self.isTerminal(state): return []
+    else:
+      newState = (action, state[1] + 1)
+      return [(newState, 1)]
+  
+  def isTerminal(self, state):
+    return state[1] == self.height - 1
+ 
+
 class TabularNavigationToy(TabularNavigation):
   def reset(self):
     # initial state: this far to the first intersection
