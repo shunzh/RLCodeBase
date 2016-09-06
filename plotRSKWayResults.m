@@ -1,6 +1,6 @@
 function main()
   agentNames = {'JQTP', 'MILP-QI-POLICY', 'MILP-POLICY', 'MILP-QI', 'MILP', 'AS', 'RQ'};
-  numOfRocks = [5];
+  numOfRocks = [2, 3, 4, 5];
   rewardNums = [5];
 
   qv = zeros(size(agentNames, 2), size(numOfRocks, 2), size(rewardNums, 2));
@@ -25,7 +25,7 @@ function main()
     hold on;
   end
   legend('Optimal Action Query', 'Policy Query w/ QI', 'Policy Query', 'QP w/ QI', 'QP', 'Active Sampling', 'Random Query');
-  xlabel('Number of Rocks');
+  xlabel('Connectivity in Transition');
   ylabel('Q-Value');
 
   figure;
@@ -35,7 +35,7 @@ function main()
     hold on;
   end
   legend('Optimal Action Query', 'Policy Query w/ QI', 'Policy Query', 'QP w/ QI', 'QP', 'Active Sampling', 'Random Query');
-  xlabel('Number of Rocks');
+  xlabel('Connectivity in Transition');
   ylabel('Computation Time (sec.)');
 end
 

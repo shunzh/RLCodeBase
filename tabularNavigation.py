@@ -1,5 +1,7 @@
 from cmp import ControlledMarkovProcess
 import util
+import random
+import config
 
 class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
@@ -55,14 +57,25 @@ class TabularNavigation(ControlledMarkovProcess):
 
 
 class TabularNavigationKWay(TabularNavigation):
+  def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
+    self.k = config.para
+    
+    # pre-build transitions 
+    self.transit = util.Counter()
+    for x in xrange(width):
+      for y in xrange(height - 1):
+        self.transit[(x, y)] = random.sample([(xn, y + 1) for xn in range(width)], self.k)
+
+    TabularNavigation.__init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward)
+
   def getPossibleActions(self, state=None):
-    return range(self.width)
+    return range(self.k)
   
   def getTransitionStatesAndProbs(self, state, action):
     if self.isTerminal(state): return []
     else:
-      newState = (action, state[1] + 1)
-      return [(newState, 1)]
+      # we already computed the transition function in init
+      return [(self.transit[state][action], 1)]
   
   def isTerminal(self, state):
     return state[1] == self.height - 1

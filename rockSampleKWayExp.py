@@ -27,14 +27,14 @@ if __name__ == '__main__':
     raise Exception('Unknown flag')
   for opt, arg in opts:
     if opt == '-t':
-      rockNum = int(arg)
+      config.para = int(arg)
     elif opt == '-n':
       rewardCandNum = int(arg)
     elif opt == '-m':
       config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-r':
       random.seed(int(arg))
-  config.opts = '_'.join(map(str, [rockNum, rewardCandNum]))
+  config.opts = '_'.join(map(str, [config.para, rewardCandNum]))
   
   if rockNum == 0:
     Domain = TabularNavigationToy

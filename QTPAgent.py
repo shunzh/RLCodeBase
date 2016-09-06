@@ -606,7 +606,7 @@ class MILPAgent(ActiveSamplingAgent):
         # compute new eus
         newObjValue = computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
         if config.VERBOSE: print newObjValue
-        assert newObjValue >= objValue - 0.001
+        #assert newObjValue >= objValue - 0.001
         numOfIters += 1
         if newObjValue <= objValue: break
         else:
