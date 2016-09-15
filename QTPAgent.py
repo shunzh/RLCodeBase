@@ -357,7 +357,7 @@ class JointQTPAgent(QTPAgent):
       qValue = self.getQValue(self.cmp.state, None, q)
 
       if config.PRINT == 'qs': print qValue
-      if config.VERBOSE: print q, qValue
+      if config.VERBOSE: print qValue
       qList.append((q, None, qValue))
     
     maxQValue = max(map(lambda _:_[2], qList))
@@ -374,7 +374,7 @@ class HeuristicAgent(QTPAgent):
     self.meanReward = self.getRewardFunc(self.phi)
     (self.xmin, self.xmax) = self.cmp.getReachability()
     
-    self.m = config.para
+    self.m = 1
 
   def learn(self):
     values = []
@@ -410,7 +410,7 @@ class ActiveSamplingAgent(HeuristicAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
-    self.m = config.para
+    self.m = 1
 
   def learn(self):
     hList = []
@@ -477,16 +477,49 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
     for subset in combinations(policies.items(), k):
       q = map(lambda _: _[1], subset)
       psis = map(lambda _: _[0], subset)
-
-      objValue = computeObj(q, self.phi,\
-                            self.cmp.getStates(),\
-                            self.cmp.getPossibleActions(),\
-                            self.rewardSet)
-      #print psis, objValue
-      if objValue > maxObjValue:
-        maxObjValue = objValue
-        optQ = q
+      # make sure that such query partitions the reward candiates
+      if sum(sum(_ > 0 for _ in psi) for psi in psis) == rewardCandNum and\
+         all(sum(psi[i] for psi in psis) > 0 for i in xrange(rewardCandNum)):
+        objValue = computeObj(q, self.phi,\
+                              self.cmp.getStates(),\
+                              self.cmp.getPossibleActions(),\
+                              self.rewardSet)
+        #print psis, objValue
+        if objValue > maxObjValue:
+          maxObjValue = objValue
+          optPsis = psis
+          optQ = q
     
+    #FIXME
+    # ad-hoc code for checking the q value v.s. heuristic value
+    """
+    for subset in combinations(policies.items(), k):
+      q = map(lambda _: _[1], subset)
+      psis = map(lambda _: _[0], subset)
+
+      if sum(sum(_ > 0 for _ in psi) for psi in psis) == rewardCandNum and\
+         all(sum(psi[i] for psi in psis) > 0 for i in xrange(rewardCandNum)):
+        objValue = computeObj(q, self.phi,\
+                              self.cmp.getStates(),\
+                              self.cmp.getPossibleActions(),\
+                              self.rewardSet)
+        # compute the conditional entropy
+        hValue = 0
+        for psi in psis:
+          # what can we infer about the optpsi?
+          resProb = 0
+          bins = [0] * len(optQ)
+          for idx in xrange(rewardCandNum):
+            if psi[idx] > 0:
+              resProb += self.phi[idx]
+              for j in xrange(len(optPsis)):
+                if optPsis[j][idx] > 0: bins[j] += self.phi[idx]
+          hValue += resProb * scipy.stats.entropy(bins)
+        
+        print psis
+        print hValue, objValue
+    """
+ 
     q = optQ
     if self.queryType == QueryType.POLICY:
       return (q, None, maxObjValue)
@@ -588,6 +621,7 @@ class MILPAgent(ActiveSamplingAgent):
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
     if config.VERBOSE: print objValue
     if self.qi:
+      #FIXME assertion in this part may fail. may have problems with qi
       numOfIters = 0
       while True:
         # compute dominance
@@ -606,7 +640,7 @@ class MILPAgent(ActiveSamplingAgent):
         # compute new eus
         newObjValue = computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
         if config.VERBOSE: print newObjValue
-        #assert newObjValue >= objValue - 0.001
+        assert newObjValue >= objValue - 0.001
         numOfIters += 1
         if newObjValue <= objValue: break
         else:
@@ -634,14 +668,16 @@ class MILPAgent(ActiveSamplingAgent):
               # put opt policies into bins
               bins = [sum(_) for _ in zip(bins, policyBins[idx])]
 
-          hValue += resProb * scipy.stats.entropy(bins)
+          # possibly such action is consistent with none of the reward candidates
+          if sum(bins) > 0:
+            hValue += resProb * scipy.stats.entropy(bins)
 
+        if config.VERBOSE: print hValue
         hList.append((s, hValue))
 
       # sort them nondecreasingly
       hList = sorted(hList, key=lambda _: _[1])
       hList = filter(lambda _: not scipy.isnan(_[1]), hList)
-      #print hList
       hList = hList[:self.m]
     else:
       raise Exception('Query type not implemented for MILP.')

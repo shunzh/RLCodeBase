@@ -18,7 +18,7 @@ if __name__ == '__main__':
   rewardCandNum = 5
 
   # since we are going to compare with action queries,
-  # we let the numebr of responses be consistent with the number of actions
+  # we let the number of responses be consistent with the number of actions
   config.NUMBER_OF_RESPONSES = width
   
   try:
