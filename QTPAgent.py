@@ -90,7 +90,7 @@ class QTPAgent:
     self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
 
-    if self.queryType == QueryType.ACTION:
+    if self.queryType in [QueryType.ACTION, QueryType.TRAJECTORY]:
       # find optimal policies for action queries
       for idx in range(self.rewardSetSize):
         phi = [0] * self.rewardSetSize
@@ -180,6 +180,11 @@ class QTPAgent:
     elif self.queryType == QueryType.REWARD:
       resSet = self.cmp.possibleRewardValues
       consistCond = lambda res, idx: self.rewardSet[idx](query) == res
+    elif self.queryType == QueryType.COMMITMENT:
+      # the operator returns the commitment directly
+      resSet = query
+      # the consistent condition is that, under such commitment, the operator can get higher value
+      # than other commitments provided
     elif self.queryType == QueryType.NONE:
       resSet = [0]
       consistCond = lambda res, idx: True
@@ -448,6 +453,11 @@ class ActiveSamplingAgent(HeuristicAgent):
     return random.choice(qList)
 
 
+class OptimalCommitmentQueryAgent(ActiveSamplingAgent):
+  def learn(self):
+    k = config.NUMBER_OF_RESPONSES
+
+
 class OptimalPolicyQueryAgent(ActiveSamplingAgent):
   """
   A brute force algorithm that checks all possible partitions of reward candidates.
@@ -490,36 +500,6 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
           optPsis = psis
           optQ = q
     
-    #FIXME
-    # ad-hoc code for checking the q value v.s. heuristic value
-    """
-    for subset in combinations(policies.items(), k):
-      q = map(lambda _: _[1], subset)
-      psis = map(lambda _: _[0], subset)
-
-      if sum(sum(_ > 0 for _ in psi) for psi in psis) == rewardCandNum and\
-         all(sum(psi[i] for psi in psis) > 0 for i in xrange(rewardCandNum)):
-        objValue = computeObj(q, self.phi,\
-                              self.cmp.getStates(),\
-                              self.cmp.getPossibleActions(),\
-                              self.rewardSet)
-        # compute the conditional entropy
-        hValue = 0
-        for psi in psis:
-          # what can we infer about the optpsi?
-          resProb = 0
-          bins = [0] * len(optQ)
-          for idx in xrange(rewardCandNum):
-            if psi[idx] > 0:
-              resProb += self.phi[idx]
-              for j in xrange(len(optPsis)):
-                if optPsis[j][idx] > 0: bins[j] += self.phi[idx]
-          hValue += resProb * scipy.stats.entropy(bins)
-        
-        print psis
-        print hValue, objValue
-    """
- 
     q = optQ
     if self.queryType == QueryType.POLICY:
       return (q, None, maxObjValue)
@@ -553,7 +533,7 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
 
     qList = []
     for q, h in hList:
-      # FIXME ignore transient phase
+      # FIXME ignored transient phase
       qValue = self.getQValue(self.cmp.state, None, q)
       qList.append((q, None, qValue))
 
