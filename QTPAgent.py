@@ -10,6 +10,7 @@ import scipy.stats
 import operator
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
+from itertools import combinations
 try:
   from lp import computeValue, computeObj, computeDemoObj, milp, milpDemo, lp, lpDual
 except ImportError: print "lp import error"
@@ -91,7 +92,9 @@ class QTPAgent:
     self.rewardSetSize = len(self.rewardSet)
 
     if self.queryType in [QueryType.ACTION, QueryType.TRAJECTORY]:
-      # find optimal policies for action queries
+      # For these queries, we need to compute the optimal policies (also values, occupancies for all reward candidates:
+      # action queries: we need the optimal actions for all the states.
+      # trajectory queries: we need to compute the occupancies of state action pairs.
       for idx in range(self.rewardSetSize):
         phi = [0] * self.rewardSetSize
         phi[idx] = 1
@@ -453,9 +456,22 @@ class ActiveSamplingAgent(HeuristicAgent):
     return random.choice(qList)
 
 
-class OptimalCommitmentQueryAgent(ActiveSamplingAgent):
+class OptimalTrajectoryQueryAgent(ActiveSamplingAgent):
   def learn(self):
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     k = config.NUMBER_OF_RESPONSES
+    from itertools import combinations, product
+    
+    maxQValue = None
+    optQuery = None
+    for subset in combinations(product(args['S'], args['A']), k):
+      # the states in the subset are the trajectories to start with
+      qValue = self.getQValue(args['s0'], None, subset)
+      if qValue > maxQValue:
+        maxQValue = qValue
+        optQuery = subset
+    
+    return (optQuery, None, maxQValue)
 
 
 class OptimalPolicyQueryAgent(ActiveSamplingAgent):
