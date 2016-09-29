@@ -120,7 +120,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   elif agentName == "OPT-POLICY-ACT":
     queryType = QueryType.ACTION
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == "OPT-TRAJECTORY":
+  elif agentName == "OPT-TRAJ":
     queryType = QueryType.TRAJECTORY
     agent = OptimalTrajectoryQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-DEMO":

@@ -10,7 +10,6 @@ import scipy.stats
 import operator
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
-from itertools import combinations
 try:
   from lp import computeValue, computeObj, computeDemoObj, milp, milpDemo, lp, lpDual
 except ImportError: print "lp import error"
@@ -100,7 +99,8 @@ class QTPAgent:
         phi[idx] = 1
         
         if horizon == numpy.inf: self.viAgentSet[idx] = self.getVIAgent(phi)
-        else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward)
+        # double check this for planning with transient phase
+        else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward, posterior=True)
 
   def getRewardFunc(self, phi):
     """
@@ -183,11 +183,31 @@ class QTPAgent:
     elif self.queryType == QueryType.REWARD:
       resSet = self.cmp.possibleRewardValues
       consistCond = lambda res, idx: self.rewardSet[idx](query) == res
-    elif self.queryType == QueryType.COMMITMENT:
+    elif self.queryType == QueryType.TRAJECTORY:
       # the operator returns the commitment directly
       resSet = query
       # the consistent condition is that, under such commitment, the operator can get higher value
       # than other commitments provided
+      def consistCond(res, idx):
+        maxProb = None
+        optTraj = None
+        x = self.viAgentSet[idx].x
+        for traj in query:
+          s, a = traj
+          prob = x[(s, a)]
+          """
+          for s, a in traj[1:]:
+            xs = sum(x[s, a] for a in self.cmp.getActions())
+            if xs == 0:
+              prob = 0
+              break
+            else:
+              prob *= x[s, a] / xs
+          """
+          if prob > maxProb:
+            maxProb = prob
+            optTraj = traj
+        return optTraj == res
     elif self.queryType == QueryType.NONE:
       resSet = [0]
       consistCond = lambda res, idx: True
@@ -195,7 +215,6 @@ class QTPAgent:
       raise Exception('unknown type of query ' + self.queryType)
 
     candAllocated = [False] * self.rewardSetSize
-
     # consider all possible responses, find out their probabilities,
     # and compute the probability of observing the next phi
     for res in resSet:
@@ -457,6 +476,10 @@ class ActiveSamplingAgent(HeuristicAgent):
 
 
 class OptimalTrajectoryQueryAgent(ActiveSamplingAgent):
+  """
+  A brute force algorithm to find out the best trajectory query.
+  This only serves as a baseline. May take forever to run for larger domains..
+  """
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     k = config.NUMBER_OF_RESPONSES
@@ -465,8 +488,9 @@ class OptimalTrajectoryQueryAgent(ActiveSamplingAgent):
     maxQValue = None
     optQuery = None
     for subset in combinations(product(args['S'], args['A']), k):
-      # the states in the subset are the trajectories to start with
-      qValue = self.getQValue(args['s0'], None, subset)
+      #FIXME for now, only consider when l = 1
+      query = subset
+      qValue = self.getQValue(args['s0'], None, query)
       if qValue > maxQValue:
         maxQValue = qValue
         optQuery = subset

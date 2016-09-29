@@ -58,6 +58,7 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
   def responseCallback(self):
     """
     The agent should check with this function to see whether there is a feedback
+    This is just for the experiment.
     """
     if self.outsandingQuery != None and self.timer >= self.outsandingQuery[1]:
       # issues a response
