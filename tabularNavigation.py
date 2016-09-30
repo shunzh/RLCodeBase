@@ -59,17 +59,34 @@ class TabularNavigation(ControlledMarkovProcess):
 
 class TabularNavigationKWay(TabularNavigation):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
-    self.degree = config.para
-    
+    self.degree = 2
+
     # pre-build transitions 
     self.transit = util.Counter()
-    for x in xrange(width):
-      for y in xrange(height - 1):
-        samples = numpy.random.choice(range(width), self.degree, replace=True)
+    for y in xrange(height - 1):
+      for x in xrange(self.getNumOfStatesPerRow(y)):
+        samples = numpy.random.choice(range(self.getNumOfStatesPerRow(y + 1)), self.degree, replace=True)
         self.transit[(x, y)] = [(xn, y + 1) for xn in samples]
 
     TabularNavigation.__init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward)
 
+  @staticmethod
+  def getNumOfStatesPerRow(y):
+    if config.CONNECTION_TYPE == 'tree':
+      return 2 ** y
+    elif config.CONNECTION_TYPE == 'grid':
+      return y + 1
+    elif config.CONNECTION_TYPE == 'chain':
+      return 1
+    else:
+      raise Exception('Unknown connection type of k way navigation.')
+    
+  def getStates(self):
+    ret = []
+    for y in xrange(self.height):
+      ret += [(x, y) for x in xrange(self.getNumOfStatesPerRow(y))]
+    return ret
+    
   def getPossibleActions(self, state=None):
     return range(self.degree)
   

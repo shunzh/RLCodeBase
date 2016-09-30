@@ -12,5 +12,7 @@ para = 2
 
 NUMBER_OF_RESPONSES = 4
 
+CONNECTION_TYPE = 'chain'#'tree'
+
 # keep configuration options for output
 opts = ''

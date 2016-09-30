@@ -9,11 +9,10 @@ import random
 import config
 
 if __name__ == '__main__':
-  width = 1
-  height = 3
+  width = height = 2
   # the time step that the agent receives the response
   responseTime = 0
-  horizon = height + width + 1
+  horizon = height + 1
   rockNum = 2
   rewardCandNum = 4
 
@@ -49,7 +48,10 @@ if __name__ == '__main__':
 
   rewardSet = []
 
-  rocks = [((x, y), a) for x in xrange(width) for y in xrange(height) for a in xrange(numOfActions)]
+  """
+  rocks = [((x, y), a) for a in xrange(numOfActions)\
+                       for y in xrange(height)\
+                       for x in xrange(TabularNavigationKWay.getNumOfStatesPerRow(y))]
   for candId in xrange(rewardCandNum):
     rewardSet.append(rewardGen(random.sample(rocks, rockNum), 1.0 / rockNum))
   """
@@ -58,7 +60,6 @@ if __name__ == '__main__':
   rewardSet.append(rewardGen([((0, 0), 1), ((0, 1), 0)], 1))
   rewardSet.append(rewardGen([((0, 0), 0), ((0, 1), 1)], 1))
   rewardSet.append(rewardGen([((0, 0), 1), ((0, 1), 1)], 1))
-  """
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
