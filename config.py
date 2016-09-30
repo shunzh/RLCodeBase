@@ -10,9 +10,9 @@ PRINT = 'perf'
 # multipurpose
 para = 2
 
-NUMBER_OF_RESPONSES = 4
+NUMBER_OF_RESPONSES = 3
 
-CONNECTION_TYPE = 'chain'#'tree'
+CONNECTION_TYPE = 'grid'
 
 # keep configuration options for output
 opts = ''

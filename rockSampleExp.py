@@ -8,8 +8,8 @@ import random
 import config
 
 if __name__ == '__main__':
-  width = 10
-  height = 10
+  width = 3
+  height = 3
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1
