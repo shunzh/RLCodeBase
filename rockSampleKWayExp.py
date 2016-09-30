@@ -9,17 +9,18 @@ import random
 import config
 
 if __name__ == '__main__':
-  width = 5
-  height = 10
+  width = 1
+  height = 3
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1
-  rockNum = 5
-  rewardCandNum = 5
+  rockNum = 2
+  rewardCandNum = 4
 
-  # since we are going to compare with action queries,
+  numOfActions = config.para
+  # if we are going to compare with action queries, enable the following for convenience
   # we let the number of responses be consistent with the number of actions
-  config.NUMBER_OF_RESPONSES = width
+  #config.NUMBER_OF_RESPONSES = numOfActions
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -36,24 +37,28 @@ if __name__ == '__main__':
       random.seed(int(arg))
   config.opts = '_'.join(map(str, [config.para, rewardCandNum]))
   
-  if rockNum == 0:
-    Domain = TabularNavigationToy
-  else:
-    #Domain = TabularNavigation
-    Domain = TabularNavigationKWay
+  Domain = TabularNavigationKWay
   
   def rewardGen(rewards, numerical): 
     def rewardFunc(s, a):
-      if s in rewards:
+      if (s, a) in rewards:
         return numerical
       else:
         return 0
     return rewardFunc
 
   rewardSet = []
-  rocks = [(x, y) for x in xrange(width) for y in xrange(height)]
+
+  rocks = [((x, y), a) for x in xrange(width) for y in xrange(height) for a in xrange(numOfActions)]
   for candId in xrange(rewardCandNum):
     rewardSet.append(rewardGen(random.sample(rocks, rockNum), 1.0 / rockNum))
+  """
+  # a case where trajectory query (actualy state-action preference query) has worse performance than policy queries
+  rewardSet.append(rewardGen([((0, 0), 0), ((0, 1), 0)], 1))
+  rewardSet.append(rewardGen([((0, 0), 1), ((0, 1), 0)], 1))
+  rewardSet.append(rewardGen([((0, 0), 0), ((0, 1), 1)], 1))
+  rewardSet.append(rewardGen([((0, 0), 1), ((0, 1), 1)], 1))
+  """
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 

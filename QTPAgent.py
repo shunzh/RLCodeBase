@@ -90,7 +90,7 @@ class QTPAgent:
     self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
 
-    if self.queryType in [QueryType.ACTION, QueryType.TRAJECTORY]:
+    if self.queryType in [QueryType.ACTION, QueryType.SIMILARITY]:
       # For these queries, we need to compute the optimal policies (also values, occupancies for all reward candidates:
       # action queries: we need the optimal actions for all the states.
       # trajectory queries: we need to compute the occupancies of state action pairs.
@@ -183,7 +183,7 @@ class QTPAgent:
     elif self.queryType == QueryType.REWARD:
       resSet = self.cmp.possibleRewardValues
       consistCond = lambda res, idx: self.rewardSet[idx](query) == res
-    elif self.queryType == QueryType.TRAJECTORY:
+    elif self.queryType == QueryType.SIMILARITY:
       # the operator returns the commitment directly
       resSet = query
       # the consistent condition is that, under such commitment, the operator can get higher value
@@ -192,22 +192,26 @@ class QTPAgent:
         maxProb = None
         optTraj = None
         x = self.viAgentSet[idx].x
+        #FIXME assume l = 1 for now
         for traj in query:
           s, a = traj
           prob = x[(s, a)]
-          """
-          for s, a in traj[1:]:
-            xs = sum(x[s, a] for a in self.cmp.getActions())
-            if xs == 0:
-              prob = 0
-              break
-            else:
-              prob *= x[s, a] / xs
-          """
           if prob > maxProb:
             maxProb = prob
             optTraj = traj
         return optTraj == res
+    elif self.queryType == QueryType.COMMITMENT:
+      resSet = query
+      def consistCond(res, idx):
+        maxV = None
+        optCommit = None
+        for commit in query:
+          # compute the operator's value by following this commitment
+          value, _ = lpDual(self.args['S'], self.args['A'], self.args['R'][idx], self.args['T'], self.args['s0'], commit)
+          if value > maxV:
+            maxV = value
+            optCommit = commit
+        return optCommit == res
     elif self.queryType == QueryType.NONE:
       resSet = [0]
       consistCond = lambda res, idx: True
@@ -475,25 +479,29 @@ class ActiveSamplingAgent(HeuristicAgent):
     return random.choice(qList)
 
 
-class OptimalTrajectoryQueryAgent(ActiveSamplingAgent):
+class OptimalPartialPolicyQueryAgent(ActiveSamplingAgent):
   """
   A brute force algorithm to find out the best trajectory query.
   This only serves as a baseline. May take forever to run for larger domains..
   """
   def learn(self):
-    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
+    self.args = easyDomains.convert(self.cmp, self.rewardSet, self.phi) # will need this, so save in self
     k = config.NUMBER_OF_RESPONSES
     from itertools import combinations, product
     
     maxQValue = None
     optQuery = None
-    for subset in combinations(product(args['S'], args['A']), k):
+    for subset in combinations(product(self.args['S'], self.args['A']), k):
       #FIXME for now, only consider when l = 1
       query = subset
-      qValue = self.getQValue(args['s0'], None, query)
+      qValue = self.getQValue(self.args['s0'], None, query)
       if qValue > maxQValue:
         maxQValue = qValue
         optQuery = subset
+      
+      if config.VERBOSE:
+        print subset
+        print qValue
     
     return (optQuery, None, maxQValue)
 

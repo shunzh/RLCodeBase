@@ -8,9 +8,9 @@ SAVE_TO_FILE = True
 PRINT = 'perf'
 
 # multipurpose
-para = 1
+para = 2
 
-NUMBER_OF_RESPONSES = 2
+NUMBER_OF_RESPONSES = 4
 
 # keep configuration options for output
 opts = ''
