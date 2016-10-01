@@ -59,7 +59,7 @@ class TabularNavigation(ControlledMarkovProcess):
 
 class TabularNavigationKWay(TabularNavigation):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
-    self.degree = 2
+    self.degree = config.para
 
     # pre-build transitions 
     self.transit = util.Counter()
@@ -73,7 +73,7 @@ class TabularNavigationKWay(TabularNavigation):
   @staticmethod
   def getNumOfStatesPerRow(y):
     if config.CONNECTION_TYPE == 'tree':
-      return 2 ** y
+      return config.para ** y
     elif config.CONNECTION_TYPE == 'grid':
       return y + 1
     elif config.CONNECTION_TYPE == 'chain':
