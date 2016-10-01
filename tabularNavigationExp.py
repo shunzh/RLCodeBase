@@ -60,7 +60,9 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
     queries = [0] # make a dummy query set
     queryType = QueryType.NONE
   else:
-    queries = [(x, y) for x in xrange(width) for y in xrange(height)]
+    #queries = [(x, y) for x in xrange(width) for y in xrange(height)]
+    # use the following code to deal with the problem of using action queries in k way
+    queries = [(x, y) for y in xrange(height) for x in range(Domain.getNumOfStatesPerRow(y))]
     if queryFlag == 'default':
       # use potential reward locations as query set
       queryType = QueryType.ACTION

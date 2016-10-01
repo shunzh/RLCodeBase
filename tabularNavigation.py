@@ -65,8 +65,14 @@ class TabularNavigationKWay(TabularNavigation):
     self.transit = util.Counter()
     for y in xrange(height - 1):
       for x in xrange(self.getNumOfStatesPerRow(y)):
-        samples = numpy.random.choice(range(self.getNumOfStatesPerRow(y + 1)), self.degree, replace=True)
-        self.transit[(x, y)] = [(xn, y + 1) for xn in samples]
+        if config.CONNECTION_TYPE == 'tree':
+          self.transit[(x, y)] = [(2 * x, y + 1), (2 * x + 1, y + 1)]
+        elif config.CONNECTION_TYPE == 'grid':
+          self.transit[(x, y)] = [(x, y + 1), (x + 1, y + 1)]
+        elif config.CONNECTION_TYPE == 'chain':
+          self.transit[(x, y)] = [(x, y + 1), (x, y + 1)]
+        else:
+          raise Exception('Unknown connection type of k way navigation.')
 
     TabularNavigation.__init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward)
 

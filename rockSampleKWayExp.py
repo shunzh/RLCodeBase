@@ -15,7 +15,7 @@ if __name__ == '__main__':
   responseTime = 0
   horizon = height + 1
   rockNum = 3
-  rewardCandNum = 5
+  rewardCandNum = 6
 
   numOfActions = config.para
   # if we are going to compare with action queries, enable the following for convenience
@@ -55,7 +55,7 @@ if __name__ == '__main__':
                        for x in xrange(TabularNavigationKWay.getNumOfStatesPerRow(y))]
   for candId in xrange(rewardCandNum):
     sampledRocks = random.sample(rocks, rockNum)
-    rewardSet.append(rewardGen(sampledRocks, 1.0 / rockNum))
+    rewardSet.append(rewardGen(sampledRocks, random.random()))
   """
   # a case where trajectory query (actualy state-action preference query) has worse performance than policy queries
   rewardSet.append(rewardGen([((0, 0), 0), ((0, 1), 0)], 1))

@@ -8,11 +8,11 @@ SAVE_TO_FILE = True
 PRINT = 'perf'
 
 # multipurpose
-para = 3
+para = 2
 
-NUMBER_OF_RESPONSES = 3
+NUMBER_OF_RESPONSES = 2
 
-CONNECTION_TYPE = 'chain'
+CONNECTION_TYPE = 'grid'
 
 # keep configuration options for output
 opts = ''

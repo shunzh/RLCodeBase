@@ -6,7 +6,7 @@ do
   python rockSampleKWayExp.py -r $i -a OPT-TRAJ-SIMILAR
   #python rockSampleKWayExp.py -r $i -a OPT-POLICY-ACT -t $j
   # optimal action query
-  #python rockSampleKWayExp.py -r $i -a JQTP -t $j
+  python rockSampleKWayExp.py -r $i -a JQTP
   # greedy construction of policy queries
   #python rockSampleKWayExp.py -r $i -a MILP-QI-POLICY -t $j
   #python rockSampleKWayExp.py -r $i -a MILP-POLICY -t $j
