@@ -14,5 +14,7 @@ NUMBER_OF_RESPONSES = 2
 
 CONNECTION_TYPE = 'grid'
 
+INIT_STATE_DISTANCE = None
+
 # keep configuration options for output
 opts = ''

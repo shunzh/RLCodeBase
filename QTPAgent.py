@@ -184,24 +184,34 @@ class QTPAgent:
       resSet = self.cmp.possibleRewardValues
       consistCond = lambda res, idx: self.rewardSet[idx](query) == res
     elif self.queryType == QueryType.SIMILARITY:
-      # the operator returns the commitment directly
       resSet = query
-      # the consistent condition is that, under such commitment, the operator can get higher value
-      # than other commitments provided
       def consistCond(res, idx):
         maxProb = None
         optTraj = None
         x = self.viAgentSet[idx].x
-        #FIXME assume l = 1 for now
+        # FIXME overfit l = 1, 2, |A| = 2
         for traj in query:
-          s, a = traj
-          prob = x[(s, a)]
+          prob = x[traj[0], traj[1]]
+          """
+          if traj[1] == 0:
+            nextState = (traj[0][0], traj[0][1] + 1)
+          else:
+            nextState = (traj[0][0] + 1, traj[0][1] + 1)
+          prob *= x[nextState, traj[2]]
+          """
+
           if prob > maxProb:
             maxProb = prob
             optTraj = traj
+        print maxProb
         return optTraj == res
     elif self.queryType == QueryType.COMMITMENT:
+      #FIXME only for l = 1
+
+      # the operator returns the commitment directly
       resSet = query
+      # the consistent condition is that, under such commitment, the operator can get higher value
+      # than other commitments provided
       def consistCond(res, idx):
         maxV = None
         optCommit = None
@@ -491,16 +501,24 @@ class OptimalPartialPolicyQueryAgent(ActiveSamplingAgent):
     
     maxQValue = None
     optQuery = None
-    for subset in combinations(product(self.args['S'], self.args['A']), k):
-      #FIXME for now, only consider when l = 1
-      query = subset
+    #FIXME for now, only consider when l = 1
+    #l = 1
+    space = product(self.args['S'], self.args['A'])
+    #l = 2
+    #space = product(filter(lambda (x, y): y < 7, self.args['S']), self.args['A'], self.args['A'])
+    for query in combinations(space, k):
+      if config.INIT_STATE_DISTANCE != None:
+        firstPP = query
+        if numpy.abs(firstPP[0][0][0] - firstPP[1][0][0]) + numpy.abs(firstPP[0][0][1] - firstPP[1][0][1]) > config.INIT_STATE_DISTANCE:
+          continue
+
       qValue = self.getQValue(self.args['s0'], None, query)
       if qValue > maxQValue:
         maxQValue = qValue
-        optQuery = subset
+        optQuery = query
       
       if config.VERBOSE:
-        print subset
+        print query
         print qValue
     
     return (optQuery, None, maxQValue)

@@ -10,11 +10,11 @@ import config
 import numpy
 
 if __name__ == '__main__':
-  width = height = 5
+  width = height = 8
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + 1
-  rockNum = 3
+  rockNum = 5
   rewardCandNum = 6
 
   numOfActions = config.para
@@ -30,13 +30,13 @@ if __name__ == '__main__':
     if opt == '-t':
       config.para = int(arg)
     elif opt == '-n':
-      rewardCandNum = int(arg)
+      config.INIT_STATE_DISTANCE = int(arg)
     elif opt == '-m':
       config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-r':
       random.seed(int(arg))
       numpy.random.seed(int(arg))
-  config.opts = '_'.join(map(str, [config.para, rewardCandNum]))
+  config.opts = '_'.join(map(str, [config.INIT_STATE_DISTANCE]))
   
   Domain = TabularNavigationKWay
   
