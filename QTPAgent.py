@@ -203,7 +203,6 @@ class QTPAgent:
           if prob > maxProb:
             maxProb = prob
             optTraj = traj
-        print maxProb
         return optTraj == res
     elif self.queryType == QueryType.COMMITMENT:
       #FIXME only for l = 1
@@ -643,7 +642,7 @@ class MILPAgent(ActiveSamplingAgent):
 
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
-    elif self.queryType in [QueryType.DEMONSTRATION, QueryType.POLICY]:
+    elif self.queryType in [QueryType.DEMONSTRATION, QueryType.COMMITMENT, QueryType.POLICY]:
       k = config.NUMBER_OF_RESPONSES
     else:
       raise Exception("query type not implemented")
