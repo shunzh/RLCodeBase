@@ -37,13 +37,14 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(S, A, r, T, s0, constraint=None):
+def lpDual(S, A, r, T, s0, constraints={}):
   """
   Solve the dual problem of lp
   Same arguments
   
   constraint [(s, a)] that the agent is required to visit
   """
+  print 'started'
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
 
@@ -58,9 +59,8 @@ def lpDual(S, A, r, T, s0, constraint=None):
     else:
       m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
   
-  if constraint:
-    s, a = constraint
-    m.constrain(x[S.index(s), A.index(a)] == 1)
+  for (s, a), occ in constraints.items():
+    m.constrain(x[S.index(s), A.index(a)] == occ)
 
   # obj
   obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
@@ -116,7 +116,11 @@ def milp(S, A, R, T, s0, psi, maxV):
   
   # build occupancy as S x A -> x[.,.]
   # z[i] == 1 then this policy is better than maxV on the i-th reward candidate
-  return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
+  res = util.Counter()
+  for s in Sr:
+    for a in Ar:
+      res[S[s], A[a]] = m[x][s, a] 
+  return res
 
 def computeObj(q, psi, S, A, R):
   rLen = len(R)

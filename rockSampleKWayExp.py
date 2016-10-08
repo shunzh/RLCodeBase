@@ -36,7 +36,7 @@ if __name__ == '__main__':
     elif opt == '-r':
       random.seed(int(arg))
       numpy.random.seed(int(arg))
-  config.opts = '_'.join(map(str, [config.INIT_STATE_DISTANCE]))
+  config.opts = '_'.join(map(str, []))
   
   Domain = TabularNavigationKWay
   

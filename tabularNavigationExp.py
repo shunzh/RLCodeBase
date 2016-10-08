@@ -134,6 +134,9 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
     # generate policy one at a time after observing the generated trajectories so far
     queryType = QueryType.DEMONSTRATION
     agent = MILPDemoAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP-PARTIAL-POLICY":
+    queryType = QueryType.PARTIAL_POLICY
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 

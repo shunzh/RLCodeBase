@@ -181,6 +181,17 @@ class QTPAgent:
         maxValue = max(piValues.values())
         optPiIdxs = filter(lambda piIdx: piValues[piIdx] == maxValue, range(len(query)))
         return any(res == query[piIdx] for piIdx in optPiIdxs)
+    elif self.queryType == QueryType.PARTIAL_POLICY:
+      resSet = query
+      # consistent if the true reward has the largest value on this policy
+      def consistCond(res, idx):
+        piValues = {}
+        for piIdx in range(len(query)):
+          obj, _ = lpDual(self.args['S'], self.args['A'], self.args['R'][idx], self.args['T'], self.args['s0'], query[piIdx])
+          piValues[piIdx] = obj
+        maxValue = max(piValues.values())
+        optPiIdxs = filter(lambda piIdx: piValues[piIdx] == maxValue, range(len(query)))
+        return any(res == query[piIdx] for piIdx in optPiIdxs)
     elif self.queryType == QueryType.REWARD_SIGN:
       resSet = [-1, 0, 1]
       consistCond = lambda res, idx: numpy.sign(self.rewardSet[idx](query)) == res
@@ -656,6 +667,7 @@ class MILPAgent(ActiveSamplingAgent):
 
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
+    self.args = args # save a copy
     rewardCandNum = len(self.rewardSet)
 
     responseTime = self.cmp.getResponseTime()
@@ -664,7 +676,7 @@ class MILPAgent(ActiveSamplingAgent):
 
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
-    elif self.queryType in [QueryType.DEMONSTRATION, QueryType.COMMITMENT, QueryType.POLICY]:
+    elif self.queryType in [QueryType.DEMONSTRATION, QueryType.COMMITMENT, QueryType.POLICY, QueryType.PARTIAL_POLICY]:
       k = config.NUMBER_OF_RESPONSES
     else:
       raise Exception("query type not implemented")
@@ -718,6 +730,28 @@ class MILPAgent(ActiveSamplingAgent):
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
       return (q, None, objValue)
+    if self.queryType == QueryType.PARTIAL_POLICY:
+      idx = 0
+      qP = copy.copy(q)
+      while True:
+        # iterate over all the policies, remove one state pair of each
+        # but make sure the EUS of the new set is unchaged
+        x = qP[idx]
+        xOld = x.copy()
+        
+        success = False
+        for key in util.randomly(x.keys()):
+          x.pop(key)
+          if self.getQValue(self.cmp.state, None, qP) == objValue:
+            success = True
+            break
+          else:
+            x = xOld.copy()
+        
+        if not success: break
+        idx = (idx + 1) % len(q)
+      
+      return (qP, None, objValue)
     elif self.queryType == QueryType.ACTION:
       hList = []
       

@@ -26,6 +26,11 @@ def getMSE(x, y):
   
   return sum([(xi - yi) ** 2 for xi, yi in zip(x, y)]) / len(x)
 
+def randomly(seq):
+  shuffled = list(seq)
+  random.shuffle(shuffled)
+  return iter(shuffled)
+
 def checkPolicyConsistency(states, a, b):
   """
     Check how many policies on the states are consistent with the optimal one.
