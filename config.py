@@ -10,7 +10,7 @@ PRINT = 'perf'
 # multipurpose
 para = 2
 
-NUMBER_OF_RESPONSES = 2
+NUMBER_OF_RESPONSES = 3
 
 CONNECTION_TYPE = 'grid'
 

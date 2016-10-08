@@ -118,68 +118,6 @@ def milp(S, A, R, T, s0, psi, maxV):
   # z[i] == 1 then this policy is better than maxV on the i-th reward candidate
   return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 
-def milpDemo(S, A, R, T, s0, psi, maxV, U):
-  """
-  Solve the MILP problem in greedy construction of policy query
-  
-  Args:
-    S: state set
-    A: action set
-    R: reward candidate set
-    T: transition function
-    s0: init state
-    psi: prior belief on rewards
-    maxV: maxV[i] = max_{\pi \in q} V_{r_i}^\pi
-    U: set of trajectory samples to consider 
-  """
-  m = CPlexModel()
-  if not config.VERBOSE: m.setVerbosity(0)
-
-  # useful constants
-  rLen = len(R)
-  uLen = len(U)
-  M = 10000 # a large number
-  Sr = range(len(S))
-  Ar = range(len(A))
-  
-  # decision variables
-  x = m.new((len(S), len(A)), lb=0, ub=1, name='x')
-  z = m.new((rLen, uLen), vtype=bool, name='z')
-  y = m.new((rLen, uLen), name='y')
-
-  # constraints on y
-  m.constrain([y[i, u] <= sum([U[u][S[s], A[a]] * R[i](S[s], A[a]) for s in Sr for a in Ar]) - maxV[i] + (1 - z[i, u]) * M\
-               for i in xrange(rLen)\
-               for u in xrange(uLen)])
-  m.constrain([y[i, u] <= z[i, u] * M\
-               for i in xrange(rLen)\
-               for u in xrange(uLen)])
-  
-  # constraints on x (valid occupancy)
-  for sp in Sr:
-    if S[sp] == s0:
-      m.constrain(sum([x[sp, ap] for ap in Ar]) == 1)
-    else:
-      m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
-  
-  # compute the probability that u is generated from pi
-  # note that ||u(s, .)||_1 = 1
-  probTrajFromPi = lambda pi, u: reduce(lambda _, __: _ * __, [pi[s, a] if u[S[s], A[a]] == 1 else 1 for s in Sr for a in Ar])
-  # obj
-  obj = m.maximize(sum([psi[i] * probTrajFromPi(x, U[u]) * y[i, u]\
-                   for i in xrange(rLen)\
-                   for u in xrange(uLen)]))
-
-  if config.VERBOSE:
-    print 'obj', obj
-    print 'x', m[x]
-    print 'y', m[y]
-    print 'z', m[z]
-  
-  # build occupancy as S x A -> x[.,.]
-  # z[i] == 1 then this policy is better than maxV on the i-th reward candidate
-  return {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
-
 def computeObj(q, psi, S, A, R):
   rLen = len(R)
   obj = 0

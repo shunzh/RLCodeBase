@@ -126,9 +126,14 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   elif agentName == "OPT-TRAJ-COMMIT":
     queryType = QueryType.COMMITMENT
     agent = OptimalPartialPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == "MILP-DEMO":
+  elif agentName == "MILP-DEMO-BATCH":
+    # generate policy query first (so we call MILPAgent) and then sample trajectories
     queryType = QueryType.DEMONSTRATION
-    agent = MILPDemoAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP-DEMO":
+    # generate policy one at a time after observing the generated trajectories so far
+    queryType = QueryType.DEMONSTRATION
+    agent = MILPDemoAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 

@@ -15,7 +15,7 @@ if __name__ == '__main__':
   responseTime = 0
   horizon = height + 1
   rockNum = 5
-  rewardCandNum = 6
+  rewardCandNum = 5
 
   numOfActions = config.para
   # if we are going to compare with action queries, enable the following for convenience

@@ -11,7 +11,7 @@ import operator
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
 try:
-  from lp import computeValue, computeObj, computeDemoObj, milp, milpDemo, lp, lpDual
+  from lp import computeValue, computeObj, computeDemoObj, milp, lp, lpDual
 except ImportError: print "lp import error"
 
 class LPAgent(ValueIterationAgent):
@@ -106,7 +106,10 @@ class QTPAgent:
     """
     return the mean reward function under the given belief
     """
-    return lambda state, action: sum([reward(state, action) * p for reward, p in zip(self.rewardSet, phi)])
+    if type(phi) == int:
+      return self.rewardSet[phi]
+    else:
+      return lambda state, action: sum([reward(state, action) * p for reward, p in zip(self.rewardSet, phi)])
   
   def getVIAgent(self, phi, posterior=False):
     """
@@ -164,19 +167,20 @@ class QTPAgent:
     if self.queryType == QueryType.ACTION:
       resSet = actions
       consistCond = lambda res, idx: res in self.viAgentSet[idx].getPolicies(query, responseTime)
-    elif self.queryType == QueryType.POLICY:
-      # query itself is a set of policies
+    elif self.queryType in [QueryType.POLICY, QueryType.DEMONSTRATION]:
+      # query is a set of policies or trajectories
+      # note that for trajectories, the occupancies are either 1 or 0 for any state action pair
       resSet = query
       # consistent if the true reward has the largest value on this policy
       def consistCond(res, idx):
-        piValues = {pi: computeValue(pi,\
-                                     self.getRewardFun(idx),\
-                                     self.cmp.getStates(),\
-                                     self.cmp.getPossibleActions())\
-                    for pi in query}
+        piValues = {piIdx: computeValue(query[piIdx],\
+                                        self.getRewardFunc(idx),\
+                                        self.cmp.getStates(),\
+                                        self.cmp.getPossibleActions())\
+                    for piIdx in range(len(query))}
         maxValue = max(piValues.values())
-        optPis = filter(lambda pi: piValues[pi] == maxValue, query)
-        return res in optPis
+        optPiIdxs = filter(lambda piIdx: piValues[piIdx] == maxValue, range(len(query)))
+        return any(res == query[piIdx] for piIdx in optPiIdxs)
     elif self.queryType == QueryType.REWARD_SIGN:
       resSet = [-1, 0, 1]
       consistCond = lambda res, idx: numpy.sign(self.rewardSet[idx](query)) == res
@@ -249,7 +253,7 @@ class QTPAgent:
       if sum(phi) != 0:
         phi = [x / sum(phi) for x in phi]
         distr[tuple(phi)] += resProb
-        self.responseToPhi[(query, res)] = tuple(phi)
+        self.responseToPhi[(tuple(query), res)] = tuple(phi)
     
     l = map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
     return l
@@ -383,7 +387,9 @@ class QTPAgent:
     The response is informed to the agent regarding a previous query
     """
     # such response was imagined by the agent before and the solution is bookkept
-    pi = self.phiToPolicy[self.responseToPhi[(query, response)]]
+    assert self.responseToPhi[(tuple(query), response)] != 0
+    assert self.phiToPolicy[self.responseToPhi[(tuple(query), response)]] != 0
+    pi = self.phiToPolicy[self.responseToPhi[(tuple(query), response)]]
     return pi
 
 
@@ -446,7 +452,7 @@ class HeuristicAgent(QTPAgent):
     return random.choice(qList)
 
 
-class ActiveSamplingAgent(HeuristicAgent):
+class ActiveSamplingAgent(QTPAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma):
     QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
@@ -632,6 +638,22 @@ class MILPAgent(ActiveSamplingAgent):
       policyBins[rewardId] = [1.0 / numMax if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
     return policyBins
   
+  def sampleTrajectory(self, pi):
+    # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
+    # pi: S, A -> prob
+    u = util.Counter()
+
+    # we use self.cmp for simulation. we reset it after running
+    while True:
+      # now, sample an action following this policy
+      a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
+      u[(self.cmp.state, a)] = 1
+      if self.cmp.isTerminal(self.cmp.state): break
+
+      self.cmp.doAction(a)
+    self.cmp.reset()
+    return u
+
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     rewardCandNum = len(self.rewardSet)
@@ -724,6 +746,13 @@ class MILPAgent(ActiveSamplingAgent):
       hList = sorted(hList, key=lambda _: _[1])
       hList = filter(lambda _: not scipy.isnan(_[1]), hList)
       hList = hList[:self.m]
+    elif self.queryType == QueryType.DEMONSTRATION:
+      # if we already build a set of policies, but the query type is demonstration
+      # we sample trajectories from these policies as a query
+      # note that another way is implemented in MILPDemoAgent, which choose the next policy based on the demonstrated trajectories.
+      qu = [self.sampleTrajectory(x) for x in q]
+      objValue = self.getQValue(self.cmp.state, None, qu)
+      return (qu, None, objValue)
     else:
       raise Exception('Query type not implemented for MILP.')
 
@@ -742,22 +771,9 @@ class MILPAgent(ActiveSamplingAgent):
 class MILPDemoAgent(MILPAgent):
   # greedily construct a set of policies for demonstration
   # assume the first i policies are demonstrated to the operator when deciding the (i+1)-st policy
-  def sampleTrajectory(self, pi=None):
-    # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
-    # pi: S, A -> prob
-    u = util.Counter()
-    while not self.cmp.isTerminal(self.cmp.state):
-      # remind me later: is reward of the terminal state gathered?
-      # now, sample an action following this policy
-      if pi == None:
-        a = random.choice(self.cmp.getPossibleActions())
-      else:
-        print {a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()}
-        a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
-      u[(self.cmp.state, a)] = 1
-      self.cmp.doAction(a)
-    self.cmp.reset()
-    return u
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, heuristic=False):
+    self.heuristic = heuristic
+    MILPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
@@ -778,14 +794,18 @@ class MILPDemoAgent(MILPAgent):
         args['maxV'] = []
         for rewardId in xrange(rewardCandNum):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
-      args['U'] = [self.sampleTrajectory() for _ in xrange(1)]
-      x = milpDemo(**args)
+      x = milp(**args)
+      if self.heuristic:
+        #TODO what to do with this x for demonstration purpose
+        pass
       q.append(self.sampleTrajectory(x))
     
-    objValue = computeDemoObj(q, self.phi, args['S'], args['A'], args['R'])
+    objValue = self.getQValue(self.cmp.state, None, q)
 
     if self.queryType == QueryType.DEMONSTRATION:
       return q, None, objValue
+    else:
+      raise Exception("query type not implemented")
 
 
 class AlternatingQTPAgent(QTPAgent):

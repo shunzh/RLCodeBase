@@ -59,6 +59,7 @@ class TabularNavigation(ControlledMarkovProcess):
 
 class TabularNavigationKWay(TabularNavigation):
   degree = 2
+  noise = 0.8
 
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
 
@@ -101,7 +102,8 @@ class TabularNavigationKWay(TabularNavigation):
     if self.isTerminal(state): return []
     else:
       # we already computed the transition function in init
-      return [(self.transit[state][action], 1)]
+      return [(self.transit[state][action], 1 - self.noise),\
+              (self.transit[state][1 - action], self.noise)]
   
   def isTerminal(self, state):
     return state[1] == self.height - 1

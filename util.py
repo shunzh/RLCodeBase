@@ -189,6 +189,9 @@ class Counter(dict):
     self.setdefault(idx, 0)
     return dict.__getitem__(self, idx)
 
+  def __hash__(self):
+    return hash((tuple(self.items()), tuple(self.values())))
+
   def incrementAll(self, keys, count):
     """
     Increments all elements of keys by the same count.
