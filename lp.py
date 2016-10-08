@@ -44,7 +44,6 @@ def lpDual(S, A, r, T, s0, constraints={}):
   
   constraint [(s, a)] that the agent is required to visit
   """
-  print 'started'
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
 

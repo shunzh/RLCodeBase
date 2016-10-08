@@ -11,7 +11,7 @@ import operator
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
 try:
-  from lp import computeValue, computeObj, computeDemoObj, milp, lp, lpDual
+  from lp import computeValue, computeObj, milp, lp, lpDual
 except ImportError: print "lp import error"
 
 class LPAgent(ValueIterationAgent):
@@ -732,7 +732,9 @@ class MILPAgent(ActiveSamplingAgent):
       return (q, None, objValue)
     if self.queryType == QueryType.PARTIAL_POLICY:
       idx = 0
+      objValue = self.getQValue(self.cmp.state, None, q)
       qP = copy.copy(q)
+
       while True:
         # iterate over all the policies, remove one state pair of each
         # but make sure the EUS of the new set is unchaged
@@ -742,6 +744,7 @@ class MILPAgent(ActiveSamplingAgent):
         success = False
         for key in util.randomly(x.keys()):
           x.pop(key)
+          print self.getQValue(self.cmp.state, None, qP), objValue 
           if self.getQValue(self.cmp.state, None, qP) == objValue:
             success = True
             break
@@ -749,6 +752,7 @@ class MILPAgent(ActiveSamplingAgent):
             x = xOld.copy()
         
         if not success: break
+        print idx, len(x)
         idx = (idx + 1) % len(q)
       
       return (qP, None, objValue)
