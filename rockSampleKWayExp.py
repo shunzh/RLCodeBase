@@ -10,7 +10,7 @@ import config
 import numpy
 
 if __name__ == '__main__':
-  width = height = 5
+  width = height = 8
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + 1

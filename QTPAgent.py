@@ -643,27 +643,41 @@ class MILPAgent(ActiveSamplingAgent):
     policyBins = util.Counter()
     rewardCandNum = len(args['R'])
     for rewardId in xrange(rewardCandNum):
+      # the values of the policies in the query under this reward candidate
       piValues = {idx: computeValue(q[idx], args['R'][rewardId], args['S'], args['A']) for idx in xrange(len(q))}
       maxValue = max(piValues.values())
       numMax = sum([1 if piValues[idx] == maxValue else 0 for idx in xrange(len(q))])
       policyBins[rewardId] = [1.0 / numMax if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
     return policyBins
   
-  def sampleTrajectory(self, pi):
+  def sampleTrajectory(self, pi, state = None, hori = numpy.inf, to = 'occupancy'):
     # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
     # pi: S, A -> prob
     u = util.Counter()
+    seq = []
+
+    t = 0
+    if state: self.cmp.state = state
 
     # we use self.cmp for simulation. we reset it after running
     while True:
       # now, sample an action following this policy
       a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
       u[(self.cmp.state, a)] = 1
-      if self.cmp.isTerminal(self.cmp.state): break
+      seq.append(self.cmp.state)
+      t += 1
+
+      if self.cmp.isTerminal(self.cmp.state) or t >= hori: break
 
       self.cmp.doAction(a)
     self.cmp.reset()
-    return u
+    
+    if to == 'occupancy':
+      return u
+    elif to == 'trajectory':
+      return seq
+    else:
+      raise Exception('unknown return type')
 
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
@@ -791,6 +805,51 @@ class MILPAgent(ActiveSamplingAgent):
       qu = [self.sampleTrajectory(x) for x in q]
       objValue = self.getQValue(self.cmp.state, None, qu)
       return (qu, None, objValue)
+    elif self.queryType == QueryType.SIMILARITY:
+      hori = 3
+      hValues = {}
+      hTrajs = {}
+      policyBins = self.computeDominatingPis(args, q)
+
+      for s in args['S']:
+        us = []
+        for idx in xrange(rewardCandNum):
+          us.append(self.sampleTrajectory(self.viAgentSet[idx].x, hori=hori, to='trajectory'))
+      
+        trajDist = {}
+        for i in xrange(k):
+          for j in xrange(k):
+            trajDist[(i, j)] = self.cmp.getTrajectoryDistance(us[i], us[j])
+        
+        hValue = 0
+        for idx in xrange(rewardCandNum):
+          for idx2 in xrange(rewardCandNum):
+            if idx != idx2:
+              for i in xrange(k):
+                for j in xrange(k):
+                  if policyBins[idx][i] > 0 and policyBins[idx2][j] > 0:
+                    hValue += trajDist[(i, j)]
+
+        for idx in xrange(rewardCandNum):
+          for i in xrange(k):
+            for j in xrange(k):
+              if policyBins[idx][i] > 0 and policyBins[idx][j] > 0:
+                hValue -= trajDist[(i, j)]
+
+        # the corresponding query contains the trajectories starting from this state
+        hTrajs[s] = []
+        for idx in xrange(rewardCandNum):
+          for i in xrange(k):
+            if policyBins[idx][i] > 0:
+              hTrajs[s] += tuple(us[i])
+              break # continue to the next reward candidate
+        hValues[s] = hValue
+      
+      maxH = max(hValues.values())
+      maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
+      q = hTrajs[random.choice(maxStates)]
+      objValue = self.getQValue(self.cmp.state, None, q)
+      return (q, None, objValue)
     else:
       raise Exception('Query type not implemented for MILP.')
 
@@ -800,7 +859,7 @@ class MILPAgent(ActiveSamplingAgent):
       qValue = self.getQValue(self.cmp.state, None, q)
       qList.append((q, None, qValue))
 
-    maxQValue = max(map(lambda _:_[2], qList))
+    maxQValue = max(map(lambda _: _[2], qList))
     qList = filter(lambda _: _[2] == maxQValue, qList)
 
     return random.choice(qList)
