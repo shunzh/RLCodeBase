@@ -137,6 +137,9 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   elif agentName == "MILP-PARTIAL-POLICY":
     queryType = QueryType.PARTIAL_POLICY
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP-SIMILAR":
+    queryType = QueryType.SIMILARITY
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 

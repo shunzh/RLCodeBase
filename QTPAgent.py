@@ -102,6 +102,35 @@ class QTPAgent:
         # double check this for planning with transient phase
         else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward, posterior=True)
 
+  def sampleTrajectory(self, pi, state = None, hori = numpy.inf, to = 'occupancy'):
+    # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
+    # pi: S, A -> prob
+    u = util.Counter()
+    seq = []
+
+    t = 0
+    if state: self.cmp.state = state
+
+    # we use self.cmp for simulation. we reset it after running
+    while True:
+      # now, sample an action following this policy
+      a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
+      u[(self.cmp.state, a)] = 1
+      seq.append(self.cmp.state)
+      t += 1
+
+      if self.cmp.isTerminal(self.cmp.state) or t >= hori: break
+
+      self.cmp.doAction(a)
+    self.cmp.reset()
+    
+    if to == 'occupancy':
+      return u
+    elif to == 'trajectory':
+      return seq
+    else:
+      raise Exception('unknown return type')
+
   def getRewardFunc(self, phi):
     """
     return the mean reward function under the given belief
@@ -201,24 +230,15 @@ class QTPAgent:
     elif self.queryType == QueryType.SIMILARITY:
       resSet = query
       def consistCond(res, idx):
-        maxProb = None
-        optTraj = None
+        tHs = {}
         x = self.viAgentSet[idx].x
-        # FIXME overfit l = 1, 2, |A| = 2
-        for traj in query:
-          prob = x[traj[0], traj[1]]
-          """
-          if traj[1] == 0:
-            nextState = (traj[0][0], traj[0][1] + 1)
-          else:
-            nextState = (traj[0][0] + 1, traj[0][1] + 1)
-          prob *= x[nextState, traj[2]]
-          """
+        optTraj = self.sampleTrajectory(x, query[0][0], hori=config.TRAJECTORY_LENGTH, to='trajectory')
 
-          if prob > maxProb:
-            maxProb = prob
-            optTraj = traj
-        return optTraj == res
+        for tIdx in range(len(query)):
+          tHs[tIdx] = self.cmp.getTrajectoryDistance(query[tIdx], optTraj)
+        maxValue = max(tHs.values())
+        optTIdxs = filter(lambda tIdx: tHs[tIdx] == maxValue, range(len(query)))
+        return any(res == query[tIdx] for tIdx in optTIdxs)
     elif self.queryType == QueryType.COMMITMENT:
       #FIXME only for l = 1
 
@@ -650,34 +670,6 @@ class MILPAgent(ActiveSamplingAgent):
       policyBins[rewardId] = [1.0 / numMax if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
     return policyBins
   
-  def sampleTrajectory(self, pi, state = None, hori = numpy.inf, to = 'occupancy'):
-    # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
-    # pi: S, A -> prob
-    u = util.Counter()
-    seq = []
-
-    t = 0
-    if state: self.cmp.state = state
-
-    # we use self.cmp for simulation. we reset it after running
-    while True:
-      # now, sample an action following this policy
-      a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
-      u[(self.cmp.state, a)] = 1
-      seq.append(self.cmp.state)
-      t += 1
-
-      if self.cmp.isTerminal(self.cmp.state) or t >= hori: break
-
-      self.cmp.doAction(a)
-    self.cmp.reset()
-    
-    if to == 'occupancy':
-      return u
-    elif to == 'trajectory':
-      return seq
-    else:
-      raise Exception('unknown return type')
 
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
@@ -690,7 +682,8 @@ class MILPAgent(ActiveSamplingAgent):
 
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
-    elif self.queryType in [QueryType.DEMONSTRATION, QueryType.COMMITMENT, QueryType.POLICY, QueryType.PARTIAL_POLICY]:
+    elif self.queryType in [QueryType.DEMONSTRATION, QueryType.COMMITMENT, QueryType.POLICY, QueryType.PARTIAL_POLICY,\
+                            QueryType.SIMILARITY]:
       k = config.NUMBER_OF_RESPONSES
     else:
       raise Exception("query type not implemented")
@@ -806,7 +799,6 @@ class MILPAgent(ActiveSamplingAgent):
       objValue = self.getQValue(self.cmp.state, None, qu)
       return (qu, None, objValue)
     elif self.queryType == QueryType.SIMILARITY:
-      hori = 3
       hValues = {}
       hTrajs = {}
       policyBins = self.computeDominatingPis(args, q)
@@ -814,7 +806,7 @@ class MILPAgent(ActiveSamplingAgent):
       for s in args['S']:
         us = []
         for idx in xrange(rewardCandNum):
-          us.append(self.sampleTrajectory(self.viAgentSet[idx].x, hori=hori, to='trajectory'))
+          us.append(self.sampleTrajectory(self.viAgentSet[idx].x, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
       
         trajDist = {}
         for i in xrange(k):
@@ -841,7 +833,7 @@ class MILPAgent(ActiveSamplingAgent):
         for idx in xrange(rewardCandNum):
           for i in xrange(k):
             if policyBins[idx][i] > 0:
-              hTrajs[s] += tuple(us[i])
+              hTrajs[s].append(tuple(us[i]))
               break # continue to the next reward candidate
         hValues[s] = hValue
       

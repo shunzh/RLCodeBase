@@ -34,7 +34,7 @@ class TabularNavigation(ControlledMarkovProcess):
 
   def getTrajectoryDistance(self, u1, u2):
     assert len(u1) == len(u2)
-    return sum(self.getStartState(s1, s2) for (s1, s2) in zip(u1, u2))
+    return sum(self.getStateDistance(s1, s2) for (s1, s2) in zip(u1, u2))
 
   def getTransitionStatesAndProbs(self, state, action):
     if self.isTerminal(state): return []
