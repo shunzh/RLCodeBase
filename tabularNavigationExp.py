@@ -121,7 +121,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
     queryType = QueryType.ACTION
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "OPT-TRAJ-SIMILAR":
-    queryType = QueryType.SIMILARITY
+    queryType = QueryType.SIMILAR
     agent = OptimalPartialPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "OPT-TRAJ-COMMIT":
     queryType = QueryType.COMMITMENT
@@ -138,7 +138,10 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
     queryType = QueryType.PARTIAL_POLICY
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-SIMILAR":
-    queryType = QueryType.SIMILARITY
+    queryType = QueryType.SIMILAR
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP-SIMILAR-NAIVE":
+    queryType = QueryType.SIMILAR_NAIVE
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)

@@ -10,14 +10,14 @@ import config
 import numpy
 
 if __name__ == '__main__':
-  width = height = 8
+  width = height = 5
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + 1
-  rockNum = 5
-  rewardCandNum = 4
+  rockNum = 2
+  rewardCandNum = 5
 
-  numOfActions = config.para
+  numOfActions = TabularNavigationKWay.degree
   # if we are going to compare with action queries, enable the following for convenience
   # we let the number of responses be consistent with the number of actions
   #config.NUMBER_OF_RESPONSES = numOfActions

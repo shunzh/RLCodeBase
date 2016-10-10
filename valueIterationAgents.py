@@ -61,6 +61,13 @@ class ValueIterationAgent(ValueEstimationAgent):
 
     self.allValues.reverse()
     
+    # construct the quasi-occupancy measure
+    self.x = util.Counter()
+    for s in self.mdp.getStates():
+      optAs = self.getPolicies(state)
+      for a in optAs:
+        self.x[s, a] = 1.0 / len(optAs)
+    
   def getValue(self, state, t=0):
     """
       Return the value of the state

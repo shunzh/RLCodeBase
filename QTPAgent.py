@@ -90,7 +90,7 @@ class QTPAgent:
     self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
 
-    if self.queryType in [QueryType.ACTION, QueryType.SIMILARITY]:
+    if self.queryType in [QueryType.ACTION, QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
       # For these queries, we need to compute the optimal policies (also values, occupancies for all reward candidates:
       # action queries: we need the optimal actions for all the states.
       # trajectory queries: we need to compute the occupancies of state action pairs.
@@ -102,7 +102,7 @@ class QTPAgent:
         # double check this for planning with transient phase
         else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward, posterior=True)
 
-  def sampleTrajectory(self, pi, state = None, hori = numpy.inf, to = 'occupancy'):
+  def sampleTrajectory(self, pi = None, state = None, hori = numpy.inf, to = 'occupancy'):
     # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
     # pi: S, A -> prob
     u = util.Counter()
@@ -113,13 +113,16 @@ class QTPAgent:
 
     # we use self.cmp for simulation. we reset it after running
     while True:
+      if self.cmp.isTerminal(self.cmp.state) or t >= hori: break
+
       # now, sample an action following this policy
-      a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
+      if pi == None:
+        a = random.choice(self.cmp.getPossibleActions())
+      else:
+        a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
       u[(self.cmp.state, a)] = 1
       seq.append(self.cmp.state)
       t += 1
-
-      if self.cmp.isTerminal(self.cmp.state) or t >= hori: break
 
       self.cmp.doAction(a)
     self.cmp.reset()
@@ -227,7 +230,7 @@ class QTPAgent:
     elif self.queryType == QueryType.REWARD:
       resSet = self.cmp.possibleRewardValues
       consistCond = lambda res, idx: self.rewardSet[idx](query) == res
-    elif self.queryType == QueryType.SIMILARITY:
+    elif self.queryType in [QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
       resSet = query
       def consistCond(res, idx):
         tHs = {}
@@ -683,7 +686,7 @@ class MILPAgent(ActiveSamplingAgent):
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
     elif self.queryType in [QueryType.DEMONSTRATION, QueryType.COMMITMENT, QueryType.POLICY, QueryType.PARTIAL_POLICY,\
-                            QueryType.SIMILARITY]:
+                            QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
       k = config.NUMBER_OF_RESPONSES
     else:
       raise Exception("query type not implemented")
@@ -798,43 +801,61 @@ class MILPAgent(ActiveSamplingAgent):
       qu = [self.sampleTrajectory(x) for x in q]
       objValue = self.getQValue(self.cmp.state, None, qu)
       return (qu, None, objValue)
-    elif self.queryType == QueryType.SIMILARITY:
+    elif self.queryType in [QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
       hValues = {}
       hTrajs = {}
       policyBins = self.computeDominatingPis(args, q)
 
       for s in args['S']:
         us = []
-        for idx in xrange(rewardCandNum):
-          us.append(self.sampleTrajectory(self.viAgentSet[idx].x, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
+        for i in xrange(rewardCandNum):
+          us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
       
         trajDist = {}
-        for i in xrange(k):
-          for j in xrange(k):
+        for i in xrange(rewardCandNum):
+          for j in xrange(rewardCandNum):
             trajDist[(i, j)] = self.cmp.getTrajectoryDistance(us[i], us[j])
         
-        hValue = 0
-        for idx in xrange(rewardCandNum):
-          for idx2 in xrange(rewardCandNum):
-            if idx != idx2:
-              for i in xrange(k):
-                for j in xrange(k):
-                  if policyBins[idx][i] > 0 and policyBins[idx2][j] > 0:
-                    hValue += trajDist[(i, j)]
+        if self.queryType == QueryType.SIMILAR:
+          hValueInter = 0
+          hValueIntra = 0
+          interNum = 0
+          intraNum = 0
+          for idx in xrange(rewardCandNum):
+            for idx2 in xrange(rewardCandNum):
+              if idx != idx2:
+                for i in xrange(k):
+                  for j in xrange(k):
+                    if policyBins[idx][i] > 0 and policyBins[idx2][j] > 0:
+                      hValueInter += trajDist[(i, j)]
+                      interNum += 1
 
-        for idx in xrange(rewardCandNum):
-          for i in xrange(k):
-            for j in xrange(k):
-              if policyBins[idx][i] > 0 and policyBins[idx][j] > 0:
-                hValue -= trajDist[(i, j)]
+          for idx in xrange(rewardCandNum):
+            for i in xrange(k):
+              for j in xrange(k):
+                if policyBins[idx][i] > 0 and policyBins[idx][j] > 0:
+                  hValueIntra += trajDist[(i, j)]
+                  intraNum += 1
+          hValue = hValueInter - hValueIntra
 
-        # the corresponding query contains the trajectories starting from this state
-        hTrajs[s] = []
-        for idx in xrange(rewardCandNum):
+          hTrajs[s] = []
+          for idx in xrange(rewardCandNum):
+            for i in xrange(k):
+              if policyBins[idx][i] > 0:
+                hTrajs[s].append(tuple(us[i]))
+                break # continue to the next reward candidate
+        elif self.queryType == QueryType.SIMILAR_NAIVE:
+          hValue = 0
+          for i in xrange(rewardCandNum):
+            for j in xrange(rewardCandNum):
+              hValue += trajDist[(i, j)]
+          
+          hTrajs[s] = []
           for i in xrange(k):
-            if policyBins[idx][i] > 0:
-              hTrajs[s].append(tuple(us[i]))
-              break # continue to the next reward candidate
+            hTrajs[s].append(tuple(self.sampleTrajectory(pi=None, state=s, hori=config.TRAJECTORY_LENGTH, to='trajectory')))
+        else:
+          raise Exception('Impossible to get here!')
+
         hValues[s] = hValue
       
       maxH = max(hValues.values())

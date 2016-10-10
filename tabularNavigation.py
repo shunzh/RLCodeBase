@@ -8,7 +8,7 @@ class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height
-    self.noise = 0.2
+    self.noise = 0.02
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, queries, trueReward, gamma, responseTime, horizon, terminalReward)
 
@@ -68,17 +68,16 @@ class TabularNavigationKWay(TabularNavigation):
   degree = 2
 
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
-
     # pre-build transitions 
     self.transit = util.Counter()
     for y in xrange(height - 1):
       for x in xrange(self.getNumOfStatesPerRow(y)):
         if config.CONNECTION_TYPE == 'tree':
-          self.transit[(x, y)] = [(2 * x, y + 1), (2 * x + 1, y + 1)]
+          self.transit[(x, y)] = [(x * self.degree + i, y + 1) for i in range(self.degree)]
         elif config.CONNECTION_TYPE == 'grid':
-          self.transit[(x, y)] = [(x, y + 1), (x + 1, y + 1)]
+          self.transit[(x, y)] = [(x + i, y + 1) for i in range(self.degree)]
         elif config.CONNECTION_TYPE == 'chain':
-          self.transit[(x, y)] = [(x, y + 1), (x, y + 1)]
+          self.transit[(x, y)] = [(x, y + 1)] * self.degree
         else:
           raise Exception('Unknown connection type of k way navigation.')
 
@@ -108,8 +107,9 @@ class TabularNavigationKWay(TabularNavigation):
     if self.isTerminal(state): return []
     else:
       # we already computed the transition function in init
-      return [(self.transit[state][action], 1 - self.noise),\
-              (self.transit[state][1 - action], self.noise)]
+      transProb = {self.transit[state][a]: self.noise for a in self.getPossibleActions()}
+      transProb[self.transit[state][action]] = 1 - self.noise * (self.degree - 1)
+      return transProb.items()
   
   def isTerminal(self, state):
     return state[1] == self.height - 1

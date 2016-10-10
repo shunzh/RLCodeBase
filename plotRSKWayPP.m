@@ -1,13 +1,13 @@
 function main()
-  load OPT-POLICY.out
-  load MILP-DEMO-BATCH.out
-  load MILP-DEMO.out
+  %load OPT-POLICY.out
+  load MILP-SIMILAR.out
+  load MILP-SIMILAR-NAIVE.out
 
-  demo = MILP_DEMO(:, 1) - OPT_POLICY(:, 1);
-  demo_batch = MILP_DEMO_BATCH(:, 1) - OPT_POLICY(:, 1);
+  sim = MILP_SIMILAR(:, 1);
+  sim_naive = MILP_SIMILAR_NAIVE(:, 1);
 
-  [m, ci] = process(demo)
-  [m, ci] = process(demo_batch)
+  [m, ci] = process(sim)
+  [m, ci] = process(sim_naive)
 end
 
 function [m, ci] = process(data)
