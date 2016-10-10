@@ -8,7 +8,7 @@ class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height
-    self.noise = 0.02
+    self.noise = 0.1
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, queries, trueReward, gamma, responseTime, horizon, terminalReward)
 
@@ -65,7 +65,7 @@ class TabularNavigation(ControlledMarkovProcess):
 
 
 class TabularNavigationKWay(TabularNavigation):
-  degree = 2
+  degree = 3
 
   def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
     # pre-build transitions 
@@ -88,7 +88,7 @@ class TabularNavigationKWay(TabularNavigation):
     if config.CONNECTION_TYPE == 'tree':
       return TabularNavigationKWay.degree ** y
     elif config.CONNECTION_TYPE == 'grid':
-      return y + 1
+      return 1 + y * (TabularNavigationKWay.degree - 1) 
     elif config.CONNECTION_TYPE == 'chain':
       return 1
     else:

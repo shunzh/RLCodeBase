@@ -1,13 +1,12 @@
 function main()
-  %load OPT-POLICY.out
   load MILP-SIMILAR.out
   load MILP-SIMILAR-NAIVE.out
 
   sim = MILP_SIMILAR(:, 1);
   sim_naive = MILP_SIMILAR_NAIVE(:, 1);
 
-  [m, ci] = process(sim)
-  [m, ci] = process(sim_naive)
+  [m1, ci1] = process(sim)
+  [m2, ci2] = process(sim_naive)
 end
 
 function [m, ci] = process(data)
