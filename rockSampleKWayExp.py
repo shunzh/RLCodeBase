@@ -38,8 +38,6 @@ if __name__ == '__main__':
       numpy.random.seed(int(arg))
   config.opts = '_'.join(map(str, []))
   
-  Domain = TabularNavigationKWay
-  
   def rewardGen(rewards, numerical): 
     def rewardFunc(s, a):
       if (s, a) in rewards:
@@ -50,12 +48,6 @@ if __name__ == '__main__':
 
   rewardSet = []
 
-  rocks = [((x, y), a) for a in xrange(numOfActions)\
-                       for y in xrange(height)\
-                       for x in xrange(TabularNavigationKWay.getNumOfStatesPerRow(y))]
-  for candId in xrange(rewardCandNum):
-    sampledRocks = random.sample(rocks, rockNum)
-    rewardSet.append(rewardGen(sampledRocks, random.random()))
   """
   # a case where trajectory query (actualy state-action preference query) has worse performance than policy queries
   rewardSet.append(rewardGen([((0, 0), 0), ((0, 1), 0)], 1))
@@ -64,8 +56,14 @@ if __name__ == '__main__':
   rewardSet.append(rewardGen([((0, 0), 1), ((0, 1), 1)], 1))
   """
 
-  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
-
   terminalReward = util.Counter()
 
-  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewardSet, initialPhi, terminalReward)
+  cmp = TabularNavigationKWay(responseTime, width, height, horizon = horizon, terminalReward = terminalReward)
+
+  rocks = cmp.getStateActionPairs()
+  for candId in xrange(rewardCandNum):
+    sampledRocks = random.sample(rocks, rockNum)
+    rewardSet.append(rewardGen(sampledRocks, random.random()))
+
+  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+  experiment(cmp, rewardSet, initialPhi)

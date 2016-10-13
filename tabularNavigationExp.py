@@ -28,9 +28,10 @@ Show:
 - computation time
 - paired difference between JQTP and AQTP
 """
-def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewardSet, initialPhi, terminalReward):
+def experiment(cmp, rewardSet, initialPhi):
   # discount factor
   gamma = 1
+  responseTime = 0
   queryFlag = 'default'
   agentName = 'JQTP'
   
@@ -62,7 +63,7 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   else:
     #queries = [(x, y) for x in xrange(width) for y in xrange(height)]
     # use the following code to deal with the problem of using action queries in k way
-    queries = [(x, y) for y in xrange(height) for x in range(Domain.getNumOfStatesPerRow(y))]
+    queries = cmp.getStates()
     if queryFlag == 'default':
       # use potential reward locations as query set
       queryType = QueryType.ACTION
@@ -77,8 +78,9 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
   trueReward = util.sample(initialPhi, rewardSet)
   if config.VERBOSE:
     print 'true reward', rewardSet.index(trueReward)
-  cmp = Domain(queries, trueReward, gamma, responseTime, width, height,\
-               horizon = horizon, terminalReward = terminalReward)
+
+  # continue initializing the cmp object
+  cmp.decorate(gamma, queries, trueReward)
   cmp.setPossibleRewardValues([0, 1])
 
   if agentName == 'JQTP' or agentName == 'NQ' or agentName == 'WAIT':
@@ -151,11 +153,11 @@ def experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewa
 
   if agentName == 'WAIT':
     # only simulate the episodes after the response
-    ret, qValue, time = CMPExp.experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon- responseTime)
+    ret, qValue, time = CMPExp.experiment(cmp, agent, gamma, rewardSet, queryType, horizon=cmp.horizon- responseTime)
     ret = ret * gamma ** responseTime
     qValue = ret * gamma ** responseTime
   else:
-    ret, qValue, time = CMPExp.experiment(cmp, agent, gamma, rewardSet, queryType, horizon=horizon)
+    ret, qValue, time = CMPExp.experiment(cmp, agent, gamma, rewardSet, queryType, horizon=cmp.horizon)
 
   if config.PRINT == 'perf':
     print ret, qValue, time

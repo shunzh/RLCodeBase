@@ -9,12 +9,10 @@ class QueryType:
   SIMILAR, SIMILAR_NAIVE, NONE = range(10)
   
 class ControlledMarkovProcess(MarkovDecisionProcess):
-  def __init__(self, queries, trueReward, gamma, responseTimes, horizon=np.inf, terminalReward=None):
+  def __init__(self, responseTimes, horizon=np.inf, terminalReward=None):
     MarkovDecisionProcess.__init__(self)
     
     self.outsandingQuery = None
-    # possible queries
-    self.queries = queries
     if type(responseTimes) == int: 
       # deterministic response time
       self.responseTimes = [(responseTimes, 1)]
@@ -29,11 +27,17 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     
     # this field is needed for reward queries
     self.possibleRewardValues = None
+
+  def decorate(self, gamma, queries, trueReward):
+    self.gamma = gamma
     
+    # possible queries
+    self.queries = queries
+
     # the real reward function
     # learn a VI agent on this reward setting, and policy will be decided.
     self.getReward = trueReward
-    self.viAgent = ValueIterationAgent(self, gamma)
+    self.viAgent = ValueIterationAgent(self, self.gamma)
     self.viAgent.learn()
 
   def setPossibleRewardValues(self, rewards):
@@ -56,6 +60,16 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     """
     raise Exception('undefined')
   
+  def getStateDistance(self, s1, s2):
+    """
+    Return the distance between two states
+    """
+    raise Exception('undefined')
+  
+  def getTrajectoryDistance(self, u1, u2):
+    assert len(u1) == len(u2)
+    return sum(self.getStateDistance(s1, s2) for (s1, s2) in zip(u1, u2))
+
   def responseCallback(self):
     """
     The agent should check with this function to see whether there is a feedback

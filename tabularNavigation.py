@@ -5,12 +5,12 @@ import config
 import numpy
 
 class TabularNavigation(ControlledMarkovProcess):
-  def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
+  def __init__(self, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height
     self.noise = 0.1
     # horizon is assumed to be finite in this domain
-    ControlledMarkovProcess.__init__(self, queries, trueReward, gamma, responseTime, horizon, terminalReward)
+    ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
 
   def cost(self, query):
     return 0
@@ -31,10 +31,6 @@ class TabularNavigation(ControlledMarkovProcess):
  
   def getStateDistance(self, s1, s2):
     return abs(s1[0] - s2[0]) + abs(s1[1] - s2[1])
-
-  def getTrajectoryDistance(self, u1, u2):
-    assert len(u1) == len(u2)
-    return sum(self.getStateDistance(s1, s2) for (s1, s2) in zip(u1, u2))
 
   def getTransitionStatesAndProbs(self, state, action):
     if self.isTerminal(state): return []
@@ -67,7 +63,7 @@ class TabularNavigation(ControlledMarkovProcess):
 class TabularNavigationKWay(TabularNavigation):
   degree = 3
 
-  def __init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward):
+  def __init__(self, responseTime, width, height, horizon, terminalReward):
     # pre-build transitions 
     self.transit = util.Counter()
     for y in xrange(height - 1):
@@ -81,7 +77,7 @@ class TabularNavigationKWay(TabularNavigation):
         else:
           raise Exception('Unknown connection type of k way navigation.')
 
-    TabularNavigation.__init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward)
+    TabularNavigation.__init__(self, responseTime, width, height, horizon, terminalReward)
 
   @staticmethod
   def getNumOfStatesPerRow(y):
@@ -151,6 +147,29 @@ class TabularNavigationMaze(TabularNavigation):
     else:
       return TabularNavigation.measure(self, state1, mid)\
            + TabularNavigation.measure(self, state2, mid)
+
+
+class Driving(TabularNavigation):
+  def __init__(self, carDist, responseTime, width, height, horizon, terminalReward):
+    TabularNavigation.__init__(self, responseTime, width, height, horizon, terminalReward)
+    self.carDist = carDist
+    
+    # initialize cars
+    self.cars = []
+    
+    for i in range(height / carDist):
+      x = random.randint(0, width - 1)
+      y = random.randint(carDist * i, carDist * (i + 1) - 1)
+      self.cars.append((x, y))
+
+  def reset(self):
+    self.state = (self.width / 2, 0)
+
+  def getPossibleActions(self, state=None):
+    return [(0, 1), (-1, 1), (1, 1)]
+  
+  def isTerminal(self, state):
+    return state[1] == self.height - 1
 
 
 class PuddleWorld(TabularNavigation):
