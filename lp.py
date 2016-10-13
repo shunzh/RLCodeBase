@@ -1,11 +1,8 @@
 from pycpx import CPlexModel
 import easyDomains
-from cmp import QueryType
 import scipy.stats
-import random
 import config
 import util
-from numpy import prod
 
 def lp(S, A, r, T, s0):
   """

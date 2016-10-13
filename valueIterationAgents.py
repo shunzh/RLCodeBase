@@ -64,7 +64,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     # construct the quasi-occupancy measure
     self.x = util.Counter()
     for s in self.mdp.getStates():
-      optAs = self.getPolicies(state)
+      optAs = self.getPolicies(s)
       for a in optAs:
         self.x[s, a] = 1.0 / len(optAs)
     

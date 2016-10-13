@@ -58,9 +58,9 @@ class LPDualAgent(ValueIterationAgent):
     maxProb = max(self.x[state, a] for a in actions)
     return filter(lambda a: self.x[state, a] == maxProb, actions)
 
-#LearningAgent = ValueIterationAgent
+LearningAgent = ValueIterationAgent
 #LearningAgent = LPAgent
-LearningAgent = LPDualAgent
+#LearningAgent = LPDualAgent
 
 class QTPAgent:
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
@@ -577,7 +577,7 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
     from itertools import combinations
 
     rewardCandNum = len(self.rewardSet)
-    maxObjValue = 0
+    maxObjValue = -numpy.inf
     optQ = None
     
     policies = util.Counter()
@@ -704,7 +704,7 @@ class MILPAgent(ActiveSamplingAgent):
 
       x = milp(**args)
       q.append(x)
-        
+
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R'])
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy

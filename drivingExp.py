@@ -50,11 +50,10 @@ if __name__ == '__main__':
   ops.append(lambda l, car: l.update({car: 1}))# nasty driver
   ops.append(lambda l, (carX, carY): l.update({(carX, carY - 1): 1, (carX, carY): -1}))# threatening driver
   ops.append(lambda l, car: l.update({car: -1}))
-  
+    
   for op in ops:
     reward = util.Counter()
     for car in cmp.cars: op(reward, car)      
-    print reward
     rewardSet.append(lambda s, a: reward[s])
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
