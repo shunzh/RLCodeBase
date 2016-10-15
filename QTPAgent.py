@@ -101,6 +101,11 @@ class QTPAgent:
         if horizon == numpy.inf: self.viAgentSet[idx] = self.getVIAgent(phi)
         # double check this for planning with transient phase
         else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward, posterior=True)
+        """
+        for s in self.cmp.getStates():
+          for a in self.cmp.getPossibleActions():
+            print s, a, self.viAgentSet[idx].getQValue(s, a)
+        """
 
   def sampleTrajectory(self, pi = None, state = None, hori = numpy.inf, to = 'occupancy'):
     # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
@@ -673,7 +678,6 @@ class MILPAgent(ActiveSamplingAgent):
       policyBins[rewardId] = [1.0 / numMax if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
     return policyBins
   
-
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     self.args = args # save a copy

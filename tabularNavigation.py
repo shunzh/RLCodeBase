@@ -8,7 +8,7 @@ class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height
-    self.noise = 0.01
+    self.noise = 0
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
 
@@ -37,13 +37,13 @@ class TabularNavigation(ControlledMarkovProcess):
     elif state[0] == self.width - 1: return [((state[0], state[1] + 1), 1)]
     elif state[1] == self.height - 1: return [((state[0] + 1, state[1]), 1)]
     else:
-      possibleNewStates = map(lambda a: (state[0] + a[0], state[1] + a[1]), self.getPossibleActions(state))
-      sap = {s: self.noise for s in possibleNewStates}
+      transProb = {self.adjustState((state[0] + a[0], state[1] + a[1])): self.noise for a in self.getPossibleActions()}
+      transSize = len(transProb.keys())
 
-      newState = (state[0] + action[0], state[1] + action[1])
-      sap[newState] = 1 - self.noise * (len(self.getPossibleActions()) - 1)
+      newState = self.adjustState((state[0] + action[0], state[1] + action[1]))
+      transProb[newState] = 1 - self.noise * (transSize - 1)
 
-      return sap.items()
+      return transProb.items()
   
   def adjustState(self, loc):
     loc = list(loc)
@@ -105,6 +105,7 @@ class TabularNavigationKWay(TabularNavigation):
       # we already computed the transition function in init
       transProb = {self.transit[state][a]: self.noise for a in self.getPossibleActions()}
       transProb[self.transit[state][action]] = 1 - self.noise * (self.degree - 1)
+      print state, transProb
       return transProb.items()
   
   def isTerminal(self, state):
@@ -129,14 +130,6 @@ class TabularNavigationMaze(TabularNavigation):
     self.walls += [(width / 2, y) for y in range(height / 2 - 1) + range(height / 2 + 2, height)]
     TabularNavigation.__init__(self, queries, trueReward, gamma, responseTime, width, height, horizon, terminalReward)
 
-  def getTransitionStatesAndProbs(self, state, action):
-    newState = TabularNavigation.getTransitionStatesAndProbs(self, state, action)[0][0]
-    if newState in self.walls:
-      # bump into walls
-      newState = state
-    
-    return [(newState, 1)]
-
   def measure(self, state1, state2):
     # mind the obstacles
     #FXIME overfit the current map
@@ -154,9 +147,10 @@ class Driving(TabularNavigation):
     TabularNavigation.__init__(self, responseTime, width, height, horizon, terminalReward)
     self.carDist = carDist
     
+    #self.cars = [(3, 5), (4, 7)] #FIXME for testing
+    
     # initialize cars
     self.cars = []
-    
     for i in range(height / carDist):
       x = random.randint(0, width - 1)
       y = random.randint(carDist * i, carDist * (i + 1) - 1)

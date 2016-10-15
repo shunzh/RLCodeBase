@@ -9,8 +9,8 @@ import numpy
 from tabularNavigation import Driving
 
 if __name__ == '__main__':
-  width = 3
-  height = 10
+  width = 5
+  height = 20
   # the time step that the agent receives the response
   horizon = height + 1
   responseTime = 0
@@ -42,19 +42,24 @@ if __name__ == '__main__':
 
   terminalReward = util.Counter()
 
-  cmp = Driving(5, responseTime, width, height, horizon, terminalReward)
-
-  rewardSet = []
+  cmp = Driving(height, responseTime, width, height, horizon, terminalReward)
+  print 'cars', cmp.cars
 
   ops = []
-  ops.append(lambda l, car: l.update({car: 1}))# nasty driver
-  ops.append(lambda l, (carX, carY): l.update({(carX, carY - 1): 1, (carX, carY): -1}))# threatening driver
-  ops.append(lambda l, car: l.update({car: -1}))
-    
+  ops.append(lambda l, car: l.update({car: 1})) # nasty driver
+  ops.append(lambda l, (carX, carY): l.update({(carX, carY - 1): 1, (carX, carY): -1})) # threatening driver
+  ops.append(lambda l, car: l.update({car: -1})) # nice driver
+ 
+  rewards = []
   for op in ops:
-    reward = util.Counter()
-    for car in cmp.cars: op(reward, car)      
-    rewardSet.append(lambda s, a: reward[s])
+    rewards.append(util.Counter())
+    reward = rewards[-1]
+    for car in cmp.cars: op(reward, car)
+
+  rewardSet = []
+  rewardSet.append(lambda s, a: rewards[0][s])
+  rewardSet.append(lambda s, a: rewards[1][s])
+  rewardSet.append(lambda s, a: rewards[2][s])
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
   experiment(cmp, rewardSet, initialPhi)
