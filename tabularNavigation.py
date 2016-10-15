@@ -34,8 +34,6 @@ class TabularNavigation(ControlledMarkovProcess):
 
   def getTransitionStatesAndProbs(self, state, action):
     if self.isTerminal(state): return []
-    elif state[0] == self.width - 1: return [((state[0], state[1] + 1), 1)]
-    elif state[1] == self.height - 1: return [((state[0] + 1, state[1]), 1)]
     else:
       transProb = {self.adjustState((state[0] + a[0], state[1] + a[1])): self.noise for a in self.getPossibleActions()}
       transSize = len(transProb.keys())
@@ -105,7 +103,6 @@ class TabularNavigationKWay(TabularNavigation):
       # we already computed the transition function in init
       transProb = {self.transit[state][a]: self.noise for a in self.getPossibleActions()}
       transProb[self.transit[state][action]] = 1 - self.noise * (self.degree - 1)
-      print state, transProb
       return transProb.items()
   
   def isTerminal(self, state):
@@ -147,14 +144,13 @@ class Driving(TabularNavigation):
     TabularNavigation.__init__(self, responseTime, width, height, horizon, terminalReward)
     self.carDist = carDist
     
-    #self.cars = [(3, 5), (4, 7)] #FIXME for testing
-    
     # initialize cars
     self.cars = []
     for i in range(height / carDist):
       x = random.randint(0, width - 1)
       y = random.randint(carDist * i, carDist * (i + 1) - 1)
       self.cars.append((x, y))
+    #self.cars = [(3, 3)] #FIXME for testing
 
   def reset(self):
     self.state = (self.width / 2, 0)

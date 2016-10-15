@@ -124,18 +124,6 @@ def computeObj(q, psi, S, A, R):
 
   for i in xrange(rLen):
     values = [computeValue(pi, R[i], S, A) for pi in q]
-    #print i, values
-    obj += psi[i] * max(values)
-  
-  return obj
-
-def computeDemoObj(q, psi, S, A, R):
-  rLen = len(R)
-  obj = 0
-
-  for i in xrange(rLen):
-    values = [computeValue(pi, R[i], S, A) for pi in q]
-    #print i, values
     obj += psi[i] * max(values)
   
   return obj

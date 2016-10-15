@@ -101,11 +101,7 @@ class QTPAgent:
         if horizon == numpy.inf: self.viAgentSet[idx] = self.getVIAgent(phi)
         # double check this for planning with transient phase
         else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward, posterior=True)
-        """
-        for s in self.cmp.getStates():
-          for a in self.cmp.getPossibleActions():
-            print s, a, self.viAgentSet[idx].getQValue(s, a)
-        """
+        #print idx, self.viAgentSet[idx].getValue(self.cmp.state)
 
   def sampleTrajectory(self, pi = None, state = None, hori = numpy.inf, to = 'occupancy'):
     # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
@@ -585,29 +581,24 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
     maxObjValue = -numpy.inf
     optQ = None
     
-    policies = util.Counter()
+    values = util.Counter()
     for i in xrange(1, rewardCandNum + 1):
       for l in combinations(range(rewardCandNum), i):
         l = [self.phi[i] if i in l else 0 for i in range(rewardCandNum)]
-        if sum(l) > 0: l = map(lambda _: _ / sum(l), l)
         if config.VERBOSE: print l
         agent = self.getFiniteVIAgent(l, horizon - responseTime, terminalReward, posterior=True)
-        policies[tuple(l)] = agent.x
+        values[tuple(l)] = agent.getValue(self.cmp.state)
     
-    for subset in combinations(policies.items(), k):
-      q = map(lambda _: _[1], subset)
+    for subset in combinations(values.items(), k):
       psis = map(lambda _: _[0], subset)
+      q = map(lambda _: _[1], subset)
       # make sure that such query partitions the reward candiates
       if sum(sum(_ > 0 for _ in psi) for psi in psis) == rewardCandNum and\
          all(sum(psi[i] for psi in psis) > 0 for i in xrange(rewardCandNum)):
-        objValue = computeObj(q, self.phi,\
-                              self.cmp.getStates(),\
-                              self.cmp.getPossibleActions(),\
-                              self.rewardSet)
+        objValue = sum(q)
         #print psis, objValue
         if objValue > maxObjValue:
           maxObjValue = objValue
-          optPsis = psis
           optQ = q
     
     q = optQ

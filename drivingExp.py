@@ -42,19 +42,19 @@ if __name__ == '__main__':
 
   terminalReward = util.Counter()
 
-  cmp = Driving(height, responseTime, width, height, horizon, terminalReward)
-  print 'cars', cmp.cars
+  cmp = Driving(5, responseTime, width, height, horizon, terminalReward)
 
   ops = []
   ops.append(lambda l, car: l.update({car: 1})) # nasty driver
-  ops.append(lambda l, (carX, carY): l.update({(carX, carY - 1): 1, (carX, carY): -1})) # threatening driver
-  ops.append(lambda l, car: l.update({car: -1})) # nice driver
+  ops.append(lambda l, (carX, carY): l.update({(carX, carY - 1): 1, (carX, carY): -10})) # dangerous driver
+  ops.append(lambda l, car: l.update({car: -10})) # nice driver
  
   rewards = []
   for op in ops:
     rewards.append(util.Counter())
     reward = rewards[-1]
     for car in cmp.cars: op(reward, car)
+    #print reward
 
   rewardSet = []
   rewardSet.append(lambda s, a: rewards[0][s])
