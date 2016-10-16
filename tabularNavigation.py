@@ -150,7 +150,7 @@ class Driving(TabularNavigation):
       x = random.randint(0, width - 1)
       y = random.randint(carDist * i, carDist * (i + 1) - 1)
       self.cars.append((x, y))
-    #self.cars = [(3, 3)] #FIXME for testing
+    #self.cars = [(2, 3)] #FIXME for testing
 
   def reset(self):
     self.state = (self.width / 2, 0)

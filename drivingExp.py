@@ -14,7 +14,7 @@ if __name__ == '__main__':
   # the time step that the agent receives the response
   horizon = height + 1
   responseTime = 0
-  rewardCandNum = 3
+  rewardCandNum = 5
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -45,9 +45,12 @@ if __name__ == '__main__':
   cmp = Driving(5, responseTime, width, height, horizon, terminalReward)
 
   ops = []
-  ops.append(lambda l, car: l.update({car: 1})) # nasty driver
-  ops.append(lambda l, (carX, carY): l.update({(carX, carY - 1): 1, (carX, carY): -10})) # dangerous driver
-  ops.append(lambda l, car: l.update({car: -10})) # nice driver
+  nastyDriver = lambda l, car: l.update({car: 1})
+  ops.append(nastyDriver)
+  dangerousDriver = lambda l, (carX, carY): l.update({(carX, carY - 1): 1, (carX, carY): -10})
+  ops.append(dangerousDriver)
+  niceDriver = lambda l, car: l.update({car: -10})
+  ops.append(niceDriver)
  
   rewards = []
   for op in ops:
@@ -55,11 +58,23 @@ if __name__ == '__main__':
     reward = rewards[-1]
     for car in cmp.cars: op(reward, car)
     #print reward
+    
+  leftPreferred = util.Counter()
+  rightPreferred = util.Counter()
+  for y in xrange(height):
+    leftPreferred[(0, y)] = 0.1
+    rightPreferred[(width - 1, y)] = 0.1
+  for car in cmp.cars: niceDriver(leftPreferred, car)
+  for car in cmp.cars: niceDriver(rightPreferred, car)
+  
 
   rewardSet = []
   rewardSet.append(lambda s, a: rewards[0][s])
   rewardSet.append(lambda s, a: rewards[1][s])
   rewardSet.append(lambda s, a: rewards[2][s])
+  rewardSet.append(lambda s, a: leftPreferred[s])
+  rewardSet.append(lambda s, a: rightPreferred[s])
 
-  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+  #initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+  initialPhi = [0.1, 0.3, 0.4, 0.1, 0.1]
   experiment(cmp, rewardSet, initialPhi)

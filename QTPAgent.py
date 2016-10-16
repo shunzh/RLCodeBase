@@ -831,14 +831,14 @@ class MILPAgent(ActiveSamplingAgent):
                 if policyBins[idx][i] > 0 and policyBins[idx][j] > 0:
                   hValueIntra += trajDist[(i, j)]
                   intraNum += 1
-          hValue = hValueInter - hValueIntra
+          hValue = 1.0 * hValueInter / interNum - 1.0 * hValueIntra / intraNum
 
           hTrajs[s] = []
-          for idx in xrange(rewardCandNum):
-            for i in xrange(k):
-              if policyBins[idx][i] > 0:
-                hTrajs[s].append(tuple(us[i]))
-                break # continue to the next reward candidate
+          for i in xrange(k):
+            subPsi = copy.copy(self.phi)
+            subPsi = [subPsi[idx] if policyBins[idx][i] > 0 else 0 for idx in xrange(rewardCandNum)]
+            idx = util.sample(subPsi, range(rewardCandNum))
+            hTrajs[s].append(tuple(us[idx]))
         elif self.queryType == QueryType.SIMILAR_NAIVE:
           hValue = 0
           for i in xrange(rewardCandNum):
@@ -846,8 +846,9 @@ class MILPAgent(ActiveSamplingAgent):
               hValue += trajDist[(i, j)]
           
           hTrajs[s] = []
-          for i in xrange(k):
-            hTrajs[s].append(tuple(self.sampleTrajectory(pi=None, state=s, hori=config.TRAJECTORY_LENGTH, to='trajectory')))
+          for _ in xrange(k):
+            idx = util.sample(self.phi, range(rewardCandNum))
+            hTrajs[s].append(tuple(us[idx]))
         else:
           raise Exception('Impossible to get here!')
 
