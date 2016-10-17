@@ -234,15 +234,14 @@ class QTPAgent:
     elif self.queryType in [QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
       resSet = query
       def consistCond(res, idx):
-        tHs = {}
-        x = self.viAgentSet[idx].x
-        optTraj = self.sampleTrajectory(x, query[0][0], hori=config.TRAJECTORY_LENGTH, to='trajectory')
+        # check if the distance from res to x[idx] is smaller than all other reward candidates
+        optTrajs = []
+        for i in xrange(self.rewardSetSize):
+          x = self.viAgentSet[i].x
+          optTrajs.append(self.sampleTrajectory(x, query[0][0], hori=config.TRAJECTORY_LENGTH, to='trajectory'))
 
-        for tIdx in range(len(query)):
-          tHs[tIdx] = self.cmp.getTrajectoryDistance(query[tIdx], optTraj)
-        maxValue = max(tHs.values())
-        optTIdxs = filter(lambda tIdx: tHs[tIdx] == maxValue, range(len(query)))
-        return any(res == query[tIdx] for tIdx in optTIdxs)
+        return all(self.cmp.getTrajectoryDistance(res, optTrajs[idx]) <= self.cmp.getTrajectoryDistance(res, optTrajs[i])\
+                   for i in xrange(self.rewardSetSize))
     elif self.queryType == QueryType.COMMITMENT:
       #FIXME only for l = 1
 
@@ -290,6 +289,7 @@ class QTPAgent:
         distr[tuple(phi)] += resProb
         self.responseToPhi[(tuple(query), res)] = tuple(phi)
     
+    assert all(candAllocated)
     l = map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
     return l
 
@@ -580,6 +580,7 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
     rewardCandNum = len(self.rewardSet)
     maxObjValue = -numpy.inf
     optQ = None
+    optPsis = None
     
     values = util.Counter()
     for i in xrange(1, rewardCandNum + 1):
@@ -596,10 +597,11 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
       if sum(sum(_ > 0 for _ in psi) for psi in psis) == rewardCandNum and\
          all(sum(psi[i] for psi in psis) > 0 for i in xrange(rewardCandNum)):
         objValue = sum(q)
-        #print psis, objValue
+        print psis, objValue
         if objValue > maxObjValue:
           maxObjValue = objValue
           optQ = q
+          optPsis = psis
     
     q = optQ
     if self.queryType == QueryType.POLICY:

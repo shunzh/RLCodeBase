@@ -22,7 +22,7 @@ if __name__ == '__main__':
     raise Exception('Unknown flag')
   for opt, arg in opts:
     if opt == '-t':
-      config.para = int(arg)
+      config.TRAJECTORY_LENGTH = int(arg)
     elif opt == '-n':
       config.INIT_STATE_DISTANCE = int(arg)
     elif opt == '-m':
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     elif opt == '-r':
       random.seed(int(arg))
       numpy.random.seed(int(arg))
-  config.opts = '_'.join(map(str, []))
+  config.opts = '_'.join(map(str, [config.TRAJECTORY_LENGTH]))
   
   def rewardGen(rewards, numerical): 
     def rewardFunc(s, a):
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
   terminalReward = util.Counter()
 
-  cmp = Driving(5, responseTime, width, height, horizon, terminalReward)
+  cmp = Driving(4, responseTime, width, height, horizon, terminalReward)
 
   ops = []
   nastyDriver = lambda l, car: l.update({car: 1})
