@@ -233,15 +233,15 @@ class QTPAgent:
       consistCond = lambda res, idx: self.rewardSet[idx](query) == res
     elif self.queryType in [QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
       resSet = query
-      def consistCond(res, idx):
-        # check if the distance from res to x[idx] is smaller than all other reward candidates
-        optTrajs = []
-        for i in xrange(self.rewardSetSize):
-          x = self.viAgentSet[i].x
-          optTrajs.append(self.sampleTrajectory(x, query[0][0], hori=config.TRAJECTORY_LENGTH, to='trajectory'))
-
-        return all(self.cmp.getTrajectoryDistance(res, optTrajs[idx]) <= self.cmp.getTrajectoryDistance(res, optTrajs[i])\
-                   for i in xrange(self.rewardSetSize))
+      consistDict = {}
+      for idx in xrange(self.rewardSetSize):
+        x = self.viAgentSet[idx].x
+        optTraj = self.sampleTrajectory(x, query[0][0], hori=config.TRAJECTORY_LENGTH, to='trajectory')
+        for res in resSet:
+          # check if the distance from res to x[idx] is smaller than all other reward candidates
+          consistDict[res, idx] = all(self.cmp.getTrajectoryDistance(res, optTraj) <= self.cmp.getTrajectoryDistance(otherRes, optTraj)\
+                                  for otherRes in resSet)
+      consistCond = lambda res, idx: consistDict[res, idx]
     elif self.queryType == QueryType.COMMITMENT:
       #FIXME only for l = 1
 
@@ -275,20 +275,16 @@ class QTPAgent:
       for idx in range(self.rewardSetSize):
         if consistCond(res, idx) and not candAllocated[idx]:
           resProb += phi[idx]
-      
-      # given that this response is observed, compute the next phi
-      for idx in range(self.rewardSetSize):
-        if not consistCond(res, idx) or candAllocated[idx]:
-          phi[idx] = 0
-        else:
           candAllocated[idx] = True
+        else:
+          phi[idx] = 0
       
       # normalize phi, only record possible phis
       if sum(phi) != 0:
         phi = [x / sum(phi) for x in phi]
         distr[tuple(phi)] += resProb
         self.responseToPhi[(tuple(query), res)] = tuple(phi)
-    
+
     assert all(candAllocated)
     l = map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
     return l
@@ -597,7 +593,6 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
       if sum(sum(_ > 0 for _ in psi) for psi in psis) == rewardCandNum and\
          all(sum(psi[i] for psi in psis) > 0 for i in xrange(rewardCandNum)):
         objValue = sum(q)
-        print psis, objValue
         if objValue > maxObjValue:
           maxObjValue = objValue
           optQ = q
