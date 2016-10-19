@@ -30,7 +30,7 @@ Show:
 """
 def experiment(cmp, rewardSet, initialPhi):
   # discount factor
-  gamma = 0.9
+  gamma = 1
   responseTime = 0
   queryFlag = 'default'
   agentName = 'JQTP'

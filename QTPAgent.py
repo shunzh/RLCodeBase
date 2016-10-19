@@ -802,6 +802,9 @@ class MILPAgent(ActiveSamplingAgent):
         us = []
         for i in xrange(rewardCandNum):
           us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
+        # avoid comparing trajectories of different lengths
+        if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
+          continue
       
         trajDist = {}
         for i in xrange(rewardCandNum):

@@ -8,13 +8,13 @@ import random
 import config
 
 if __name__ == '__main__':
-  width = 3
-  height = 3
+  width = 6
+  height = 6
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1
   rockNum = 3
-  rewardCandNum = 5
+  rewardCandNum = 3
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -31,11 +31,6 @@ if __name__ == '__main__':
       random.seed(int(arg))
   config.opts = '_'.join(map(str, [rockNum, rewardCandNum]))
   
-  if rockNum == 0:
-    Domain = TabularNavigationToy
-  else:
-    Domain = TabularNavigation
-  
   def rewardGen(rewards, numerical): 
     def rewardFunc(s, a):
       if s in rewards:
@@ -43,6 +38,13 @@ if __name__ == '__main__':
       else:
         return 0
     return rewardFunc
+
+  if rockNum == 0:
+    Domain = TabularNavigationToy
+  else:
+    Domain = TabularNavigation
+  terminalReward = util.Counter()
+  cmp = Domain(responseTime, width, height, horizon = horizon, terminalReward = terminalReward)
 
   rewardSet = []
   if rockNum == 0:
@@ -63,12 +65,16 @@ if __name__ == '__main__':
       else: return 0
     rewardSet = [r1, r2, r3]
   else:
+    r1 = lambda s, a: s == (4, 0)
+    r2 = lambda s, a: s == (0, 4)
+    r3 = lambda s, a: s == (2, 2)
+    rewardSet = [r1, r2, r3]
+    """
     rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(10)]
     for candId in xrange(rewardCandNum):
       rewardSet.append(rewardGen(random.sample(rocks, rockNum), 1.0 / rockNum))
+    """
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
-  terminalReward = util.Counter()
-
-  experiment(Domain, width, height, responseTime, horizon, rewardCandNum, rewardSet, initialPhi, terminalReward)
+  experiment(cmp, rewardSet, initialPhi)
