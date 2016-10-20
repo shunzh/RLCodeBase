@@ -65,8 +65,8 @@ if __name__ == '__main__':
       else: return 0
     rewardSet = [r1, r2, r3]
   else:
-    r1 = lambda s, a: s == (4, 0)
-    r2 = lambda s, a: s == (0, 4)
+    r1 = lambda s, a: 10 * (s == (4, 0)) + (-10) * (s == (0, 4))
+    r2 = lambda s, a: (-10) * (s == (4, 0)) + 10 * (s == (0, 4))
     r3 = lambda s, a: s == (2, 2)
     rewardSet = [r1, r2, r3]
     """

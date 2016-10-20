@@ -10,7 +10,7 @@ from tabularNavigation import Driving
 
 if __name__ == '__main__':
   width = 5
-  height = 20
+  height = 30
   # the time step that the agent receives the response
   horizon = height + 1
   responseTime = 0
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
   terminalReward = util.Counter()
 
-  cmp = Driving(4, responseTime, width, height, horizon, terminalReward)
+  cmp = Driving(5, responseTime, width, height, horizon, terminalReward)
 
   ops = []
   nastyDriver = lambda l, car: l.update({car: 1})
@@ -62,8 +62,8 @@ if __name__ == '__main__':
   leftPreferred = util.Counter()
   rightPreferred = util.Counter()
   for y in xrange(height):
-    leftPreferred[(0, y)] = 0.1
-    rightPreferred[(width - 1, y)] = 0.1
+    leftPreferred[(0, y)] = 0.01
+    rightPreferred[(width - 1, y)] = 0.01
   for car in cmp.cars: niceDriver(leftPreferred, car)
   for car in cmp.cars: niceDriver(rightPreferred, car)
   
@@ -75,6 +75,6 @@ if __name__ == '__main__':
   rewardSet.append(lambda s, a: leftPreferred[s])
   rewardSet.append(lambda s, a: rightPreferred[s])
 
-  #initialPhi = [1.0 / rewardCandNum] * rewardCandNum
-  initialPhi = [0.1, 0.3, 0.4, 0.1, 0.1]
+  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+  #initialPhi = [0.1, 0.3, 0.4, 0.1, 0.1]
   experiment(cmp, rewardSet, initialPhi)

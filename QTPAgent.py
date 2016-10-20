@@ -120,7 +120,8 @@ class QTPAgent:
       if pi == None:
         a = random.choice(self.cmp.getPossibleActions())
       else:
-        a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
+        #a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
+        a = filter(lambda _: pi[self.cmp.state, _] > 0, self.cmp.getPossibleActions())[0]
       u[(self.cmp.state, a)] = 1
       seq.append(self.cmp.state)
       t += 1
@@ -721,7 +722,7 @@ class MILPAgent(ActiveSamplingAgent):
         # compute new eus
         newObjValue = computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
         if config.VERBOSE: print newObjValue
-        assert newObjValue >= objValue - 0.001
+        assert newObjValue >= objValue - 0.001, '%f turns to %f' % (objValue, newObjValue)
         numOfIters += 1
         if newObjValue <= objValue: break
         else:
@@ -845,10 +846,8 @@ class MILPAgent(ActiveSamplingAgent):
             for j in xrange(rewardCandNum):
               hValue += trajDist[(i, j)]
           
-          hTrajs[s] = []
-          for _ in xrange(k):
-            idx = util.sample(self.phi, range(rewardCandNum))
-            hTrajs[s].append(tuple(us[idx]))
+          indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
+          hTrajs[s] = [tuple(us[idx]) for idx in indices]
         else:
           raise Exception('Impossible to get here!')
 
