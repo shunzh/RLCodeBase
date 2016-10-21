@@ -835,10 +835,14 @@ class MILPAgent(ActiveSamplingAgent):
           hValue = 1.0 * hValueInter / interNum - 1.0 * hValueIntra / intraNum
 
           hTrajs[s] = []
+          available = [True] * rewardCandNum
           for i in xrange(k):
             subPsi = copy.copy(self.phi)
-            subPsi = [subPsi[idx] if policyBins[idx][i] > 0 else 0 for idx in xrange(rewardCandNum)]
+            subPsi = [subPsi[idx] if policyBins[idx][i] > 0 and available[idx] else 0 for idx in xrange(rewardCandNum)]
+
             idx = util.sample(subPsi, range(rewardCandNum))
+            available[idx] = False
+
             hTrajs[s].append(tuple(us[idx]))
         elif self.queryType == QueryType.SIMILAR_NAIVE:
           hValue = 0
@@ -853,6 +857,11 @@ class MILPAgent(ActiveSamplingAgent):
 
         hValues[s] = hValue
       
+      """
+      for s in args['S']:
+        if s in hValues.keys() and s in hTrajs.keys():
+          print s, hValues[s], hTrajs[s]
+      """
       maxH = max(hValues.values())
       maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
       q = hTrajs[random.choice(maxStates)]

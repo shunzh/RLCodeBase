@@ -8,7 +8,7 @@ class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height
-    self.noise = 0
+    self.noise = 0.01
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
 
@@ -143,6 +143,7 @@ class Driving(TabularNavigation):
   def __init__(self, numOfCars, responseTime, width, height, horizon, terminalReward):
     TabularNavigation.__init__(self, responseTime, width, height, horizon, terminalReward)
     self.numOfCars = numOfCars
+    self.noise = 0
     
     # initialize cars
     self.cars = []
