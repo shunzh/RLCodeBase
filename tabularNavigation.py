@@ -8,7 +8,7 @@ class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, responseTime, width, height, horizon, terminalReward):
     self.width = width
     self.height = height
-    self.noise = 0.01
+    self.noise = 0
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
 

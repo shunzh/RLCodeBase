@@ -1,6 +1,7 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
   PriorTPAgent, HeuristicAgent, ActiveSamplingAgent, MILPAgent,\
-  OptimalPolicyQueryAgent, MILPDemoAgent, OptimalPartialPolicyQueryAgent
+  OptimalPolicyQueryAgent, MILPDemoAgent, OptimalPartialPolicyQueryAgent,\
+  BeliefChangeTrajAgent, RandomTrajAgent
 import CMPExp
 import util
 import sys
@@ -142,9 +143,12 @@ def experiment(cmp, rewardSet, initialPhi):
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == "MILP-SIMILAR-NAIVE":
-    queryType = QueryType.SIMILAR_NAIVE
-    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP-SIMILAR-VARIATION":
+    queryType = QueryType.SIMILAR_VARIATION
+    agent = BeliefChangeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP-SIMILAR-RANDOM":
+    queryType = QueryType.SIMILAR
+    agent = RandomTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:
     raise Exception("Unknown Agent " + agentName)
 

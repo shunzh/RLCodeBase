@@ -90,7 +90,7 @@ class QTPAgent:
     self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
 
-    if self.queryType in [QueryType.ACTION, QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
+    if self.queryType in [QueryType.ACTION, QueryType.SIMILAR, QueryType.SIMILAR_VARIATION]:
       # For these queries, we need to compute the optimal policies (also values, occupancies for all reward candidates:
       # action queries: we need the optimal actions for all the states.
       # trajectory queries: we need to compute the occupancies of state action pairs.
@@ -232,7 +232,7 @@ class QTPAgent:
     elif self.queryType == QueryType.REWARD:
       resSet = self.cmp.possibleRewardValues
       consistCond = lambda res, idx: self.rewardSet[idx](query) == res
-    elif self.queryType in [QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
+    elif self.queryType in [QueryType.SIMILAR, QueryType.SIMILAR_VARIATION]:
       resSet = query
       consistDict = {}
       for idx in xrange(self.rewardSetSize):
@@ -663,8 +663,9 @@ class MILPAgent(ActiveSamplingAgent):
       # the values of the policies in the query under this reward candidate
       piValues = {idx: computeValue(q[idx], args['R'][rewardId], args['S'], args['A']) for idx in xrange(len(q))}
       maxValue = max(piValues.values())
-      numMax = sum([1 if piValues[idx] == maxValue else 0 for idx in xrange(len(q))])
-      policyBins[rewardId] = [1.0 / numMax if piValues[idx] == maxValue else 0 for idx in xrange(len(q))]
+      # we assumed the first consistent response is returned
+      maxIdx = piValues.values().index(maxValue)
+      policyBins[rewardId] = [1 if idx == maxIdx else 0 for idx in xrange(len(q))]
     return policyBins
   
   def learn(self):
@@ -679,7 +680,7 @@ class MILPAgent(ActiveSamplingAgent):
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
     elif self.queryType in [QueryType.DEMONSTRATION, QueryType.COMMITMENT, QueryType.POLICY, QueryType.PARTIAL_POLICY,\
-                            QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
+                            QueryType.SIMILAR, QueryType.SIMILAR_VARIATION]:
       k = config.NUMBER_OF_RESPONSES
     else:
       raise Exception("query type not implemented")
@@ -794,7 +795,7 @@ class MILPAgent(ActiveSamplingAgent):
       qu = [self.sampleTrajectory(x) for x in q]
       objValue = self.getQValue(self.cmp.state, None, qu)
       return (qu, None, objValue)
-    elif self.queryType in [QueryType.SIMILAR, QueryType.SIMILAR_NAIVE]:
+    elif self.queryType == QueryType.SIMILAR:
       hValues = {}
       hTrajs = {}
       policyBins = self.computeDominatingPis(args, q)
@@ -807,54 +808,30 @@ class MILPAgent(ActiveSamplingAgent):
         if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
           continue
       
-        trajDist = {}
-        for i in xrange(rewardCandNum):
-          for j in xrange(rewardCandNum):
-            trajDist[(i, j)] = self.cmp.getTrajectoryDistance(us[i], us[j])
-        
-        if self.queryType == QueryType.SIMILAR:
-          hValueInter = 0
-          hValueIntra = 0
-          interNum = 0
-          intraNum = 0
+        """
+        hTrajs[s] = []
+        available = [True] * rewardCandNum
+        for i in xrange(k):
+          subPsi = copy.copy(self.phi)
+          subPsi = [subPsi[idx] if policyBins[idx][i] > 0 and available[idx] else 0 for idx in xrange(rewardCandNum)]
+
+          idx = util.sample(subPsi, range(rewardCandNum))
+          available[idx] = False
+          #print i, subPsi, idx
+
+          hTrajs[s].append(tuple(us[idx]))
+        """
+        hTrajs[s] = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
+
+        psiProbs = self.getPossiblePhiAndProbs(hTrajs[s])
+        hValue = 0
+        for psi, prob in psiProbs:
+          bins = [0] * k
           for idx in xrange(rewardCandNum):
-            for idx2 in xrange(rewardCandNum):
-              if idx != idx2:
-                for i in xrange(k):
-                  for j in xrange(k):
-                    if policyBins[idx][i] > 0 and policyBins[idx2][j] > 0:
-                      hValueInter += trajDist[(i, j)]
-                      interNum += 1
-
-          for idx in xrange(rewardCandNum):
-            for i in xrange(k):
-              for j in xrange(k):
-                if policyBins[idx][i] > 0 and policyBins[idx][j] > 0:
-                  hValueIntra += trajDist[(i, j)]
-                  intraNum += 1
-          hValue = 1.0 * hValueInter / interNum - 1.0 * hValueIntra / intraNum
-
-          hTrajs[s] = []
-          available = [True] * rewardCandNum
-          for i in xrange(k):
-            subPsi = copy.copy(self.phi)
-            subPsi = [subPsi[idx] if policyBins[idx][i] > 0 and available[idx] else 0 for idx in xrange(rewardCandNum)]
-
-            idx = util.sample(subPsi, range(rewardCandNum))
-            available[idx] = False
-
-            hTrajs[s].append(tuple(us[idx]))
-        elif self.queryType == QueryType.SIMILAR_NAIVE:
-          hValue = 0
-          for i in xrange(rewardCandNum):
-            for j in xrange(rewardCandNum):
-              hValue += trajDist[(i, j)]
-          
-          indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
-          hTrajs[s] = [tuple(us[idx]) for idx in indices]
-        else:
-          raise Exception('Impossible to get here!')
-
+            if psi[idx] > 0:
+              # put opt policies into bins
+              bins = [psi[idx] * sum(_) for _ in zip(bins, policyBins[idx])]
+          hValue += prob * scipy.stats.entropy(bins)
         hValues[s] = hValue
       
       """
@@ -862,9 +839,9 @@ class MILPAgent(ActiveSamplingAgent):
         if s in hValues.keys() and s in hTrajs.keys():
           print s, hValues[s], hTrajs[s]
       """
-      maxH = max(hValues.values())
-      maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
-      q = hTrajs[random.choice(maxStates)]
+      minH = min(hValues.values())
+      minStates = filter(lambda _: hValues[_] == minH, hValues.keys())
+      q = hTrajs[random.choice(minStates)]
       objValue = self.getQValue(self.cmp.state, None, q)
       return (q, None, objValue)
     else:
@@ -880,6 +857,64 @@ class MILPAgent(ActiveSamplingAgent):
     qList = filter(lambda _: _[2] == maxQValue, qList)
 
     return random.choice(qList)
+
+
+class OptimalTrajAgent(ActiveSamplingAgent):
+  """
+  TODO
+  """
+  pass
+
+
+class BeliefChangeTrajAgent(ActiveSamplingAgent):
+  """
+  We compute the posterior belief, but only compare it with the prior belief,
+  not using the desirable belief.
+  """
+  def learn(self):
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
+    rewardCandNum = len(self.rewardSet)
+    k = config.NUMBER_OF_RESPONSES
+
+    hTrajs = util.Counter()
+    hValues = util.Counter()
+
+    for s in args['S']:
+      us = []
+      for i in xrange(rewardCandNum):
+        us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
+      # avoid comparing trajectories of different lengths
+      if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
+        continue
+      
+      indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
+      #hTrajs[s] = [tuple(us[idx]) for idx in indices]
+      hTrajs[s] = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
+      
+      psiProbs = self.getPossiblePhiAndProbs(hTrajs[s])
+      for psi, prob in psiProbs:
+        hValues[s] += prob * sum(abs(p1 - p2) for p1, p2 in zip(psi, self.phi))
+
+    maxH = max(hValues.values())
+    maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
+    q = hTrajs[random.choice(maxStates)]
+    objValue = self.getQValue(self.cmp.state, None, q)
+    return (q, None, objValue)
+
+
+class RandomTrajAgent(ActiveSamplingAgent):
+  def learn(self):
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
+    k = config.NUMBER_OF_RESPONSES
+
+    s = random.choice(args['S'])
+    """
+    indices = numpy.random.choice(range(rewardCandNum), config.NUMBER_OF_RESPONSES, replace=False)
+    q = [tuple(self.sampleTrajectory(self.viAgentSet[idx].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for idx in indices]
+    """
+    q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
+    objValue = self.getQValue(self.cmp.state, None, q)
+    return (q, None, objValue)
 
 
 class MILPDemoAgent(MILPAgent):

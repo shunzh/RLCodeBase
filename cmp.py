@@ -7,7 +7,7 @@ from lp import computeValue
 # TODO some are not implemented
 class QueryType:
   ACTION, REWARD, REWARD_SIGN, POLICY, PARTIAL_POLICY, DEMONSTRATION, COMMITMENT,\
-  SIMILAR, SIMILAR_NAIVE, NONE = range(10)
+  SIMILAR, SIMILAR_VARIATION, NONE = range(10)
   
 class ControlledMarkovProcess(MarkovDecisionProcess):
   def __init__(self, responseTimes, horizon=np.inf, terminalReward=None):

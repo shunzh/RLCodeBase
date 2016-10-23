@@ -22,7 +22,7 @@ if __name__ == '__main__':
     raise Exception('Unknown flag')
   for opt, arg in opts:
     if opt == '-t':
-      rockNum = int(arg)
+      config.TRAJECTORY_LENGTH = int(arg)
     elif opt == '-n':
       rewardCandNum = int(arg)
     elif opt == '-m':
