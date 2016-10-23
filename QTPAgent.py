@@ -907,12 +907,11 @@ class RandomTrajAgent(ActiveSamplingAgent):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     k = config.NUMBER_OF_RESPONSES
 
-    s = random.choice(args['S'])
-    """
-    indices = numpy.random.choice(range(rewardCandNum), config.NUMBER_OF_RESPONSES, replace=False)
-    q = [tuple(self.sampleTrajectory(self.viAgentSet[idx].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for idx in indices]
-    """
-    q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
+    while True:
+      s = random.choice(args['S'])
+      q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
+      if any(len(u) < config.TRAJECTORY_LENGTH for u in q): continue
+      else: break
     objValue = self.getQValue(self.cmp.state, None, q)
     return (q, None, objValue)
 

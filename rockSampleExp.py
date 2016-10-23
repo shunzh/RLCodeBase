@@ -65,6 +65,7 @@ if __name__ == '__main__':
       else: return 0
     rewardSet = [r1, r2, r3]
   else:
+    """
     r1 = lambda s, a: 10 * (s == (4, 0)) + (-10) * (s == (0, 4))
     r2 = lambda s, a: (-10) * (s == (4, 0)) + 10 * (s == (0, 4))
     r3 = lambda s, a: s == (2, 2)
@@ -73,7 +74,6 @@ if __name__ == '__main__':
     rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(10)]
     for candId in xrange(rewardCandNum):
       rewardSet.append(rewardGen(random.sample(rocks, rockNum), 1.0 / rockNum))
-    """
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
