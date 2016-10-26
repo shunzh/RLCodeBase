@@ -10,7 +10,7 @@ from tabularNavigation import Driving
 
 if __name__ == '__main__':
   width = 5
-  height = 60
+  height = 30
   # the time step that the agent receives the response
   horizon = height + 1
   responseTime = 0

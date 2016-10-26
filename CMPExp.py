@@ -3,17 +3,25 @@ import time
 
 def experiment(cmp, agent, gamma, rewardSet, queryType, times=1, horizon=float('inf')):
   t = time.time()
-  q, pi, qValue = agent.learn()
+
+  for _ in xrange(times):
+    q, pi, qValue = agent.learn()
+
+    cmp.query(q)
+    res = cmp.responseCallback(agent)
+
+    # update belief
+    agent.phi = list(agent.responseToPhi[(tuple(q), res)])
+    print agent.phi
+
   timeElapsed = time.time() - t
   
   # add query type here
-  q = [queryType, q]
   if config.VERBOSE: print 'q', q
  
-  # disable simulation for now --- responseCallback for some query types are not implemented
-  """
   ret = 0
 
+  """
   # pi may not be computed, so disabled simulation
   # init state
   state = cmp.state
@@ -32,7 +40,7 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, times=1, horizon=float('
     if response != None:
       if config.VERBOSE: print 'o', response
       # update policy
-      pi = agent.respond(q[1], response)
+      pi = agent.respond(q, response)
     
     action = pi(state, cmp.timer)
     state, reward = cmp.doAction(action)

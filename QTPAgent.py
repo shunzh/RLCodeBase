@@ -192,11 +192,10 @@ class QTPAgent:
     
     return v
 
-  def getPossiblePhiAndProbs(self, query):
+  def getConsistentCond(self, query):
     actions = self.cmp.getPossibleActions(query)
     responseTime = self.cmp.getResponseTime()
     # belief -> prob dict
-    distr = util.Counter()
 
     if self.queryType == QueryType.ACTION:
       resSet = actions
@@ -265,6 +264,12 @@ class QTPAgent:
       consistCond = lambda res, idx: True
     else:
       raise Exception('unknown type of query ' + self.queryType)
+  
+    return resSet, consistCond
+
+  def getPossiblePhiAndProbs(self, query):
+    distr = util.Counter()
+    resSet, consistCond = self.getConsistentCond(query)
 
     candAllocated = [False] * self.rewardSetSize
     # consider all possible responses, find out their probabilities,

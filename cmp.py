@@ -29,7 +29,7 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     # this field is needed for reward queries
     self.possibleRewardValues = None
 
-  def decorate(self, gamma, queries, trueReward):
+  def decorate(self, gamma, queries, trueRewardIdx, trueReward):
     self.gamma = gamma
     
     # possible queries
@@ -37,9 +37,8 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
 
     # the real reward function
     # learn a VI agent on this reward setting, and policy will be decided.
+    self.rewardIdx = trueRewardIdx
     self.getReward = trueReward
-    self.viAgent = ValueIterationAgent(self, self.gamma)
-    self.viAgent.learn()
 
   def setPossibleRewardValues(self, rewards):
     self.possibleRewardValues = rewards
@@ -71,26 +70,19 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     assert len(u1) == len(u2)
     return sum(self.getStateDistance(s1, s2) for (s1, s2) in zip(u1, u2))
 
-  def responseCallback(self):
+  def responseCallback(self, agent):
     """
     The agent should check with this function to see whether there is a feedback
     This is just for the experiment.
     """
     if self.outsandingQuery != None and self.timer >= self.outsandingQuery[1]:
       # issues a response
-      type, q = self.outsandingQuery[0]
-      if type == QueryType.ACTION:
-        # give policy at the response time
-        res = self.viAgent.getPolicies(q, self.timer)[0]
-      elif type == QueryType.REWARD:
-        res = self.getReward(q)
-      elif type == QueryType.REWARD_SIGN:
-        res = np.sign(self.getReward(q))
-      elif type == QueryType.NONE:
-        res = 0 # return a dummy value
-      else:
-        raise Exception('Unkown type of query ' + str(type))
+      q = self.outsandingQuery[0]
+      resSet, consistCond = agent.getConsistentCond(q)
       
-      self.outsandingQuery = None
-      return res
+      # we assumed that the first consistent response is returned
+      for res in resSet:
+        if consistCond(res, self.rewardIdx):
+          self.outsandingQuery = None
+          return res
     else: return None

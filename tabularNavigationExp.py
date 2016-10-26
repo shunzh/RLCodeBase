@@ -76,12 +76,12 @@ def experiment(cmp, rewardSet, initialPhi):
       raise Exception('unknown query flag ' + queryFlag)
 
   # the true reward function is chosen according to initialPhi
-  trueReward = util.sample(initialPhi, rewardSet)
+  trueRewardIdx = util.sample(initialPhi, range(len(rewardSet)))
   if config.VERBOSE:
-    print 'true reward', rewardSet.index(trueReward)
+    print 'true reward', trueRewardIdx
 
   # continue initializing the cmp object
-  cmp.decorate(gamma, queries, trueReward)
+  cmp.decorate(gamma, queries, trueRewardIdx, rewardSet[trueRewardIdx])
   cmp.setPossibleRewardValues([0, 1])
 
   if agentName == 'JQTP' or agentName == 'NQ' or agentName == 'WAIT':
