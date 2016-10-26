@@ -796,8 +796,8 @@ class MILPAgent(ActiveSamplingAgent):
       objValue = self.getQValue(self.cmp.state, None, qu)
       return (qu, None, objValue)
     elif self.queryType == QueryType.SIMILAR:
-      hValues = {}
-      hTrajs = {}
+      hValues = util.Counter()
+      hTrajs = util.Counter()
       policyBins = self.computeDominatingPis(args, q)
 
       for s in args['S']:
@@ -807,23 +807,11 @@ class MILPAgent(ActiveSamplingAgent):
         # avoid comparing trajectories of different lengths
         if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
           continue
-      
-        """
-        hTrajs[s] = []
-        available = [True] * rewardCandNum
-        for i in xrange(k):
-          subPsi = copy.copy(self.phi)
-          subPsi = [subPsi[idx] if policyBins[idx][i] > 0 and available[idx] else 0 for idx in xrange(rewardCandNum)]
+        
+        # generate random trajectories from this state
+        hTraj = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
 
-          idx = util.sample(subPsi, range(rewardCandNum))
-          available[idx] = False
-          #print i, subPsi, idx
-
-          hTrajs[s].append(tuple(us[idx]))
-        """
-        hTrajs[s] = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
-
-        psiProbs = self.getPossiblePhiAndProbs(hTrajs[s])
+        psiProbs = self.getPossiblePhiAndProbs(hTraj)
         hValue = 0
         for psi, prob in psiProbs:
           bins = [0] * k
@@ -832,7 +820,12 @@ class MILPAgent(ActiveSamplingAgent):
               # put opt policies into bins
               bins = [psi[idx] * sum(_) for _ in zip(bins, policyBins[idx])]
           hValue += prob * scipy.stats.entropy(bins)
+        
+        if s in hValues.keys():
+          if hValue < hValues[s]: continue
+        
         hValues[s] = hValue
+        hTrajs[s] = hTraj
       
       """
       for s in args['S']:
@@ -859,17 +852,44 @@ class MILPAgent(ActiveSamplingAgent):
     return random.choice(qList)
 
 
-class OptimalTrajAgent(ActiveSamplingAgent):
+class DisagreeTrajAgent(ActiveSamplingAgent):
   """
-  TODO
+  Compute the distance between optimal trajectories.
+  
+  from Wilson et al.
   """
-  pass
+  def learn(self):
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
+    rewardCandNum = len(self.rewardSet)
+    k = config.NUMBER_OF_RESPONSES
 
+    hValues = util.Counter()
+
+    for s in args['S']:
+      us = []
+      for i in xrange(rewardCandNum):
+        us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
+      # avoid comparing trajectories of different lengths
+      if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
+        continue
+      
+      for i in xrange(rewardCandNum):
+        for j in xrange(rewardCandNum):
+          hValues[s] += self.cmp.getTrajectoryDistance(us[i], us[j])
+    maxH = max(hValues.values())
+    maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
+    s = random.choice(maxStates)
+
+    q = (tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k))
+    objValue = self.getQValue(self.cmp.state, None, q)
+    return (q, None, objValue)
 
 class BeliefChangeTrajAgent(ActiveSamplingAgent):
   """
   We compute the posterior belief, but only compare it with the prior belief,
   not using the desirable belief.
+
+  from Wilson et al.
   """
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)

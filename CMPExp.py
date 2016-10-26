@@ -1,7 +1,7 @@
 import config
 import time
 
-def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
+def experiment(cmp, agent, gamma, rewardSet, queryType, times=1, horizon=float('inf')):
   t = time.time()
   q, pi, qValue = agent.learn()
   timeElapsed = time.time() - t
@@ -10,11 +10,11 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   q = [queryType, q]
   if config.VERBOSE: print 'q', q
  
-  # accumulated return
+  # disable simulation for now --- responseCallback for some query types are not implemented
+  """
   ret = 0
 
   # pi may not be computed, so disabled simulation
-  """
   # init state
   state = cmp.state
   if config.VERBOSE: print 's', state

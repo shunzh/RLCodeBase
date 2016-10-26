@@ -15,5 +15,7 @@ INIT_STATE_DISTANCE = None
 
 TRAJECTORY_LENGTH = 3
 
+STATE_SAMPLES = 20
+
 # keep configuration options for output
 opts = ''

@@ -58,7 +58,7 @@ function main()
   errorbar(1:5, [m12, m13, m14, m15, m16], [ci12, ci13, ci14, ci15, ci16], '*-');
   errorbar(1:5, [m22, m23, m24, m25, m26], [ci22, ci23, ci24, ci25, ci26], '+--');
   errorbar(1:5, [m32, m33, m34, m35, m26], [ci32, ci33, ci34, ci35, ci36], 'o--');
-  legend('Opt Policy Query', 'Query Projection', 'Welson et al. 2012', 'Random Query');
+  legend('Opt Policy Query', 'Query Projection', 'Wilson et al. 2012', 'Random Query');
   xlabel('Length of Trajectory');
   ylabel('Q Value');
 end
