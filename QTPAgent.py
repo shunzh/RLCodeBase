@@ -79,6 +79,12 @@ class QTPAgent:
     
     self.preprocess()
     
+  def resetPsi(self, psi):
+    self.phi = psi
+    
+    self.cmp.reset()
+    self.preprocess()
+
   def preprocess(self):
     # bookkeep our in-mind planning
     self.responseToPhi = util.Counter()
@@ -90,7 +96,7 @@ class QTPAgent:
     self.viAgentSet = util.Counter()
     self.rewardSetSize = len(self.rewardSet)
 
-    if self.queryType in [QueryType.ACTION, QueryType.SIMILAR, QueryType.SIMILAR_VARIATION]:
+    if self.queryType in [QueryType.ACTION, QueryType.SIMILAR]:
       # For these queries, we need to compute the optimal policies (also values, occupancies for all reward candidates:
       # action queries: we need the optimal actions for all the states.
       # trajectory queries: we need to compute the occupancies of state action pairs.
@@ -231,7 +237,7 @@ class QTPAgent:
     elif self.queryType == QueryType.REWARD:
       resSet = self.cmp.possibleRewardValues
       consistCond = lambda res, idx: self.rewardSet[idx](query) == res
-    elif self.queryType in [QueryType.SIMILAR, QueryType.SIMILAR_VARIATION]:
+    elif self.queryType in [QueryType.SIMILAR]:
       resSet = query
       consistDict = {}
       for idx in xrange(self.rewardSetSize):
@@ -685,7 +691,7 @@ class MILPAgent(ActiveSamplingAgent):
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
     elif self.queryType in [QueryType.DEMONSTRATION, QueryType.COMMITMENT, QueryType.POLICY, QueryType.PARTIAL_POLICY,\
-                            QueryType.SIMILAR, QueryType.SIMILAR_VARIATION]:
+                            QueryType.SIMILAR]:
       k = config.NUMBER_OF_RESPONSES
     else:
       raise Exception("query type not implemented")
@@ -885,9 +891,10 @@ class DisagreeTrajAgent(ActiveSamplingAgent):
     maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
     s = random.choice(maxStates)
 
-    q = (tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k))
+    q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
     objValue = self.getQValue(self.cmp.state, None, q)
     return (q, None, objValue)
+
 
 class BeliefChangeTrajAgent(ActiveSamplingAgent):
   """

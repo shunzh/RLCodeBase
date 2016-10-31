@@ -1,19 +1,26 @@
 import config
 import time
+import copy
 
-def experiment(cmp, agent, gamma, rewardSet, queryType, times=1, horizon=float('inf')):
+def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   t = time.time()
 
-  for _ in xrange(times):
+  def computeQ(agent, t):
     q, pi, qValue = agent.learn()
+    #print agent.phi, qValue
 
-    cmp.query(q)
-    res = cmp.responseCallback(agent)
+    if t > 1:
+      qSum = 0
+      psiProbs = agent.getPossiblePhiAndProbs(q)
+      for psi, prob in psiProbs:
+        agent.resetPsi(list(psi))
+        q, pi, qValue = computeQ(agent, t - 1)
+        qSum += prob * qValue
+      return q, pi, qSum
+    else:
+      return q, pi, qValue
 
-    # update belief
-    agent.phi = list(agent.responseToPhi[(tuple(q), res)])
-    print agent.phi
-
+  q, pi, qValue = computeQ(agent, config.NUMBER_OF_QUERIES)
   timeElapsed = time.time() - t
   
   # add query type here

@@ -1,7 +1,7 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
   PriorTPAgent, HeuristicAgent, ActiveSamplingAgent, MILPAgent,\
   OptimalPolicyQueryAgent, MILPDemoAgent, OptimalPartialPolicyQueryAgent,\
-  BeliefChangeTrajAgent, RandomTrajAgent
+  BeliefChangeTrajAgent, RandomTrajAgent, DisagreeTrajAgent
 import CMPExp
 import util
 import sys
@@ -102,7 +102,7 @@ def experiment(cmp, rewardSet, initialPhi):
   elif agentName == 'PTP':
     agent = PriorTPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == 'KNOWN':
-    agent = JointQTPAgent(cmp, [trueReward], [1], queryType, gamma)
+    agent = JointQTPAgent(cmp, [rewardSet[trueRewardIdx]], [1], queryType, gamma)
   elif agentName == "H":
     agent = HeuristicAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "AS":
@@ -143,8 +143,11 @@ def experiment(cmp, rewardSet, initialPhi):
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "MILP-SIMILAR-DISAGREE":
+    queryType = QueryType.SIMILAR
+    agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-SIMILAR-VARIATION":
-    queryType = QueryType.SIMILAR_VARIATION
+    queryType = QueryType.SIMILAR
     agent = BeliefChangeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-SIMILAR-RANDOM":
     queryType = QueryType.SIMILAR
