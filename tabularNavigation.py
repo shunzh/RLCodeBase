@@ -24,10 +24,10 @@ class TabularNavigation(ControlledMarkovProcess):
   
   def getPossibleActions(self, state=None):
     # actions are coordinate diff
-    return [(1, 0), (0, 1)]
+    return [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
   def isTerminal(self, state):
-    return state[0] == self.width - 1 or state[1] == self.height - 1
+    return state[0] == self.width - 1 and state[1] == self.height - 1
  
   def getStateDistance(self, s1, s2):
     return abs(s1[0] - s2[0]) + abs(s1[1] - s2[1])
@@ -56,6 +56,26 @@ class TabularNavigation(ControlledMarkovProcess):
 
   def measure(self, state1, state2):
     return abs(state1[0] - state2[0]) + abs(state1[1] - state2[1])
+
+
+class RockCollection(TabularNavigation):
+  def getPossibleActions(self, state=None):
+    return [(1, 0), (0, 1)]
+
+  def getTransitionStatesAndProbs(self, state, action):
+    """
+    Should be careful for rock collection domain.
+    When the agent reaches the border, any action it takes must take it one step to the goal deterministically.
+    So any policy has a finite horizon. This is essential for our way of implementing trajectory queries
+    (because the distance metric requires sub-trajectories have the same length).
+    """
+    x, y = state
+    if x == self.width - 1:
+      return [((x, y+1), 1)]
+    elif y == self.height - 1:
+      return [((x+1, y), 1)]
+    else:
+      return TabularNavigation.getTransitionStatesAndProbs(self, state, action)
 
 
 class TabularNavigationKWay(TabularNavigation):

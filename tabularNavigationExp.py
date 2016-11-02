@@ -10,7 +10,7 @@ import getopt
 import config
 from cmp import QueryType
 
-flags = "r:l:s:d:a:vq:P:t:m:n:"
+flags = "r:l:s:d:a:vq:P:t:m:n:x:"
 
 """
 Algorithms:

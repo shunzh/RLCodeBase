@@ -1,5 +1,6 @@
 import util
-from tabularNavigation import TabularNavigation, TabularNavigationToy
+from tabularNavigation import TabularNavigation, TabularNavigationToy,\
+  RockCollection
 from tabularNavigationExp import experiment
 import getopt
 import sys
@@ -8,13 +9,13 @@ import random
 import config
 
 if __name__ == '__main__':
-  width = 6
-  height = 6
+  width = 10
+  height = 10
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1
-  rockNum = 3
-  rewardCandNum = 3
+  rockNum = 5
+  rewardCandNum = 5
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -27,6 +28,8 @@ if __name__ == '__main__':
       rewardCandNum = int(arg)
     elif opt == '-m':
       config.NUMBER_OF_RESPONSES = int(arg)
+    elif opt == '-x':
+      config.NUMBER_OF_QUERIES = int(arg)
     elif opt == '-r':
       random.seed(int(arg))
   config.opts = '_'.join(map(str, [rockNum, rewardCandNum]))
@@ -42,7 +45,7 @@ if __name__ == '__main__':
   if rockNum == 0:
     Domain = TabularNavigationToy
   else:
-    Domain = TabularNavigation
+    Domain = RockCollection
   terminalReward = util.Counter()
   cmp = Domain(responseTime, width, height, horizon = horizon, terminalReward = terminalReward)
 
@@ -64,14 +67,16 @@ if __name__ == '__main__':
       elif s == (0, 1) and a == (0, 1): return 0.6
       else: return 0
     rewardSet = [r1, r2, r3]
-  else:
     """
     r1 = lambda s, a: 10 * (s == (4, 0)) + (-10) * (s == (0, 4))
     r2 = lambda s, a: (-10) * (s == (4, 0)) + 10 * (s == (0, 4))
     r3 = lambda s, a: s == (2, 2)
     rewardSet = [r1, r2, r3]
     """
-    rocks = [(random.randint(0, width - 1), random.randint(0, height - 1)) for _ in xrange(10)]
+  else:
+    # rocks can show up in any state
+    rocks = cmp.getStates()
+    # sample rockNum rocks from the state space
     for candId in xrange(rewardCandNum):
       rewardSet.append(rewardGen(random.sample(rocks, rockNum), 1.0 / rockNum))
 

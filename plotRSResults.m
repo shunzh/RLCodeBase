@@ -1,5 +1,7 @@
 function main()
-  agentNames = {'OPT-POLICY', 'OPT-POLICY-ACT', 'JQTP', 'MILP-QI-POLICY', 'MILP-POLICY', 'MILP-QI', 'MILP', 'AS', 'RQ'};
+  % disabled some agents for simplicity. Generated figures are not for debugging purpose..
+  agentNames = {'OPT-POLICY', 'JQTP', 'MILP', 'AS', 'RQ'};
+  %agentNames = {'OPT-POLICY', 'OPT-POLICY-ACT', 'JQTP', 'MILP-QI-POLICY', 'MILP-POLICY', 'MILP-QI', 'MILP', 'AS', 'RQ'};
   numOfRocks = [1, 3, 5];
   rewardNums = [3, 5, 7];
 
@@ -17,14 +19,16 @@ function main()
     end
   end
 
-  markers = {'*-', '*--', '+-', 'x-', 'x--', 's-', 's--', '^-', 'd-'};
+  %markers = {'*-', '*--', '+-', 'x-', 'x--', 's-', 's--', '^-', 'd-'};
+  markers = {'*-', '*--', '+-', 'x-', 's-'};
   for agentId = 1 : size(agentNames, 2)
     agentNames{agentId}
     datum = qv(agentId, numOfRocks, 5)
     plot(numOfRocks, datum, markers{agentId});
     hold on;
   end
-  legend('Optimal Policy Query', 'Action Query from OP', 'Optimal Action Query', 'Policy Query w/ QI', 'Policy Query', 'QP w/ QI', 'QP', 'Active Sampling', 'Random Query');
+  legend('Opt Policy Query', 'Optimal Action Query', 'Query Projection', 'Active Sampling', 'Random Query');
+  %legend('Optimal Policy Query', 'Action Query from OP', 'Optimal Action Query', 'Policy Query w/ QI', 'Policy Query', 'QP w/ QI', 'QP', 'Active Sampling', 'Random Query');
   xlabel('Number of Rocks');
   ylabel('Q-Value');
 
@@ -34,7 +38,7 @@ function main()
     plot(numOfRocks, datum, markers{agentId});
     hold on;
   end
-  legend('Optimal Policy Query', 'Action Query from OP', 'Optimal Action Query', 'Policy Query w/ QI', 'Policy Query', 'QP w/ QI', 'QP', 'Active Sampling', 'Random Query');
+  legend('Opt Policy Query', 'Optimal Action Query', 'Query Projection', 'Active Sampling', 'Random Query');
   xlabel('Number of Rocks');
   ylabel('Computation Time (sec.)');
 
