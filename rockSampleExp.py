@@ -9,12 +9,12 @@ import random
 import config
 
 if __name__ == '__main__':
-  width = 10
-  height = 10
+  width = 20
+  height = 20
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1
-  rockNum = 5
+  rockNum = 10
   rewardCandNum = 5
   
   try:
@@ -26,13 +26,15 @@ if __name__ == '__main__':
       config.TRAJECTORY_LENGTH = int(arg)
     elif opt == '-n':
       rewardCandNum = int(arg)
-    elif opt == '-m':
+    elif opt == '-k':
       config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-x':
       config.NUMBER_OF_QUERIES = int(arg)
+    elif opt == '-y':
+      rockNum = int(arg)
     elif opt == '-r':
       random.seed(int(arg))
-  config.opts = '_'.join(map(str, [rockNum, rewardCandNum]))
+  config.opts = '_'.join(map(str, [rewardCandNum, config.NUMBER_OF_QUERIES, config.NUMBER_OF_RESPONSES, config.TRAJECTORY_LENGTH]))
   
   def rewardGen(rewards, numerical): 
     def rewardFunc(s, a):
@@ -42,15 +44,13 @@ if __name__ == '__main__':
         return 0
     return rewardFunc
 
-  if rockNum == 0:
-    Domain = TabularNavigationToy
-  else:
-    Domain = RockCollection
+  Domain = RockCollection
   terminalReward = util.Counter()
   cmp = Domain(responseTime, width, height, horizon = horizon, terminalReward = terminalReward)
 
   rewardSet = []
   if rockNum == 0:
+    """
     # use rockNum == 0 to represent a test case
     rewardCandNum = 3
     def r1(s, a):
@@ -68,11 +68,10 @@ if __name__ == '__main__':
       else: return 0
     rewardSet = [r1, r2, r3]
     """
-    r1 = lambda s, a: 10 * (s == (4, 0)) + (-10) * (s == (0, 4))
-    r2 = lambda s, a: (-10) * (s == (4, 0)) + 10 * (s == (0, 4))
+    r1 = lambda s, a: s == (4, 0)
+    r2 = lambda s, a: s == (0, 4)
     r3 = lambda s, a: s == (2, 2)
     rewardSet = [r1, r2, r3]
-    """
   else:
     # rocks can show up in any state
     rocks = cmp.getStates()

@@ -10,7 +10,7 @@ import getopt
 import config
 from cmp import QueryType
 
-flags = "r:l:s:d:a:vq:P:t:m:n:x:"
+flags = "r:l:s:d:a:vq:P:t:k:n:x:y:"
 
 """
 Algorithms:
@@ -166,9 +166,9 @@ def experiment(cmp, rewardSet, initialPhi):
   else:
     ret, qValue, time = CMPExp.experiment(cmp, agent, gamma, rewardSet, queryType, horizon=cmp.horizon)
 
-  if config.PRINT == 'perf':
-    print ret, qValue, time
+  print ret, qValue, time
 
+  if config.PRINT == 'perf':
     f = open(agentName + str(config.opts) + '.out',"a")
     f.write(str(qValue) + ' ' + str(time) + '\n')
     f.close()

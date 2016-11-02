@@ -767,7 +767,7 @@ class MILPAgent(ActiveSamplingAgent):
             x = xOld.copy()
         
         if not success: break
-        print idx, len(x)
+        #print idx, len(x)
         idx = (idx + 1) % len(q)
       
       return (qP, None, objValue)
@@ -908,8 +908,8 @@ class BeliefChangeTrajAgent(ActiveSamplingAgent):
     rewardCandNum = len(self.rewardSet)
     k = config.NUMBER_OF_RESPONSES
 
-    hTrajs = util.Counter()
     hValues = util.Counter()
+    hTrajs = util.Counter()
 
     for s in args['S']:
       us = []
@@ -919,10 +919,11 @@ class BeliefChangeTrajAgent(ActiveSamplingAgent):
       if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
         continue
       
-      indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
+      #indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
       #hTrajs[s] = [tuple(us[idx]) for idx in indices]
       hTrajs[s] = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
       
+      # compute the different between new psi and old psi
       psiProbs = self.getPossiblePhiAndProbs(hTrajs[s])
       for psi, prob in psiProbs:
         hValues[s] += prob * sum(abs(p1 - p2) for p1, p2 in zip(psi, self.phi))
