@@ -7,7 +7,6 @@ from cmp import QueryType
 import numpy
 from copy import deepcopy
 import scipy.stats
-import operator
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
 try:
@@ -455,89 +454,8 @@ class JointQTPAgent(QTPAgent):
     return random.choice(qList)
 
 
-class HeuristicAgent(QTPAgent):
-  def __init__(self, cmp, rewardSet, initialPhi, queryType,
-               gamma, clusterDistance=0):
-    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, clusterDistance)
 
-    self.meanReward = self.getRewardFunc(self.phi)
-    (self.xmin, self.xmax) = self.cmp.getReachability()
-    
-    self.m = 1
-
-  def learn(self):
-    values = []
-
-    for q in self.cmp.queries:
-      possiblePhis = self.getPossiblePhiAndProbs(q)
-      v = util.Counter()
-      for fPhi, fPhiProb in possiblePhis:
-        rewardFunc = self.getRewardFunc(fPhi)
-        for s in self.cmp.getStates():
-          v[q, s] += fPhiProb * (max(self.xmax[s] * rewardFunc(s), self.xmin[s] * rewardFunc(s)) - self.meanReward(s))
-      v = sorted(v.items(), key=operator.itemgetter(1), reverse=True)
-      values += v[:self.m]
-    
-    values = sorted(values, key=operator.itemgetter(1), reverse=True)
-    qList = []
-    sList = []
-    for item in values:
-      (q, s) = item[0]
-      if not s in sList and not q in map(lambda _: _[0], qList):
-        pi, qValue = self.optimizePolicy(q)
-        qList.append((q, pi, qValue))
-        sList.append(s)
-        if len(qList) >= self.m: break
-
-    maxQValue = max(map(lambda _:_[2], qList))
-    qList = filter(lambda _: _[2] == maxQValue, qList)
-
-    return random.choice(qList)
-
-
-class ActiveSamplingAgent(QTPAgent):
-  def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma):
-    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
-
-    self.m = 1
-
-  def learn(self):
-    hList = []
-
-    # must be action queries
-    for s in self.cmp.getStates():
-      hValue = 0
-      for a in self.cmp.getPossibleActions(self.cmp.state):
-        bins = [0] * 10
-        for idx in range(self.rewardSetSize):
-          policies = self.viAgentSet[idx].getPolicies(s)
-          if a in policies:
-            id = min(int(10 / len(policies)), 9)
-            bins[id] += self.phi[idx]
-          else: bins[0] += self.phi[idx]
-        #print s, a, bins
-        hValue += scipy.stats.entropy(bins)
-        
-      hList.append((s, hValue))
-
-    hList = sorted(hList, reverse=True, key=lambda _: _[1])
-    hList = filter(lambda _: not scipy.isnan(_[1]), hList)
-    #print hList
-    hList = hList[:self.m]
-    
-    qList = []
-    for q, h in hList:
-      # FIXME ignore transient phase
-      qValue = self.getQValue(self.cmp.state, None, q)
-      qList.append((q, None, qValue))
-
-    maxQValue = max(map(lambda _:_[2], qList))
-    qList = filter(lambda _: _[2] == maxQValue, qList)
-
-    return random.choice(qList)
-
-
-class OptimalPartialPolicyQueryAgent(ActiveSamplingAgent):
+class OptimalPartialPolicyQueryAgent(QTPAgent):
   """
   A brute force algorithm to find out the best trajectory query.
   This only serves as a baseline. May take forever to run for larger domains..
@@ -572,7 +490,7 @@ class OptimalPartialPolicyQueryAgent(ActiveSamplingAgent):
     return (optQuery, None, maxQValue)
 
 
-class OptimalPolicyQueryAgent(ActiveSamplingAgent):
+class OptimalPolicyQueryAgent(QTPAgent):
   """
   A brute force algorithm that checks all possible partitions of reward candidates.
   Don't worry about its computation time :)
@@ -637,7 +555,7 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
       # sort them nondecreasingly
       hList = filter(lambda _: not scipy.isnan(_[1]), hList)
       hList = sorted(hList, key=lambda _: _[1])
-      hList = hList[:self.m]
+      hList = hList[:1]
     else:
       raise Exception('Query type not implemented for MILP.')
 
@@ -653,14 +571,15 @@ class OptimalPolicyQueryAgent(ActiveSamplingAgent):
     return random.choice(qList)
 
 
-class MILPAgent(ActiveSamplingAgent):
+class MILPAgent(QTPAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=False):
     """
     qi: query iteration
     """
-    ActiveSamplingAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
+    QTPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     # do query iteration?
     self.qi = qi
+    self.m = 1
 
   @staticmethod
   def computeDominatingPis(args, q):
@@ -680,6 +599,12 @@ class MILPAgent(ActiveSamplingAgent):
     return policyBins
   
   def learn(self):
+    """
+    This function was way too long.. partially refactored in this way:
+    - for some simple query types, return values are found here and returned directly
+    - for some complicated ones, like trajectory queries, this function is called by a sub-class to get some intermediate results,
+      return values are found by the sub-class.
+    """
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     self.args = args # save a copy
     rewardCandNum = len(self.rewardSet)
@@ -771,34 +696,6 @@ class MILPAgent(ActiveSamplingAgent):
         idx = (idx + 1) % len(q)
       
       return (qP, None, objValue)
-    elif self.queryType == QueryType.ACTION:
-      hList = []
-      
-      policyBins = self.computeDominatingPis(args, q)
-
-      for s in args['S']:
-        hValue = 0
-        for a in args['A']:
-          resProb = 0
-          bins = [0] * len(q)
-          for idx in xrange(rewardCandNum):
-            if a in self.viAgentSet[idx].getPolicies(s):
-              # increase the probability of observing this 
-              resProb += self.phi[idx]
-              # put opt policies into bins
-              bins = [sum(_) for _ in zip(bins, policyBins[idx])]
-
-          # possibly such action is consistent with none of the reward candidates
-          if sum(bins) > 0:
-            hValue += resProb * scipy.stats.entropy(bins)
-
-        if config.VERBOSE: print hValue
-        hList.append((s, hValue))
-
-      # sort them nondecreasingly
-      hList = sorted(hList, key=lambda _: _[1])
-      hList = filter(lambda _: not scipy.isnan(_[1]), hList)
-      hList = hList[:self.m]
     elif self.queryType == QueryType.DEMONSTRATION:
       # if we already build a set of policies, but the query type is demonstration
       # we sample trajectories from these policies as a query
@@ -806,148 +703,13 @@ class MILPAgent(ActiveSamplingAgent):
       qu = [self.sampleTrajectory(x) for x in q]
       objValue = self.getQValue(self.cmp.state, None, qu)
       return (qu, None, objValue)
-    elif self.queryType == QueryType.SIMILAR:
-      hValues = util.Counter()
-      hTrajs = util.Counter()
-      policyBins = self.computeDominatingPis(args, q)
-
-      for s in args['S']:
-        us = []
-        for i in xrange(rewardCandNum):
-          us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
-        # avoid comparing trajectories of different lengths
-        if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
-          continue
-        
-        # generate random trajectories from this state
-        hTraj = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
-
-        psiProbs = self.getPossiblePhiAndProbs(hTraj)
-        hValue = 0
-        for psi, prob in psiProbs:
-          bins = [0] * k
-          for idx in xrange(rewardCandNum):
-            if psi[idx] > 0:
-              # put opt policies into bins
-              bins = [psi[idx] * sum(_) for _ in zip(bins, policyBins[idx])]
-          hValue += prob * scipy.stats.entropy(bins)
-        
-        if s in hValues.keys():
-          if hValue < hValues[s]: continue
-        
-        hValues[s] = hValue
-        hTrajs[s] = hTraj
-      
-      """
-      for s in args['S']:
-        if s in hValues.keys() and s in hTrajs.keys():
-          print s, hValues[s], hTrajs[s]
-      """
-      minH = min(hValues.values())
-      minStates = filter(lambda _: hValues[_] == minH, hValues.keys())
-      q = hTrajs[random.choice(minStates)]
-      objValue = self.getQValue(self.cmp.state, None, q)
-      return (q, None, objValue)
+    elif self.queryType in [QueryType.SIMILAR, QueryType.ACTION]:
+      # implemented in a subclass, do nothing here
+      pass
     else:
       raise Exception('Query type not implemented for MILP.')
 
-    qList = []
-    for q, h in hList:
-      # FIXME ignore transient phase
-      qValue = self.getQValue(self.cmp.state, None, q)
-      qList.append((q, None, qValue))
-
-    maxQValue = max(map(lambda _: _[2], qList))
-    qList = filter(lambda _: _[2] == maxQValue, qList)
-
-    return random.choice(qList)
-
-
-class DisagreeTrajAgent(ActiveSamplingAgent):
-  """
-  Compute the distance between optimal trajectories.
-  
-  from Wilson et al.
-  """
-  def learn(self):
-    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
-    rewardCandNum = len(self.rewardSet)
-    k = config.NUMBER_OF_RESPONSES
-
-    hValues = util.Counter()
-
-    for s in args['S']:
-      us = []
-      for i in xrange(rewardCandNum):
-        us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
-      # avoid comparing trajectories of different lengths
-      if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
-        continue
-      
-      for i in xrange(rewardCandNum):
-        for j in xrange(rewardCandNum):
-          hValues[s] += self.cmp.getTrajectoryDistance(us[i], us[j])
-    maxH = max(hValues.values())
-    maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
-    s = random.choice(maxStates)
-
-    q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
-    objValue = self.getQValue(self.cmp.state, None, q)
-    return (q, None, objValue)
-
-
-class BeliefChangeTrajAgent(ActiveSamplingAgent):
-  """
-  We compute the posterior belief, but only compare it with the prior belief,
-  not using the desirable belief.
-
-  from Wilson et al.
-  """
-  def learn(self):
-    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
-    rewardCandNum = len(self.rewardSet)
-    k = config.NUMBER_OF_RESPONSES
-
-    hValues = util.Counter()
-    hTrajs = util.Counter()
-
-    for s in args['S']:
-      us = []
-      for i in xrange(rewardCandNum):
-        us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
-      # avoid comparing trajectories of different lengths
-      if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
-        continue
-      
-      #indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
-      #hTrajs[s] = [tuple(us[idx]) for idx in indices]
-      hTrajs[s] = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
-      
-      # compute the different between new psi and old psi
-      psiProbs = self.getPossiblePhiAndProbs(hTrajs[s])
-      for psi, prob in psiProbs:
-        hValues[s] += prob * sum(abs(p1 - p2) for p1, p2 in zip(psi, self.phi))
-
-    maxH = max(hValues.values())
-    maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
-    q = hTrajs[random.choice(maxStates)]
-    objValue = self.getQValue(self.cmp.state, None, q)
-    return (q, None, objValue)
-
-
-class RandomTrajAgent(ActiveSamplingAgent):
-  def learn(self):
-    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
-    k = config.NUMBER_OF_RESPONSES
-
-    while True:
-      s = random.choice(args['S'])
-      q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
-      if any(len(u) < config.TRAJECTORY_LENGTH for u in q): continue
-      else: break
-    objValue = self.getQValue(self.cmp.state, None, q)
-    return (q, None, objValue)
-
+    return args, q
 
 class MILPDemoAgent(MILPAgent):
   # greedily construct a set of policies for demonstration

@@ -1,7 +1,7 @@
 function main()
   agents = {'MILP-SIMILAR', 'MILP-SIMILAR-VARIATION', 'MILP-SIMILAR-DISAGREE', 'MILP-SIMILAR-RANDOM'};
 
-  rewardCandNums = [5];
+  rewardCandNums = [5, 10];
   numOfQueries = [1, 2];
   numOfResponses = [2, 3];
   trajLens = [2, 3, 4];
@@ -14,13 +14,21 @@ function main()
 
   dataM = cell(size(agents, 2), max(rewardCandNums), max(numOfQueries), max(numOfResponses), max(trajLens));
   for agentId = 1 : size(agents, 2)
-    %for numOfQuery = numOfQueries
-    %  filename = strcat(agents(agentId), num2str(rewardCand_), '_', num2str(numOfQuery), '_', num2str(numOfResponse_), '_', num2str(trajLen_), '.out');
-    %  data = load(char(filename));
-    %  [m, ci] = process(data(:, 1));
-    %  dataM{agentId, rewardCand_, numOfQuery, numOfResponse_, trajLen_} = m;
-    %  dataCI{agentId, rewardCand_, numOfQuery, numOfResponse_, trajLen_} = ci;
-    %end
+    for rewardCand = rewardCandNums
+      filename = strcat(agents(agentId), num2str(rewardCand), '_', num2str(numOfQuery_), '_', num2str(numOfResponse_), '_', num2str(trajLen_), '.out');
+      data = load(char(filename));
+      [m, ci] = process(data(:, 1));
+      dataM{agentId, rewardCand, numOfQuery_, numOfResponse_, trajLen_} = m;
+      dataCI{agentId, rewardCand, numOfQuery_, numOfResponse_, trajLen_} = ci;
+    end
+
+    for numOfQuery = numOfQueries
+      filename = strcat(agents(agentId), num2str(rewardCand_), '_', num2str(numOfQuery), '_', num2str(numOfResponse_), '_', num2str(trajLen_), '.out');
+      data = load(char(filename));
+      [m, ci] = process(data(:, 1));
+      dataM{agentId, rewardCand_, numOfQuery, numOfResponse_, trajLen_} = m;
+      dataCI{agentId, rewardCand_, numOfQuery, numOfResponse_, trajLen_} = ci;
+    end
 
     for numOfResponse = numOfResponses
       filename = strcat(agents(agentId), num2str(rewardCand_), '_', num2str(numOfQuery_), '_', num2str(numOfResponse), '_', num2str(trajLen_), '.out');
@@ -42,8 +50,8 @@ function main()
   markers = {'*-', '+-', 'x-', 's-'};
 
   for agentId = 1 : size(agents, 2)
-    errorbar(rewardCandNums, dataM(agentId, rewardCandNums, numOfQuery_, numOfResponse_, trajLen_),...
-                             dataCI(agentId, rewardCandNums, numOfQuery_, numOfResponse_, trajLen_), markers{agentId});
+    errorbar(rewardCandNums, cell2mat(dataM(agentId, rewardCandNums, numOfQuery_, numOfResponse_, trajLen_)),...
+                             cell2mat(dataCI(agentId, rewardCandNums, numOfQuery_, numOfResponse_, trajLen_)), markers{agentId});
     hold on
   end
   legend('Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
@@ -52,8 +60,8 @@ function main()
 
   figure;
   for agentId = 1 : size(agents, 2)
-    errorbar(numOfQueries, dataM(agentId, rewardCand_, numOfQueries, numOfResponse_, trajLen_),...
-                           dataCI(agentId, rewardCand_, numOfQueries, numOfResponse_, trajLen_), markers{agentId});
+    errorbar(numOfQueries, cell2mat(dataM(agentId, rewardCand_, numOfQueries, numOfResponse_, trajLen_)),...
+                           cell2mat(dataCI(agentId, rewardCand_, numOfQueries, numOfResponse_, trajLen_)), markers{agentId});
     hold on
   end
   legend('Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
@@ -77,7 +85,7 @@ function main()
     hold on
   end
   legend('Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
-  xlabel('Number of Responses');
+  xlabel('Trajectory Lengths');
   ylabel('Q-Value');
 end
 

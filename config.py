@@ -19,5 +19,7 @@ TRAJECTORY_LENGTH = 3
 
 STATE_SAMPLES = 20
 
+GENERATE_RANDOM_TRAJ = False
+
 # keep configuration options for output
 opts = ''

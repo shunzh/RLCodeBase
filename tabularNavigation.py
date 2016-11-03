@@ -2,7 +2,6 @@ from cmp import ControlledMarkovProcess
 import util
 import random
 import config
-import numpy
 
 class TabularNavigation(ControlledMarkovProcess):
   def __init__(self, responseTime, width, height, horizon, terminalReward):

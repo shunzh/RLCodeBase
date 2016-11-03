@@ -10,6 +10,7 @@ import os
 from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
+import random
 
 class QLearningAgent(ReinforcementAgent):
   """
