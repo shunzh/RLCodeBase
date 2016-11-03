@@ -9,12 +9,12 @@ import random
 import config
 
 if __name__ == '__main__':
-  width = 20
-  height = 20
+  width = 10
+  height = 10
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1
-  rockNum = 10
+  rockNum = 5
   rewardCandNum = 5
   
   try:
