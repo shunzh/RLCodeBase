@@ -24,13 +24,13 @@ if __name__ == '__main__':
     if opt == '-t':
       config.TRAJECTORY_LENGTH = int(arg)
     elif opt == '-n':
-      config.INIT_STATE_DISTANCE = int(arg)
-    elif opt == '-m':
+      config.NUMBER_OF_QUERIES = int(arg)
+    elif opt == '-k':
       config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-r':
       random.seed(int(arg))
       numpy.random.seed(int(arg))
-  config.opts = '_'.join(map(str, [config.TRAJECTORY_LENGTH]))
+  config.opts = '_'.join(map(str, [rewardCandNum, config.NUMBER_OF_QUERIES, config.NUMBER_OF_RESPONSES, config.TRAJECTORY_LENGTH]))
   
   def rewardGen(rewards, numerical): 
     def rewardFunc(s, a):

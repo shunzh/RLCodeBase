@@ -12,7 +12,7 @@ import getopt
 import config
 from cmp import QueryType
 
-flags = "r:l:s:d:a:vq:P:t:k:n:x:y:"
+flags = "r:l:s:d:a:vq:P:t:k:n:y:"
 
 """
 Algorithms:
@@ -145,13 +145,13 @@ def experiment(cmp, rewardSet, initialPhi):
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
     agent = MILPTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == "MILP-SIMILAR-DISAGREE":
+  elif agentName == "SIMILAR-DISAGREE":
     queryType = QueryType.SIMILAR
     agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == "MILP-SIMILAR-VARIATION":
+  elif agentName == "SIMILAR-VARIATION":
     queryType = QueryType.SIMILAR
     agent = BeliefChangeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == "MILP-SIMILAR-RANDOM":
+  elif agentName == "SIMILAR-RANDOM":
     queryType = QueryType.SIMILAR
     agent = RandomTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   else:

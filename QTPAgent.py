@@ -640,7 +640,7 @@ class MILPAgent(QTPAgent):
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
     if config.VERBOSE: print objValue
     if self.qi:
-      #FIXME assertion in this part may fail. may have problems with qi
+      # FIXME need debugging
       numOfIters = 0
       while True:
         # compute dominance

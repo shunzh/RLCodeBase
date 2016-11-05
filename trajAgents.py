@@ -36,6 +36,9 @@ class MILPTrajAgent(MILPAgent):
         for i in xrange(k):
           subPsi = copy.copy(self.phi)
           subPsi = [subPsi[idx] if policyBins[idx][i] > 0 and available[idx] else 0 for idx in xrange(rewardCandNum)]
+          if sum(subPsi) == 0:
+            # this means the agent does not need more trajs in the query
+            continue
           idx = util.sample(subPsi, range(rewardCandNum))
           # it's possible that one policy dominates multiple reward candidates..
           # to avoid containing same policies in the query as a result of this
@@ -100,7 +103,6 @@ class DisagreeTrajAgent(QTPAgent):
           hValues[s] += self.cmp.getTrajectoryDistance(us[i], us[j])
     maxH = max(hValues.values())
     maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
-    print maxH, maxStates
     s = random.choice(maxStates)
 
     objValue = self.getQValue(self.cmp.state, None, hTrajs[s])

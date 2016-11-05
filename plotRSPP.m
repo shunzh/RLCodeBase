@@ -1,7 +1,8 @@
 function main()
-  agents = {'MILP-SIMILAR', 'MILP-SIMILAR-VARIATION', 'MILP-SIMILAR-DISAGREE', 'MILP-SIMILAR-RANDOM'};
+  %agents = {'MILP-SIMILAR', 'MILP-SIMILAR-VARIATION', 'MILP-SIMILAR-DISAGREE', 'MILP-SIMILAR-RANDOM'};
+  agents = {'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
 
-  rewardCandNums = [5, 10];
+  rewardCandNums = [5];
   numOfQueries = [1, 2];
   numOfResponses = [2, 3];
   trajLens = [2, 3, 4];

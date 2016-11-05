@@ -128,15 +128,6 @@ class TabularNavigationKWay(TabularNavigation):
     return state[1] == self.height - 1
  
 
-class TabularNavigationToy(TabularNavigation):
-  def reset(self):
-    # initial state: this far to the first intersection
-    self.state = (0, 0)
- 
-  def isTerminal(self, state):
-    return state in [(1, 0), (1, 1), (0, 2), (1, 2)]
-
-
 class TabularNavigationMaze(TabularNavigation):
   """
   Split the world into 4 rooms
@@ -188,6 +179,9 @@ class PuddleWorld(TabularNavigation):
   
   def getPossibleActions(self, state):
     return [(-1, 1), (0, 1), (1, 1)]
+
+  def isTerminal(self, state):
+    return state[1] == self.height - 1
 
   def getReachability(self):
     xmax = util.Counter()
