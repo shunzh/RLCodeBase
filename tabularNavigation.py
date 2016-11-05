@@ -59,6 +59,14 @@ class TabularNavigation(ControlledMarkovProcess):
 
 class RockCollection(TabularNavigation):
   def getPossibleActions(self, state=None):
+    return [(-1, 1), (0, 1), (1, 1)]
+
+  def isTerminal(self, state):
+    return state[1] == self.height - 1
+
+
+class RockCollectionDiagonal(TabularNavigation):
+  def getPossibleActions(self, state=None):
     return [(1, 0), (0, 1)]
 
   def getTransitionStatesAndProbs(self, state, action):

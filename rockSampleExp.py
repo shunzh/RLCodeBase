@@ -1,5 +1,5 @@
 import util
-from tabularNavigation import RockCollection
+from tabularNavigation import RockCollectionDiagonal, RockCollection
 from tabularNavigationExp import experiment
 import getopt
 import sys
@@ -9,14 +9,14 @@ import config
 import numpy
 
 if __name__ == '__main__':
-  width = 10
-  height = 10
+  width = 5
+  height = 30
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + width + 1
-  rockNum = 10
+  rockNum = 20
   rewardCandNum = 10
-  rewardVar = 0
+  rewardVar = 1
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -93,13 +93,19 @@ if __name__ == '__main__':
 
   # THE GENERAL CASE
   """
-  # rocks can show up in any state
-  rocks = cmp.getStates()
+  rocks = random.sample(cmp.getStates(), rockNum)
+  if rewardVar == 1:
+    rewardCandBonus = [1] * rewardCandNum
+  elif rewardVar == 2:
+    rewardCandBonus = [2] * (rewardCandNum / 2) + [1] * (rewardCandNum - rewardCandNum / 2)
+  elif rewardVar == 3:
+    rewardCandBonus = [5] + [1] * (rewardCandNum - 1)
   # sample rockNum rocks from the state space
   for candId in xrange(rewardCandNum):
     # we have some more valuable rocks
-    reward = random.random() * rewardVar + (1 - 1.0 * rewardVar / 2)
-    rewardSet.append(rewardGen(random.sample(rocks, rockNum), reward))
+    bonus = random.sample(rocks, rockNum / rewardCandNum)
+    pits = [_ for _ in rocks if not _ in bonus] # pits = rocks \ bonus
+    rewardSet.append(reward2Gen(bonus, pits, rewardCandBonus[candId], -10))
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
