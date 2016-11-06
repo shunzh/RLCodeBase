@@ -13,9 +13,9 @@ if __name__ == '__main__':
   height = 30
   # the time step that the agent receives the response
   responseTime = 0
-  horizon = height + width + 1
+  horizon = height + 1
   rockNum = 20
-  rewardCandNum = 10
+  rewardCandNum = 5
   rewardVar = 1
   
   try:
@@ -80,16 +80,10 @@ if __name__ == '__main__':
   rewardSet = [r1, r2, r3]
   """
   """
-  r1 = lambda s, a: s == (4, 1)
-  r2 = lambda s, a: s == (4, 0)
-  r3 = lambda s, a: s == (2, 0)
-  r4 = lambda s, a: s == (3, 0)
-
-  l1 = lambda s, a: s == (0, 2)
-  l2 = lambda s, a: s == (0, 3)
-  l3 = lambda s, a: s == (0, 4)
-  l4 = lambda s, a: s == (0, 5)
-  rewardSet = [r1, r2, r3, r4, l1, l2, l3, l4]
+  r1 = lambda s, a: s == (2, 10)
+  r2 = lambda s, a: s == (1, 10)
+  r3 = lambda s, a: s == (3, 10)
+  rewardSet = [r1, r2, r3]
 
   # THE GENERAL CASE
   """
@@ -100,6 +94,9 @@ if __name__ == '__main__':
     rewardCandBonus = [2] * (rewardCandNum / 2) + [1] * (rewardCandNum - rewardCandNum / 2)
   elif rewardVar == 3:
     rewardCandBonus = [5] + [1] * (rewardCandNum - 1)
+  else:
+    raise Exception('unknown rewardVar')
+
   # sample rockNum rocks from the state space
   for candId in xrange(rewardCandNum):
     # we have some more valuable rocks

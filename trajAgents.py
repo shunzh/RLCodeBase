@@ -25,7 +25,7 @@ class MILPTrajAgent(MILPAgent):
       # avoid comparing trajectories of different lengths
       if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
         continue
-      
+        
       hTraj = []
       if config.GENERATE_RANDOM_TRAJ:
         # WAY 1: generating random policies
@@ -38,14 +38,16 @@ class MILPTrajAgent(MILPAgent):
           subPsi = [subPsi[idx] if policyBins[idx][i] > 0 and available[idx] else 0 for idx in xrange(rewardCandNum)]
           if sum(subPsi) == 0:
             # this means the agent does not need more trajs in the query
-            continue
-          idx = util.sample(subPsi, range(rewardCandNum))
-          # it's possible that one policy dominates multiple reward candidates..
-          # to avoid containing same policies in the query as a result of this
-          # mark any policy added to the traj query as unavailable
-          available[idx] = False
-          #print i, subPsi, idx
-          hTraj.append(tuple(us[idx]))
+            # then just add a random one to make this a k-nary response
+            hTraj.append(tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')))
+          else:
+            idx = util.sample(subPsi, range(rewardCandNum))
+            # it's possible that one policy dominates multiple reward candidates..
+            # to avoid containing same policies in the query as a result of this
+            # mark any policy added to the traj query as unavailable
+            available[idx] = False
+            #print i, subPsi, idx
+            hTraj.append(tuple(us[idx]))
 
       psiProbs = self.getPossiblePhiAndProbs(hTraj)
       hValue = 0

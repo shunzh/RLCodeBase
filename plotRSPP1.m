@@ -3,25 +3,32 @@ function main()
   agents = {'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
 
   % driving
-  rewardCandNums = [5];
+  rewardCandNums = [10];
   numOfQueries = [1];
-  numOfResponses = [2, 3];
+  numOfResponses = [4];
   rewardVars = [1, 2, 3];
 
   % default values of variables
   rewardCand_ = 5;
   numOfQuery_ = 1;
+  numOfResponse_ = 3;
+
+  agentName = 'MILP-POLICY';
+  optData = cell(size(rewardVars));
+  for rewardVar = rewardVars
+    filename = strcat(agentName, num2str(rewardCand_), '_', num2str(numOfQuery_), '_', num2str(numOfResponse_), '_', num2str(rewardVar), '.out');
+    optData{rewardVar} = load(char(filename));
+  end
 
   dataM = cell(size(agents, 2), max(rewardCandNums), max(numOfQueries), max(numOfResponses), max(rewardVars));
   for agentId = 1 : size(agents, 2)
-    for numOfResponse = numOfResponses
-      for rewardVar = rewardVars
-        filename = strcat(agents(agentId), num2str(rewardCand_), '_', num2str(numOfQuery_), '_', num2str(numOfResponse), '_', num2str(rewardVar-1), '.out');
-        data = load(char(filename));
-        [m, ci] = process(data(:, 1));
-        dataM{agentId, rewardCand_, numOfQuery_, numOfResponse, rewardVar} = m;
-        dataCI{agentId, rewardCand_, numOfQuery_, numOfResponse, rewardVar} = ci;
-      end
+    for rewardVar = rewardVars
+      filename = strcat(agents(agentId), num2str(rewardCand_), '_', num2str(numOfQuery_), '_', num2str(numOfResponse_), '_', num2str(rewardVar), '.out');
+      data = load(char(filename));
+      [m, ci] = process(data(:, 1) - optData{rewardVar}(:, 1));
+      %[m, ci] = process(data(:, 1));
+      dataM{agentId, rewardCand_, numOfQuery_, numOfResponse_, rewardVar} = m;
+      dataCI{agentId, rewardCand_, numOfQuery_, numOfResponse_, rewardVar} = ci;
     end
   end
 
@@ -30,14 +37,15 @@ function main()
   for numOfResponse = numOfResponses
     figure;
     for agentId = 1 : size(agents, 2)
-      errorbar(rewardVars, cell2mat(dataM(agentId, rewardCand_, numOfQuery_, numOfResponse, rewardVars)),...
-                           cell2mat(dataCI(agentId, rewardCand_, numOfQuery_, numOfResponse, rewardVars)), markers{agentId});
+      errorbar(rewardVars, cell2mat(dataM(agentId, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)),...
+                           cell2mat(dataCI(agentId, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)), markers{agentId});
       hold on
     end
   end
   legend('Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
-  xlabel('Variance in Reward Candidates');
-  ylabel('Q-Value');
+  xlabel('Reward Settings');
+  ylabel('Q-Value - Q-Value of Greedy Policy Query');
+  set(gca, 'Xtick', rewardVars, 'XtickLabel', {'#1', '#2', '#3'});
 
   %figure;
   %numOfQuery_ = 2;
