@@ -634,11 +634,8 @@ class MILPAgent(QTPAgent):
 
       x = milp(**args)
       q.append(x)
-    
-    #The obj value is NOT the q value UNLESS for globally optimal policy query. it's actually a lower bound
-    #objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
+    objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
 
-    objValue = self.getQValue(self.cmp.state, None, q)
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
     if config.VERBOSE: print objValue
@@ -672,6 +669,7 @@ class MILPAgent(QTPAgent):
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
+      objValue = self.getQValue(self.cmp.state, None, q)
       return (q, None, objValue)
     if self.queryType == QueryType.PARTIAL_POLICY:
       idx = 0
