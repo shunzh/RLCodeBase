@@ -8,7 +8,7 @@ SAVE_TO_FILE = True
 PRINT = 'perf'
 
 NUMBER_OF_QUERIES = 1
-NUMBER_OF_RESPONSES = 3
+NUMBER_OF_RESPONSES = 2
 
 # a parameter for k way domains
 CONNECTION_TYPE = 'grid'

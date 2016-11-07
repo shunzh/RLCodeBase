@@ -56,7 +56,7 @@ class MILPTrajAgent(MILPAgent):
         for idx in xrange(rewardCandNum):
           if psi[idx] > 0:
             # put opt policies into bins
-            bins = [psi[idx] * sum(_) for _ in zip(bins, policyBins[idx])]
+            bins = [sum(_) for _ in zip(bins, policyBins[idx])]
         hValue += prob * scipy.stats.entropy(bins)
       
       if s in hValues.keys():
