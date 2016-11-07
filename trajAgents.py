@@ -46,7 +46,7 @@ class MILPTrajAgent(MILPAgent):
             # to avoid containing same policies in the query as a result of this
             # mark any policy added to the traj query as unavailable
             available[idx] = False
-            #print i, subPsi, idx
+            if config.VERBOSE: print s, i, subPsi, idx
             hTraj.append(tuple(us[idx]))
 
       psiProbs = self.getPossiblePhiAndProbs(hTraj)
@@ -58,6 +58,7 @@ class MILPTrajAgent(MILPAgent):
             # put opt policies into bins
             bins = [sum(_) for _ in zip(bins, policyBins[idx])]
         hValue += prob * scipy.stats.entropy(bins)
+      if config.VERBOSE: print hValue, psiProbs
       
       if s in hValues.keys():
         if hValue < hValues[s]: continue

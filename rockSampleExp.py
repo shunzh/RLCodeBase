@@ -14,8 +14,8 @@ if __name__ == '__main__':
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + 1
-  rockNum = 20
-  rewardCandNum = 5
+  rockNum = 40
+  rewardCandNum = 10
   rewardVar = 1
   
   try:
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     if opt == '-t':
       config.TRAJECTORY_LENGTH = int(arg)
     elif opt == '-n':
-      config.NUMBER_OF_QUERIES = int(arg)
+      rewardCandNum = int(arg)
     elif opt == '-k':
       config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-y':

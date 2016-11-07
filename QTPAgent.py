@@ -634,8 +634,11 @@ class MILPAgent(QTPAgent):
 
       x = milp(**args)
       q.append(x)
+    
+    #The obj value is NOT the q value UNLESS for globally optimal policy query. it's actually a lower bound
+    #objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
 
-    objValue = computeObj(q, self.phi, args['S'], args['A'], args['R'])
+    objValue = self.getQValue(self.cmp.state, None, q)
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
     if config.VERBOSE: print objValue
@@ -710,6 +713,13 @@ class MILPAgent(QTPAgent):
       raise Exception('Query type not implemented for MILP.')
 
     return args, q
+
+
+class RandWalkPolicyAgent(MILPAgent):
+  def learn(self):
+    # TODO
+    pass
+
 
 class MILPDemoAgent(MILPAgent):
   # greedily construct a set of policies for demonstration
