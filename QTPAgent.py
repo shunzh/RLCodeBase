@@ -323,7 +323,7 @@ class QTPAgent:
       estimatedValue = 0
       for fState, fStateProb in possibleStatesAndProbs:
         estimatedValue += values(fState) * fStateProb
-      #print fPhi, fPhiProb, estimatedValue
+      if config.DEBUG: print fPhi, fPhiProb, estimatedValue
       vAfterResponse += fPhiProb * estimatedValue
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
@@ -615,11 +615,8 @@ class MILPAgent(QTPAgent):
 
     if self.queryType == QueryType.ACTION:
       k = len(args['A'])
-    elif self.queryType in [QueryType.DEMONSTRATION, QueryType.COMMITMENT, QueryType.POLICY, QueryType.PARTIAL_POLICY,\
-                            QueryType.SIMILAR]:
-      k = config.NUMBER_OF_RESPONSES
     else:
-      raise Exception("query type not implemented")
+      k = config.NUMBER_OF_RESPONSES
 
     # now q is a set of policy queries
     q = []
@@ -634,11 +631,12 @@ class MILPAgent(QTPAgent):
 
       x = milp(**args)
       q.append(x)
+
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
+    if config.DEBUG: print 'eus value', objValue
 
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
-    if config.VERBOSE: print objValue
     if self.qi:
       # FIXME need debugging
       numOfIters = 0

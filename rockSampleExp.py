@@ -87,7 +87,10 @@ if __name__ == '__main__':
 
   # THE GENERAL CASE
   """
-  rocks = random.sample(cmp.getStates(), rockNum)
+  
+  # don't set rewards on terminal states (where y == height - 1)
+  rocks = random.sample(filter(lambda (x, y): y < cmp.height - 1, cmp.getStates()), rockNum)
+
   if rewardVar == 1:
     rewardCandBonus = [1] * rewardCandNum
   elif rewardVar == 2:

@@ -9,9 +9,9 @@ function main()
   rewardVars = [1, 2, 3];
 
   % default values of variables
-  rewardCand_ = 5;
+  rewardCand_ = 10;
   numOfQuery_ = 1;
-  numOfResponse_ = 2;
+  numOfResponse_ = 8;
 
   agentName = 'MILP-POLICY';
   optData = cell(size(rewardVars));
