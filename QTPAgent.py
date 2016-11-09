@@ -323,7 +323,7 @@ class QTPAgent:
       estimatedValue = 0
       for fState, fStateProb in possibleStatesAndProbs:
         estimatedValue += values(fState) * fStateProb
-      if config.DEBUG: print fPhi, fPhiProb, estimatedValue
+      #print fPhi, fPhiProb, estimatedValue
       vAfterResponse += fPhiProb * estimatedValue
 
     return cost + vBeforeResponse + self.gamma ** responseTime * vAfterResponse
@@ -633,7 +633,7 @@ class MILPAgent(QTPAgent):
       q.append(x)
 
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
-    if config.DEBUG: print 'eus value', objValue
+    if config.VERBOSE: print 'eus value', objValue
 
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy

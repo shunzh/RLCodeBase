@@ -13,12 +13,12 @@ function main()
   numOfQuery_ = 1;
   numOfResponse_ = 8;
 
-  agentName = 'MILP-POLICY';
-  optData = cell(size(rewardVars));
-  for rewardVar = rewardVars
-    filename = strcat(agentName, num2str(rewardCand_), '_', num2str(numOfQuery_), '_', num2str(numOfResponse_), '_', num2str(rewardVar), '.out');
-    optData{rewardVar} = load(char(filename));
-  end
+  %agentName = 'MILP-POLICY';
+  %optData = cell(size(rewardVars));
+  %for rewardVar = rewardVars
+  %  filename = strcat(agentName, num2str(rewardCand_), '_', num2str(numOfQuery_), '_', num2str(numOfResponse_), '_', num2str(rewardVar), '.out');
+  %  optData{rewardVar} = load(char(filename));
+  %end
 
   dataM = cell(size(agents, 2), max(rewardCandNums), max(numOfQueries), max(numOfResponses), max(rewardVars));
   for agentId = 1 : size(agents, 2)
@@ -32,7 +32,7 @@ function main()
     end
   end
 
-  markers = {'*--', '*-', '+-', 'x-', 's-'};
+  markers = {'o--', '*-', '+-', 'x-', 's-'};
 
   for numOfResponse = numOfResponses
     figure;

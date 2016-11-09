@@ -157,7 +157,7 @@ class TabularNavigationMaze(TabularNavigation):
            + TabularNavigation.measure(self, state2, mid)
 
 
-class Driving(TabularNavigation):
+class Driving(RockCollection):
   def __init__(self, numOfCars, responseTime, width, height, horizon, terminalReward):
     TabularNavigation.__init__(self, responseTime, width, height, horizon, terminalReward)
     self.numOfCars = numOfCars
@@ -167,18 +167,9 @@ class Driving(TabularNavigation):
     self.cars = []
     for _ in range(numOfCars):
       x = random.randint(0, width - 1)
-      y = random.randint(0, height - 1)
+      y = random.randint(0, height - 2)
       self.cars.append((x, y))
     #self.cars = [(2, 3)] #FIXME for testing
-
-  def reset(self):
-    self.state = (self.width / 2, 0)
-
-  def getPossibleActions(self, state=None):
-    return [(0, 1), (-1, 1), (1, 1)]
-  
-  def isTerminal(self, state):
-    return state[1] == self.height - 1
 
 
 class PuddleWorld(TabularNavigation):

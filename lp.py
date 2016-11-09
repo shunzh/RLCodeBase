@@ -125,6 +125,7 @@ def computeObj(q, psi, S, A, R):
   for i in xrange(rLen):
     values = [computeValue(pi, R[i], S, A) for pi in q]
     obj += psi[i] * max(values)
+    #print filter(lambda _: values[_] == max(values), range(len(q))), max(values)
   
   return obj
 

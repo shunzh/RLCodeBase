@@ -2,9 +2,6 @@ DEBUG = False
 
 VERBOSE = False
 
-# init VERBOSE to be true if debug is enabled
-if DEBUG: VERBOSE = True
-
 SAVE_TO_FILE = True
 
 # what to print
@@ -18,7 +15,7 @@ CONNECTION_TYPE = 'grid'
 
 INIT_STATE_DISTANCE = None
 
-TRAJECTORY_LENGTH = 5
+TRAJECTORY_LENGTH = 4
 
 # sample trajectories to compute max h values
 #SAMPLES_TIMES = 4
