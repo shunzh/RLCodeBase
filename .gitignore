@@ -62,9 +62,6 @@ eval_*
 *.dat
 
 # condor
-*out*
+*.out
 *.tar.gz
-*results
-*beliefs
-*time
 experiments
