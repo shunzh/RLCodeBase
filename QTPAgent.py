@@ -629,7 +629,7 @@ class MILPAgent(QTPAgent):
         for rewardId in xrange(rewardCandNum):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
-      x = milp(**args)
+      x = self.findNextPolicy(args)
       q.append(x)
 
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
@@ -710,11 +710,48 @@ class MILPAgent(QTPAgent):
 
     return args, q
 
+  def findNextPolicy(self, **args):
+    return milp(**args)
 
-class RandWalkPolicyAgent(MILPAgent):
-  def learn(self):
-    # TODO
+
+class PolicyGradientAgent(MILPAgent):
+  """
+  This finds the next policy by gradient descent using EUS as the objective function
+  """
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, alpha, gamma):
+    MILPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
+    self.feat = feat
+    self.alpha = alpha
+
+  def thetaToOccupancy(self, theta):
     pass
+  
+  def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
+    """
+    Same arguments as lp.milp
+    Return: next policy to add. It's a parameter, not occupancy
+    """
+    # start with a random policy
+    theta = None
+    pi = self.thetaToOccupancy(theta)
+    horizon = self.cmp.horizon
+    
+    # compute the derivative of EUS
+    while True:
+      deri = 0
+      for rIdx in len(R):
+        u = self.sampleTrajectory(pi, s0, horizon, 'trajectory')
+        rDeri = 0
+        futureRet = 0
+        for s, a in reversed(u):
+          futureRet += R[rIdx](s, a)
+          piDeri = self.feat(s, a) - sum(pi[s, b] * self.feat(s, b) for b in A)
+          rDeri += futureRet * piDeri
+        deri += psi[rIdx] * rDeri
+      
+      theta += self.alpha * deri
+    
+    return pi
 
 
 class MILPDemoAgent(MILPAgent):

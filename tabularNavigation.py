@@ -157,7 +157,7 @@ class TabularNavigationMaze(TabularNavigation):
            + TabularNavigation.measure(self, state2, mid)
 
 
-class Driving(RockCollection):
+class DiscreteDriving(RockCollection):
   def __init__(self, numOfCars, responseTime, width, height, horizon, terminalReward):
     TabularNavigation.__init__(self, responseTime, width, height, horizon, terminalReward)
     self.numOfCars = numOfCars

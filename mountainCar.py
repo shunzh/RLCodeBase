@@ -18,12 +18,15 @@ class MountainCar(ControlledMarkovProcess):
     return [(0, 0)]
   
   def getStates(self):
-    raise Exception('continuous domain')
+    #FIXME should not be used
+    return []
   
   def getStateDistance(self, s1, s2):
     return abs(s1[0] - s2[0])
 
   def getPossibleActions(self, state):
+    # 0: stay the same speed
+    # -1, 1: accelerate forward or backward
     return [-1, 0, 1]
 
   def isTerminal(self, state):
