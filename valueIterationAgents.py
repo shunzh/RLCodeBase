@@ -10,6 +10,8 @@ import util, sys
 
 from learningAgents import ValueEstimationAgent
 import random
+import easyDomains
+import numpy
 INF = sys.maxint
 
 class ValueIterationAgent(ValueEstimationAgent):
@@ -111,3 +113,95 @@ class ValueIterationAgent(ValueEstimationAgent):
       if q > maxValue:
         maxValue = q
     return filter(lambda act: self.getQValue(state, act, t+1) == maxValue, actions)
+
+  def sampleTrajectory(self, pi = None, state = None, hori = INF, to = 'occupancy'):
+    # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
+    # pi: S, A -> prob
+    u = util.Counter()
+    seq = []
+    
+    if hasattr(self, 'mdp'):
+      mdp = self.mdp
+    elif hasattr(self, 'cmp'):
+      mdp = self.cmp
+    else:
+      raise Exception('didn\'t find mdp or cmp object. how come?')
+
+    t = 0
+    if state: self.cmp.state = state
+
+    # we use self.cmp for simulation. we reset it after running
+    while True:
+      if mdp.isTerminal(mdp.state) or t >= hori: break
+
+      # now, sample an action following this policy
+      if pi == None:
+        a = random.choice(mdp.getPossibleActions())
+      else:
+        #a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
+        a = filter(lambda _: pi(mdp.state, _) > 0, mdp.getPossibleActions())[0]
+      u[(mdp.state, a)] = 1
+      seq.append(mdp.state)
+      t += 1
+
+      mdp.doAction(a)
+    mdp.reset()
+    
+    if to == 'occupancy':
+      return u
+    elif to == 'trajectory':
+      return seq
+    else:
+      raise Exception('unknown return type')    
+
+  def thetaToOccupancy(self, theta):
+    if not hasattr(self, 'feat'):
+      raise Exception('feature representation not supported in this agent')
+
+    def getActProb(s, a):
+      actProbs = {b: numpy.exp(numpy.dot(theta, self.feat(s))) for b in self.args['A']}
+      return actProbs[a] / sum(actProbs.values())
+    
+    return getActProb
+ 
+
+class PolicyGradientAgent(ValueIterationAgent):
+  """
+  Find policy by gradient descent in the policy space.
+  We assume the policies are softmax, parameterized by weights on features
+  """
+  def __init__(self, mdp, discount = 1.0, feat = lambda x: x, alpha = 0.1):
+    ValueIterationAgent.__init__(self, mdp, discount)
+
+    self.feat = feat
+    self.alpha = alpha
+
+  def learn(self):
+    A = self.mdp.getPossibleActions()
+    r = self.mdp.getReward
+    s0 = self.mdp.state
+    
+    # start with a `trivial' controller
+    theta = [0] * len(self.feat(s0))
+    horizon = self.cmp.horizon
+    
+    # compute the derivative of EUS
+    while True:
+      pi = self.thetaToOccupancy(theta)
+      deri = 0
+      # u is a list of state action pairs
+      u = self.sampleTrajectory(pi, s0, horizon, 'trajectory')
+      rDeri = 0
+      futureRet = 0
+      for s, a in reversed(u):
+        futureRet += r(s, a)
+        piDeri = self.feat(s, a) - sum(pi[s, b] * self.feat(s, b) for b in A)
+        rDeri += futureRet * piDeri
+          
+      deri += self.alpha * rDeri
+      
+    return pi
+
+  def getPolicy(self, state, t=0):
+    return ValueIterationAgent.getPolicy(self, state, t=t)
+  

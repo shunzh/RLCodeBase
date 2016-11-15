@@ -1,8 +1,7 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
   PriorTPAgent, MILPAgent, OptimalPolicyQueryAgent, MILPDemoAgent, OptimalPartialPolicyQueryAgent,\
-  PolicyGradientAgent
-from actionQueryAgents import HeuristicAgent, ActiveSamplingAgent,\
-  MILPActionAgent
+  PolicyGradientAgent, PolicyGradientQueryAgent
+from actionQueryAgents import MILPActionAgent
 from trajAgents import BeliefChangeTrajAgent, RandomTrajAgent, DisagreeTrajAgent,\
   MILPTrajAgent
 import CMPExp
@@ -72,7 +71,7 @@ def experiment(cmp, feat, rewardSet, initialPhi):
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
-    agent = PolicyGradientAgent(cmp, rewardSet, initialPhi, queryType, feat, 0.1, gamma)
+    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, 0.1, gamma)
   elif agentName == "SIMILAR-DISAGREE":
     queryType = QueryType.SIMILAR
     agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
@@ -104,8 +103,8 @@ def experiment(cmp, feat, rewardSet, initialPhi):
     f.close()
 
 if __name__ == '__main__':
-  feat = lambda (x, v): (x, x * x, v, v * v, x * v)
-  featLength = len(feat(0, 0))
+  feat = lambda (x, v): (x, v, x * x, v * v, x * v)
+  featLength = len(feat((0, 0)))
   
   horizon = 20 # note that this can't be inf.. the agent may not terminate
   # define feature-based reward functions
@@ -115,10 +114,13 @@ if __name__ == '__main__':
         return value
       else:
         return 0
+
   rewardSet = [makeReward([[9, 10], [-numpy.inf, numpy.inf]], 1),\
                makeReward([[9, 10], [-0.1, 0.1]], 1),\
                makeReward([[4, 5], [-numpy.inf, numpy.inf]], 1),\
                makeReward([[4, 5], [-0.1, 0.1]], 1)]
+  rewardSet = [(0,) * featLength]
+
   rewardCandNum = len(rewardSet)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum

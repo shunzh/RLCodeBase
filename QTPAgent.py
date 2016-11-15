@@ -8,7 +8,7 @@ import numpy
 from copy import deepcopy
 import scipy.stats
 import easyDomains
-from valueIterationAgents import ValueIterationAgent
+from valueIterationAgents import ValueIterationAgent, PolicyGradientAgent
 try:
   from lp import computeValue, computeObj, milp, lp, lpDual
 except ImportError: print "lp import error"
@@ -58,10 +58,11 @@ class LPDualAgent(ValueIterationAgent):
     return filter(lambda a: self.x[state, a] == maxProb, actions)
 
 LearningAgent = ValueIterationAgent
+#LearningAgent = PolicyGradientAgent
 #LearningAgent = LPAgent
 #LearningAgent = LPDualAgent
 
-class QTPAgent:
+class QTPAgent(ValueIterationAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType,
                gamma, clusterDistance=0):
     # underlying cmp
@@ -106,39 +107,6 @@ class QTPAgent:
         if horizon == numpy.inf: self.viAgentSet[idx] = self.getVIAgent(phi)
         # double check this for planning with transient phase
         else: self.viAgentSet[idx] = self.getFiniteVIAgent(phi, horizon, terminalReward, posterior=True)
-
-  def sampleTrajectory(self, pi = None, state = None, hori = numpy.inf, to = 'occupancy'):
-    # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
-    # pi: S, A -> prob
-    u = util.Counter()
-    seq = []
-
-    t = 0
-    if state: self.cmp.state = state
-
-    # we use self.cmp for simulation. we reset it after running
-    while True:
-      if self.cmp.isTerminal(self.cmp.state) or t >= hori: break
-
-      # now, sample an action following this policy
-      if pi == None:
-        a = random.choice(self.cmp.getPossibleActions())
-      else:
-        #a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
-        a = filter(lambda _: pi(self.cmp.state, _) > 0, self.cmp.getPossibleActions())[0]
-      u[(self.cmp.state, a)] = 1
-      seq.append(self.cmp.state)
-      t += 1
-
-      self.cmp.doAction(a)
-    self.cmp.reset()
-    
-    if to == 'occupancy':
-      return u
-    elif to == 'trajectory':
-      return seq
-    else:
-      raise Exception('unknown return type')
 
   def getRewardFunc(self, phi):
     """
@@ -628,7 +596,7 @@ class MILPAgent(QTPAgent):
         for rewardId in xrange(rewardCandNum):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
-      x = self.findNextPolicy(args)
+      x = self.findNextPolicy(**args)
       q.append(x)
 
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
@@ -713,7 +681,7 @@ class MILPAgent(QTPAgent):
     return milp(**args)
 
 
-class PolicyGradientAgent(MILPAgent):
+class PolicyGradientQueryAgent(MILPAgent):
   """
   This finds the next policy by gradient descent using EUS as the objective function
   """
@@ -722,17 +690,12 @@ class PolicyGradientAgent(MILPAgent):
     self.feat = feat
     self.alpha = alpha
 
-  def thetaToOccupancy(self, theta):
-    def getActProb(s, a):
-      actProbs = {b: numpy.exp(numpy.dot(theta, self.feat(s, b))) for b in self.args['A']}
-      return actProbs[a] / sum(actProbs.values())
-    
-    return getActProb
-  
   def findNextPolicy(self, S, A, R, T, s0, psi, maxV = None):
     """
     Same arguments as lp.milp
     Return: next policy to add. It's a parameter, not occupancy
+    
+    FIXME not re-using the code in PolicyGradientAgent. they are very similar classes. shall we?
     """
     # start with a `trivial' controller
     theta = [0] * len(self.feat(s0))
@@ -742,7 +705,7 @@ class PolicyGradientAgent(MILPAgent):
     while True:
       pi = self.thetaToOccupancy(theta)
       deri = 0
-      for rIdx in len(R):
+      for rIdx in range(len(R)):
         # u is a list of state action pairs
         u = self.sampleTrajectory(pi, s0, horizon, 'trajectory')
         rDeri = 0
@@ -752,16 +715,17 @@ class PolicyGradientAgent(MILPAgent):
           piDeri = self.feat(s, a) - sum(pi[s, b] * self.feat(s, b) for b in A)
           rDeri += futureRet * piDeri
           
-        if maxV is not None and futureRet > maxV[rIdx]:
+        if futureRet > maxV[rIdx]:
           # here is where the non-smoothness comes from
           # only add the derivative when the accumulated return is larger than the return obtained by the
           # best policy in the query set
           deri += psi[rIdx] * rDeri
       
       theta += self.alpha * deri
+      print deri
     
     return pi
-  
+
 
 class MILPDemoAgent(MILPAgent):
   # greedily construct a set of policies for demonstration

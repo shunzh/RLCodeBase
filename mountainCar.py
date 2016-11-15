@@ -15,7 +15,7 @@ class MountainCar(ControlledMarkovProcess):
     return 0
 
   def reset(self):
-    return [(0, 0)]
+    self.state = (0, 0)
   
   def getStates(self):
     #FIXME should not be used
@@ -24,7 +24,7 @@ class MountainCar(ControlledMarkovProcess):
   def getStateDistance(self, s1, s2):
     return abs(s1[0] - s2[0])
 
-  def getPossibleActions(self, state):
+  def getPossibleActions(self, state = None):
     # 0: stay the same speed
     # -1, 1: accelerate forward or backward
     return [-1, 0, 1]
@@ -41,4 +41,4 @@ class MountainCar(ControlledMarkovProcess):
     
     if loc < self.wallLoc: loc = state[0]
      
-    return {(loc, v): 1}
+    return [((loc, v), 1)]
