@@ -197,6 +197,9 @@ class Counter(dict):
   def __hash__(self):
     return hash((tuple(self.items()), tuple(self.values())))
 
+  def __call__(self, idx):
+    return self.__getitem__(self, idx)
+
   def incrementAll(self, keys, count):
     """
     Increments all elements of keys by the same count.

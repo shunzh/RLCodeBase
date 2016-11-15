@@ -200,7 +200,7 @@ class ApproximateQAgent(QLearningAgent):
     
   def update(self, state, action, nextState, reward):
     """
-       Should update your weights based on transition  
+       Should update your weights based on transition 
     """
     "*** YOUR CODE HERE ***"
     correction = (reward + self.gamma * self.getValue(nextState)) - self.getQValue(state, action)
@@ -218,7 +218,7 @@ class ApproximateQAgent(QLearningAgent):
 class ApproximateVAgent(ApproximateQAgent):
   """
   Approximate the states instead.
-  self.weights[action] keeps a directory of weightes for that state, action pair.
+  self.weights[action] keeps a directory of weights for that state, action pair.
   """
   def setWeights(self, filename):
     """

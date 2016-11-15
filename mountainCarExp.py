@@ -12,6 +12,8 @@ import random
 import getopt
 import config
 from cmp import QueryType
+from mountainCar import MountainCar
+import numpy
 
 flags = "r:l:s:d:a:vq:P:t:k:n:y:"
 
@@ -32,11 +34,10 @@ Show:
 - computation time
 - paired difference between JQTP and AQTP
 """
-def experiment(cmp, rewardSet, initialPhi):
+def experiment(cmp, feat, rewardSet, initialPhi):
   # discount factor
   gamma = 1
   responseTime = 0
-  queryFlag = 'default'
   agentName = 'JQTP'
   
   try:
@@ -58,7 +59,7 @@ def experiment(cmp, rewardSet, initialPhi):
     print 'true reward', trueRewardIdx
 
   # continue initializing the cmp object
-  cmp.decorate(gamma, queries, trueRewardIdx, rewardSet[trueRewardIdx])
+  cmp.decorate(gamma, None, trueRewardIdx, rewardSet[trueRewardIdx])
   cmp.setPossibleRewardValues([0, 1])
 
   if agentName == 'JQTP' or agentName == 'NQ' or agentName == 'WAIT':
@@ -71,7 +72,7 @@ def experiment(cmp, rewardSet, initialPhi):
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
-    agent = PolicyGradientAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+    agent = PolicyGradientAgent(cmp, rewardSet, initialPhi, queryType, feat, 0.1, gamma)
   elif agentName == "SIMILAR-DISAGREE":
     queryType = QueryType.SIMILAR
     agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
@@ -89,7 +90,7 @@ def experiment(cmp, rewardSet, initialPhi):
 
   if agentName == 'WAIT':
     # only simulate the episodes after the response
-    ret, qValue, time = CMPExp.experiment(cmp, agent, gamma, rewardSet, queryType, horizon=cmp.horizon- responseTime)
+    ret, qValue, time = CMPExp.experiment(cmp, agent, gamma, rewardSet, queryType, horizon=cmp.horizon - responseTime)
     ret = ret * gamma ** responseTime
     qValue = ret * gamma ** responseTime
   else:
@@ -101,3 +102,28 @@ def experiment(cmp, rewardSet, initialPhi):
     f = open(agentName + str(config.opts) + '.out',"a")
     f.write(str(qValue) + ' ' + str(time) + '\n')
     f.close()
+
+if __name__ == '__main__':
+  feat = lambda (x, v): (x, x * x, v, v * v, x * v)
+  featLength = len(feat(0, 0))
+  
+  horizon = 20 # note that this can't be inf.. the agent may not terminate
+  # define feature-based reward functions
+  def makeReward(phiRanges, value):
+    def r(s):
+      if all(s[i] >= phiRanges[i][0] and s[i] <= phiRanges[i][1] for i in xrange(featLength)):
+        return value
+      else:
+        return 0
+  rewardSet = [makeReward([[9, 10], [-numpy.inf, numpy.inf]], 1),\
+               makeReward([[9, 10], [-0.1, 0.1]], 1),\
+               makeReward([[4, 5], [-numpy.inf, numpy.inf]], 1),\
+               makeReward([[4, 5], [-0.1, 0.1]], 1)]
+  rewardCandNum = len(rewardSet)
+
+  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+  
+  terminalReward = util.Counter()
+  cmp = MountainCar(0, horizon, terminalReward)
+  
+  experiment(cmp, feat, rewardSet, initialPhi)
