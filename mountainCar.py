@@ -5,7 +5,7 @@ class MountainCar(ControlledMarkovProcess):
     self.noise = 0
     self.acc = 0.1
 
-    self.wallLoc = -5
+    self.wallLoc = -10
     self.goal = 10
 
     # horizon is assumed to be finite in this domain
@@ -30,15 +30,17 @@ class MountainCar(ControlledMarkovProcess):
     return [-1, 0, 1]
 
   def isTerminal(self, state):
-    return state[0] > self.goal
+    return state[0] > self.goal or state[0] < self.wallLoc
   
   def getTransitionStatesAndProbs(self, state, action):
     v = state[1]
-    loc = state[0] + v
 
     if action == 1: v += self.acc
     elif action == -1: v -= self.acc
     
-    if loc < self.wallLoc: loc = state[0]
+    # -2 <= v <= 2
+    v = max(min(v, 2), -2)
+
+    loc = state[0] + v
      
     return [((loc, v), 1)]

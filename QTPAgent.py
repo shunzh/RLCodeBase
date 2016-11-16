@@ -599,6 +599,12 @@ class MILPAgent(QTPAgent):
       x = self.findNextPolicy(**args)
       q.append(x)
 
+    for x in q:
+      for r in args['R']:
+        u = self.sampleTrajectory(x, self.cmp.state, horizon, 'saPairs')
+        print sum(r(s, a) for s, a in u),
+      print
+
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
     if config.VERBOSE: print 'eus value', objValue
 
@@ -685,9 +691,10 @@ class PolicyGradientQueryAgent(MILPAgent):
   """
   This finds the next policy by gradient descent using EUS as the objective function
   """
-  def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, alpha, gamma):
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, alpha, gamma):
     MILPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     self.feat = feat
+    self.featLength = featLength
     self.alpha = alpha
 
   def findNextPolicy(self, S, A, R, T, s0, psi, maxV = None):
@@ -698,31 +705,28 @@ class PolicyGradientQueryAgent(MILPAgent):
     FIXME not re-using the code in PolicyGradientAgent. they are very similar classes. shall we?
     """
     # start with a `trivial' controller
-    theta = [0] * len(self.feat(s0))
+    theta = [random.random() for _ in xrange(self.featLength)]
     horizon = self.cmp.horizon
     
     # compute the derivative of EUS
-    while True:
+    #while True:
+    for _ in xrange(500):
       pi = self.thetaToOccupancy(theta)
-      deri = 0
+      deri = numpy.array([0] * self.featLength)
       for rIdx in range(len(R)):
         # u is a list of state action pairs
-        u = self.sampleTrajectory(pi, s0, horizon, 'trajectory')
-        rDeri = 0
-        futureRet = 0
-        for s, a in reversed(u):
-          futureRet += R[rIdx](s, a)
-          piDeri = self.feat(s, a) - sum(pi[s, b] * self.feat(s, b) for b in A)
-          rDeri += futureRet * piDeri
-          
-        if futureRet > maxV[rIdx]:
+        u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
+
+        ret = sum(R[rIdx](s, a) for s, a in u)
+        if ret > maxV[rIdx]:
           # here is where the non-smoothness comes from
           # only add the derivative when the accumulated return is larger than the return obtained by the
           # best policy in the query set
-          deri += psi[rIdx] * rDeri
-      
-      theta += self.alpha * deri
-      print deri
+          futureRet = 0
+          for s, a in reversed(u):
+            futureRet += R[rIdx](s, a)
+            deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
+            theta = theta + self.alpha * futureRet * deri
     
     return pi
 

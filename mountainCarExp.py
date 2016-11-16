@@ -33,7 +33,7 @@ Show:
 - computation time
 - paired difference between JQTP and AQTP
 """
-def experiment(cmp, feat, rewardSet, initialPhi):
+def experiment(cmp, feat, featLength, rewardSet, initialPhi):
   # discount factor
   gamma = 1
   responseTime = 0
@@ -71,7 +71,7 @@ def experiment(cmp, feat, rewardSet, initialPhi):
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
-    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, 0.1, gamma)
+    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, 0.1, gamma)
   elif agentName == "SIMILAR-DISAGREE":
     queryType = QueryType.SIMILAR
     agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
@@ -103,23 +103,29 @@ def experiment(cmp, feat, rewardSet, initialPhi):
     f.close()
 
 if __name__ == '__main__':
-  feat = lambda (x, v): (x, v, x * x, v * v, x * v)
-  featLength = len(feat((0, 0)))
+  def feat((x, v), a):
+    v += a
+    x += v
+    #return numpy.array((x, v, x**2, v**2, x * v, 1))
+    return numpy.array((x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2, 1))
+
+  featLength = 9
   
-  horizon = 20 # note that this can't be inf.. the agent may not terminate
+  horizon = 40 # note that this can't be inf.. the agent may not terminate
   # define feature-based reward functions
   def makeReward(phiRanges, value):
-    def r(s):
-      if all(s[i] >= phiRanges[i][0] and s[i] <= phiRanges[i][1] for i in xrange(featLength)):
+    def r(s, a):
+      if all(s[i] >= phiRanges[i][0] and s[i] <= phiRanges[i][1] for i in xrange(2)):
         return value
       else:
         return 0
+    return r
 
   rewardSet = [makeReward([[9, 10], [-numpy.inf, numpy.inf]], 1),\
-               makeReward([[9, 10], [-0.1, 0.1]], 1),\
-               makeReward([[4, 5], [-numpy.inf, numpy.inf]], 1),\
-               makeReward([[4, 5], [-0.1, 0.1]], 1)]
-  rewardSet = [(0,) * featLength]
+               makeReward([[9, 10], [-0.5, 0.5]], 1),\
+               makeReward([[-10, -9], [-numpy.inf, numpy.inf]], 1),\
+               makeReward([[-10, -9], [-0.5, 0.5]], 1)\
+               ]
 
   rewardCandNum = len(rewardSet)
 
@@ -128,4 +134,4 @@ if __name__ == '__main__':
   terminalReward = util.Counter()
   cmp = MountainCar(0, horizon, terminalReward)
   
-  experiment(cmp, feat, rewardSet, initialPhi)
+  experiment(cmp, feat, featLength, rewardSet, initialPhi)

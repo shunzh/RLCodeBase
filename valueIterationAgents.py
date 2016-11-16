@@ -14,6 +14,9 @@ import easyDomains
 import numpy
 INF = sys.maxint
 
+class DOMAIN_PROPERTY:
+  TABUALR, CONTINUOUS = range(2)
+
 class ValueIterationAgent(ValueEstimationAgent):
   """
       * Please read learningAgents.py before reading this.*
@@ -40,6 +43,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     self.iterations = iterations
     # allValues: t, state -> value
     self.allValues = [initValues]
+    self.dp = DOMAIN_PROPERTY.TABUALR
   
   def learn(self):
     for t in xrange(self.iterations):
@@ -118,7 +122,8 @@ class ValueIterationAgent(ValueEstimationAgent):
     # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
     # pi: S, A -> prob
     u = util.Counter()
-    seq = []
+    states = []
+    actions = []
     
     if hasattr(self, 'mdp'):
       mdp = self.mdp
@@ -138,10 +143,11 @@ class ValueIterationAgent(ValueEstimationAgent):
       if pi == None:
         a = random.choice(mdp.getPossibleActions())
       else:
-        #a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
-        a = filter(lambda _: pi(mdp.state, _) > 0, mdp.getPossibleActions())[0]
+        a = util.sample({a: pi(self.cmp.state, a) for a in self.cmp.getPossibleActions()})
+        #a = filter(lambda _: pi(mdp.state, _) > 0, mdp.getPossibleActions())[0]
       u[(mdp.state, a)] = 1
-      seq.append(mdp.state)
+      states.append(mdp.state)
+      actions.append(a)
       t += 1
 
       mdp.doAction(a)
@@ -150,7 +156,9 @@ class ValueIterationAgent(ValueEstimationAgent):
     if to == 'occupancy':
       return u
     elif to == 'trajectory':
-      return seq
+      return states
+    elif to == 'saPairs':
+      return zip(states, actions)
     else:
       raise Exception('unknown return type')    
 
@@ -159,7 +167,8 @@ class ValueIterationAgent(ValueEstimationAgent):
       raise Exception('feature representation not supported in this agent')
 
     def getActProb(s, a):
-      actProbs = {b: numpy.exp(numpy.dot(theta, self.feat(s))) for b in self.args['A']}
+      maxV = max(numpy.dot(theta, self.feat(s, b)) for b in self.args['A'])
+      actProbs = {b: numpy.exp(numpy.dot(theta, self.feat(s, b)) - maxV) for b in self.args['A']}
       return actProbs[a] / sum(actProbs.values())
     
     return getActProb
@@ -170,11 +179,13 @@ class PolicyGradientAgent(ValueIterationAgent):
   Find policy by gradient descent in the policy space.
   We assume the policies are softmax, parameterized by weights on features
   """
-  def __init__(self, mdp, discount = 1.0, feat = lambda x: x, alpha = 0.1):
+  def __init__(self, mdp, discount = 1.0, feat = lambda x: x, alpha = 0.05, featLength = 1):
     ValueIterationAgent.__init__(self, mdp, discount)
 
     self.feat = feat
+    self.featLength = featLength
     self.alpha = alpha
+    self.dp = DOMAIN_PROPERTY.CONTINUOUS
 
   def learn(self):
     A = self.mdp.getPossibleActions()
@@ -182,23 +193,23 @@ class PolicyGradientAgent(ValueIterationAgent):
     s0 = self.mdp.state
     
     # start with a `trivial' controller
-    theta = [0] * len(self.feat(s0))
+    theta = [random.random() for _ in xrange(self.featLength)]
     horizon = self.cmp.horizon
     
     # compute the derivative of EUS
     while True:
       pi = self.thetaToOccupancy(theta)
-      deri = 0
+      deri = numpy.array([0] * self.featLength)
+      rDeri = numpy.array([0] * self.featLength)
       # u is a list of state action pairs
-      u = self.sampleTrajectory(pi, s0, horizon, 'trajectory')
-      rDeri = 0
+      u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
       futureRet = 0
       for s, a in reversed(u):
         futureRet += r(s, a)
-        piDeri = self.feat(s, a) - sum(pi[s, b] * self.feat(s, b) for b in A)
-        rDeri += futureRet * piDeri
+        piDeri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in A)
+        rDeri = rDeri + futureRet * piDeri / pi(s, a)
           
-      deri += self.alpha * rDeri
+      deri = deri + self.alpha * rDeri
       
     return pi
 
