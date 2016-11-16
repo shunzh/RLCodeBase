@@ -587,23 +587,19 @@ class MILPAgent(QTPAgent):
 
     # now q is a set of policy queries
     q = []
+    args['maxV'] = [0] * rewardCandNum
     for i in range(k):
-      if i == 0:
-        args['maxV'] = [0] * rewardCandNum
-      else:
-        # find the optimal policy so far that achieves the best on each reward candidate
-        args['maxV'] = []
-        for rewardId in xrange(rewardCandNum):
-          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
-
       x = self.findNextPolicy(**args)
       q.append(x)
 
-    for x in q:
-      for r in args['R']:
-        u = self.sampleTrajectory(x, self.cmp.state, horizon, 'saPairs')
-        print sum(r(s, a) for s, a in u),
-      print
+      # find the optimal policy so far that achieves the best on each reward candidate
+      args['maxV'] = []
+      for rewardId in xrange(rewardCandNum):
+        if hasattr(self, 'computePiValue'):
+          args['maxV'].append(max([self.computePiValue(pi, args['R'][rewardId], horizon) for pi in q]))
+        else:
+          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
+      print args['maxV']
 
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
     if config.VERBOSE: print 'eus value', objValue
@@ -705,30 +701,50 @@ class PolicyGradientQueryAgent(MILPAgent):
     FIXME not re-using the code in PolicyGradientAgent. they are very similar classes. shall we?
     """
     # start with a `trivial' controller
-    theta = [random.random() for _ in xrange(self.featLength)]
     horizon = self.cmp.horizon
+    bestTheta = [0] * self.featLength
+    bestObjValue = -numpy.inf
     
     # compute the derivative of EUS
-    #while True:
-    for _ in xrange(500):
-      pi = self.thetaToOccupancy(theta)
-      deri = numpy.array([0] * self.featLength)
-      for rIdx in range(len(R)):
-        # u is a list of state action pairs
-        u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
+    for _ in xrange(5):
+      theta = [random.random() for _ in xrange(self.featLength)]
+      for __ in xrange(100):
+        pi = self.thetaToOccupancy(theta)
+        deri = numpy.array([0] * self.featLength)
+        for rIdx in range(len(R)):
+          # u is a list of state action pairs
+          u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
 
-        ret = sum(R[rIdx](s, a) for s, a in u)
-        if ret > maxV[rIdx]:
-          # here is where the non-smoothness comes from
-          # only add the derivative when the accumulated return is larger than the return obtained by the
-          # best policy in the query set
-          futureRet = 0
-          for s, a in reversed(u):
-            futureRet += R[rIdx](s, a)
-            deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
-            theta = theta + self.alpha * futureRet * deri
+          ret = sum(R[rIdx](s, a) for s, a in u)
+          if ret > maxV[rIdx]:
+            # here is where the non-smoothness comes from
+            # only add the derivative when the accumulated return is larger than the return obtained by the
+            # best policy in the query set
+            futureRet = 0
+            for s, a in reversed(u):
+              futureRet += R[rIdx](s, a)
+              deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
+              theta = theta + self.alpha * psi[rIdx] * futureRet * deri / pi(s, a)
+
+              objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
+              if objValue > bestObjValue:
+                bestObjValue = objValue
+                bestTheta = theta
     
-    return pi
+    return self.thetaToOccupancy(bestTheta)
+
+  def computeObjValue(self, theta, psi, R, horizon, maxV):
+    ret = 0
+    pi = self.thetaToOccupancy(theta)
+    for rIdx in xrange(len(R)):
+      rRet = self.computePiValue(pi, R[rIdx], horizon)
+      if rRet > maxV[rIdx]:
+        ret += psi[rIdx] * rRet
+    return ret
+  
+  def computePiValue(self, pi, r, horizon):
+    u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
+    return sum(r(s, a) for s, a in u)
 
 
 class MILPDemoAgent(MILPAgent):

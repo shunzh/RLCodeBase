@@ -14,9 +14,6 @@ import easyDomains
 import numpy
 INF = sys.maxint
 
-class DOMAIN_PROPERTY:
-  TABUALR, CONTINUOUS = range(2)
-
 class ValueIterationAgent(ValueEstimationAgent):
   """
       * Please read learningAgents.py before reading this.*
@@ -43,7 +40,6 @@ class ValueIterationAgent(ValueEstimationAgent):
     self.iterations = iterations
     # allValues: t, state -> value
     self.allValues = [initValues]
-    self.dp = DOMAIN_PROPERTY.TABUALR
   
   def learn(self):
     for t in xrange(self.iterations):
@@ -185,33 +181,14 @@ class PolicyGradientAgent(ValueIterationAgent):
     self.feat = feat
     self.featLength = featLength
     self.alpha = alpha
-    self.dp = DOMAIN_PROPERTY.CONTINUOUS
 
   def learn(self):
-    A = self.mdp.getPossibleActions()
-    r = self.mdp.getReward
-    s0 = self.mdp.state
-    
-    # start with a `trivial' controller
-    theta = [random.random() for _ in xrange(self.featLength)]
-    horizon = self.cmp.horizon
-    
-    # compute the derivative of EUS
-    while True:
-      pi = self.thetaToOccupancy(theta)
-      deri = numpy.array([0] * self.featLength)
-      rDeri = numpy.array([0] * self.featLength)
-      # u is a list of state action pairs
-      u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
-      futureRet = 0
-      for s, a in reversed(u):
-        futureRet += r(s, a)
-        piDeri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in A)
-        rDeri = rDeri + futureRet * piDeri / pi(s, a)
-          
-      deri = deri + self.alpha * rDeri
-      
-    return pi
+    #TODO
+    # don't write from sctach.. hold a policy gradient query agent and go from there
+    #a = PolicyGradientQueryAgent(cmp, [self.getReward], [1], QueryType.POLICY,\
+    #                             self.feat, self.featLength, self.alpha, self.discount)
+    pass
+
 
   def getPolicy(self, state, t=0):
     return ValueIterationAgent.getPolicy(self, state, t=t)

@@ -71,7 +71,7 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
-    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, 0.1, gamma)
+    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, 0.05, gamma)
   elif agentName == "SIMILAR-DISAGREE":
     queryType = QueryType.SIMILAR
     agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
@@ -122,10 +122,8 @@ if __name__ == '__main__':
     return r
 
   rewardSet = [makeReward([[9, 10], [-numpy.inf, numpy.inf]], 1),\
-               makeReward([[9, 10], [-0.5, 0.5]], 1),\
                makeReward([[-10, -9], [-numpy.inf, numpy.inf]], 1),\
-               makeReward([[-10, -9], [-0.5, 0.5]], 1)\
-               ]
+              ]
 
   rewardCandNum = len(rewardSet)
 
