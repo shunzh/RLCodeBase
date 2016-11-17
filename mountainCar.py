@@ -5,8 +5,8 @@ class MountainCar(ControlledMarkovProcess):
     self.noise = 0
     self.acc = 0.1
 
-    self.wallLoc = -10
-    self.goal = 10
+    self.wallLoc = -3
+    self.goal = 3
 
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
@@ -44,3 +44,13 @@ class MountainCar(ControlledMarkovProcess):
     loc = state[0] + v
      
     return [((loc, v), 1)]
+
+
+class MountainCarToy(MountainCar):
+  """
+  for testing.. the agent controls velocity not acceleration
+  """
+  def getTransitionStatesAndProbs(self, state, action):
+    loc = state[0] + action
+    
+    return [((loc, 0), 1)]

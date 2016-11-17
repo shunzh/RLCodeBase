@@ -11,7 +11,7 @@ import random
 import getopt
 import config
 from cmp import QueryType
-from mountainCar import MountainCar
+from mountainCar import MountainCar, MountainCarToy
 import numpy
 
 flags = "r:l:s:d:a:vq:P:t:k:n:y:"
@@ -71,7 +71,7 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
-    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, 0.05, gamma)
+    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, 0.01, gamma)
   elif agentName == "SIMILAR-DISAGREE":
     queryType = QueryType.SIMILAR
     agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
@@ -103,26 +103,31 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
     f.close()
 
 if __name__ == '__main__':
+  """
   def feat((x, v), a):
     v += a
     x += v
     #return numpy.array((x, v, x**2, v**2, x * v, 1))
     return numpy.array((x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2, 1))
+  """
+  def feat((x, x0), v):
+    x += v
+    return numpy.array((x,))
 
-  featLength = 9
+  featLength = len(feat((0, 0), 1)) # just use an arbitrary state to compute the length of feature
   
-  horizon = 40 # note that this can't be inf.. the agent may not terminate
+  horizon = 30 # note that this can't be inf.. the agent may not terminate
   # define feature-based reward functions
-  def makeReward(phiRanges, value):
+  def makeReward(phiRanges, action, value):
     def r(s, a):
-      if all(s[i] >= phiRanges[i][0] and s[i] <= phiRanges[i][1] for i in xrange(2)):
+      if s[0] >= phiRanges[0] and s[0] <= phiRanges[1] and a == action:
         return value
       else:
-        return 0
+        return -0.1
     return r
 
-  rewardSet = [makeReward([[9, 10], [-numpy.inf, numpy.inf]], 1),\
-               makeReward([[-10, -9], [-numpy.inf, numpy.inf]], 1),\
+  rewardSet = [makeReward([2.1, 3], 1, 1),\
+               makeReward([-3, -2.1], -1, 1),\
               ]
 
   rewardCandNum = len(rewardSet)
@@ -130,6 +135,10 @@ if __name__ == '__main__':
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
   
   terminalReward = util.Counter()
-  cmp = MountainCar(0, horizon, terminalReward)
+
+  #Domain = MountainCar
+  Domain = MountainCarToy
+
+  cmp = Domain(0, horizon, terminalReward)
   
   experiment(cmp, feat, featLength, rewardSet, initialPhi)

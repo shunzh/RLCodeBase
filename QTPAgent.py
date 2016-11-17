@@ -587,7 +587,7 @@ class MILPAgent(QTPAgent):
 
     # now q is a set of policy queries
     q = []
-    args['maxV'] = [0] * rewardCandNum
+    args['maxV'] = [-numpy.inf] * rewardCandNum
     for i in range(k):
       x = self.findNextPolicy(**args)
       q.append(x)
@@ -706,14 +706,15 @@ class PolicyGradientQueryAgent(MILPAgent):
     bestObjValue = -numpy.inf
     
     # compute the derivative of EUS
-    for _ in xrange(5):
-      theta = [random.random() for _ in xrange(self.featLength)]
-      for __ in xrange(100):
+    for rspTime in xrange(1):
+      theta = [0] * self.featLength
+      #theta = [random.random() for _ in xrange(self.featLength)]
+      for iterStep in xrange(1000):
         pi = self.thetaToOccupancy(theta)
-        deri = numpy.array([0] * self.featLength)
         for rIdx in range(len(R)):
           # u is a list of state action pairs
           u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
+          #print u
 
           ret = sum(R[rIdx](s, a) for s, a in u)
           if ret > maxV[rIdx]:
@@ -724,14 +725,20 @@ class PolicyGradientQueryAgent(MILPAgent):
             for s, a in reversed(u):
               futureRet += R[rIdx](s, a)
               deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
-              theta = theta + self.alpha * psi[rIdx] * futureRet * deri / pi(s, a)
+              theta = theta + self.alpha * psi[rIdx] * futureRet * deri
+              #print s, a, 'return', futureRet, 'deri', deri
+              #raw_input()
+              #print 'theta', theta
 
               objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
               if objValue > bestObjValue:
                 bestObjValue = objValue
                 bestTheta = theta
     
-    return self.thetaToOccupancy(bestTheta)
+    optPi = self.thetaToOccupancy(bestTheta)
+    print bestTheta
+    print self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
+    return optPi
 
   def computeObjValue(self, theta, psi, R, horizon, maxV):
     ret = 0
@@ -743,8 +750,11 @@ class PolicyGradientQueryAgent(MILPAgent):
     return ret
   
   def computePiValue(self, pi, r, horizon):
-    u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
-    return sum(r(s, a) for s, a in u)
+    ret = 0
+    for _ in xrange(10):
+      u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
+      ret += sum(r(s, a) for s, a in u) / 10
+    return ret
 
 
 class MILPDemoAgent(MILPAgent):
