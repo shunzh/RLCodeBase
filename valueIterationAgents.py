@@ -139,7 +139,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       if pi == None:
         a = random.choice(mdp.getPossibleActions())
       else:
-        a = util.sample({a: pi(self.cmp.state, a) for a in self.cmp.getPossibleActions()})
+        a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
         #a = filter(lambda _: pi(mdp.state, _) > 0, mdp.getPossibleActions())[0]
       u[(mdp.state, a)] = 1
       states.append(mdp.state)

@@ -599,7 +599,6 @@ class MILPAgent(QTPAgent):
           args['maxV'].append(max([self.computePiValue(pi, args['R'][rewardId], horizon) for pi in q]))
         else:
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
-      print args['maxV']
 
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
     if config.VERBOSE: print 'eus value', objValue
@@ -693,7 +692,7 @@ class PolicyGradientQueryAgent(MILPAgent):
     self.featLength = featLength
     self.alpha = alpha
 
-  def findNextPolicy(self, S, A, R, T, s0, psi, maxV = None):
+  def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
     """
     Same arguments as lp.milp
     Return: next policy to add. It's a parameter, not occupancy
@@ -706,16 +705,18 @@ class PolicyGradientQueryAgent(MILPAgent):
     bestObjValue = -numpy.inf
     
     # compute the derivative of EUS
-    for rspTime in xrange(1):
-      theta = [0] * self.featLength
-      #theta = [random.random() for _ in xrange(self.featLength)]
-      for iterStep in xrange(1000):
+    for rspTime in xrange(10):
+      print rspTime
+      theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
+      for iterStep in xrange(50):
         pi = self.thetaToOccupancy(theta)
-        for rIdx in range(len(R)):
-          # u is a list of state action pairs
-          u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
-          #print u
+        # u is a list of state action pairs
+        u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
+        #print theta
+        #print u
+        #raw_input()
 
+        for rIdx in range(len(R)):
           ret = sum(R[rIdx](s, a) for s, a in u)
           if ret > maxV[rIdx]:
             # here is where the non-smoothness comes from
@@ -726,9 +727,6 @@ class PolicyGradientQueryAgent(MILPAgent):
               futureRet += R[rIdx](s, a)
               deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
               theta = theta + self.alpha * psi[rIdx] * futureRet * deri
-              #print s, a, 'return', futureRet, 'deri', deri
-              #raw_input()
-              #print 'theta', theta
 
               objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
               if objValue > bestObjValue:

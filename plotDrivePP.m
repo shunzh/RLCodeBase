@@ -2,6 +2,7 @@ function main()
   agents = {'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
 
   % driving
+  agentIds = 1 : size(agents, 2);
   rewardCandNums = [5];
   numOfQueries = [1];
   numOfResponses = [2, 3, 4];
@@ -10,7 +11,7 @@ function main()
   % default values of variables
   rewardCand_ = 5;
   numOfQuery_ = 1;
-  trajLen_ = 3;
+  trajLen_ = 4;
 
   dataM = cell(size(agents, 2), max(rewardCandNums), max(numOfQueries), max(numOfResponses), max(trajLens));
   for agentId = 1 : size(agents, 2)
@@ -25,16 +26,21 @@ function main()
 
   markers = {'o--', '*-', '+-', 'x-', 's-'};
 
-  for agentId = 1 : size(agents, 2)
+  %for agentId = 1 : size(agents, 2)
     %errorbar(numOfResponses, cell2mat(dataM(agentId, rewardCand_, numOfQuery_, numOfResponses, trajLen_)),...
     %                         cell2mat(dataCI(agentId, rewardCand_, numOfQuery_, numOfResponses, trajLen_)), markers{agentId});
-    errorbar(numOfResponses, cell2mat(dataM(agentId, rewardCand_, numOfQuery_, numOfResponses, trajLen_)),...
-                             zeros(1, size(numOfResponses, 2)), markers{agentId});
-    hold on
-  end
-  legend('Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
+    %errorbar(numOfResponses, cell2mat(dataM(agentId, rewardCand_, numOfQuery_, numOfResponses, trajLen_)),...
+    %                         zeros(1, size(numOfResponses, 2)), markers{agentId});
+    %hold on
+  %end
+  d = squeeze(cell2mat(dataM(agentIds, rewardCand_, numOfQuery_, numOfResponses, trajLen_)))'
+  h = figure;
+  b = bar(2:4, d);
+  colormap(gray); 
+
+  %legend('Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
   xlabel('Number of Responses');
-  ylabel('Q-Value');
+  ylabel('EPU');
 end
 
 function [m, ci] = process(data)
