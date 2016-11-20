@@ -518,19 +518,20 @@ class OptimalPolicyQueryAgent(QTPAgent):
     
     for subset in combinations(values.items(), k):
       psis = map(lambda _: _[0], subset)
-      q = map(lambda _: _[1], subset)
+      qs = map(lambda _: _[1], subset)
       # make sure that such query partitions the reward candiates
       if sum(sum(_ > 0 for _ in psi) for psi in psis) == rewardCandNum and\
          all(sum(psi[i] for psi in psis) > 0 for i in xrange(rewardCandNum)):
-        objValue = sum(q)
+        objValue = sum(qs)
         if objValue > maxObjValue:
           maxObjValue = objValue
-          optQ = q
+          optQ = qs
           optPsis = psis
     
-    q = optQ
+    # TODO imp later
+    q = None
     if self.queryType == QueryType.POLICY:
-      return (q, None, maxObjValue)
+      return q, maxObjValue
     elif self.queryType == QueryType.ACTION:
       hList = []
       
@@ -667,8 +668,7 @@ class MILPAgent(QTPAgent):
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
-      objValue = self.getQValue(self.cmp.state, None, q)
-      return (q, None, objValue)
+      return q, None
     if self.queryType == QueryType.PARTIAL_POLICY:
       idx = 0
       objValue = self.getQValue(self.cmp.state, None, q)
@@ -694,14 +694,13 @@ class MILPAgent(QTPAgent):
         #print idx, len(x)
         idx = (idx + 1) % len(q)
       
-      return (qP, None, objValue)
+      return qP
     elif self.queryType == QueryType.DEMONSTRATION:
       # if we already build a set of policies, but the query type is demonstration
       # we sample trajectories from these policies as a query
       # note that another way is implemented in MILPDemoAgent, which choose the next policy based on the demonstrated trajectories.
       qu = [self.sampleTrajectory(x) for x in q]
-      objValue = self.getQValue(self.cmp.state, None, qu)
-      return (qu, None, objValue)
+      return qu
     elif self.queryType in [QueryType.SIMILAR, QueryType.ACTION]:
       # implemented in a subclass, do nothing here
       pass

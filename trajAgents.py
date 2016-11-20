@@ -69,8 +69,7 @@ class MILPTrajAgent(MILPAgent):
     minH = min(hValues.values())
     minStates = filter(lambda _: hValues[_] == minH, hValues.keys())
     q = hTrajs[random.choice(minStates)]
-    objValue = self.getQValue(self.cmp.state, None, q)
-    return (q, None, objValue)
+    return q, None
 
 
 class DisagreeTrajAgent(QTPAgent):
@@ -108,8 +107,7 @@ class DisagreeTrajAgent(QTPAgent):
     maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
     s = random.choice(maxStates)
 
-    objValue = self.getQValue(self.cmp.state, None, hTrajs[s])
-    return (hTrajs[s], None, objValue)
+    return hTrajs[s], None
 
 
 class BeliefChangeTrajAgent(QTPAgent):
@@ -149,8 +147,7 @@ class BeliefChangeTrajAgent(QTPAgent):
     maxH = max(hValues.values())
     maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
     q = hTrajs[random.choice(maxStates)]
-    objValue = self.getQValue(self.cmp.state, None, q)
-    return (q, None, objValue)
+    return q, None
 
 
 class RandomTrajAgent(QTPAgent):
@@ -163,5 +160,4 @@ class RandomTrajAgent(QTPAgent):
       q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
       if any(len(u) < config.TRAJECTORY_LENGTH for u in q): continue
       else: break
-    objValue = self.getQValue(self.cmp.state, None, q)
-    return (q, None, objValue)
+    return q, None

@@ -5,6 +5,7 @@ import copy
 def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   t = time.time()
 
+  """
   def computeQ(agent, t):
     q, pi, qValue = agent.learn()
     #print agent.phi, qValue
@@ -14,15 +15,19 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
       psiProbs = agent.getPossiblePhiAndProbs(q)
       for psi, prob in psiProbs:
         agent.resetPsi(list(psi))
-        q, pi, qValue = computeQ(agent, t - 1)
+        q = computeQ(agent, t - 1)
         qSum += prob * qValue
-      return q, pi, qSum
+      return q
     else:
-      return q, pi, qValue
+      return q
+  """
 
-  q, pi, qValue = computeQ(agent, config.NUMBER_OF_QUERIES)
+  q, qValue = agent.learn()
   timeElapsed = time.time() - t
   
+  if qValue == None:
+    qValue = agent.getQValue(agent.cmp.state, None, q)
+
   # add query type here
   if config.VERBOSE: print 'q', q
  

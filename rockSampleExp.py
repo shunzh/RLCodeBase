@@ -14,8 +14,8 @@ if __name__ == '__main__':
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + 1
-  rockNum = 40
-  rewardCandNum = 10
+  rockNum = 20
+  rewardCandNum = 5
   rewardVar = 1
   
   try:
