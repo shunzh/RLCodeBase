@@ -1,5 +1,6 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
-  PriorTPAgent, MILPAgent, OptimalPolicyQueryAgent, MILPDemoAgent, OptimalPartialPolicyQueryAgent
+  PriorTPAgent, MILPAgent, OptimalPolicyQueryAgent, MILPDemoAgent, OptimalPartialPolicyQueryAgent,\
+  AprilAgent
 from actionQueryAgents import HeuristicAgent, ActiveSamplingAgent,\
   MILPActionAgent
 from trajAgents import BeliefChangeTrajAgent, RandomTrajAgent, DisagreeTrajAgent,\
@@ -111,6 +112,9 @@ def experiment(cmp, rewardSet, initialPhi):
     agent = ActiveSamplingAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP":
     agent = MILPActionAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "APRIL1":
+    queryType = QueryType.POLICY
+    agent = AprilAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-QI":
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
   elif agentName == "MILP-POLICY":

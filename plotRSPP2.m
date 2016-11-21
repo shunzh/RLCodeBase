@@ -1,6 +1,6 @@
 function main()
-  %agents = {'OPT-POLICY', 'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
-  agents = {'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
+  %agents = {'MILP-POLICY', 'APRIL'};
+  agents = {'OPT-POLICY', 'MILP-POLICY', 'APRIL', 'APRIL1'};
 
   % driving
   agentIds = 1 : size(agents, 2);
@@ -12,8 +12,8 @@ function main()
   % default values of variables
   numOfQuery_ = 1;
 
-  rewardCand_ = 10;
-  numOfResponse_ = 8;
+  rewardCand_ = 5;
+  numOfResponse_ = 2;
 
   %agentName = 'MILP-POLICY';
   %optData = cell(size(rewardVars));
@@ -47,33 +47,30 @@ function main()
     %                     zeros(1, size(rewardVars, 2)), markers{agentId});
   %end
 
-  d = squeeze(cell2mat(dataM(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))';
-  d = [[NaN; NaN; NaN], d];
-  d
+  d = squeeze(cell2mat(dataM(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))'
 
   figure;
   b = bar(d);
   colormap(gray); 
 
-  %legend('Opt q^*_\Pi', 'Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
+  %legend('Opt q^*_\Pi', 'Greedy q^*_\Pi', 'APRIL N=10', 'APRIL N=20');
   xlabel('Reward Settings');
   ylabel('EPU');
 
   set(gca, 'Xtick', rewardVars, 'XtickLabel', {'#1', '#2', '#3'});
   set(gcf,'PaperUnits','inches','PaperPosition',[0 0 3.5 2.5])
-  print('-deps', ['rsn', num2str(rewardCand_), 'k', num2str(numOfResponse_), '.eps'], '-r100');
+  print('-deps', ['april.eps'], '-r100');
 
   d = squeeze(cell2mat(dataTM(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))'
   h = figure;
   b = bar(d);
   colormap(gray); 
 
-  %legend('Opt q^*_\Pi', 'Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
   xlabel('Reward Settings');
   ylabel('Computation Time (sec.)');
   set(gca, 'Xtick', rewardVars, 'XtickLabel', {'#1', '#2', '#3'});
   set(gcf,'PaperUnits','inches','PaperPosition',[0 0 3.5 2.5])
-  print('-deps', ['rsn', num2str(rewardCand_), 'k', num2str(numOfResponse_), 't.eps'], '-r100');
+  print('-deps', ['aprilt.eps'], '-r100');
 end
 
 function [m, ci] = process(data)

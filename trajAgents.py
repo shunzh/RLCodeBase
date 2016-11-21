@@ -155,6 +155,8 @@ class RandomTrajAgent(QTPAgent):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     k = config.NUMBER_OF_RESPONSES
 
+    # find an arbitrary state to generate trajectory queries
+    # make sure that the length of the query is TRAJECTORY_LENGTH
     while True:
       s = random.choice(args['S'])
       q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
