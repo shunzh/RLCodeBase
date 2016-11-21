@@ -18,7 +18,7 @@ INIT_STATE_DISTANCE = None
 TRAJECTORY_LENGTH = 4
 
 # sample trajectories to compute max h values
-#SAMPLES_TIMES = 4
+SAMPLES_TIMES = 50
 
 GENERATE_RANDOM_TRAJ = False
 

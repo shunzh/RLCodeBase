@@ -15,61 +15,51 @@ class MILPTrajAgent(MILPAgent):
     k = config.NUMBER_OF_RESPONSES
 
     hValues = util.Counter()
-    hTrajs = util.Counter()
     policyBins = MILPAgent.computeDominatingPis(args, q)
 
     for s in args['S']:
-      us = []
-      for i in xrange(rewardCandNum):
-        us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
-      # avoid comparing trajectories of different lengths
-      if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
-        continue
-        
-      hTraj = []
-      if config.GENERATE_RANDOM_TRAJ:
-        # WAY 1: generating random policies
-        hTraj = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
-      else:
-        # WAY 2: using prefixes of optimal policies of some reward candidates
-        available = [True] * rewardCandNum
-        for i in xrange(k):
-          subPsi = copy.copy(self.phi)
-          subPsi = [subPsi[idx] if policyBins[idx][i] > 0 and available[idx] else 0 for idx in xrange(rewardCandNum)]
-          if sum(subPsi) == 0:
-            # this means the agent does not need more trajs in the query
-            # then just add a random one to make this a k-nary response
-            hTraj.append(tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')))
-          else:
-            idx = util.sample(subPsi, range(rewardCandNum))
-            # it's possible that one policy dominates multiple reward candidates..
-            # to avoid containing same policies in the query as a result of this
-            # mark any policy added to the traj query as unavailable
-            available[idx] = False
-            if config.DEBUG: print s, i, subPsi, idx
-            hTraj.append(tuple(us[idx]))
+      indices = []
+      for i in xrange(k):
+        subPsi = copy.copy(self.phi)
+        subPsi = [subPsi[idx] if policyBins[idx][i] > 0 and not idx in indices else 0 for idx in xrange(rewardCandNum)]
+        if sum(subPsi) == 0:
+          # this means the agent does not need more trajs in the query
+          # then just add a random opt policy from the available
+          random.choice([idx for idx in xrange(rewardCandNum) if not idx in indices])
+          indices.append(idx)
+        else:
+          idx = util.sample(subPsi, range(rewardCandNum))
+          # it's possible that one policy dominates multiple reward candidates..
+          # to avoid containing same policies in the query as a result of this
+          # mark any policy added to the traj query as unavailable
+          if config.DEBUG: print s, i, subPsi, idx
+          indices.append(idx)
 
-      psiProbs = self.getPossiblePhiAndProbs(hTraj)
-      hValue = 0
-      for psi, prob in psiProbs:
-        bins = [0] * k
-        for idx in xrange(rewardCandNum):
-          if psi[idx] > 0:
-            # put opt policies into bins
-            bins = [sum(_) for _ in zip(bins, policyBins[idx])]
-        hValue += prob * scipy.stats.entropy(bins)
-      if config.DEBUG: print hValue, psiProbs
-      
-      if s in hValues.keys():
-        if hValue < hValues[s]: continue
-      
-      hValues[s] = hValue
-      hTrajs[s] = hTraj
+      # now we have a set of reward candidates to sample trajectories..
+      # fix them, and generate trajectories for several times 
+      indices = tuple(indices)
+      for sampleIdx in xrange(config.SAMPLES_TIMES):
+        trajs = [self.sampleTrajFromRewardCandidate(idx, s) for idx in indices]
+        if any(len(u) < config.TRAJECTORY_LENGTH for u in trajs):
+          break
+        psiProbs = self.getPossiblePhiAndProbs(trajs)
+        hValue = 0
+        for psi, prob in psiProbs:
+          bins = [0] * k
+          for idx in xrange(rewardCandNum):
+            if psi[idx] > 0:
+              # put opt policies into bins
+              bins = [sum(_) for _ in zip(bins, policyBins[idx])]
+          hValue += prob * scipy.stats.entropy(bins)
+        if config.DEBUG: print hValue, psiProbs
+        
+        hValues[(s, indices)] += hValue
     
-    minH = min(hValues.values())
-    minStates = filter(lambda _: hValues[_] == minH, hValues.keys())
-    q = hTrajs[random.choice(minStates)]
-    return q, None
+    maxH = max(hValues.values())
+    maxStatesIndices = filter(lambda _: hValues[_] == maxH, hValues.keys())
+    maxState, maxIndices = random.choice(maxStatesIndices)
+    trajs = [self.sampleTrajFromRewardCandidate(idx, maxState) for idx in maxIndices]
+    return trajs, None
 
 
 class DisagreeTrajAgent(QTPAgent):
@@ -84,30 +74,22 @@ class DisagreeTrajAgent(QTPAgent):
     k = config.NUMBER_OF_RESPONSES
 
     hValues = util.Counter()
-    hTrajs = util.Counter()
 
     for s in args['S']:
-      us = []
-      for i in xrange(rewardCandNum):
-        us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
-      # avoid comparing trajectories of different lengths
-      if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
-        continue
-
-      if config.GENERATE_RANDOM_TRAJ:
-        hTrajs[s] = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
-      else:
-        indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
-        hTrajs[s] = [tuple(us[idx]) for idx in indices]
+      indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
+      for sampleIdx in range(config.SAMPLES_TIMES):
+        trajs = [self.sampleTrajFromRewardCandidate(idx, s) for idx in indices]
+        if any(len(u) < config.TRAJECTORY_LENGTH for u in trajs):
+          break
      
-      for i in xrange(rewardCandNum):
-        for j in xrange(rewardCandNum):
-          hValues[s] += self.cmp.getTrajectoryDistance(us[i], us[j])
+        for i in xrange(k):
+          for j in xrange(k):
+            hValues[(s, tuple(indices))] += self.cmp.getTrajectoryDistance(trajs[i], trajs[j])
     maxH = max(hValues.values())
-    maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
-    s = random.choice(maxStates)
-
-    return hTrajs[s], None
+    maxStatesIndices = filter(lambda _: hValues[_] == maxH, hValues.keys())
+    maxState, maxIndices = random.choice(maxStatesIndices)
+    trajs = [self.sampleTrajFromRewardCandidate(idx, maxState) for idx in maxIndices]
+    return trajs, None
 
 
 class BeliefChangeTrajAgent(QTPAgent):
@@ -123,31 +105,27 @@ class BeliefChangeTrajAgent(QTPAgent):
     k = config.NUMBER_OF_RESPONSES
 
     hValues = util.Counter()
-    hTrajs = util.Counter()
 
     for s in args['S']:
-      us = []
-      for i in xrange(rewardCandNum):
-        us.append(self.sampleTrajectory(self.viAgentSet[i].x, s, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
-      # avoid comparing trajectories of different lengths
-      if any(len(u) < config.TRAJECTORY_LENGTH for u in us):
-        continue
-      
-      if config.GENERATE_RANDOM_TRAJ:
-        hTrajs[s] = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
-      else:
-        indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
-        hTrajs[s] = [tuple(us[idx]) for idx in indices]
-      
-      # compute the different between new psi and old psi
-      psiProbs = self.getPossiblePhiAndProbs(hTrajs[s])
-      for psi, prob in psiProbs:
-        hValues[s] += prob * sum(abs(p1 - p2) for p1, p2 in zip(psi, self.phi))
+      indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
+      for sampleIdx in range(config.SAMPLES_TIMES):
+        trajs = [self.sampleTrajFromRewardCandidate(idx, s) for idx in indices]
+        if any(len(u) < config.TRAJECTORY_LENGTH for u in trajs):
+          # this state is too close to the terminal state. not considering generating traj queries from here
+          break
+
+        # compute the different between new psi and old psi
+        psiProbs = self.getPossiblePhiAndProbs(trajs)
+        for psi, prob in psiProbs:
+          # note that we need to keep the information of which state to generate queries
+          # and what reward candidates the policies are optimazing
+          hValues[(s, tuple(indices))] += prob * sum(abs(p1 - p2) for p1, p2 in zip(psi, self.phi))
 
     maxH = max(hValues.values())
-    maxStates = filter(lambda _: hValues[_] == maxH, hValues.keys())
-    q = hTrajs[random.choice(maxStates)]
-    return q, None
+    maxStatesIndices = filter(lambda _: hValues[_] == maxH, hValues.keys())
+    maxState, maxIndices = random.choice(maxStatesIndices)
+    trajs = [self.sampleTrajFromRewardCandidate(idx, maxState) for idx in maxIndices]
+    return trajs, None
 
 
 class RandomTrajAgent(QTPAgent):

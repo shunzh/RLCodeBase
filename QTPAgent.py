@@ -112,7 +112,8 @@ class QTPAgent:
     # sample a trajectory by following pi starting from self.state until state that is self.isTerminal
     # pi: S, A -> prob
     u = util.Counter()
-    seq = []
+    states = []
+    actions = []
 
     t = 0
     if state: self.cmp.state = state
@@ -128,7 +129,8 @@ class QTPAgent:
         #a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
         a = filter(lambda _: pi[self.cmp.state, _] > 0, self.cmp.getPossibleActions())[0]
       u[(self.cmp.state, a)] = 1
-      seq.append(self.cmp.state)
+      states.append(self.cmp.state)
+      actions.append(a)
       t += 1
 
       self.cmp.doAction(a)
@@ -137,9 +139,14 @@ class QTPAgent:
     if to == 'occupancy':
       return u
     elif to == 'trajectory':
-      return seq
+      return states
+    elif to == 'saPairs':
+      return zip(states, actions)
     else:
       raise Exception('unknown return type')
+
+  def sampleTrajFromRewardCandidate(self, idx, state):
+    return tuple(self.sampleTrajectory(self.viAgentSet[idx].x, state, hori=config.TRAJECTORY_LENGTH, to='trajectory'))
 
   def getRewardFunc(self, phi):
     """
@@ -454,7 +461,6 @@ class JointQTPAgent(QTPAgent):
     return random.choice(qList)
 
 
-
 class OptimalPartialPolicyQueryAgent(QTPAgent):
   """
   A brute force algorithm to find out the best trajectory query.
@@ -736,12 +742,6 @@ class AprilAgent(QTPAgent):
         maxV = v
 
     return None, maxV
-
-
-class RandWalkPolicyAgent(MILPAgent):
-  def learn(self):
-    # TODO
-    pass
 
 
 class MILPDemoAgent(MILPAgent):
