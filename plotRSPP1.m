@@ -60,7 +60,7 @@ function main()
   ylim([0; Inf]);
   b = superbar(d, 'E', c, 'BarFaceColor', colors);
 
-  legend('Opt q^*_\Pi', 'Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
+  %legend('Opt q^*_\Pi', 'Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
   %xlabel('Reward Settings');
   %ylabel('EVOI');
 

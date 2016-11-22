@@ -1,6 +1,6 @@
 function main()
   %agents = {'MILP-POLICY', 'APRIL'};
-  agents = {'OPT-POLICY', 'MILP-POLICY', 'APRIL0', 'APRIL1', 'APRIL2'};
+  agents = {'MILP-POLICY', 'APRIL1', 'APRIL2', 'APRIL3'};
 
   % driving
   agentIds = 1 : size(agents, 2);
@@ -12,7 +12,7 @@ function main()
   % default values of variables
   numOfQuery_ = 1;
 
-  rewardCand_ = 5;
+  rewardCand_ = 10;
   numOfResponse_ = 2;
 
   %agentName = 'MILP-POLICY';
@@ -56,7 +56,6 @@ function main()
   ylim([0; Inf]);
   superbar(d, 'E', c, 'BarFaceColor', colors);
 
-  %legend('Opt q^*_\Pi', 'Greedy q^*_\Pi', 'Sampling N=5', 'Sampling N=10', 'Sampling N=20');
   %xlabel('Reward Settings');
   %ylabel('EVOI');
 

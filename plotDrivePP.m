@@ -42,6 +42,7 @@ function main()
   %legend('Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
   xlabel('Number of Responses');
   ylabel('EVOI');
+  set(gca, 'Xtick', 1:3, 'XtickLabel', {'2', '3', '4'});
   set(gcf,'PaperUnits','inches','PaperPosition',[0 0 4 3])
   print('-deps', ['drive.eps'], '-r100');
 end

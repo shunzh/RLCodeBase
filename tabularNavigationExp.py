@@ -115,12 +115,12 @@ def experiment(cmp, rewardSet, initialPhi):
   elif "APRIL" in agentName:
     queryType = QueryType.POLICY
     agent = AprilAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-    if '0' in agentName:
-      config.SAMPLES_TIMES = 5
-    elif '1' in agentName:
+    if '1' in agentName:
       config.SAMPLES_TIMES = 10
     elif '2' in agentName:
       config.SAMPLES_TIMES = 20
+    elif '3' in agentName:
+      config.SAMPLES_TIMES = 50
     else:
       raise "unknown april agent"
   elif agentName == "MILP-QI":
