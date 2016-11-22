@@ -112,9 +112,17 @@ def experiment(cmp, rewardSet, initialPhi):
     agent = ActiveSamplingAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP":
     agent = MILPActionAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == "APRIL1":
+  elif "APRIL" in agentName:
     queryType = QueryType.POLICY
     agent = AprilAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+    if '0' in agentName:
+      config.SAMPLES_TIMES = 5
+    elif '1' in agentName:
+      config.SAMPLES_TIMES = 10
+    elif '2' in agentName:
+      config.SAMPLES_TIMES = 20
+    else:
+      raise "unknown april agent"
   elif agentName == "MILP-QI":
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
   elif agentName == "MILP-POLICY":

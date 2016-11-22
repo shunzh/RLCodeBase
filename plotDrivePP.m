@@ -13,7 +13,6 @@ function main()
   numOfQuery_ = 1;
   trajLen_ = 4;
 
-  dataM = cell(size(agents, 2), max(rewardCandNums), max(numOfQueries), max(numOfResponses), max(trajLens));
   for agentId = 1 : size(agents, 2)
     for numOfResponse = numOfResponses
       filename = strcat(agents(agentId), num2str(rewardCand_), '_', num2str(numOfQuery_), '_', num2str(numOfResponse), '_', num2str(trajLen_), '.out');
@@ -24,7 +23,8 @@ function main()
     end
   end
 
-  markers = {'o--', '*-', '+-', 'x-', 's-'};
+  colors = repmat((1:5) / 6, 3, 1)';
+  colors = permute(colors, [3 1 2]);
 
   %for agentId = 1 : size(agents, 2)
     %errorbar(numOfResponses, cell2mat(dataM(agentId, rewardCand_, numOfQuery_, numOfResponses, trajLen_)),...
@@ -34,13 +34,16 @@ function main()
     %hold on
   %end
   d = squeeze(cell2mat(dataM(agentIds, rewardCand_, numOfQuery_, numOfResponses, trajLen_)))'
-  h = figure;
-  b = bar(2:4, d);
-  colormap(gray); 
+  c = squeeze(cell2mat(dataCI(agentIds, rewardCand_, numOfQuery_, numOfResponses, trajLen_)))'
+  figure;
+  ylim([0; Inf]);
+  b = superbar(d, 'E', c, 'BarFaceColor', colors);
 
   %legend('Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
   xlabel('Number of Responses');
-  ylabel('EPU');
+  ylabel('EVOI');
+  set(gcf,'PaperUnits','inches','PaperPosition',[0 0 4 3])
+  print('-deps', ['drive.eps'], '-r100');
 end
 
 function [m, ci] = process(data)

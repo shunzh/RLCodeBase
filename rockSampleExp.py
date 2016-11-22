@@ -14,10 +14,10 @@ if __name__ == '__main__':
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + 1
-  rockNum = 20#40
-  rewardCandNum = 5#10
   rewardVar = 1
-  
+  rockNum = 20
+  rewardCandNum = 5
+
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
   except getopt.GetoptError:
@@ -26,7 +26,13 @@ if __name__ == '__main__':
     if opt == '-t':
       config.TRAJECTORY_LENGTH = int(arg)
     elif opt == '-n':
-      rewardCandNum = int(arg)
+      if int(arg) == 5:
+        pass
+      elif int(arg) == 10:
+        rockNum = 40
+        rewardCandNum = 10
+      else:
+        raise Exception('undefined number of rocks')
     elif opt == '-k':
       config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-y':
@@ -105,7 +111,7 @@ if __name__ == '__main__':
     # we have some more valuable rocks
     bonus = random.sample(rocks, rockNum / rewardCandNum)
     pits = [_ for _ in rocks if not _ in bonus] # pits = rocks \ bonus
-    rewardSet.append(reward2Gen(bonus, pits, rewardCandBonus[candId], -10))
+    rewardSet.append(reward2Gen(bonus, pits, rewardCandBonus[candId], -1))
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 

@@ -730,18 +730,21 @@ class AprilAgent(QTPAgent):
     assert k == 2 # not going to work for k > 2
 
     maxV = -numpy.inf
-    for iterIdx in range(20):
+    maxQ = None
+    for iterIdx in range(config.SAMPLES_TIMES):
       selector = [random.random() > .5 for _ in xrange(rewardCandNum)]
       # got two psis
       psi0 = [self.phi[_] if selector[_] else 0 for _ in xrange(rewardCandNum)]
       psi1 = [self.phi[_] if not selector[_] else 0 for _ in xrange(rewardCandNum)]
       agent0 = self.getFiniteVIAgent(psi0, self.cmp.horizon - self.cmp.getResponseTime(), self.cmp.terminalReward, posterior=True)
       agent1 = self.getFiniteVIAgent(psi1, self.cmp.horizon - self.cmp.getResponseTime(), self.cmp.terminalReward, posterior=True)
+      
       v = agent0.getValue(self.cmp.state) + agent1.getValue(self.cmp.state) 
       if v > maxV:
         maxV = v
+        maxQ = [agent0.x, agent1.x]
 
-    return None, maxV
+    return maxQ, maxV
 
 
 class MILPDemoAgent(MILPAgent):

@@ -20,8 +20,7 @@ class MILPTrajAgent(MILPAgent):
     for s in args['S']:
       indices = []
       for i in xrange(k):
-        subPsi = copy.copy(self.phi)
-        subPsi = [subPsi[idx] if policyBins[idx][i] > 0 and not idx in indices else 0 for idx in xrange(rewardCandNum)]
+        subPsi = [self.phi[idx] if policyBins[idx][i] > 0 and not idx in indices else 0 for idx in xrange(rewardCandNum)]
         if sum(subPsi) == 0:
           # this means the agent does not need more trajs in the query
           # then just add a random opt policy from the available
@@ -55,10 +54,10 @@ class MILPTrajAgent(MILPAgent):
         
         hValues[(s, indices)] += hValue
     
-    maxH = max(hValues.values())
-    maxStatesIndices = filter(lambda _: hValues[_] == maxH, hValues.keys())
-    maxState, maxIndices = random.choice(maxStatesIndices)
-    trajs = [self.sampleTrajFromRewardCandidate(idx, maxState) for idx in maxIndices]
+    minH = min(hValues.values())
+    minStatesIndices = filter(lambda _: hValues[_] == minH, hValues.keys())
+    minState, minIndices = random.choice(minStatesIndices)
+    trajs = [self.sampleTrajFromRewardCandidate(idx, minState) for idx in minIndices]
     return trajs, None
 
 
@@ -80,6 +79,7 @@ class DisagreeTrajAgent(QTPAgent):
       for sampleIdx in range(config.SAMPLES_TIMES):
         trajs = [self.sampleTrajFromRewardCandidate(idx, s) for idx in indices]
         if any(len(u) < config.TRAJECTORY_LENGTH for u in trajs):
+          assert sampleIdx == 0
           break
      
         for i in xrange(k):
@@ -112,6 +112,7 @@ class BeliefChangeTrajAgent(QTPAgent):
         trajs = [self.sampleTrajFromRewardCandidate(idx, s) for idx in indices]
         if any(len(u) < config.TRAJECTORY_LENGTH for u in trajs):
           # this state is too close to the terminal state. not considering generating traj queries from here
+          assert sampleIdx == 0
           break
 
         # compute the different between new psi and old psi
