@@ -2,7 +2,7 @@ from QTPAgent import MILPAgent
 import numpy
 import random
 
-class PolicyGradientQueryAgent(MILPAgent):
+class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
   """
   This finds the next policy by gradient descent using EUS as the objective function
   """

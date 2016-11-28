@@ -578,7 +578,7 @@ class OptimalPolicyQueryAgent(QTPAgent):
     return random.choice(qList)
 
 
-class MILPAgent(QTPAgent):
+class GreedyConstructionPiAgent(QTPAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=False):
     """
     qi: query iteration
@@ -636,7 +636,7 @@ class MILPAgent(QTPAgent):
         for rewardId in xrange(rewardCandNum):
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
-      x = milp(**args)
+      x = self.findNextPolicy(**args)
       q.append(x)
 
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
@@ -714,6 +714,11 @@ class MILPAgent(QTPAgent):
       raise Exception('Query type not implemented for MILP.')
 
     return args, q
+
+
+class MILPAgent(GreedyConstructionPiAgent):
+  def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
+    return milp(S, A, R, T, s0, psi, maxV)
 
 
 class AprilAgent(QTPAgent):
