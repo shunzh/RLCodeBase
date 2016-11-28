@@ -1,6 +1,6 @@
 function main()
-  agents = {'OPT-POLICY', 'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
-  %agents = {'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
+  %agents = {'OPT-POLICY', 'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
+  agents = {'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
 
   % driving
   agentIds = 1 : size(agents, 2);
@@ -13,7 +13,7 @@ function main()
   numOfQuery_ = 1;
 
   rewardCand_ = 5;
-  numOfResponse_ = 2;
+  numOfResponse_ = 3;
 
   %agentName = 'MILP-POLICY';
   %optData = cell(size(rewardVars));
@@ -51,8 +51,8 @@ function main()
 
   d = squeeze(cell2mat(dataM(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))';
   c = squeeze(cell2mat(dataCI(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))';
-  %d = [[NaN; NaN; NaN], d];
-  %c = [[0; 0; 0], c];
+  d = [[0.05; 0.05; 0.05], d];
+  c = [[0; 0; 0], c];
   d
   c
 
@@ -71,8 +71,8 @@ function main()
 
   d = squeeze(cell2mat(dataTM(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))';
   c = squeeze(cell2mat(dataTCI(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))';
-  %d = [[NaN; NaN; NaN], d];
-  %c = [[0; 0; 0], c];
+  d = [[0.05; 0.05; 0.05], d];
+  c = [[0; 0; 0], c];
   d
   c
   figure;
