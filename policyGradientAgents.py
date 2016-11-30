@@ -34,18 +34,22 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     
     # compute the derivative of EUS
     for rspTime in xrange(2):
-      #theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
-      theta = [0] * self.featLength
-      for iterStep in xrange(50):
+      theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
+      #theta = [0] * self.featLength
+      for iterStep in xrange(30):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
         u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
+
+        #debug
+        #print 'pi', pi((0, 0), 1), pi((0, 0), 0), pi((0, 0), -1)
         #print theta
         #print u
 
         for rIdx in range(len(R)):
           ret = sum(R[rIdx](s, a) for s, a in u)
+
           if ret > maxV[rIdx]:
             # here is where the non-smoothness comes from
             # only add the derivative when the accumulated return is larger than the return obtained by the

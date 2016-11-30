@@ -126,8 +126,7 @@ class QTPAgent:
       if pi == None:
         a = random.choice(self.cmp.getPossibleActions())
       else:
-        #a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
-        a = filter(lambda _: pi(self.cmp.state, _) > 0, self.cmp.getPossibleActions())[0]
+        a = util.sample({a: pi(self.cmp.state, a) for a in self.cmp.getPossibleActions()})
       u[(self.cmp.state, a)] = 1
       states.append(self.cmp.state)
       actions.append(a)
@@ -636,7 +635,7 @@ class GreedyConstructionPiAgent(QTPAgent):
 
     print args['maxV']
 
-    objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
+    objValue = sum(args['maxV'][i] * self.phi[i] for i in range(k))
     if config.VERBOSE: print 'eus value', objValue
 
     # query iteration
@@ -671,7 +670,7 @@ class GreedyConstructionPiAgent(QTPAgent):
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
-      return q, None
+      return q, objValue
     if self.queryType == QueryType.PARTIAL_POLICY:
       idx = 0
       objValue = self.getQValue(self.cmp.state, None, q)
