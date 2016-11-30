@@ -70,10 +70,11 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-POLICY":
     queryType = QueryType.POLICY
-    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, 0.05, gamma)
+    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
-    agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, 0.05, gamma)
+    #agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
+    raise Exception('not implemented')
   elif agentName == "SIMILAR-DISAGREE":
     queryType = QueryType.SIMILAR
     agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)

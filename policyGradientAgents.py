@@ -2,15 +2,28 @@ from QTPAgent import GreedyConstructionPiAgent
 import numpy
 import random
 
+class DiminishingStepSize:
+  def __init__(self, alpha):
+    self.initAlpha = alpha
+    self.k = 0.0
+  
+  def getAlpha(self):
+    self.k += 1
+    return self.initAlpha / self.k
+  
+  def reset(self):
+    self.k = 0.0
+
+
 class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
   """
   This finds the next policy by gradient descent using EUS as the objective function
   """
-  def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, alpha, gamma):
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma):
     GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     self.feat = feat
     self.featLength = featLength
-    self.alpha = alpha
+    self.stepSize = DiminishingStepSize(1)
 
   def thetaToOccupancy(self, theta):
     def getActProb(s, a):
@@ -35,8 +48,9 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     # compute the derivative of EUS
     for rspTime in xrange(2):
       theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
+      self.stepSize.reset()
       #theta = [0] * self.featLength
-      for iterStep in xrange(30):
+      for iterStep in xrange(50):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
@@ -58,7 +72,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
             for s, a in reversed(u):
               futureRet += R[rIdx](s, a)
               deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
-              theta = theta + self.alpha * psi[rIdx] * futureRet * deri
+              theta = theta + self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
 
               # compute the obj function using theta
               objValue = self.computeObjValue(theta, psi, R, horizon, maxV)

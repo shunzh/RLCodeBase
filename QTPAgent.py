@@ -635,7 +635,7 @@ class GreedyConstructionPiAgent(QTPAgent):
 
     print args['maxV']
 
-    objValue = sum(args['maxV'][i] * self.phi[i] for i in range(k))
+    objValue = sum(args['maxV'][idx] * self.phi[idx] for idx in range(rewardCandNum))
     if config.VERBOSE: print 'eus value', objValue
 
     # query iteration
