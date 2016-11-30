@@ -1,4 +1,4 @@
-from QTPAgent import MILPAgent
+from QTPAgent import GreedyConstructionPiAgent
 import numpy
 import random
 
@@ -7,7 +7,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
   This finds the next policy by gradient descent using EUS as the objective function
   """
   def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, alpha, gamma):
-    MILPAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
+    GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     self.feat = feat
     self.featLength = featLength
     self.alpha = alpha
@@ -34,11 +34,12 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     
     # compute the derivative of EUS
     for rspTime in xrange(1):
-      print rspTime
+      #print rspTime
       theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
       for iterStep in xrange(50):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
+        # this is still policy query.. we sample to the task horizon
         u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
         #print theta
         #print u
@@ -56,6 +57,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
               deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
               theta = theta + self.alpha * psi[rIdx] * futureRet * deri
 
+              # compute the obj function using theta
               objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
               if objValue > bestObjValue:
                 bestObjValue = objValue
@@ -63,8 +65,8 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     
     optPi = self.thetaToOccupancy(bestTheta)
     
-    print bestTheta
-    print self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
+    #print bestTheta
+    #print self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
     return optPi
 
   def computeObjValue(self, theta, psi, R, horizon, maxV):

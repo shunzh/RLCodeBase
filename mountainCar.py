@@ -6,7 +6,7 @@ class MountainCar(ControlledMarkovProcess):
     self.acc = 0.1
 
     self.wallLoc = -5
-    self.goal = 10
+    self.goal = 5
 
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
@@ -15,27 +15,42 @@ class MountainCar(ControlledMarkovProcess):
     return 0
 
   def reset(self):
-    return [(0, 0)]
+    self.state = (0, 0)
   
   def getStates(self):
-    raise Exception('continuous domain')
+    #FIXME should not be used
+    return []
   
   def getStateDistance(self, s1, s2):
     return abs(s1[0] - s2[0])
 
-  def getPossibleActions(self, state):
+  def getPossibleActions(self, state = None):
+    # 0: stay the same speed
+    # -1, 1: accelerate forward or backward
     return [-1, 0, 1]
 
   def isTerminal(self, state):
-    return state[0] > self.goal
+    return state[0] > self.goal or state[0] < self.wallLoc
   
   def getTransitionStatesAndProbs(self, state, action):
     v = state[1]
-    loc = state[0] + v
 
     if action == 1: v += self.acc
     elif action == -1: v -= self.acc
     
-    if loc < self.wallLoc: loc = state[0]
+    # -2 <= v <= 2
+    v = max(min(v, 1), -1)
+
+    loc = state[0] + v
      
-    return {(loc, v): 1}
+    return [((loc, v), 1)]
+
+
+class MountainCarToy(MountainCar):
+  """
+  for testing.. the agent controls velocity not acceleration
+  """
+  def getTransitionStatesAndProbs(self, state, action):
+    loc = state[0] + action
+    
+    return [((loc, 0), 1)]

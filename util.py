@@ -194,6 +194,9 @@ class Counter(dict):
     self.setdefault(idx, 0)
     return dict.__getitem__(self, idx)
 
+  def __call__(self, idx):
+    return self.__getitem__(self, idx)
+
   def __hash__(self):
     return hash((tuple(self.items()), tuple(self.values())))
 

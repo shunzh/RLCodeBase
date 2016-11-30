@@ -127,7 +127,7 @@ class QTPAgent:
         a = random.choice(self.cmp.getPossibleActions())
       else:
         #a = util.sample({a: pi[self.cmp.state, a] for a in self.cmp.getPossibleActions()})
-        a = filter(lambda _: pi[self.cmp.state, _] > 0, self.cmp.getPossibleActions())[0]
+        a = filter(lambda _: pi(self.cmp.state, _) > 0, self.cmp.getPossibleActions())[0]
       u[(self.cmp.state, a)] = 1
       states.append(self.cmp.state)
       actions.append(a)
@@ -606,12 +606,6 @@ class GreedyConstructionPiAgent(QTPAgent):
     return policyBins
   
   def learn(self):
-    """
-    This function was way too long.. partially refactored in this way:
-    - for some simple query types, return values are found here and returned directly
-    - for some complicated ones, like trajectory queries, this function is called by a sub-class to get some intermediate results,
-      return values are found by the sub-class.
-    """
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     self.args = args # save a copy
     rewardCandNum = len(self.rewardSet)
@@ -629,7 +623,7 @@ class GreedyConstructionPiAgent(QTPAgent):
     q = []
     for i in range(k):
       if i == 0:
-        args['maxV'] = [0] * rewardCandNum
+        args['maxV'] = [-numpy.inf] * rewardCandNum
       else:
         # find the optimal policy so far that achieves the best on each reward candidate
         args['maxV'] = []

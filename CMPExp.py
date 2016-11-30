@@ -5,6 +5,7 @@ import copy
 def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   t = time.time()
 
+  # code for multi-querying
   """
   def computeQ(agent, t):
     q, pi, qValue = agent.learn()
@@ -25,8 +26,11 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   q, qValue = agent.learn()
   timeElapsed = time.time() - t
   
+  """
   priorAgent = agent.getFiniteVIAgent(agent.phi, cmp.horizon, cmp.terminalReward, posterior=True)
   priorV = priorAgent.getValue(cmp.state)
+  qValue = qValue - priorV
+  """
   
   if qValue == None:
     qValue = agent.getQValue(agent.cmp.state, None, q)
@@ -36,34 +40,4 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
  
   ret = 0
 
-  """
-  # pi may not be computed, so disabled simulation
-  # init state
-  state = cmp.state
-  if config.VERBOSE: print 's', state
-
-  while True:
-    if cmp.isTerminal(state) or cmp.timer >= horizon:
-      break
-    
-    # query the model in the first time step
-    if cmp.timer == 0:
-      cmp.query(q)
-  
-    # see whether there is any response
-    response = cmp.responseCallback()
-    if response != None:
-      if config.VERBOSE: print 'o', response
-      # update policy
-      pi = agent.respond(q, response)
-    
-    action = pi(state, cmp.timer)
-    state, reward = cmp.doAction(action)
-    cmp.timeElapse()
-    if config.VERBOSE: print cmp.timer, 'a', action, 's', state, 'r', reward
-    if config.PRINT == 'states': print state[0], state[1]
-
-    ret += reward * gamma ** cmp.timer
-  """
-  
-  return ret, qValue - priorV, timeElapsed
+  return ret, qValue, timeElapsed
