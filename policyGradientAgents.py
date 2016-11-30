@@ -33,9 +33,9 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     bestObjValue = -numpy.inf
     
     # compute the derivative of EUS
-    for rspTime in xrange(1):
-      #print rspTime
-      theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
+    for rspTime in xrange(2):
+      #theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
+      theta = [0] * self.featLength
       for iterStep in xrange(50):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
@@ -43,7 +43,6 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
         u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
         #print theta
         #print u
-        #raw_input()
 
         for rIdx in range(len(R)):
           ret = sum(R[rIdx](s, a) for s, a in u)
@@ -59,6 +58,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
 
               # compute the obj function using theta
               objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
+
               if objValue > bestObjValue:
                 bestObjValue = objValue
                 bestTheta = theta
@@ -66,7 +66,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     optPi = self.thetaToOccupancy(bestTheta)
     
     #print bestTheta
-    #print self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
+    print self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
     return optPi
 
   def computeObjValue(self, theta, psi, R, horizon, maxV):
@@ -76,6 +76,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       rRet = self.computePiValue(pi, R[rIdx], horizon)
       if rRet > maxV[rIdx]:
         ret += psi[rIdx] * rRet
+
     return ret
   
   def computePiValue(self, pi, r, horizon):

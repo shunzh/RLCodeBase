@@ -102,9 +102,9 @@ if __name__ == '__main__':
   def feat((x, v), a):
     v += a
     x += v
-    #return numpy.array((x, v, x**2))
-    return numpy.array((x, v, x**2, v**2, x * v, 1))
-    #return numpy.array((x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2, 1))
+    return numpy.array((x, v))
+    #return numpy.array((x, v, x**2, v**2, x * v, 1))
+    #return numpy.array((x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2))
   """
   def feat((x, x0), v):
     x += v
@@ -120,11 +120,11 @@ if __name__ == '__main__':
       if all(s[i] >= phiRanges[i][0] and s[i] <= phiRanges[i][1] for i in xrange(2)):
         return 10
       else:
-        return -.1
+        return 0
     return r
 
-  rewardSet = [makeReward([[5, 6], [-numpy.inf, numpy.inf]]),\
-               makeReward([[-6, -5], [-numpy.inf, numpy.inf]]),\
+  rewardSet = [makeReward([[5.5, 6], [-numpy.inf, numpy.inf]]),\
+               makeReward([[-6, -5.5], [-numpy.inf, numpy.inf]]),\
               ]
   rewardCandNum = len(rewardSet)
 
@@ -132,8 +132,8 @@ if __name__ == '__main__':
   
   terminalReward = util.Counter()
 
-  #Domain = MountainCar
-  Domain = MountainCarToy
+  Domain = MountainCar
+  #Domain = MountainCarToy
 
   cmp = Domain(0, horizon, terminalReward)
   

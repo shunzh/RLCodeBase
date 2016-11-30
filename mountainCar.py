@@ -5,8 +5,8 @@ class MountainCar(ControlledMarkovProcess):
     self.noise = 0
     self.acc = 0.1
 
-    self.wallLoc = -5
-    self.goal = 5
+    self.wallLoc = -6
+    self.goal = 6
 
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)

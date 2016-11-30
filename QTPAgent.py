@@ -621,17 +621,20 @@ class GreedyConstructionPiAgent(QTPAgent):
 
     # now q is a set of policy queries
     q = []
+    args['maxV'] = [-numpy.inf] * rewardCandNum
     for i in range(k):
-      if i == 0:
-        args['maxV'] = [-numpy.inf] * rewardCandNum
-      else:
-        # find the optimal policy so far that achieves the best on each reward candidate
-        args['maxV'] = []
-        for rewardId in xrange(rewardCandNum):
-          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
-
       x = self.findNextPolicy(**args)
       q.append(x)
+
+      args['maxV'] = []
+      for rewardId in xrange(rewardCandNum):
+        if hasattr(self, 'computePiValue'):
+          # policy gradient agent has different ways to compute values..
+          args['maxV'].append(max([self.computePiValue(pi, args['R'][rewardId], horizon) for pi in q]))
+        else:
+          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
+
+    print args['maxV']
 
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
     if config.VERBOSE: print 'eus value', objValue
