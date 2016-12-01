@@ -104,8 +104,8 @@ if __name__ == '__main__':
     v += a
     x += v
     #return numpy.array((x, v))
-    return numpy.array((x, v, x**2, v**2, x * v, 1))
-    #return numpy.array((x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2))
+    #return numpy.array((x, v, x**2, v**2, x * v, 1))
+    return numpy.array((x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2))
   """
   def feat((x, x0), v):
     x += v
@@ -125,7 +125,9 @@ if __name__ == '__main__':
     return r
 
   rewardSet = [makeReward([[5, 6], [-numpy.inf, numpy.inf]]),\
+               makeReward([[5, 6], [0, 0.5]]),\
                makeReward([[-6, -5], [-numpy.inf, numpy.inf]]),\
+               makeReward([[-6, -5], [0, 0.5]]),\
               ]
   rewardCandNum = len(rewardSet)
 
