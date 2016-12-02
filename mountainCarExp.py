@@ -107,9 +107,9 @@ if __name__ == '__main__':
     the length of feat is vecLen * |A|
     features for each action occupy different subsets of the feature vector
     """
-    #vec = (x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2)
-    #vec = (x, v, x**2, v**2, x * v, 1)
-    vec = (x,)
+    vec = (x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2)
+    #vec = (x, v, x**2, v**2, x * v)
+    #vec = (x,)
     
     vecLen = len(vec)
 
@@ -137,9 +137,9 @@ if __name__ == '__main__':
     return r
 
   rewardSet = [makeReward([[5, 6], [-numpy.inf, numpy.inf]]),\
-               #makeReward([[5, 6], [0, .5]]),\
+               makeReward([[5, 6], [-.1, .1]]),\
                makeReward([[-6, -5], [-numpy.inf, numpy.inf]]),\
-               #makeReward([[-6, -5], [-.5, 0]]),\
+               makeReward([[-6, -5], [-.1, .1]]),\
               ]
   rewardCandNum = len(rewardSet)
 
@@ -147,8 +147,8 @@ if __name__ == '__main__':
   
   terminalReward = util.Counter()
 
-  #Domain = MountainCar
-  Domain = MountainCarToy
+  Domain = MountainCar
+  #Domain = MountainCarToy
 
   cmp = Domain(0, horizon, terminalReward)
   

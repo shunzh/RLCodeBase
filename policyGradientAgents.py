@@ -63,19 +63,19 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     bestObjValue = -numpy.inf
     
     # compute the derivative of EUS
-    for rspTime in xrange(3):
+    for rspTime in xrange(2):
       #theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
       theta = [0] * self.featLength
 
       self.stepSize.reset()
 
-      for iterStep in xrange(50):
+      for iterStep in xrange(100):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
         u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
         self.stepSize.iterate()
-        if config.DEBUG: print u
+        if config.DEBUG: print iterStep, u
 
         for rIdx in range(len(R)):
           ret = sum(R[rIdx](s, a) for s, a in u)
@@ -90,12 +90,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
               futureRet += R[rIdx](s, a)
               deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
               theta = theta + self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
-
-              if config.DEBUG:
-                print futureRet
-                print theta
-                raw_input()
-
+              
               # compute the obj function using theta
               objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
 
@@ -106,7 +101,9 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     optPi = self.thetaToOccupancy(bestTheta)
     
     #print bestTheta
-    print self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
+    if config.VERBOSE:
+      for _ in xrange(3):
+        print self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
     return optPi
 
   def computeObjValue(self, theta, psi, R, horizon, maxV):
@@ -124,9 +121,10 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     pi is generally stochastic. going to generate multiple trajectories to evaluate pi
     """
     ret = 0
-    for _ in xrange(5):
+    times = 5
+    for _ in xrange(times):
       u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
-      ret += sum(r(s, a) for s, a in u) / 10
+      ret += sum(r(s, a) for s, a in u) / times
     return ret
 
 
