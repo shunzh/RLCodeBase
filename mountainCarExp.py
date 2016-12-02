@@ -13,7 +13,7 @@ from cmp import QueryType
 from mountainCar import MountainCar, MountainCarToy
 import numpy
 
-flags = "r:l:s:d:a:vq:P:t:k:n:y:"
+flags = "r:l:s:d:a:vq:P:t:k:n:y:x"
 
 """
 Algorithms:
@@ -50,6 +50,8 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
       agentName = arg
     elif opt == '-v':
       config.VERBOSE = True
+    elif opt == '-x':
+      config.DEBUG = True
     
   # the true reward function is chosen according to initialPhi
   trueRewardIdx = util.sample(initialPhi, range(len(rewardSet)))
@@ -101,16 +103,25 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
 
 if __name__ == '__main__':
   def feat((x, v), a):
-    v += a
-    x += v
-    #return numpy.array((x, v))
-    #return numpy.array((x, v, x**2, v**2, x * v, 1))
-    return numpy.array((x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2))
-  """
-  def feat((x, x0), v):
-    x += v
-    return numpy.array((x,))
-  """
+    """
+    the length of feat is vecLen * |A|
+    features for each action occupy different subsets of the feature vector
+    """
+    #vec = (x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2)
+    #vec = (x, v, x**2, v**2, x * v, 1)
+    vec = (x,)
+    
+    vecLen = len(vec)
+
+    if a == -1:
+      return numpy.array(vec + (0,) * 2 * vecLen)
+    elif a == 0:
+      return numpy.array((0,) * vecLen + vec + (0,) * vecLen)
+    elif a == 1:
+      return numpy.array((0,) * 2 * vecLen + vec)
+    else:
+      raise Exception('unknown action. different domain?')
+
   featLength = len(feat((0, 0), 1)) # just use an arbitrary state to compute the length of feature
   
   horizon = 20 # note that this can't be inf.. the agent may not terminate
@@ -118,16 +129,17 @@ if __name__ == '__main__':
 
   def makeReward(phiRanges):
     def r(s, a):
+      # rewards are given on states. action a is dummy here
       if all(s[i] >= phiRanges[i][0] and s[i] <= phiRanges[i][1] for i in xrange(2)):
         return 10
       else:
-        return 0
+        return -0.1
     return r
 
   rewardSet = [makeReward([[5, 6], [-numpy.inf, numpy.inf]]),\
-               makeReward([[5, 6], [0, 0.5]]),\
+               #makeReward([[5, 6], [0, .5]]),\
                makeReward([[-6, -5], [-numpy.inf, numpy.inf]]),\
-               makeReward([[-6, -5], [0, 0.5]]),\
+               #makeReward([[-6, -5], [-.5, 0]]),\
               ]
   rewardCandNum = len(rewardSet)
 
@@ -135,8 +147,8 @@ if __name__ == '__main__':
   
   terminalReward = util.Counter()
 
-  Domain = MountainCar
-  #Domain = MountainCarToy
+  #Domain = MountainCar
+  Domain = MountainCarToy
 
   cmp = Domain(0, horizon, terminalReward)
   
