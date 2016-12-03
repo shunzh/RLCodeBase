@@ -2,6 +2,9 @@ from QTPAgent import GreedyConstructionPiAgent
 import numpy
 import random
 import config
+from valueIterationAgents import ValueIterationAgent
+import easyDomains
+from cmp import QueryType
 
 class StepSize:
   def iterate(self):
@@ -40,7 +43,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     self.feat = feat
     self.featLength = featLength
-    self.stepSize = ConstantStepSize(0.05)
+    self.stepSize = ConstantStepSize(0.01)
 
   def thetaToOccupancy(self, theta):
     def getActProb(s, a):
@@ -59,17 +62,14 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     """
     # start with a `trivial' controller
     horizon = self.cmp.horizon
-    bestTheta = [0] * self.featLength
-    bestObjValue = -numpy.inf
     
     # compute the derivative of EUS
-    for rspTime in xrange(2):
-      #theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
+    for rspTime in xrange(1):
       theta = [0] * self.featLength
 
       self.stepSize.reset()
 
-      for iterStep in xrange(100):
+      for iterStep in xrange(1000):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
@@ -90,20 +90,14 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
               futureRet += R[rIdx](s, a)
               deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
               theta = theta + self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
-              
-              # compute the obj function using theta
-              objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
-
-              if objValue > bestObjValue:
-                bestObjValue = objValue
-                bestTheta = theta
     
-    optPi = self.thetaToOccupancy(bestTheta)
+    #theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
+    optPi = self.thetaToOccupancy(theta)
     
     #print bestTheta
     if config.VERBOSE:
       for _ in xrange(3):
-        print self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
+        print 'Sample #', _, self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
     return optPi
 
   def computeObjValue(self, theta, psi, R, horizon, maxV):
@@ -124,7 +118,27 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     times = 5
     for _ in xrange(times):
       u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
-      ret += sum(r(s, a) for s, a in u) / times
+      ret += 1.0 * sum(r(s, a) for s, a in u) / times
     return ret
 
 
+class PolicyGradientAgent(ValueIterationAgent):
+  """
+  Policy gradient to solve a policy for a given reward function.
+  Implemented in a way that calls policy gradient query agent, which has one reward candidate
+  """
+  def __init__(self, mdp, feat, featLength, discount = 1.0):
+    ValueIterationAgent.__init__(self, mdp, discount)
+    self.feat = feat
+    self.featLength = featLength
+
+  def learn(self):
+    rewardSet = [self.mdp.getReward]
+    psi = [1]
+
+    # the agent is certain on the reward functions
+    args = easyDomains.convert(self.mdp, rewardSet, psi)
+    args['maxV'] = [-numpy.inf]
+
+    a = PolicyGradientQueryAgent(self.mdp, rewardSet, psi, QueryType.POLICY, self.feat, self.featLength, self.discount)
+    return a.findNextPolicy(**args)

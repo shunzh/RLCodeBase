@@ -633,10 +633,10 @@ class GreedyConstructionPiAgent(QTPAgent):
         else:
           args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
 
-    print args['maxV']
-
     objValue = sum(args['maxV'][idx] * self.phi[idx] for idx in range(rewardCandNum))
-    if config.VERBOSE: print 'eus value', objValue
+    if config.VERBOSE:
+      print 'maxV', args['maxV']
+      print 'eus value', objValue
 
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy

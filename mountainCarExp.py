@@ -107,7 +107,7 @@ if __name__ == '__main__':
     the length of feat is vecLen * |A|
     features for each action occupy different subsets of the feature vector
     """
-    vec = (x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2)
+    vec = (x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2, 1)
     #vec = (x, v, x**2, v**2, x * v)
     #vec = (x,)
     
@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
   featLength = len(feat((0, 0), 1)) # just use an arbitrary state to compute the length of feature
   
-  horizon = 20 # note that this can't be inf.. the agent may not terminate
+  horizon = 30
   # define feature-based reward functions
 
   def makeReward(phiRanges):
@@ -136,10 +136,8 @@ if __name__ == '__main__':
         return -0.1
     return r
 
-  rewardSet = [makeReward([[5, 6], [-numpy.inf, numpy.inf]]),\
-               makeReward([[5, 6], [-.1, .1]]),\
-               makeReward([[-6, -5], [-numpy.inf, numpy.inf]]),\
-               makeReward([[-6, -5], [-.1, .1]]),\
+  rewardSet = [makeReward([[0.5, 0.6], [-numpy.inf, numpy.inf]]),\
+               makeReward([[-1.2, -1.1], [-numpy.inf, numpy.inf]]),\
               ]
   rewardCandNum = len(rewardSet)
 

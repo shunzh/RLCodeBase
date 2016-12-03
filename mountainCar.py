@@ -1,12 +1,14 @@
 from cmp import ControlledMarkovProcess
+import math
 
 class MountainCar(ControlledMarkovProcess):
   def __init__(self, responseTime, horizon, terminalReward):
     self.noise = 0
-    self.acc = 0.1
+    
+    self.acc = 0.01
 
-    self.wallLoc = -6
-    self.goal = 6
+    self.wallLoc = -1.2
+    self.goal = 0.6
 
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
@@ -33,17 +35,35 @@ class MountainCar(ControlledMarkovProcess):
     return state[0] > self.goal or state[0] < self.wallLoc
   
   def getTransitionStatesAndProbs(self, state, action):
-    v = state[1]
+    x, v = state
 
-    if action == 1: v += self.acc
-    elif action == -1: v -= self.acc
-    
-    # -2 <= v <= 2
+    x = x + v
+    v = v + action * self.acc
+
     v = max(min(v, 1), -1)
-
-    loc = state[0] + v
      
-    return [((loc, v), 1)]
+    return [((x, v), 1)]
+
+
+class RealMountainCar(MountainCar):
+  def __init__(self, **args):
+    MountainCar.__init__(self, **args)
+    self.wallLoc = -1.2
+    self.goal = 0.6
+
+  def getTransitionStatesAndProbs(self, state, action):
+    x, v = state
+    x = x + v
+    v = v + 0.001 * action - 0.0025 * math.cos(3 * x)
+    
+    # range of variables
+    x = max(min(x, 0.6), -1.2)
+    v = max(min(v, 0.07), -0.07)
+     
+    return [((x, v), 1)]
+  
+  def isTerminal(self, state):
+    return state[0] > self.goal
 
 
 class MountainCarToy(MountainCar):
