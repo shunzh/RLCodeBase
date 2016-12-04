@@ -533,14 +533,14 @@ class OptimalPolicyQueryAgent(QTPAgent):
           optQ = qs
           optPsis = psis
     
-    # TODO imp later
     q = None
     if self.queryType == QueryType.POLICY:
       return q, maxObjValue
     elif self.queryType == QueryType.ACTION:
       hList = []
       
-      policyBins = MILPAgent.computeDominatingPis(args, q)
+      # FIXME has a problem here!
+      policyBins = self.computeDominatingPis(args, q)
 
       for s in args['S']:
         hValue = 0
@@ -586,9 +586,14 @@ class GreedyConstructionPiAgent(QTPAgent):
     # do query iteration?
     self.qi = qi
     self.m = 1
+    
+    if hasattr(self, 'computePiValue'):
+      # policy gradient agent has different ways to compute values..
+      self.computeV = lambda pi, S, A, r, horizon: self.computePiValue(pi, r, horizon)
+    else:
+      self.computeV = lambda pi, S, A, r, horizon: computeValue(pi, r, S, A)
 
-  @staticmethod
-  def computeDominatingPis(args, q):
+  def computeDominatingPis(self, args, q):
     """
     args, q: from context in learn
     policyBins[idx][i] == 1 iff i-th policy dominates reward idx
@@ -597,7 +602,7 @@ class GreedyConstructionPiAgent(QTPAgent):
     rewardCandNum = len(args['R'])
     for rewardId in xrange(rewardCandNum):
       # the values of the policies in the query under this reward candidate
-      piValues = {idx: computeValue(q[idx], args['R'][rewardId], args['S'], args['A']) for idx in xrange(len(q))}
+      piValues = {idx: self.computeV(q[idx], args['S'], args['A'], args['R'][rewardId], self.cmp.horizon) for idx in xrange(len(q))}
       maxValue = max(piValues.values())
       # we assumed the first consistent response is returned
       maxIdx = piValues.values().index(maxValue)
@@ -627,11 +632,7 @@ class GreedyConstructionPiAgent(QTPAgent):
 
       args['maxV'] = []
       for rewardId in xrange(rewardCandNum):
-        if hasattr(self, 'computePiValue'):
-          # policy gradient agent has different ways to compute values..
-          args['maxV'].append(max([self.computePiValue(pi, args['R'][rewardId], horizon) for pi in q]))
-        else:
-          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
+        args['maxV'].append(max([self.computeV(pi, args['S'], args['A'], args['R'][rewardId], horizon) for pi in q]))
 
     objValue = sum(args['maxV'][idx] * self.phi[idx] for idx in range(rewardCandNum))
     if config.VERBOSE:
@@ -773,7 +774,7 @@ class MILPDemoAgent(MILPAgent):
         # find the optimal policy so far that achieves the best on each reward candidate
         args['maxV'] = []
         for rewardId in xrange(rewardCandNum):
-          args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
+          args['maxV'].append(max([self.computeV(pi, args['S'], args['A'], args['R'][rewardId], self.cmp.horizon) for pi in q]))
       x = milp(**args)
       if self.heuristic:
         #TODO what to do with this x for demonstration purpose

@@ -5,6 +5,7 @@ import config
 from valueIterationAgents import ValueIterationAgent
 import easyDomains
 from cmp import QueryType
+from copy import deepcopy
 
 class StepSize:
   def iterate(self):
@@ -45,6 +46,22 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     self.featLength = featLength
     self.stepSize = ConstantStepSize(0.01)
 
+  def getFiniteVIAgent(self, phi, horizon, terminalReward, posterior=False):
+    if posterior and tuple(phi) in self.viAgentSet.keys():
+      # bookkeep posterior optimal policies
+      return self.viAgentSet[tuple(phi)]
+    else:
+      rewardFunc = self.getRewardFunc(phi)
+      cmp = deepcopy(self.cmp)
+      cmp.getReward = rewardFunc
+      if posterior:
+        a = PolicyGradientAgent(cmp, self.feat, self.featLength, discount=self.gamma)
+      else:
+        raise Exception('not implemented')
+      a.learn()
+      if posterior: self.viAgentSet[tuple(phi)] = a # bookkeep
+      return a
+ 
   def thetaToOccupancy(self, theta):
     def getActProb(s, a):
       maxV = max(numpy.dot(theta, self.feat(s, b)) for b in self.args['A'])
@@ -120,6 +137,14 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
       ret += 1.0 * sum(r(s, a) for s, a in u) / times
     return ret
+
+
+class PolicyGradientRandQueryAgent(PolicyGradientQueryAgent):
+  def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
+    theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
+    optPi = self.thetaToOccupancy(theta)
+
+    return optPi
 
 
 class PolicyGradientAgent(ValueIterationAgent):

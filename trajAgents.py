@@ -15,7 +15,7 @@ class MILPTrajAgent(MILPAgent):
     k = config.NUMBER_OF_RESPONSES
 
     hValues = util.Counter()
-    policyBins = MILPAgent.computeDominatingPis(args, q)
+    policyBins = self.computeDominatingPis(args, q)
 
     for s in args['S']:
       indices = []

@@ -1,5 +1,6 @@
 from QTPAgent import JointQTPAgent, OptimalPolicyQueryAgent
-from policyGradientAgents import PolicyGradientQueryAgent
+from policyGradientAgents import PolicyGradientQueryAgent,\
+  PolicyGradientRandQueryAgent
 from actionQueryAgents import MILPActionAgent
 from trajAgents import BeliefChangeTrajAgent, RandomTrajAgent, DisagreeTrajAgent,\
   MILPTrajAgent
@@ -73,6 +74,9 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
   elif agentName == "MILP-POLICY":
     queryType = QueryType.POLICY
     agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
+  elif agentName == "RAND-POLICY":
+    queryType = QueryType.POLICY
+    agent = PolicyGradientRandQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
     #agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
@@ -125,7 +129,6 @@ if __name__ == '__main__':
   featLength = len(feat((0, 0), 1)) # just use an arbitrary state to compute the length of feature
   
   horizon = 30
-  # define feature-based reward functions
 
   def makeReward(phiRanges):
     def r(s, a):
@@ -137,8 +140,13 @@ if __name__ == '__main__':
     return r
 
   rewardSet = [makeReward([[0.5, 0.6], [-numpy.inf, numpy.inf]]),\
+               makeReward([[0.4, 0.5], [-numpy.inf, numpy.inf]]),\
+               makeReward([[0.3, 0.4], [-numpy.inf, numpy.inf]]),\
                makeReward([[-1.2, -1.1], [-numpy.inf, numpy.inf]]),\
+               makeReward([[-1.1, -1.0], [-numpy.inf, numpy.inf]]),\
+               makeReward([[-1.0, -0.9], [-numpy.inf, numpy.inf]]),\
               ]
+
   rewardCandNum = len(rewardSet)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum

@@ -46,11 +46,6 @@ class MountainCar(ControlledMarkovProcess):
 
 
 class RealMountainCar(MountainCar):
-  def __init__(self, **args):
-    MountainCar.__init__(self, **args)
-    self.wallLoc = -1.2
-    self.goal = 0.6
-
   def getTransitionStatesAndProbs(self, state, action):
     x, v = state
     x = x + v
