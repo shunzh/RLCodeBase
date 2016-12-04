@@ -8,7 +8,7 @@ class MountainCar(ControlledMarkovProcess):
     self.acc = 0.01
 
     self.wallLoc = -1.2
-    self.goal = 0.6
+    self.goal = 1.2
 
     # horizon is assumed to be finite in this domain
     ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
@@ -46,6 +46,12 @@ class MountainCar(ControlledMarkovProcess):
 
 
 class RealMountainCar(MountainCar):
+  def __init__(self, **args):
+    MountainCar.__init__(self, **args)
+    
+    self.wallLoc = -1.2
+    self.goal = 0.6
+
   def getTransitionStatesAndProbs(self, state, action):
     x, v = state
     x = x + v

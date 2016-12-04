@@ -217,10 +217,12 @@ class QTPAgent:
       resSet = query
       # consistent if the true reward has the largest value on this policy
       def consistCond(res, idx):
-        piValues = {piIdx: computeValue(query[piIdx],\
-                                        self.getRewardFunc(idx),\
+        piValues = {piIdx: self.computeV(query[piIdx],\
                                         self.cmp.getStates(),\
-                                        self.cmp.getPossibleActions())\
+                                        self.cmp.getPossibleActions(),\
+                                        self.getRewardFunc(idx),\
+                                        self.cmp.horizon\
+                                        )
                     for piIdx in range(len(query))}
         maxValue = max(piValues.values())
         optPiIdxs = filter(lambda piIdx: piValues[piIdx] == maxValue, range(len(query)))
@@ -302,7 +304,7 @@ class QTPAgent:
         distr[tuple(phi)] += resProb
         self.responseToPhi[(tuple(query), res)] = tuple(phi)
 
-    assert all(candAllocated)
+    #assert all(candAllocated)
     l = map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
     return l
 
@@ -633,11 +635,10 @@ class GreedyConstructionPiAgent(QTPAgent):
       args['maxV'] = []
       for rewardId in xrange(rewardCandNum):
         args['maxV'].append(max([self.computeV(pi, args['S'], args['A'], args['R'][rewardId], horizon) for pi in q]))
+      if config.VERBOSE: print 'maxV', args['maxV']
 
     objValue = sum(args['maxV'][idx] * self.phi[idx] for idx in range(rewardCandNum))
-    if config.VERBOSE:
-      print 'maxV', args['maxV']
-      print 'eus value', objValue
+    if config.VERBOSE: print 'eus value', objValue
 
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
@@ -671,7 +672,8 @@ class GreedyConstructionPiAgent(QTPAgent):
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
-      return q, objValue
+      #return q, objValue # THIS RETURNS EUS, NOT EPU
+      return q, None
     if self.queryType == QueryType.PARTIAL_POLICY:
       idx = 0
       objValue = self.getQValue(self.cmp.state, None, q)

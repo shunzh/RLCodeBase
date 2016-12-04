@@ -55,7 +55,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       cmp = deepcopy(self.cmp)
       cmp.getReward = rewardFunc
       if posterior:
-        a = PolicyGradientAgent(cmp, self.feat, self.featLength, discount=self.gamma)
+        a = PolicyGradientAgent(cmp, self.feat, self.featLength, discount=self.gamma, horizon=horizon)
       else:
         raise Exception('not implemented')
       a.learn()
@@ -64,8 +64,9 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
  
   def thetaToOccupancy(self, theta):
     def getActProb(s, a):
-      maxV = max(numpy.dot(theta, self.feat(s, b)) for b in self.args['A'])
-      actProbs = {b: numpy.exp(numpy.dot(theta, self.feat(s, b)) - maxV) for b in self.args['A']}
+      actions = self.cmp.getPossibleActions()
+      maxV = max(numpy.dot(theta, self.feat(s, b)) for b in actions)
+      actProbs = {b: numpy.exp(numpy.dot(theta, self.feat(s, b)) - maxV) for b in actions}
       return actProbs[a] / sum(actProbs.values())
     
     return getActProb
@@ -79,10 +80,15 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     """
     # start with a `trivial' controller
     horizon = self.cmp.horizon
+    bestTheta = None
+    bestValue = -numpy.inf
     
     # compute the derivative of EUS
-    for rspTime in xrange(1):
-      theta = [0] * self.featLength
+    for rspTime in xrange(3):
+      if config.VERBOSE: print rspTime
+
+      theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
+      #theta = [0] * self.featLength
 
       self.stepSize.reset()
 
@@ -105,16 +111,17 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
             futureRet = 0
             for s, a in reversed(u):
               futureRet += R[rIdx](s, a)
-              deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in self.args['A'])
+              deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in A)
               theta = theta + self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
+
+      objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
+      if objValue > bestValue:
+        bestTheta = theta
+        bestValue = objValue
     
-    #theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
-    optPi = self.thetaToOccupancy(theta)
+    optPi = self.thetaToOccupancy(bestTheta)
     
-    #print bestTheta
-    if config.VERBOSE:
-      for _ in xrange(3):
-        print 'Sample #', _, self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
+    if config.VERBOSE: print 'Sample', self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
     return optPi
 
   def computeObjValue(self, theta, psi, R, horizon, maxV):
@@ -152,10 +159,11 @@ class PolicyGradientAgent(ValueIterationAgent):
   Policy gradient to solve a policy for a given reward function.
   Implemented in a way that calls policy gradient query agent, which has one reward candidate
   """
-  def __init__(self, mdp, feat, featLength, discount = 1.0):
+  def __init__(self, mdp, feat, featLength, discount = 1.0, horizon = numpy.inf):
     ValueIterationAgent.__init__(self, mdp, discount)
     self.feat = feat
     self.featLength = featLength
+    self.horizon = horizon
 
   def learn(self):
     rewardSet = [self.mdp.getReward]
@@ -165,5 +173,10 @@ class PolicyGradientAgent(ValueIterationAgent):
     args = easyDomains.convert(self.mdp, rewardSet, psi)
     args['maxV'] = [-numpy.inf]
 
-    a = PolicyGradientQueryAgent(self.mdp, rewardSet, psi, QueryType.POLICY, self.feat, self.featLength, self.discount)
-    return a.findNextPolicy(**args)
+    self.a = PolicyGradientQueryAgent(self.mdp, rewardSet, psi, QueryType.POLICY, self.feat, self.featLength, self.discount)
+    self.optPi = self.a.findNextPolicy(**args)
+
+    return self.optPi
+
+  def getValue(self, state, t=0):
+    return self.a.computePiValue(self.optPi, self.mdp.getReward, self.horizon)

@@ -139,12 +139,12 @@ if __name__ == '__main__':
         return -0.1
     return r
 
-  rewardSet = [makeReward([[0.5, 0.6], [-numpy.inf, numpy.inf]]),\
-               makeReward([[0.4, 0.5], [-numpy.inf, numpy.inf]]),\
-               makeReward([[0.3, 0.4], [-numpy.inf, numpy.inf]]),\
-               makeReward([[-1.2, -1.1], [-numpy.inf, numpy.inf]]),\
-               makeReward([[-1.1, -1.0], [-numpy.inf, numpy.inf]]),\
-               makeReward([[-1.0, -0.9], [-numpy.inf, numpy.inf]]),\
+  rewardSet = [makeReward([[0.95, 1.0], [-numpy.inf, numpy.inf]]),\
+               makeReward([[1.05, 1.1], [-numpy.inf, numpy.inf]]),\
+               makeReward([[1.15, 1.2], [-numpy.inf, numpy.inf]]),\
+               makeReward([[-1.2, -1.15], [-numpy.inf, numpy.inf]]),\
+               makeReward([[-1.1, -1.05], [-numpy.inf, numpy.inf]]),\
+               makeReward([[-1.0, -0.95], [-numpy.inf, numpy.inf]]),\
               ]
 
   rewardCandNum = len(rewardSet)
