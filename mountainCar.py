@@ -1,5 +1,6 @@
 from cmp import ControlledMarkovProcess
 import math
+import random
 
 class MountainCar(ControlledMarkovProcess):
   def __init__(self, responseTime, horizon, terminalReward):
@@ -23,6 +24,11 @@ class MountainCar(ControlledMarkovProcess):
     #FIXME should not be used
     return []
   
+  def sampleState(self):
+    x = -1.2 + 2.4 * random.random()
+    v = -1 + 2 * random.random()
+    return (x, v)
+    
   def getStateDistance(self, s1, s2):
     return abs(s1[0] - s2[0])
 

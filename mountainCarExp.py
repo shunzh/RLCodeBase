@@ -79,14 +79,13 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
     agent = PolicyGradientRandQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
-    #agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
-    raise Exception('not implemented')
+    agent = MILPTrajAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
   elif agentName == "SIMILAR-DISAGREE":
     queryType = QueryType.SIMILAR
-    agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+    agent = DisagreeTrajAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
   elif agentName == "SIMILAR-VARIATION":
     queryType = QueryType.SIMILAR
-    agent = BeliefChangeTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+    agent = BeliefChangeTrajAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
   elif agentName == "SIMILAR-RANDOM":
     queryType = QueryType.SIMILAR
     agent = RandomTrajAgent(cmp, rewardSet, initialPhi, queryType, gamma)
@@ -141,8 +140,6 @@ if __name__ == '__main__':
 
   rewardSet = [makeReward([[0.95, 1.0], [-numpy.inf, numpy.inf]]),\
                makeReward([[1.05, 1.1], [-numpy.inf, numpy.inf]]),\
-               makeReward([[1.15, 1.2], [-numpy.inf, numpy.inf]]),\
-               makeReward([[-1.2, -1.15], [-numpy.inf, numpy.inf]]),\
                makeReward([[-1.1, -1.05], [-numpy.inf, numpy.inf]]),\
                makeReward([[-1.0, -0.95], [-numpy.inf, numpy.inf]]),\
               ]

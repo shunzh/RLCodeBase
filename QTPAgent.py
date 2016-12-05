@@ -244,7 +244,7 @@ class QTPAgent:
     elif self.queryType == QueryType.REWARD:
       resSet = self.cmp.possibleRewardValues
       consistCond = lambda res, idx: self.rewardSet[idx](query) == res
-    elif self.queryType in [QueryType.SIMILAR]:
+    elif self.queryType == QueryType.SIMILAR:
       resSet = query
       consistDict = {}
       for idx in xrange(self.rewardSetSize):

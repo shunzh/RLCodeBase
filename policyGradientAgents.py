@@ -41,10 +41,10 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
   This finds the next policy by gradient descent using EUS as the objective function
   """
   def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma):
-    GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
     self.feat = feat
     self.featLength = featLength
-    self.stepSize = ConstantStepSize(0.01)
+    self.stepSize = ConstantStepSize(0.02)
+    GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
   def getFiniteVIAgent(self, phi, horizon, terminalReward, posterior=False):
     if posterior and tuple(phi) in self.viAgentSet.keys():
@@ -92,7 +92,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
 
       self.stepSize.reset()
 
-      for iterStep in xrange(1000):
+      for iterStep in xrange(500):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
@@ -173,10 +173,11 @@ class PolicyGradientAgent(ValueIterationAgent):
     args = easyDomains.convert(self.mdp, rewardSet, psi)
     args['maxV'] = [-numpy.inf]
 
-    self.a = PolicyGradientQueryAgent(self.mdp, rewardSet, psi, QueryType.POLICY, self.feat, self.featLength, self.discount)
-    self.optPi = self.a.findNextPolicy(**args)
+    self.agent = PolicyGradientQueryAgent(self.mdp, rewardSet, psi, QueryType.POLICY, self.feat, self.featLength, self.discount)
+    self.optPi = self.agent.findNextPolicy(**args)
+    self.x = lambda s, a: self.optPi(s, a)
 
     return self.optPi
 
   def getValue(self, state, t=0):
-    return self.a.computePiValue(self.optPi, self.mdp.getReward, self.horizon)
+    return self.agent.computePiValue(self.optPi, self.mdp.getReward, self.horizon)

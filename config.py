@@ -15,10 +15,10 @@ CONNECTION_TYPE = 'grid'
 
 INIT_STATE_DISTANCE = None
 
-TRAJECTORY_LENGTH = 4
+TRAJECTORY_LENGTH = 3
 
 # sample trajectories to compute max h values
-SAMPLES_TIMES = 20
+SAMPLES_TIMES = 100
 
 GENERATE_RANDOM_TRAJ = False
 
