@@ -6,7 +6,7 @@ import tabularNavigationExp
 import random
 import config
 import numpy
-from tabularNavigation import Driving
+from tabularNavigation import DiscreteDriving
 
 if __name__ == '__main__':
   width = 5
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
   terminalReward = util.Counter()
 
-  cmp = Driving(5, responseTime, width, height, horizon, terminalReward)
+  cmp = DiscreteDriving(5, responseTime, width, height, horizon, terminalReward)
 
   ops = []
   nastyDriver = lambda l, car: l.update({car: 1})

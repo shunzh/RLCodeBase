@@ -57,6 +57,29 @@ class TabularNavigation(ControlledMarkovProcess):
     return abs(state1[0] - state2[0]) + abs(state1[1] - state2[1])
 
 
+class ThreeStateToy(TabularNavigation):
+  def __init__(self, responseTime, horizon, terminalReward):
+    # no need to make this domain noisy
+    self.noise = 0
+    ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
+
+  def getStates(self):
+    return [(0, 0), (-1, 0), (1, 0), (0, 1)]
+  
+  def reset(self):
+    self.state = (0, 0)
+  
+  def getPossibleActions(self, state=None):
+    return [(-1, 0), (1, 0), (0, 1)]
+  
+  def isTerminal(self, state):
+    return not state == (0, 0)
+  
+  def adjustState(self, loc):
+    # no need
+    return loc
+
+
 class RockCollection(TabularNavigation):
   def getPossibleActions(self, state=None):
     return [(-1, 1), (0, 1), (1, 1)]
@@ -157,7 +180,7 @@ class TabularNavigationMaze(TabularNavigation):
            + TabularNavigation.measure(self, state2, mid)
 
 
-class Driving(RockCollection):
+class DiscreteDriving(RockCollection):
   def __init__(self, numOfCars, responseTime, width, height, horizon, terminalReward):
     TabularNavigation.__init__(self, responseTime, width, height, horizon, terminalReward)
     self.numOfCars = numOfCars

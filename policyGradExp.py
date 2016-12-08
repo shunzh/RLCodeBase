@@ -13,31 +13,19 @@ import config
 from cmp import QueryType
 from mountainCar import MountainCar, MountainCarToy
 import numpy
+from tabularNavigation import ThreeStateToy
 
 flags = "r:l:s:d:a:vq:P:t:k:n:y:x"
 
 """
-Algorithms:
-- E-JQTP
-- AQTP
-- AQTP-NF
-- opt query
-- random query
-- no query
+For all experiments that we need function approximation, now including mountain car and some toy domains.
 
-Setting:
-- response time (axis)
-
-Show:
-- expectation Q
-- computation time
-- paired difference between JQTP and AQTP
+We have arguments for policy gradient algorithms, and some candidate feature extractors.
 """
 def experiment(cmp, feat, featLength, rewardSet, initialPhi):
   # discount factor
   gamma = 1
-  responseTime = 0
-  agentName = 'JQTP'
+  agentName = 'MILP-POLICY'
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], flags)
@@ -104,7 +92,8 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
     f.write(str(qValue) + ' ' + str(time) + '\n')
     f.close()
 
-if __name__ == '__main__':
+ 
+def mountainCarExp():
   def feat((x, v), a):
     """
     the length of feat is vecLen * |A|
@@ -156,3 +145,28 @@ if __name__ == '__main__':
   cmp = Domain(0, horizon, terminalReward)
   
   experiment(cmp, feat, featLength, rewardSet, initialPhi)
+
+
+def threeStateExp():
+  featLength = 3
+  
+  horizon = 1
+  
+  rewardSet = [lambda s, a: 1 if a == (-1, 0) else (.6 if a == (0, 1) else 0),\
+               lambda s, a: 1 if a == (1, 0) else (.6 if a == (0, 1) else 0)]
+  rewardCandNum = len(rewardSet)
+
+  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+  
+  terminalReward = util.Counter()
+
+  Domain = ThreeStateToy
+
+  cmp = Domain(0, horizon, terminalReward)
+  
+  experiment(cmp, None, featLength, rewardSet, initialPhi)
+
+
+if __name__ == '__main__':
+  #mountainCarExp()
+  threeStateExp()
