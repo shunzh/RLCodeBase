@@ -25,7 +25,7 @@ class MountainCar(ControlledMarkovProcess):
     return []
   
   def sampleState(self):
-    x = -1.2 + 2.4 * random.random()
+    x = self.wallLoc + (self.goal - self.wallLoc) * random.random()
     v = -1 + 2 * random.random()
     return (x, v)
     

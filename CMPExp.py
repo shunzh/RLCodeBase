@@ -26,15 +26,13 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   q, qValue = agent.learn()
   timeElapsed = time.time() - t
   
-  """
-  priorAgent = agent.getFiniteVIAgent(agent.phi, cmp.horizon, cmp.terminalReward, posterior=True)
-  priorV = priorAgent.getValue(cmp.state)
-  qValue = qValue - priorV
-  """
-  
   if qValue == None:
     qValue = agent.getQValue(agent.cmp.state, None, q)
 
+  priorAgent = agent.getFiniteVIAgent(agent.phi, cmp.horizon, cmp.terminalReward, posterior=True)
+  priorV = priorAgent.getValue(cmp.state)
+  qValue = qValue - priorV
+ 
   # add query type here
   if config.VERBOSE: print 'q', q
  

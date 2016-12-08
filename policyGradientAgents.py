@@ -75,8 +75,8 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       positiveTheta = map(lambda _: abs(_), theta)
       return (positiveTheta[idx] + 0.001) / (sum(positiveTheta) + 0.001 * len(actions))
 
-    #return getSoftmaxActProb
-    return getLinearActProb
+    return getSoftmaxActProb
+    #return getLinearActProb
 
   def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
     """
@@ -91,6 +91,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     bestValue = -numpy.inf
     
     #TEST
+    """
     for th1 in numpy.arange(0, 1.01, 0.1):
       for th2 in numpy.arange(0, 1.01, 0.1):
         if th1 + th2 <= 1:
@@ -99,9 +100,10 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
         else:
           print 'nan',
       print
+    """
     
     # compute the derivative of EUS
-    for rspTime in xrange(3):
+    for rspTime in xrange(5):
       if config.VERBOSE: print rspTime
 
       theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
@@ -109,7 +111,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
 
       self.stepSize.reset()
 
-      for iterStep in xrange(500):
+      for iterStep in xrange(300):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
@@ -129,10 +131,13 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
             for s, a in reversed(u):
               futureRet += R[rIdx](s, a)
               # softmax derivative
-              #deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in A)
+              deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in A)
+              
+              """
               # linear derivative
               deri = numpy.array([0,] * len(A))
               deri[A.index(a)] = 1
+              """
 
               theta = theta + self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
 
@@ -162,7 +167,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     pi is generally stochastic. going to generate multiple trajectories to evaluate pi
     """
     ret = 0
-    times = 100
+    times = 30
     for _ in xrange(times):
       u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
       ret += 1.0 * sum(r(s, a) for s, a in u) / times
@@ -171,6 +176,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
 
 class PolicyGradientRandQueryAgent(PolicyGradientQueryAgent):
   def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
+    # randomly generate a policy to add to the query
     theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
     optPi = self.thetaToOccupancy(theta)
 

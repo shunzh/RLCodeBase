@@ -93,14 +93,14 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
     f.close()
 
  
-def mountainCarExp():
+def mountainCarExp(Domain):
   def feat((x, v), a):
     """
     the length of feat is vecLen * |A|
     features for each action occupy different subsets of the feature vector
     """
-    vec = (x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2, 1)
-    #vec = (x, v, x**2, v**2, x * v)
+    #vec = (x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2, 1)
+    vec = (x, v, x**2, v**2, x * v, 1)
     #vec = (x,)
     
     vecLen = len(vec)
@@ -118,29 +118,21 @@ def mountainCarExp():
   
   horizon = 30
 
-  def makeReward(phiRanges):
+  def makeReward(loc0, loc1, reward):
     def r(s, a):
       # rewards are given on states. action a is dummy here
-      if all(s[i] >= phiRanges[i][0] and s[i] <= phiRanges[i][1] for i in xrange(2)):
-        return 10
+      if s[0] > loc0 and s[0] < loc1:
+        return reward
       else:
         return -0.1
     return r
 
-  rewardSet = [makeReward([[0.95, 1.0], [-numpy.inf, numpy.inf]]),\
-               makeReward([[1.05, 1.1], [-numpy.inf, numpy.inf]]),\
-               makeReward([[-1.1, -1.05], [-numpy.inf, numpy.inf]]),\
-               makeReward([[-1.0, -0.95], [-numpy.inf, numpy.inf]]),\
-              ]
-
+  rewardSet = [makeReward(i, i + 0.1, 10 if i == -1.1 or i == 1.0 else 1) for i in [-1.1, -0.6, 0.5, 1.0]]
   rewardCandNum = len(rewardSet)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
   
   terminalReward = util.Counter()
-
-  Domain = MountainCar
-  #Domain = MountainCarToy
 
   cmp = Domain(0, horizon, terminalReward)
   
@@ -168,5 +160,6 @@ def threeStateExp():
 
 
 if __name__ == '__main__':
-  #mountainCarExp()
-  threeStateExp()
+  mountainCarExp(MountainCar)
+  #mountainCarExp(MountainCarToy)
+  #threeStateExp()
