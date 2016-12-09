@@ -43,7 +43,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma):
     self.feat = feat
     self.featLength = featLength
-    self.stepSize = ConstantStepSize(0.02)
+    self.stepSize = ConstantStepSize(0.05)
     GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
   def getFiniteVIAgent(self, phi, horizon, terminalReward, posterior=False):
@@ -94,27 +94,25 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     bestValue = -numpy.inf
     
     #TEST
-    """
-    for th1 in numpy.arange(0, 1.01, 0.1):
-      for th2 in numpy.arange(0, 1.01, 0.1):
-        if th1 + th2 <= 1:
-          theta = (th1, th2, 1 - th1 - th2)
+    for th1 in numpy.arange(0, 10.1, 1):
+      for th2 in numpy.arange(0, 10.1, 1):
+        if th1 + th2 <= 10:
+          theta = (th1, th2, 10 - th1 - th2)
           print self.computeObjValue(theta, psi, R, horizon, maxV),
         else:
           print 'nan',
       print
-    """
     
     # compute the derivative of EUS
     for rspTime in xrange(5):
       if config.VERBOSE: print rspTime
 
-      #theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
-      theta = [0] * self.featLength
+      theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
+      #theta = [0] * self.featLength
 
       self.stepSize.reset()
 
-      for iterStep in xrange(500):
+      for iterStep in xrange(1000):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
@@ -163,6 +161,8 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       rRet = self.computePiValue(pi, R[rIdx], horizon)
       if rRet > maxV[rIdx]:
         ret += psi[rIdx] * rRet
+      else:
+        ret += psi[rIdx] * maxV[rIdx]
 
     return ret
   
@@ -171,7 +171,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     pi is generally stochastic. going to generate multiple trajectories to evaluate pi
     """
     ret = 0
-    times = 30
+    times = 50
     for _ in xrange(times):
       u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
       ret += 1.0 * sum(r(s, a) for s, a in u) / times
