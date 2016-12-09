@@ -106,12 +106,12 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     for rspTime in xrange(5):
       if config.VERBOSE: print rspTime
 
-      theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
-      #theta = [0] * self.featLength
+      #theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
+      theta = [0] * self.featLength
 
       self.stepSize.reset()
 
-      for iterStep in xrange(300):
+      for iterStep in xrange(500):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon

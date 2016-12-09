@@ -674,7 +674,7 @@ class GreedyConstructionPiAgent(QTPAgent):
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
       #return q, objValue # THIS RETURNS EUS, NOT EPU
-      return q, objValue
+      return q, None
     if self.queryType == QueryType.PARTIAL_POLICY:
       idx = 0
       objValue = self.getQValue(self.cmp.state, None, q)

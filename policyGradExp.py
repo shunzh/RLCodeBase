@@ -99,8 +99,8 @@ def mountainCarExp(Domain):
     the length of feat is vecLen * |A|
     features for each action occupy different subsets of the feature vector
     """
-    #vec = (x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2, 1)
-    vec = (x, v, x**2, v**2, x * v, 1)
+    vec = (x, v, x**2, x**3, x * v, x**2 * v, x**3 * v, v**2, 1)
+    #vec = (x, v, x**2, v**2, x * v, 1)
     #vec = (x,)
     
     vecLen = len(vec)
@@ -116,7 +116,7 @@ def mountainCarExp(Domain):
 
   featLength = len(feat((0, 0), 1)) # just use an arbitrary state to compute the length of feature
   
-  horizon = 30
+  horizon = 20
 
   def makeReward(loc0, loc1, reward):
     def r(s, a):
@@ -124,10 +124,10 @@ def mountainCarExp(Domain):
       if s[0] > loc0 and s[0] < loc1:
         return reward
       else:
-        return -0.1
+        return -1
     return r
 
-  rewardSet = [makeReward(i, i + 0.1, 10 if i == -1.1 or i == 1.0 else 1) for i in [-1.1, -0.6, 0.5, 1.0]]
+  rewardSet = [makeReward(i, i + 0.1, 10 if i == -0.4 or i == 0.3 else 1) for i in [-1.0, -0.7, -0.4, 0.3, 0.6, 0.9]]
   rewardCandNum = len(rewardSet)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
