@@ -140,7 +140,24 @@ def mountainCarExp(Domain):
 
 
 def threeStateExp():
+  # a simple domain to make sure our pg works
   featLength = 3
+  
+  if config.POLICY_TYPE == 'linear':
+    # direct policy control.
+    # (normalized) theta1, theta2, theta3 are the prob. of reaching three terminal states
+    # this is a very simple problem to solve. check this first when debugging!
+    feat = None
+  elif config.POLICY_TYPE == 'softmax':
+    # theta1 .. theta3 are the values of states
+    def feat(s, a):
+      if not s == (0, 0): vec = (0, 0, 0)
+      elif a == (1, 0): vec = (1, 0, 0)
+      elif a == (-1, 0): vec = (0, 1, 0)
+      elif a == (0, 1): vec =(0, 0, 1)
+      else: raise Exception('should be unreachable')
+      
+      return numpy.array(vec)
   
   horizon = 1
   
@@ -156,10 +173,10 @@ def threeStateExp():
 
   cmp = Domain(0, horizon, terminalReward)
   
-  experiment(cmp, None, featLength, rewardSet, initialPhi)
+  experiment(cmp, feat, featLength, rewardSet, initialPhi)
 
 
 if __name__ == '__main__':
-  mountainCarExp(MountainCar)
+  #mountainCarExp(MountainCar)
   #mountainCarExp(MountainCarToy)
-  #threeStateExp()
+  threeStateExp()

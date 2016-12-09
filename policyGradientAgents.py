@@ -75,8 +75,11 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       positiveTheta = map(lambda _: abs(_), theta)
       return (positiveTheta[idx] + 0.001) / (sum(positiveTheta) + 0.001 * len(actions))
 
-    return getSoftmaxActProb
-    #return getLinearActProb
+    if config.POLICY_TYPE == 'softmax':
+      return getSoftmaxActProb
+    elif config.POLICY_TYPE == 'linear':
+      return getLinearActProb
+    else: raise Exception('unknown policy type')
 
   def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
     """
@@ -130,14 +133,15 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
             futureRet = 0
             for s, a in reversed(u):
               futureRet += R[rIdx](s, a)
-              # softmax derivative
-              deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in A)
               
-              """
-              # linear derivative
-              deri = numpy.array([0,] * len(A))
-              deri[A.index(a)] = 1
-              """
+              if config.POLICY_TYPE == 'softmax':
+                # softmax derivative
+                deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in A)
+              elif config.POLICY_TYPE == 'linear':
+                # linear derivative
+                deri = numpy.array([0,] * len(A))
+                deri[A.index(a)] = 1
+              else: raise Exception('unknown policy type')
 
               theta = theta + self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
 

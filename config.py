@@ -17,10 +17,8 @@ INIT_STATE_DISTANCE = None
 
 TRAJECTORY_LENGTH = 3
 
-# sample trajectories to compute max h values
-SAMPLES_TIMES = 100
-
-GENERATE_RANDOM_TRAJ = False
+POLICY_TYPE = 'softmax'
+#POLICY_TYPE = 'linear'
 
 # keep configuration options for output
 opts = ''
