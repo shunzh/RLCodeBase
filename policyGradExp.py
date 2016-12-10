@@ -14,6 +14,7 @@ from cmp import QueryType
 from mountainCar import MountainCar, MountainCarToy
 import numpy
 from tabularNavigation import ThreeStateToy
+from driving import Driving
 
 flags = "r:l:s:d:a:vq:P:t:k:n:y:x"
 
@@ -121,13 +122,13 @@ def mountainCarExp(Domain):
   def makeReward(loc0, loc1, reward):
     def r(s, a):
       # rewards are given on states. action a is dummy here
-      if s[0] > loc0 and s[0] < loc1:
+      if s[0] > loc0 and s[0] < loc1 and s[1] >= -0.02 and s[1] <= 0.02:
         return reward
       else:
-        return -1
+        return 0
     return r
 
-  rewardSet = [makeReward(i, i + 0.1, 10 if i == -0.4 or i == 0.3 else 1) for i in [-1.0, -0.7, -0.4, 0.3, 0.6, 0.9]]
+  rewardSet = [makeReward(i, i + 0.1, 10 if i == -1.0 or i == 0.9 else 1) for i in [-1.0, -0.7, -0.4, 0.3, 0.6, 0.9]]
   rewardCandNum = len(rewardSet)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
@@ -136,6 +137,74 @@ def mountainCarExp(Domain):
 
   cmp = Domain(0, horizon, terminalReward)
   
+  experiment(cmp, feat, featLength, rewardSet, initialPhi)
+
+
+def drivingExp():
+  numOfLanes = 3
+  length = 5
+  numOfCars = 10
+  carLength = 0.3
+  cars = [(random.random() * 10, random.randint(0, numOfLanes - 1)) for _ in range(numOfCars)]
+
+  def feat(s, a):
+    # binary vector to indicate the current lane of the robot
+    vec = [1 if s[1] == i else 0 for i in range(numOfLanes)]
+    for i in [s[1] - 1, s[1], s[1] + 1]:
+      laneFeat = [0, 0, 0]
+      for car in cars:
+        if car[1] == i and car[0] - s[0]:
+          if car[0] - s[0] < carLength:
+            laneFeat[0] = 1
+          elif car[0] - s[0] < 1:
+            laneFeat[1] = 1
+          else:
+            laneFeat[2] = 1
+      vec = vec + laneFeat
+
+    vec = tuple(vec)
+    vecLen = len(vec)
+
+    if a == 'W':
+      return numpy.array(vec + (0,) * 2 * vecLen)
+    elif a == 'E':
+      return numpy.array((0,) * vecLen + vec + (0,) * vecLen)
+    elif a == 'N':
+      return numpy.array((0,) * 2 * vecLen + vec)
+    else:
+      raise Exception('unknown action ' + str(a) + '. different domain?')
+
+  featLength = len(feat((0, 1), 'N')) # just use an arbitrary state to compute the length of feature
+
+  horizon = 100
+  terminalReward = util.Counter()
+  cmp = Driving(0, horizon, terminalReward, length=length, lanes=numOfLanes)
+  
+  niceDriver = {'cars': -1, 'lane': None}
+  nastyDriver = {'cars': 1, 'lane': None}
+  rightNiceDriver = {'cars': -1, 'lane': 0}
+  rightNastyDriver = {'cars': 1, 'lane': 0}
+  middleLaneDriver = {'cars': 0, 'lane': numOfLanes / 2}
+
+  def makeReward(spec):
+    def r(s, a):
+      reward = 0
+      for car in cars:
+        if car[1] == s[1] and car[0] > s[0] and car[0] < s[0] + carLength:
+          reward += spec['cars']
+
+      if spec['lane']:
+        if car[1] == spec['lane']:
+          reward += 0.01
+      
+      return reward
+    return r
+  rewardSet = [makeReward(niceDriver), makeReward(nastyDriver), \
+              makeReward(rightNiceDriver), makeReward(rightNastyDriver), makeReward(middleLaneDriver)]
+
+  rewardCandNum = len(rewardSet)
+  initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+
   experiment(cmp, feat, featLength, rewardSet, initialPhi)
 
 
@@ -179,4 +248,5 @@ def threeStateExp():
 if __name__ == '__main__':
   #mountainCarExp(MountainCar)
   #mountainCarExp(MountainCarToy)
-  threeStateExp()
+  #threeStateExp()
+  drivingExp()

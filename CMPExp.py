@@ -29,6 +29,7 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   if qValue == None:
     qValue = agent.getQValue(agent.cmp.state, None, q)
 
+  if config.VERBOSE: print 'under prior belief:'
   priorAgent = agent.getFiniteVIAgent(agent.phi, cmp.horizon, cmp.terminalReward, posterior=True)
   priorV = priorAgent.getValue(cmp.state)
   qValue = qValue - priorV

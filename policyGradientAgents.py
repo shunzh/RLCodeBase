@@ -43,7 +43,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma):
     self.feat = feat
     self.featLength = featLength
-    self.stepSize = ConstantStepSize(0.05)
+    self.stepSize = ConstantStepSize(0.02)
     GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
   def getFiniteVIAgent(self, phi, horizon, terminalReward, posterior=False):
@@ -94,6 +94,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     bestValue = -numpy.inf
     
     #TEST
+    """
     for th1 in numpy.arange(0, 10.1, 1):
       for th2 in numpy.arange(0, 10.1, 1):
         if th1 + th2 <= 10:
@@ -102,9 +103,10 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
         else:
           print 'nan',
       print
+    """
     
     # compute the derivative of EUS
-    for rspTime in xrange(5):
+    for rspTime in xrange(3):
       if config.VERBOSE: print rspTime
 
       theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
@@ -112,7 +114,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
 
       self.stepSize.reset()
 
-      for iterStep in xrange(1000):
+      for iterStep in xrange(500):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
@@ -151,7 +153,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     print 'bestTheta', bestTheta
     optPi = self.thetaToOccupancy(bestTheta)
     
-    if config.VERBOSE: print 'Sample', self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
+    #if config.VERBOSE: print 'Sample', self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
     return optPi
 
   def computeObjValue(self, theta, psi, R, horizon, maxV):
