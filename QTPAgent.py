@@ -629,7 +629,7 @@ class GreedyConstructionPiAgent(QTPAgent):
     q = []
     args['maxV'] = [-numpy.inf] * rewardCandNum
     for i in range(k):
-      print 'iter.', i
+      if config.VERBOSE: print 'iter.', i
       x = self.findNextPolicy(**args)
       q.append(x)
 
