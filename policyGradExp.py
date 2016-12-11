@@ -143,9 +143,11 @@ def mountainCarExp(Domain):
 def drivingExp():
   numOfLanes = 3
   length = 5
-  numOfCars = 10
-  carLength = 0.3
-  cars = [(random.random() * 10, random.randint(0, numOfLanes - 1)) for _ in range(numOfCars)]
+  numOfCars = 3
+  carLength = 0.5
+  #cars = [(random.random() * 5, random.randint(0, numOfLanes - 1)) for _ in range(numOfCars)]
+  cars = [(0.5, 1), (1.5, 0), (2.5, 2)]
+  print cars
 
   def feat(s, a):
     # binary vector to indicate the current lane of the robot

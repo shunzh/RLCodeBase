@@ -43,7 +43,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma):
     self.feat = feat
     self.featLength = featLength
-    self.stepSize = ConstantStepSize(0.02)
+    self.stepSize = ConstantStepSize(0.05)
     GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
   def getFiniteVIAgent(self, phi, horizon, terminalReward, posterior=False):
@@ -113,12 +113,15 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       #theta = [0] * self.featLength
 
       self.stepSize.reset()
+      stopCounter = 0
 
       for iterStep in xrange(500):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
         u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
+        accG = numpy.array((0.0,) * self.featLength)
+        
         self.stepSize.iterate()
         if config.DEBUG: print iterStep, u
 
@@ -142,18 +145,29 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
                 deri = numpy.array([0,] * len(A))
                 deri[A.index(a)] = 1
               else: raise Exception('unknown policy type')
+              
+              g = self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
+              accG += g
+              theta = theta + g
 
-              theta = theta + self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
+        # should for debug level.. to expensive to run
+        #if config.VERBOSE: print self.computeObjValue(theta, psi, R, horizon, maxV)
+
+        # stopping criteria
+        if numpy.linalg.norm(accG) < 0.01: stopCounter += 1
+        else: stopCounter = 0
+
+        if stopCounter > 50: break
 
       objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
       if objValue > bestValue:
         bestTheta = theta
         bestValue = objValue
     
-    print 'bestTheta', bestTheta
+    if config.VERBOSE: print 'bestTheta', bestTheta
     optPi = self.thetaToOccupancy(bestTheta)
     
-    #if config.VERBOSE: print 'Sample', self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
+    if config.VERBOSE: print 'Sample', self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
     return optPi
 
   def computeObjValue(self, theta, psi, R, horizon, maxV):
@@ -173,7 +187,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     pi is generally stochastic. going to generate multiple trajectories to evaluate pi
     """
     ret = 0
-    times = 50
+    times = 10
     for _ in xrange(times):
       u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
       ret += 1.0 * sum(r(s, a) for s, a in u) / times

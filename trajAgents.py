@@ -18,7 +18,7 @@ class MILPTrajAgent(PolicyGradientQueryAgent):
     hValues = util.Counter()
     policyBins = self.computeDominatingPis(args, q)
 
-    for sIdx in range(config.SAMPLES_TIMES):
+    for sIdx in range(config.SAMPLE_TIMES):
       s = self.cmp.sampleState()
       indices = []
       for i in xrange(k):
@@ -75,7 +75,7 @@ class DisagreeTrajAgent(PolicyGradientQueryAgent):
 
     hValues = util.Counter()
 
-    for sIdx in range(config.SAMPLES_TIMES):
+    for sIdx in range(config.SAMPLE_TIMES):
       s = self.cmp.sampleState()
       indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
       trajs = [self.sampleTrajFromRewardCandidate(idx, s) for idx in indices]
@@ -106,7 +106,7 @@ class BeliefChangeTrajAgent(PolicyGradientQueryAgent):
 
     hValues = util.Counter()
 
-    for sIdx in range(config.SAMPLES_TIMES):
+    for sIdx in range(config.SAMPLE_TIMES):
       s = self.cmp.sampleState()
       indices = numpy.random.choice(range(rewardCandNum), k, replace=False)
       trajs = [self.sampleTrajFromRewardCandidate(idx, s) for idx in indices]
@@ -135,7 +135,7 @@ class RandomTrajAgent(QTPAgent):
     # find an arbitrary state to generate trajectory queries
     # make sure that the length of the query is TRAJECTORY_LENGTH
     while True:
-      s = random.choice(args['S'])
+      s = self.cmp.sampleState()
       q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
       if any(len(u) < config.TRAJECTORY_LENGTH for u in q): continue
       else: break
