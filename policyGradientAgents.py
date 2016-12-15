@@ -119,14 +119,14 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
-        u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
         accG = numpy.array((0.0,) * self.featLength)
         
         self.stepSize.iterate()
-        if config.DEBUG: print iterStep, u
 
+        # sample one trajectory here, might be used when this policy dominates in any reward candidate 
+        u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
         for rIdx in range(len(R)):
-          ret = sum(R[rIdx](s, a) for s, a in u)
+          ret = self.computePiValue(pi, R[rIdx], horizon)
           if config.DEBUG: print 'ret in reward id', rIdx, 'is', ret
 
           if ret > maxV[rIdx]:

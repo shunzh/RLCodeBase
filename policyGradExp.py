@@ -250,5 +250,5 @@ def threeStateExp():
 if __name__ == '__main__':
   #mountainCarExp(MountainCar)
   #mountainCarExp(MountainCarToy)
-  #threeStateExp()
-  drivingExp()
+  threeStateExp()
+  #drivingExp()
