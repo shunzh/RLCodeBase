@@ -182,11 +182,17 @@ def drivingExp():
   terminalReward = util.Counter()
   cmp = Driving(0, horizon, terminalReward, length=length, lanes=numOfLanes)
   
-  niceDriver = {'cars': -1, 'lane': None}
-  nastyDriver = {'cars': 1, 'lane': None}
-  rightNiceDriver = {'cars': -1, 'lane': 0}
-  rightNastyDriver = {'cars': 1, 'lane': 0}
-  middleLaneDriver = {'cars': 0, 'lane': numOfLanes / 2}
+  drivers = {
+    'niceDriver': {'cars': -1, 'lane': None},
+    'nastyDriver': {'cars': 1, 'lane': None},
+    'rightNiceDriver': {'cars': -1, 'lane': 0},
+    'rightNastyDriver': {'cars': 1, 'lane': 0},
+    'leftNiceDriver': {'cars': -1, 'lane': numOfLanes - 1},
+    'leftNastyDriver': {'cars': 1, 'lane': numOfLanes - 1},
+    'middleNiceDriver': {'cars': -1, 'lane': numOfLanes / 2},
+    'middleNastyDriver': {'cars': 1, 'lane': numOfLanes / 2},
+    'middleLaneDriver': {'cars': 0, 'lane': numOfLanes / 2},
+  }
 
   def makeReward(spec):
     def r(s, a):
@@ -201,8 +207,7 @@ def drivingExp():
       
       return reward
     return r
-  rewardSet = [makeReward(niceDriver), makeReward(nastyDriver), \
-              makeReward(rightNiceDriver), makeReward(rightNastyDriver), makeReward(middleLaneDriver)]
+  rewardSet = [makeReward(driverSpec) for driverName, driverSpec in drivers.items()]
 
   rewardCandNum = len(rewardSet)
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
@@ -250,5 +255,5 @@ def threeStateExp():
 if __name__ == '__main__':
   #mountainCarExp(MountainCar)
   #mountainCarExp(MountainCarToy)
-  threeStateExp()
-  #drivingExp()
+  #threeStateExp()
+  drivingExp()

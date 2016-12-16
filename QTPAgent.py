@@ -736,7 +736,7 @@ class AprilAgent(QTPAgent):
 
     maxV = -numpy.inf
     maxQ = None
-    for iterIdx in range(config.SAMPLES_TIMES):
+    for iterIdx in range(config.SAMPLE_TIMES):
       selector = [random.random() > .5 for _ in xrange(rewardCandNum)]
       # got two psis
       psi0 = [self.phi[_] if selector[_] else 0 for _ in xrange(rewardCandNum)]
