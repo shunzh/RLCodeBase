@@ -1,6 +1,6 @@
 from QTPAgent import JointQTPAgent, OptimalPolicyQueryAgent
 from policyGradientAgents import PolicyGradientQueryAgent,\
-  PolicyGradientRandQueryAgent
+  PolicyGradientRandQueryAgent, AprilAgent
 from actionQueryAgents import MILPActionAgent
 from trajAgents import BeliefChangeTrajAgent, RandomTrajAgent, DisagreeTrajAgent,\
   MILPTrajAgent
@@ -63,6 +63,9 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
   elif agentName == "MILP-POLICY":
     queryType = QueryType.POLICY
     agent = PolicyGradientQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
+  elif agentName == "APRIL":
+    queryType = QueryType.POLICY
+    agent = AprilAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
   elif agentName == "RAND-POLICY":
     queryType = QueryType.POLICY
     agent = PolicyGradientRandQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
@@ -186,11 +189,11 @@ def drivingExp():
     'niceDriver': {'cars': -1, 'lane': None},
     'nastyDriver': {'cars': 1, 'lane': None},
     'rightNiceDriver': {'cars': -1, 'lane': 0},
-    'rightNastyDriver': {'cars': 1, 'lane': 0},
+    #'rightNastyDriver': {'cars': 1, 'lane': 0},
     'leftNiceDriver': {'cars': -1, 'lane': numOfLanes - 1},
-    'leftNastyDriver': {'cars': 1, 'lane': numOfLanes - 1},
-    'middleNiceDriver': {'cars': -1, 'lane': numOfLanes / 2},
-    'middleNastyDriver': {'cars': 1, 'lane': numOfLanes / 2},
+    #'leftNastyDriver': {'cars': 1, 'lane': numOfLanes - 1},
+    #'middleNiceDriver': {'cars': -1, 'lane': numOfLanes / 2},
+    #'middleNastyDriver': {'cars': 1, 'lane': numOfLanes / 2},
     'middleLaneDriver': {'cars': 0, 'lane': numOfLanes / 2},
   }
 

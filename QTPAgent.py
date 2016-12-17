@@ -721,37 +721,6 @@ class MILPAgent(GreedyConstructionPiAgent):
     return milp(S, A, R, T, s0, psi, maxV)
 
 
-class AprilAgent(QTPAgent):
-  """
-  Randomly partition psi and find their optimal policies
-  Repeat this for finite number of times, specified by ?
-  
-  only works for k == 2
-  """
-  def learn(self):
-    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
-    rewardCandNum = len(args['R'])
-    k = config.NUMBER_OF_RESPONSES
-    assert k == 2 # not going to work for k > 2
-
-    maxV = -numpy.inf
-    maxQ = None
-    for iterIdx in range(config.SAMPLE_TIMES):
-      selector = [random.random() > .5 for _ in xrange(rewardCandNum)]
-      # got two psis
-      psi0 = [self.phi[_] if selector[_] else 0 for _ in xrange(rewardCandNum)]
-      psi1 = [self.phi[_] if not selector[_] else 0 for _ in xrange(rewardCandNum)]
-      agent0 = self.getFiniteVIAgent(psi0, self.cmp.horizon - self.cmp.getResponseTime(), self.cmp.terminalReward, posterior=True)
-      agent1 = self.getFiniteVIAgent(psi1, self.cmp.horizon - self.cmp.getResponseTime(), self.cmp.terminalReward, posterior=True)
-      
-      v = agent0.getValue(self.cmp.state) + agent1.getValue(self.cmp.state) 
-      if v > maxV:
-        maxV = v
-        maxQ = [agent0.x, agent1.x]
-
-    return maxQ, maxV
-
-
 class MILPDemoAgent(MILPAgent):
   # greedily construct a set of policies for demonstration
   # assume the first i policies are demonstrated to the operator when deciding the (i+1)-st policy

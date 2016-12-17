@@ -194,6 +194,37 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     return ret
 
 
+class AprilAgent(PolicyGradientQueryAgent):
+  """
+  Randomly partition psi and find their optimal policies
+  Repeat this for finite number of times, specified by ?
+  
+  only works for k == 2
+  """
+  def learn(self):
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
+    rewardCandNum = len(args['R'])
+    k = config.NUMBER_OF_RESPONSES
+    assert k == 2 # not going to work for k > 2
+
+    maxV = -numpy.inf
+    maxQ = None
+    for iterIdx in range(config.SAMPLE_TIMES):
+      selector = [random.random() > .5 for _ in xrange(rewardCandNum)]
+      # got two psis
+      psi0 = [self.phi[_] if selector[_] else 0 for _ in xrange(rewardCandNum)]
+      psi1 = [self.phi[_] if not selector[_] else 0 for _ in xrange(rewardCandNum)]
+      agent0 = self.getFiniteVIAgent(psi0, self.cmp.horizon - self.cmp.getResponseTime(), self.cmp.terminalReward, posterior=True)
+      agent1 = self.getFiniteVIAgent(psi1, self.cmp.horizon - self.cmp.getResponseTime(), self.cmp.terminalReward, posterior=True)
+      
+      v = agent0.getValue(self.cmp.state) + agent1.getValue(self.cmp.state) 
+      if v > maxV:
+        maxV = v
+        maxQ = [agent0.x, agent1.x]
+
+    return maxQ, maxV
+
+
 class PolicyGradientRandQueryAgent(PolicyGradientQueryAgent):
   def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
     # randomly generate a policy to add to the query
