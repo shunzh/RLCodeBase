@@ -626,6 +626,9 @@ class GreedyConstructionPiAgent(QTPAgent):
       k = config.NUMBER_OF_RESPONSES
 
     # now q is a set of policy queries
+    bestQ = None
+    bestEUS = -numpy.inf
+    
     q = []
     args['maxV'] = [-numpy.inf] * rewardCandNum
     for i in range(k):

@@ -194,6 +194,33 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     return ret
 
 
+class SamplingAgent(PolicyGradientQueryAgent):
+  def learn(self):
+    args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
+    rewardCandNum = len(args['R'])
+    horizon = self.cmp.horizon
+    k = config.NUMBER_OF_RESPONSES
+
+    maxV = -numpy.inf
+    maxQ = None
+
+    for iterIdx in range(config.SAMPLE_TIMES):
+      q = []
+      for i in xrange(k):
+        theta = [-0.5 + random.random() for _ in xrange(self.featLength)]
+        q.append(self.thetaToOccupancy(theta))
+      
+      maxVs = []
+      for rewardId in xrange(rewardCandNum):
+        maxVs.append(max([self.computeV(pi, args['S'], args['A'], args['R'][rewardId], horizon) for pi in q]))
+      objValue = sum(maxVs[idx] * self.phi[idx] for idx in range(rewardCandNum))
+      if objValue > maxV:
+        maxV = objValue
+        maxQ = q
+    
+    return maxQ, None
+
+
 class AprilAgent(PolicyGradientQueryAgent):
   """
   Randomly partition psi and find their optimal policies
@@ -222,7 +249,7 @@ class AprilAgent(PolicyGradientQueryAgent):
         maxV = v
         maxQ = [agent0.x, agent1.x]
 
-    return maxQ, maxV
+    return maxQ, None
 
 
 class PolicyGradientRandQueryAgent(PolicyGradientQueryAgent):
