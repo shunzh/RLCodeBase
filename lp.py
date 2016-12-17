@@ -1,4 +1,7 @@
-from pycpx import CPlexModel
+try:
+  from pycpx import CPlexModel
+except ImportError:
+  print "can't import CPlexModel"
 import easyDomains
 import scipy.stats
 import config
