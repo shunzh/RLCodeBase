@@ -30,7 +30,7 @@ for i in `seq 0 9`
 do
   echo $i
 
-  for agent in MILP-POLICY SAMPLE-POLICY
+  for agent in MILP-POLICY SAMPLE-POLICY RAND-POLICY
   do
     python policyGradExp.py -a $agent -r $i &
   done

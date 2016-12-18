@@ -152,13 +152,14 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
               theta = theta + g
 
         # should for debug level.. to expensive to run
-        #if config.VERBOSE: print self.computeObjValue(theta, psi, R, horizon, maxV)
+        #if config.VERBOSE:
+        #  print self.computeObjValue(theta, psi, R, horizon, maxV)
+        #  print numpy.linalg.norm(accG)
 
         # stopping criteria
         if numpy.linalg.norm(accG) < 0.001: stopCounter += 1
         else: stopCounter = 0
 
-        print numpy.linalg.norm(accG)
 
         if stopCounter > 50: break
 
@@ -190,7 +191,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     pi is generally stochastic. going to generate multiple trajectories to evaluate pi
     """
     ret = 0
-    times = 10
+    times = 5
     for _ in xrange(times):
       u = self.sampleTrajectory(pi, self.cmp.state, horizon, 'saPairs')
       ret += 1.0 * sum(r(s, a) for s, a in u) / times

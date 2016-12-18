@@ -15,12 +15,12 @@ CONNECTION_TYPE = 'grid'
 
 INIT_STATE_DISTANCE = None
 
-TRAJECTORY_LENGTH = 6
+TRAJECTORY_LENGTH = 5
 
 POLICY_TYPE = 'softmax'
 #POLICY_TYPE = 'linear'
 
-SAMPLE_TIMES = 5
+SAMPLE_TIMES = 10
 
 # keep configuration options for output
 opts = ''

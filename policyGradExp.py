@@ -181,7 +181,7 @@ def drivingExp():
 
   featLength = len(feat((0, 1), 'N')) # just use an arbitrary state to compute the length of feature
 
-  horizon = 100
+  horizon = 50
   terminalReward = util.Counter()
   cmp = Driving(0, horizon, terminalReward, length=length, lanes=numOfLanes)
   
