@@ -20,7 +20,7 @@ class DiminishingStepSize(StepSize):
     self.k = 0.0
   
   def getAlpha(self):
-    return self.initAlpha / self.k
+    return self.initAlpha / numpy.sqrt(self.k)
   
   def iterate(self):
     self.k += 1
@@ -43,7 +43,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma):
     self.feat = feat
     self.featLength = featLength
-    self.stepSize = ConstantStepSize(0.05)
+    self.stepSize = DiminishingStepSize(0.1)
     GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
   def getFiniteVIAgent(self, phi, horizon, terminalReward, posterior=False):
@@ -115,7 +115,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       self.stepSize.reset()
       stopCounter = 0
 
-      for iterStep in xrange(500):
+      for iterStep in xrange(200):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
@@ -127,6 +127,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
         u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
         for rIdx in range(len(R)):
           ret = self.computePiValue(pi, R[rIdx], horizon)
+          #ret = sum(R[rIdx](s, a) for s, a in u)
           if config.DEBUG: print 'ret in reward id', rIdx, 'is', ret
 
           if ret > maxV[rIdx]:
@@ -154,8 +155,10 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
         #if config.VERBOSE: print self.computeObjValue(theta, psi, R, horizon, maxV)
 
         # stopping criteria
-        if numpy.linalg.norm(accG) < 0.01: stopCounter += 1
+        if numpy.linalg.norm(accG) < 0.001: stopCounter += 1
         else: stopCounter = 0
+
+        print numpy.linalg.norm(accG)
 
         if stopCounter > 50: break
 
