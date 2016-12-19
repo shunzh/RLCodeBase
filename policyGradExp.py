@@ -36,6 +36,7 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
   for opt, arg in opts:
     if opt == '-r':
       random.seed(int(arg))
+      numpy.random.seed(int(arg))
     elif opt == '-a':
       agentName = arg
     elif opt == '-v':
@@ -265,5 +266,5 @@ def threeStateExp():
 if __name__ == '__main__':
   #mountainCarExp(MountainCar)
   #mountainCarExp(MountainCarToy)
-  #threeStateExp()
-  drivingExp()
+  threeStateExp()
+  #drivingExp()
