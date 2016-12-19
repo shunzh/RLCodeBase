@@ -219,7 +219,6 @@ class SamplingAgent(PolicyGradientQueryAgent):
         maxVs.append(max([self.computeV(pi, args['S'], args['A'], args['R'][rewardId], horizon) for pi in q]))
       objValue = sum(maxVs[idx] * self.phi[idx] for idx in range(rewardCandNum))
       
-      print iterIdx, 'objValue, posteriorValue', objValue#self.getQValue(self.cmp.state, None, q)
       if objValue > maxV:
         maxV = objValue
         maxQ = q
@@ -256,15 +255,6 @@ class AprilAgent(PolicyGradientQueryAgent):
         maxQ = [agent0.x, agent1.x]
 
     return maxQ, None
-
-
-class PolicyGradientRandQueryAgent(PolicyGradientQueryAgent):
-  def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
-    # randomly generate a policy to add to the query
-    theta = [-0.5 + random.random() for _ in xrange(self.featLength)] # baseline
-    optPi = self.thetaToOccupancy(theta)
-
-    return optPi
 
 
 class PolicyGradientAgent(ValueIterationAgent):

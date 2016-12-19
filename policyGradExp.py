@@ -1,6 +1,6 @@
 from QTPAgent import JointQTPAgent, OptimalPolicyQueryAgent
 from policyGradientAgents import PolicyGradientQueryAgent,\
-  PolicyGradientRandQueryAgent, AprilAgent, SamplingAgent
+  AprilAgent, SamplingAgent
 from actionQueryAgents import MILPActionAgent
 from trajAgents import BeliefChangeTrajAgent, RandomTrajAgent, DisagreeTrajAgent,\
   MILPTrajAgent
@@ -68,8 +68,9 @@ def experiment(cmp, feat, featLength, rewardSet, initialPhi):
     queryType = QueryType.POLICY
     agent = SamplingAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
   elif agentName == "RAND-POLICY":
+    config.SAMPLE_TIMES = 1
     queryType = QueryType.POLICY
-    agent = PolicyGradientRandQueryAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
+    agent = SamplingAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
   elif agentName == "MILP-SIMILAR":
     queryType = QueryType.SIMILAR
     agent = MILPTrajAgent(cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma)
