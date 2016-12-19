@@ -43,7 +43,8 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, feat, featLength, gamma):
     self.feat = feat
     self.featLength = featLength
-    self.stepSize = DiminishingStepSize(0.1)
+    #self.stepSize = DiminishingStepSize(0.1)
+    self.stepSize = ConstantStepSize(0.05)
     GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma)
 
   def getFiniteVIAgent(self, phi, horizon, terminalReward, posterior=False):
@@ -115,7 +116,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       self.stepSize.reset()
       stopCounter = 0
 
-      for iterStep in xrange(200):
+      for iterStep in xrange(400):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
@@ -217,6 +218,8 @@ class SamplingAgent(PolicyGradientQueryAgent):
       for rewardId in xrange(rewardCandNum):
         maxVs.append(max([self.computeV(pi, args['S'], args['A'], args['R'][rewardId], horizon) for pi in q]))
       objValue = sum(maxVs[idx] * self.phi[idx] for idx in range(rewardCandNum))
+      
+      print iterIdx, 'objValue, posteriorValue', objValue#self.getQValue(self.cmp.state, None, q)
       if objValue > maxV:
         maxV = objValue
         maxQ = q

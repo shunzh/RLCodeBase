@@ -1,8 +1,8 @@
 function main()
-  agents = {'MILP-POLICY', 'SAMPLE-POLICY', 'RAND-POLICY'};
-  agentNames = {'Policy Grad.', 'Sampling', 'Random'};
-  %agents = {'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE'};
-  %agentNames = {'Query Proj.', 'Belief Change', 'Disagree'};
+  %agents = {'MILP-POLICY', 'SAMPLE-POLICY', 'RAND-POLICY'};
+  %agentNames = {'Policy Grad.', 'Sampling', 'Random'};
+  agents = {'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE'};
+  agentNames = {'Query Proj.', 'Belief Change', 'Disagree'};
 
   ms = [];
   tms = [];

@@ -189,7 +189,7 @@ def drivingExp():
   drivers = {
     'niceDriver': {'cars': -1, 'lane': None},
     'nastyDriver': {'cars': 1, 'lane': None},
-    'dangerousDriver': {'cars': -1, 'backOfCars': 1, 'lane': None},
+    #'dangerousDriver': {'cars': -1, 'backOfCars': 1, 'lane': None},
     'rightNiceDriver': {'cars': -1, 'lane': 0},
     #'rightNastyDriver': {'cars': 1, 'lane': 0},
     'leftNiceDriver': {'cars': -1, 'lane': numOfLanes - 1},
@@ -197,7 +197,7 @@ def drivingExp():
     #'middleNiceDriver': {'cars': -1, 'lane': numOfLanes / 2},
     #'middleNastyDriver': {'cars': 1, 'lane': numOfLanes / 2},
     #'leftLaneDriver': {'cars': 0, 'lane': 0},
-    #'middleLaneDriver': {'cars': 0, 'lane': numOfLanes / 2},
+    'middleLaneDriver': {'cars': 0, 'lane': numOfLanes / 2},
     #'rightLaneDriver': {'cars': 0, 'lane': numOfLanes - 1},
   }
 
@@ -266,5 +266,5 @@ def threeStateExp():
 if __name__ == '__main__':
   #mountainCarExp(MountainCar)
   #mountainCarExp(MountainCarToy)
-  threeStateExp()
-  #drivingExp()
+  #threeStateExp()
+  drivingExp()

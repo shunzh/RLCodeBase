@@ -292,7 +292,8 @@ class QTPAgent:
       resProb = 0
       phi = self.phi[:]
       for idx in range(self.rewardSetSize):
-        if consistCond(res, idx) and not candAllocated[idx]:
+        if (consistCond(res, idx) or res == resSet[-1]) and not candAllocated[idx]:
+          # either it is consistent, or it's the last response
           resProb += phi[idx]
           candAllocated[idx] = True
         else:
@@ -304,7 +305,8 @@ class QTPAgent:
         distr[tuple(phi)] += resProb
         self.responseToPhi[(tuple(query), res)] = tuple(phi)
 
-    #assert all(candAllocated)
+    # should be true if implemented correctly
+    assert all(candAllocated)
     l = map(lambda l: (l[0], l[1]/sum(distr.values())), distr.items())
     return l
 
