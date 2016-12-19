@@ -188,6 +188,7 @@ def drivingExp():
   drivers = {
     'niceDriver': {'cars': -1, 'lane': None},
     'nastyDriver': {'cars': 1, 'lane': None},
+    'dangerousDriver': {'cars': -1, 'backOfCars': 1, 'lane': None},
     'rightNiceDriver': {'cars': -1, 'lane': 0},
     #'rightNastyDriver': {'cars': 1, 'lane': 0},
     'leftNiceDriver': {'cars': -1, 'lane': numOfLanes - 1},
@@ -195,7 +196,7 @@ def drivingExp():
     #'middleNiceDriver': {'cars': -1, 'lane': numOfLanes / 2},
     #'middleNastyDriver': {'cars': 1, 'lane': numOfLanes / 2},
     #'leftLaneDriver': {'cars': 0, 'lane': 0},
-    'middleLaneDriver': {'cars': 0, 'lane': numOfLanes / 2},
+    #'middleLaneDriver': {'cars': 0, 'lane': numOfLanes / 2},
     #'rightLaneDriver': {'cars': 0, 'lane': numOfLanes - 1},
   }
 
@@ -205,6 +206,10 @@ def drivingExp():
       for car in cars:
         if car[1] == s[1] and car[0] > s[0] and car[0] < s[0] + carLength:
           reward += spec['cars']
+
+      if 'backOfCars' in spec.keys():
+        if car[1] == s[1] and car[0] < s[0] and car[0] > s[0] - carLength:
+          reward += spec['backOfCars']
 
       if spec['lane']:
         if car[1] == spec['lane']:

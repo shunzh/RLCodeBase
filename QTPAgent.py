@@ -249,11 +249,11 @@ class QTPAgent:
       consistDict = {}
       for idx in xrange(self.rewardSetSize):
         x = self.viAgentSet[idx].x
-        optTraj = self.sampleTrajectory(x, query[0][0], hori=config.TRAJECTORY_LENGTH, to='trajectory')
+        optTrajs = [self.sampleTrajectory(x, query[0][0], hori=config.TRAJECTORY_LENGTH, to='trajectory') for _ in range(5)]
+        resDists = {res: sum(self.cmp.getTrajectoryDistance(res, optTraj) for optTraj in optTrajs) for res in resSet}
         for res in resSet:
           # check if the distance from res to x[idx] is smaller than all other reward candidates
-          consistDict[res, idx] = all(self.cmp.getTrajectoryDistance(res, optTraj) <= self.cmp.getTrajectoryDistance(otherRes, optTraj)\
-                                  for otherRes in resSet)
+          consistDict[res, idx] = all(resDists[res] <= resDists[otherRes] for otherRes in resSet)
       consistCond = lambda res, idx: consistDict[res, idx]
     elif self.queryType == QueryType.COMMITMENT:
       #FIXME only for l = 1

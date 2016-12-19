@@ -10,7 +10,6 @@ import sys
 import inspect
 import heapq, random
 # for load mat file and squeeze
-import scipy.io as spio
 import pickle
 import numpy as np
 
@@ -553,6 +552,7 @@ def loadmat(filename):
     from mat files. It calls the function check keys to cure all entries
     which are still mat-objects
     '''
+    import scipy.io as spio
     data = spio.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
 
@@ -574,6 +574,7 @@ def _check_keys(dict):
     checks if entries in dictionary are mat-objects. If yes
     todict is called to change them to nested dictionaries
     '''
+    import scipy.io as spio
     for key in dict:
         if isinstance(dict[key], spio.matlab.mio5_params.mat_struct):
             dict[key] = _todict(dict[key])

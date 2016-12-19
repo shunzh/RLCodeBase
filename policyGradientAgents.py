@@ -160,7 +160,6 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
         if numpy.linalg.norm(accG) < 0.001: stopCounter += 1
         else: stopCounter = 0
 
-
         if stopCounter > 50: break
 
       objValue = self.computeObjValue(theta, psi, R, horizon, maxV)
