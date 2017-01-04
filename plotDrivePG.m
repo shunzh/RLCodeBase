@@ -26,7 +26,7 @@ function main()
   errorbar(1:size(agents, 2), ms, cis, '+')
   ylabel('EVOI');
 
-  set(gca, 'Xtick', 1:size(agents, 2), 'XtickLabel', agents);
+  set(gca, 'Xtick', 1:size(agents, 2), 'XtickLabel', agentNames);
 
   set(gcf,'PaperUnits','inches','PaperPosition',[0 0 5 3])
   ylim([0, 2.5]);

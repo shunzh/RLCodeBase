@@ -150,7 +150,8 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
               
               g = self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
               accG += g
-              theta = theta + g
+
+        theta = theta + accG
 
         # should for debug level.. to expensive to run
         #if config.VERBOSE:
