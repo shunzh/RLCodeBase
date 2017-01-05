@@ -147,11 +147,11 @@ def mountainCarExp(Domain):
 
 def drivingExp():
   numOfLanes = 3
-  length = 5
-  numOfCars = 3
+  length = 10
+  numOfCars = 5
   carLength = 0.5
-  #cars = [(random.random() * 5, random.randint(0, numOfLanes - 1)) for _ in range(numOfCars)]
-  cars = [(0.5, 1), (1.5, 0), (2.5, 2)]
+  cars = [(random.random() * 5, random.randint(0, numOfLanes - 1)) for _ in range(numOfCars)]
+  #cars = [(0.5, 1), (1.5, 0), (2.5, 2)]
   print cars
 
   def feat(s, a):
@@ -183,7 +183,7 @@ def drivingExp():
 
   featLength = len(feat((0, 1), 'N')) # just use an arbitrary state to compute the length of feature
 
-  horizon = 50
+  horizon = 100
   terminalReward = util.Counter()
   cmp = Driving(0, horizon, terminalReward, length=length, lanes=numOfLanes)
   
@@ -267,5 +267,5 @@ def threeStateExp():
 if __name__ == '__main__':
   #mountainCarExp(MountainCar)
   #mountainCarExp(MountainCarToy)
-  threeStateExp()
-  #drivingExp()
+  #threeStateExp()
+  drivingExp()

@@ -116,7 +116,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       self.stepSize.reset()
       stopCounter = 0
 
-      for iterStep in xrange(400):
+      for iterStep in xrange(300):
         pi = self.thetaToOccupancy(theta)
         # u is a list of state action pairs
         # this is still policy query.. we sample to the task horizon
