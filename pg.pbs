@@ -9,7 +9,7 @@
 #PBS -q flux
 
 #PBS -l nodes=1:ppn=10,pmem=2gb
-#PBS -l walltime=15:00
+#PBS -l walltime=20:00
 #PBS -j oe
 #PBS -V
 
@@ -26,7 +26,7 @@ if [ -d "$PBS_O_WORKDIR" ] ; then
 fi
 
 #  Put your job commands after this line
-for i in `seq 0 9`
+for i in `seq 30 49`
 do
   echo $i
 
