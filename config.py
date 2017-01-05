@@ -20,7 +20,7 @@ TRAJECTORY_LENGTH = 10
 POLICY_TYPE = 'softmax'
 #POLICY_TYPE = 'linear'
 
-SAMPLE_TIMES = 10
+SAMPLE_TIMES = 20
 
 # keep configuration options for output
 opts = ''

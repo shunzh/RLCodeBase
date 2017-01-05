@@ -29,16 +29,16 @@ function main()
   set(gca, 'Xtick', 1:size(agents, 2), 'XtickLabel', agentNames);
 
   set(gcf,'PaperUnits','inches','PaperPosition',[0 0 5 3])
-  ylim([0, 2.5]);
+  %ylim([0, 2.5]);
   print('-deps', [char(agents{1}), '.eps'], '-r100');
 
-  %figure;
-  %errorbar(1:size(agents, 2), tms, tcis, '+')
-  %ylabel('Computation Time (sec.)');
+  figure;
+  errorbar(1:size(agents, 2), tms, tcis, '+')
+  ylabel('Computation Time (sec.)');
 
-  %set(gca, 'Xtick', 1:size(agents, 2), 'XtickLabel', agents);
+  set(gca, 'Xtick', 1:size(agents, 2), 'XtickLabel', agents);
 
-  %set(gcf,'PaperUnits','inches','PaperPosition',[0 0 5 3])
-  %print('-deps', [char(agents{1}), 't.eps'], '-r100');
+  set(gcf,'PaperUnits','inches','PaperPosition',[0 0 5 3])
+  print('-deps', [char(agents{1}), 't.eps'], '-r100');
 end
 
