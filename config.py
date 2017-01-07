@@ -20,6 +20,9 @@ TRAJECTORY_LENGTH = 10
 POLICY_TYPE = 'softmax'
 #POLICY_TYPE = 'linear'
 
+PG_TYPE = 'pe' # policy evaluation
+#PG_TYPE = 'mc' # Monte Carlo
+
 SAMPLE_TIMES = 20
 
 # keep configuration options for output

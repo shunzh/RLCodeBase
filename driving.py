@@ -18,7 +18,16 @@ class Driving(ControlledMarkovProcess):
     self.state = (0, self.lanes / 2)
     
   def getStates(self):
-    return []
+    # in principle, the state space is continuous
+    # here are the states that are reachable from the start state, which is sufficient!
+    i = 0
+    states = []
+    while i < self.length:
+      for j in range(self.lanes):
+        states.append((i, j))
+      i += 0.1
+    
+    return states
   
   def sampleState(self):
     loc = random.random() * self.length

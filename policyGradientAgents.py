@@ -6,6 +6,7 @@ from valueIterationAgents import ValueIterationAgent
 import easyDomains
 from cmp import QueryType
 from copy import deepcopy
+import util
 
 class StepSize:
   def iterate(self):
@@ -74,6 +75,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     def getLinearActProb(s, a):
       idx = actions.index(a)
       positiveTheta = map(lambda _: abs(_), theta)
+      # 0.001 here is for smoothing
       return (positiveTheta[idx] + 0.001) / (sum(positiveTheta) + 0.001 * len(actions))
 
     if config.POLICY_TYPE == 'softmax':
@@ -81,13 +83,14 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     elif config.POLICY_TYPE == 'linear':
       return getLinearActProb
     else: raise Exception('unknown policy type')
-
+  
   def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
     """
     Same arguments as lp.milp
     Return: next policy to add. It's a parameter, not occupancy
-    
-    FIXME not re-using the code in PolicyGradientAgent. they are very similar classes. shall we?
+
+    Evaluate policy by sampling
+    Not sure if theoretically sound, implemented anyway
     """
     # start with a `trivial' controller
     horizon = self.cmp.horizon
@@ -125,31 +128,43 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
         self.stepSize.iterate()
 
         # sample one trajectory here, might be used when this policy dominates in any reward candidate 
-        u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
         for rIdx in range(len(R)):
-          ret = self.computePiValue(pi, R[rIdx], horizon)
-          #ret = sum(R[rIdx](s, a) for s, a in u)
-          if config.DEBUG: print 'ret in reward id', rIdx, 'is', ret
+          if config.PG_TYPE == 'mc':
+            # theoretically we should sample the policy multiple times to get the estimate of its value
+            # but it's too slow!
+            #ret = self.computePiValue(pi, R[rIdx], horizon) 
+            u = self.sampleTrajectory(pi, s0, horizon, 'saPairs')
+            ret = sum(R[rIdx](s, a) for s, a in u)
+            if config.DEBUG: print 'ret in reward id', rIdx, 'is', ret
 
-          if ret > maxV[rIdx]:
-            # here is where the non-smoothness comes from
-            # only add the derivative when the accumulated return is larger than the return obtained by the
-            # best policy in the query set
-            futureRet = 0
-            for s, a in reversed(u):
-              futureRet += R[rIdx](s, a)
-              
-              if config.POLICY_TYPE == 'softmax':
-                # softmax derivative
+            if ret > maxV[rIdx]:
+              # here is where the non-smoothness comes from
+              # only add the derivative when the accumulated return is larger than the return obtained by the
+              # best policy in the query set
+              futureRet = 0
+              for s, a in reversed(u):
+                futureRet += R[rIdx](s, a)
+                
+                if config.POLICY_TYPE == 'softmax':
+                  # softmax derivative
+                  deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in A)
+                elif config.POLICY_TYPE == 'linear':
+                  # linear derivative
+                  deri = numpy.array([0,] * len(A))
+                  deri[A.index(a)] = 1
+                else: raise Exception('unknown policy type')
+                
+                g = self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
+                accG += g
+          elif config.PG_TYPE == 'pe':
+            # doing in a policy evaluation way
+            occ, q = self.findStateOccupancyAndValues(theta, S, A, T, R[rIdx], s0)
+            print iterStep
+            for s in S:
+              for a in A:
                 deri = self.feat(s, a) - sum(pi(s, b) * self.feat(s, b) for b in A)
-              elif config.POLICY_TYPE == 'linear':
-                # linear derivative
-                deri = numpy.array([0,] * len(A))
-                deri[A.index(a)] = 1
-              else: raise Exception('unknown policy type')
-              
-              g = self.stepSize.getAlpha() * psi[rIdx] * futureRet * deri
-              accG += g
+                accG += psi[rIdx] * occ[s] * q[s, a] * deri
+          else: raise Exception('unknown pg type')
 
         theta = theta + accG
 
@@ -174,6 +189,29 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
     
     if config.VERBOSE: print 'Sample', self.sampleTrajectory(optPi, s0, horizon, 'saPairs')
     return optPi
+
+  def findStateOccupancyAndValues(self, theta, S, A, T, r, s0):
+    occ = util.Counter()
+    q = util.Counter()
+    pi = self.thetaToOccupancy(theta)
+    
+    #FIXME we assume S is ordered in a way of S_0, S_1, ..., S_T,
+    # where S_t is the set of states reachable in the t-th time step.
+    # compute occ from S_0 to S_T
+    occ[s0] = 1 # visit 0 for sure
+    for s in S:
+      for sp in S:
+        for a in A:
+          occ[sp] += occ[s] * pi(s, a) * T(s, a, sp)
+
+    # compute q from S_0 to S_T
+    for s in reversed(S):
+      for a in A:
+        q[s, a] = r(s, a)
+        for sp in S:
+          q[s, a] += pi(s, a) * T(s, a, sp) * max(q[sp, ap] for ap in A)
+    
+    return occ, q
 
   def computeObjValue(self, theta, psi, R, horizon, maxV):
     ret = 0
@@ -260,7 +298,7 @@ class AprilAgent(PolicyGradientQueryAgent):
 
 class PolicyGradientAgent(ValueIterationAgent):
   """
-  Policy gradient to solve a policy for a given reward function.
+  Use policy gradient to solve the optimal policy for a given reward function.
   Implemented in a way that calls policy gradient query agent, which has one reward candidate
   """
   def __init__(self, mdp, feat, featLength, discount = 1.0, horizon = numpy.inf):
