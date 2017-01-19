@@ -23,7 +23,7 @@ def parseFiles(filename, xAxis, perTrial):
       except:
         print "issue in processing ", filename, condorId
     means.append(np.mean(data))
-    cis.append(1.96 * np.std(data) / np.sqrt(len(data)))
+    cis.append(np.std(data) / np.sqrt(len(data)))
     
     print data
   
@@ -36,6 +36,6 @@ plt.gcf().set_size_inches(5,4)
 plt.xlabel('Number of Samples')
 plt.ylabel('Policy Agreement')
 plt.axis([0, 110, 0.5, 1])
-plt.legend(["Modular IRL", "Bayesian IRL"], "lower right")
-plt.savefig("grid_modular_vs_bayes.png")
+plt.legend(["Modular IRL", "Bayesian IRL"], loc=4)
+plt.savefig("grid_modular_vs_bayes.tiff", dpi=300, format="tiff")
 plt.close()
