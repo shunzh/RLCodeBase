@@ -1,6 +1,5 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
-  PriorTPAgent, MILPAgent, OptimalPolicyQueryAgent, MILPDemoAgent, OptimalPartialPolicyQueryAgent,\
-  AprilAgent
+  PriorTPAgent, MILPAgent, OptimalPolicyQueryAgent, MILPDemoAgent, OptimalPartialPolicyQueryAgent
 from actionQueryAgents import HeuristicAgent, ActiveSamplingAgent,\
   MILPActionAgent
 from trajAgents import BeliefChangeTrajAgent, RandomTrajAgent, DisagreeTrajAgent,\
@@ -12,6 +11,7 @@ import random
 import getopt
 import config
 from cmp import QueryType
+from policyGradientAgents import AprilAgent
 
 flags = "r:l:s:d:a:vq:P:t:k:n:y:"
 

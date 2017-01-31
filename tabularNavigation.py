@@ -42,6 +42,13 @@ class TabularNavigation(ControlledMarkovProcess):
 
       return transProb.items()
   
+  def getFeatures(self, state):
+    """
+    This not used for all learning algorithms
+    
+    return: a vector of features of the given state
+    """
+
   def adjustState(self, loc):
     loc = list(loc)
 

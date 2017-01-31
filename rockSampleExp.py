@@ -17,6 +17,9 @@ if __name__ == '__main__':
   rewardVar = 1
   rockNum = 20
   rewardCandNum = 5
+  
+  # feature dimensions, only for REWARD_TYPE == 'feature'
+  dimension = 2
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -66,26 +69,31 @@ if __name__ == '__main__':
 
   rewardSet = []
   
- 
   # THE GENERAL CASE
   # don't set rewards on terminal states (where y == height - 1)
   rocks = random.sample(filter(lambda (x, y): y < cmp.height - 1, cmp.getStates()), rockNum)
 
-  if rewardVar == 1:
-    rewardCandBonus = [1] * rewardCandNum
-  elif rewardVar == 2:
-    rewardCandBonus = [2] * (rewardCandNum / 2) + [1] * (rewardCandNum - rewardCandNum / 2)
-  elif rewardVar == 3:
-    rewardCandBonus = [5] + [1] * (rewardCandNum - 1)
-  else:
-    raise Exception('unknown rewardVar')
+  if config.REWARD_TYPE == 'tabular':
+    if rewardVar == 1:
+      rewardCandBonus = [1] * rewardCandNum
+    elif rewardVar == 2:
+      rewardCandBonus = [2] * (rewardCandNum / 2) + [1] * (rewardCandNum - rewardCandNum / 2)
+    elif rewardVar == 3:
+      rewardCandBonus = [5] + [1] * (rewardCandNum - 1)
+    else:
+      raise Exception('unknown rewardVar')
 
-  # sample rockNum rocks from the state space
-  for candId in xrange(rewardCandNum):
-    # we have some more valuable rocks
-    bonus = random.sample(rocks, rockNum / rewardCandNum)
-    pits = [_ for _ in rocks if not _ in bonus] # pits = rocks \ bonus
-    rewardSet.append(reward2Gen(bonus, pits, rewardCandBonus[candId], -1))
+    # sample rockNum rocks from the state space
+    for candId in xrange(rewardCandNum):
+      # we have some more valuable rocks
+      bonus = random.sample(rocks, rockNum / rewardCandNum)
+      pits = [_ for _ in rocks if not _ in bonus] # pits = rocks \ bonus
+      rewardSet.append(reward2Gen(bonus, pits, rewardCandBonus[candId], -1))
+  elif config.REWARD_TYPE == 'feature':
+    # start with a test case :)
+    rewardSet = [(0, 0), (0, 1), (1, 0), (1, 1)]
+  else:
+    raise Exception('unimplemented reward type ', config.REWARD_TYPE)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 

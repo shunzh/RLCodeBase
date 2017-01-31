@@ -84,7 +84,7 @@ class PolicyGradientQueryAgent(GreedyConstructionPiAgent):
       return getLinearActProb
     else: raise Exception('unknown policy type')
   
-  def findNextPolicy(self, S, A, R, T, s0, psi, maxV):
+  def findNextPolicy(self, S, A, R, T, s0, psi, maxV, q):
     """
     Same arguments as lp.milp
     Return: next policy to add. It's a parameter, not occupancy
