@@ -23,9 +23,6 @@ POLICY_TYPE = 'softmax'
 PG_TYPE = 'pe' # policy evaluation
 #PG_TYPE = 'mc' # Monte Carlo
 
-REWARD_TYPE = 'feature'
-#REWARD_TYPE = 'tabular'
-
 SAMPLE_TIMES = 20
 
 # keep configuration options for output

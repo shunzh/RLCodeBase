@@ -42,13 +42,6 @@ class TabularNavigation(ControlledMarkovProcess):
 
       return transProb.items()
   
-  def getFeatures(self, state):
-    """
-    This not used for all learning algorithms
-    
-    return: a vector of features of the given state
-    """
-
   def adjustState(self, loc):
     loc = list(loc)
 
@@ -88,6 +81,26 @@ class ThreeStateToy(TabularNavigation):
 
 
 class RockCollection(TabularNavigation):
+  def __init__(self, responseTime, width, height, horizon, terminalReward, rockNum, dimension):
+    """
+    args:
+      rockNum: number of rocks to have potentially nontrivial features
+    """
+    RockCollection.__init__(self, responseTime, width, height, horizon, terminalReward)
+    
+    # initialize the features for rocks
+    self.feats = util.Counter()
+    rocks = random.sample(filter(lambda (x, y): y < cmp.height - 1, cmp.getStates()), rockNum)
+    # we assign features randomly for the rocks
+    # different actions share the same feature
+    for rock in rocks:
+      for action in self.getPossibleActions():
+        self.feats[rock, action] = [random.choice([0, 1]) for _ in range(dimension)]
+  
+  def getFeatures(self, state, action):
+    # the features are determined in the constructor function
+    return self.feats(state, action)
+
   def getPossibleActions(self, state=None):
     return [(-1, 1), (0, 1), (1, 1)]
 

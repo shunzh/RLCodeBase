@@ -594,12 +594,8 @@ class GreedyConstructionPiAgent(QTPAgent):
     if hasattr(self, 'computePiValue'):
       # policy gradient agent has different ways to compute values..
       self.computeV = lambda pi, S, A, r, horizon: self.computePiValue(pi, r, horizon)
-    elif self.__class__.__name__ == 'FeatureBasedPolicyQueryAgent':
-      # don't do any computation for feature based methods
-      self.computeV = lambda pi, S, A, r, horizon: None
     else:
-      # TODO make this compatible with feature representation
-      self.computeV = lambda pi, S, A, r, horizon: computeValue(pi, r, S, A)
+      self.computeV = lambda pi, S, A, r, horizon: sum(pi[s, a] * numpy.dot(r, cmp.getFeatures(s, a)) for s in S for a in A)
 
   def computeDominatingPis(self, args, q):
     """
