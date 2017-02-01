@@ -21,7 +21,7 @@ class GreedyConstructionPiAgent(QTPAgent):
       # policy gradient agent has different ways to compute values..
       self.computeV = lambda pi, S, A, r, horizon: self.computePiValue(pi, r, horizon)
     else:
-      self.computeV = lambda pi, S, A, r, horizon: sum(pi[s, a] * numpy.dot(r, cmp.getFeatures(s, a)) for s in S for a in A)
+      self.computeV = lambda pi, S, A, r, horizon: lp.computeValue(pi, r, S, A)
 
   def computeDominatingPis(self, args, q):
     """

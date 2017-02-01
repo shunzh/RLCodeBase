@@ -1,4 +1,5 @@
-from QTPAgent import MILPAgent, QTPAgent
+from QTPAgent import QTPAgent
+from greedyConstructionAgents import MILPAgent
 import easyDomains
 import config
 import util

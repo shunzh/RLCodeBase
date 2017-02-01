@@ -62,12 +62,16 @@ class LPDualAgent(ValueIterationAgent):
 LearningAgent = LPDualAgent
 
 class QTPAgent:
-  def __init__(self, cmp, rewardSet, initialPhi, queryType,
+  def __init__(self, cmp, ws, initialPhi, queryType,
                gamma, clusterDistance=0):
     # underlying cmp
     self.cmp = cmp
     # set of possible reward functions
-    self.rewardSet = rewardSet
+    self.ws = ws
+    # create the reward function representation for each w \in ws
+    # FIXME let's assume feature decomposition in general from now on, unless we further change our research direction
+    # will make this compatible with other algorithms later 
+    self.rewardSet = map(lambda w: self.wToReward(w), ws)
     self.gamma = gamma
     # init belief on rewards in rewardSet
     self.phi = initialPhi
@@ -155,8 +159,32 @@ class QTPAgent:
       return self.rewardSet[phi]
     else:
       # now we have the feature-based representation of rewardSet
-      return lambda state, action: sum([numpy.dot(r, self.cmp.getFeatures(state, action)) * p for r, p in zip(self.rewardSet, phi)])
+      return lambda state, action: sum([reward(state, action) * p for reward, p in zip(self.rewardSet, phi)])
   
+  def wToReward(self, w):
+    """
+    convert \omega to a reward function
+    
+    return: a function of state action pair that returns its reward under reward parameter w
+    """
+    return lambda state, action: numpy.dot(w, self.cmp.getFeatures(state, action))
+
+  def optimizeW(self, w):
+    """
+    optimize a reward parameter w
+    
+    return: the occupancy measure the optimal policy under w
+    """
+    horizon = self.cmp.horizon
+    terminalReward = self.cmp.terminalReward
+
+    rewardFunc = self.wToReward(w)
+    cmp = deepcopy(self.cmp)
+    cmp.getReward = rewardFunc
+    agent = LearningAgent(cmp, discount=self.gamma, iterations=horizon, initValues=terminalReward)
+    agent.learn()
+    return agent.x
+
   def getVIAgent(self, phi, posterior=False):
     """
     Return a trained value iteration agent with given phi.

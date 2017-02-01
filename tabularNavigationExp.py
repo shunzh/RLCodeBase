@@ -13,26 +13,10 @@ import getopt
 import config
 from cmp import QueryType
 from policyGradientAgents import AprilAgent
+from featureBasedAgents import FeatureBasedPolicyQueryAgent
 
 flags = "r:l:s:d:a:vq:P:t:k:n:y:"
 
-"""
-Algorithms:
-- E-JQTP
-- AQTP
-- AQTP-NF
-- opt query
-- random query
-- no query
-
-Setting:
-- response time (axis)
-
-Show:
-- expectation Q
-- computation time
-- paired difference between JQTP and AQTP
-"""
 def experiment(cmp, rewardSet, initialPhi):
   # discount factor
   gamma = 1
@@ -85,7 +69,7 @@ def experiment(cmp, rewardSet, initialPhi):
     print 'true reward', trueRewardIdx
 
   # continue initializing the cmp object
-  cmp.decorate(gamma, queries, trueRewardIdx, rewardSet[trueRewardIdx])
+  cmp.decorate(gamma, queries)
   cmp.setPossibleRewardValues([0, 1])
 
   if agentName == 'JQTP' or agentName == 'NQ' or agentName == 'WAIT':
@@ -124,6 +108,8 @@ def experiment(cmp, rewardSet, initialPhi):
       config.SAMPLES_TIMES = 50
     else:
       raise "unknown april agent"
+  elif agentName == "FEAT-GREEDY":
+    agent = FeatureBasedPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-QI":
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
   elif agentName == "MILP-POLICY":

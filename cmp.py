@@ -29,16 +29,11 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     # this field is needed for reward queries
     self.possibleRewardValues = None
 
-  def decorate(self, gamma, queries, trueRewardIdx, trueReward):
+  def decorate(self, gamma, queries):
     self.gamma = gamma
     
     # possible queries
     self.queries = queries
-
-    # the real reward function
-    # learn a VI agent on this reward setting, and policy will be decided.
-    self.rewardIdx = trueRewardIdx
-    self.getReward = trueReward
 
   def setPossibleRewardValues(self, rewards):
     self.possibleRewardValues = rewards
@@ -75,6 +70,7 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     The agent should check with this function to see whether there is a feedback
     This is just for the experiment.
     """
+    # FIXME not paying attention here when refactoring
     if self.outsandingQuery != None and self.timer >= self.outsandingQuery[1]:
       # issues a response
       q = self.outsandingQuery[0]

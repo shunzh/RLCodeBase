@@ -47,8 +47,8 @@ if __name__ == '__main__':
   cmp = Domain(responseTime, width, height, horizon = horizon, terminalReward = terminalReward)
 
   # start with a test case :)
-  rewardSet = [(0, 0), (0, 1), (1, 0), (1, 1)]
+  ws = [(0, 0), (0, 1), (1, 0), (1, 1)]
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
-  experiment(cmp, rewardSet, initialPhi)
+  experiment(cmp, ws, initialPhi)

@@ -43,6 +43,9 @@ def lpDual(S, A, r, T, s0, constraints={}):
   Same arguments
   
   constraint [(s, a)] that the agent is required to visit
+  
+  Note that this is a lower level function that does not consider feature extraction.
+  r should be a reward function, not a reward parameter.
   """
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)

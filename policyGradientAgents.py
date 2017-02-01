@@ -1,4 +1,4 @@
-from QTPAgent import GreedyConstructionPiAgent
+from greedyConstructionAgents import GreedyConstructionPiAgent
 import numpy
 import random
 import config
