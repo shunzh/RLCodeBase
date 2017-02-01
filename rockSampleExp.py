@@ -16,7 +16,7 @@ if __name__ == '__main__':
   horizon = height + 1
   rewardVar = 1
   rockNum = 20
-  rewardCandNum = 5
+  rewardCandNum = 4
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -44,7 +44,7 @@ if __name__ == '__main__':
   
   Domain = RockCollection
   terminalReward = util.Counter()
-  cmp = Domain(responseTime, width, height, horizon = horizon, terminalReward = terminalReward)
+  cmp = Domain(responseTime, width, height, horizon, terminalReward, rockNum)
 
   # start with a test case :)
   ws = [(0, 0), (0, 1), (1, 0), (1, 1)]

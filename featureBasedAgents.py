@@ -8,8 +8,8 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
     # step size for local search
     self.epsilon = 0.01
     # call the parent class.
-    # note that query iteration has to be turned on for this method, as discussed in our report
-    GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
+    # FIXME note that query iteration needs to be turned on for this method, as discussed in our report
+    GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=False)
 
   def findNextPolicy(self, S, A, R, T, s0, psi, maxV, q):
     """
@@ -21,14 +21,14 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
     dimension = config.DIMENSION
     # first, we find all the verticies formed by occupancies in q and the borders [0, config.WEIGHT_MAX_VALUE] in each dimension
     # start by creating the matrix x^T \Phi \omega
-    fullA = np.array()
+    fullA = np.array((0, dimension))
 
     # add hyperplanes for policies in q
     for x in q:
-      a = np.array()
+      a = np.zeros((1, dimension))
       for i in range(dimension):
         # compute <\Phi_i, x> and add to this a
-        a.append(sum(self.cmp.getFeatures(s, a)[i] * x[s, a] for s in S for a in A))
+        a[i] = sum(self.cmp.getFeatures(s, act)[i] * x[s, act] for s in S for act in A)
       
       # add a vector of feature occupancy of policy x to fullA
       np.vstack((fullA, a))
@@ -39,17 +39,17 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
       a = np.zeros(dimension)
       a[i] = 1
       # left border
-      np.vstack(fullA, a)
-      np.vstack(fullB, 0)
+      np.vstack((fullA, a))
+      np.vstack((fullB, 0))
       # right border
-      np.vstack(fullA, a)
-      np.vstack(fullB, config.WEIGHT_MAX_VALUE)
+      np.vstack((fullA, a))
+      np.vstack((fullB, config.WEIGHT_MAX_VALUE))
       
     # now iterate over all verticies 
     maxEUS = -np.inf
     optPi = None
     from itertools import combinations
-    for subset in combinations(len(fullA), dimension + 1):
+    for subset in combinations(range(len(fullA)), dimension + 1):
       # TODO filter the subset that have borders of the same dimension to make this process more efficient
 
       a = fullA[subset]

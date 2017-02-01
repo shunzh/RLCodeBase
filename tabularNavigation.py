@@ -81,27 +81,30 @@ class ThreeStateToy(TabularNavigation):
 
 
 class RockCollection(TabularNavigation):
-  def __init__(self, responseTime, width, height, horizon, terminalReward, rockNum, dimension):
+  def __init__(self, responseTime, width, height, horizon, terminalReward, rockNum):
     """
     args:
       rockNum: number of rocks to have potentially nontrivial features
       dimension: dimensionality of the features
     """
-    RockCollection.__init__(self, responseTime, width, height, horizon, terminalReward)
+    TabularNavigation.__init__(self, responseTime, width, height, horizon, terminalReward)
     
     # initialize the features for rocks
     # assume each feature for rocks can be either 1 or 0
     self.feats = util.Counter()
-    rocks = random.sample(filter(lambda (x, y): y < cmp.height - 1, cmp.getStates()), rockNum)
+    rocks = random.sample(filter(lambda (x, y): y < height - 1, self.getStates()), rockNum)
     # we assign features randomly for the rocks
     # let different actions share the same feature
-    for rock in rocks:
+    for state in self.getStates():
       for action in self.getPossibleActions():
-        self.feats[rock, action] = [random.choice([0, 1]) for _ in range(dimension)]
+        if state in rocks:
+          self.feats[state, action] = [random.choice([0, 1]) for _ in range(config.DIMENSION)]
+        else:
+          self.feats[state, action] = [0,] * config.DIMENSION
   
   def getFeatures(self, state, action):
     # the features are determined in the constructor function
-    return self.feats(state, action)
+    return self.feats[state, action]
 
   def getPossibleActions(self, state=None):
     return [(-1, 1), (0, 1), (1, 1)]

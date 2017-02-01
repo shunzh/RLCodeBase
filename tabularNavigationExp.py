@@ -108,10 +108,11 @@ def experiment(cmp, rewardSet, initialPhi):
       config.SAMPLES_TIMES = 50
     else:
       raise "unknown april agent"
-  elif agentName == "FEAT-GREEDY":
-    agent = FeatureBasedPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-QI":
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
+  elif agentName == "FEAT-GREEDY":
+    queryType = QueryType.POLICY
+    agent = FeatureBasedPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-POLICY":
     queryType = QueryType.POLICY
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)

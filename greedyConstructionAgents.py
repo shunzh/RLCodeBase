@@ -64,20 +64,15 @@ class GreedyConstructionPiAgent(QTPAgent):
     args['q'] = q 
     
     # start with the prior optimal policy
-    x = self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True).x
+    q = [self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True).x]
     # start adding following policies
     for i in range(1, k):
       if config.VERBOSE: print 'iter.', i
       x = self.findNextPolicy(**args)
       q.append(x)
 
-      args['maxV'] = []
-      for rewardId in xrange(rewardCandNum):
-        args['maxV'].append(max([self.computeV(pi, args['S'], args['A'], args['R'][rewardId], horizon) for pi in q]))
-      if config.VERBOSE: print 'maxV', args['maxV']
-
-    objValue = sum(args['maxV'][idx] * self.phi[idx] for idx in range(rewardCandNum))
-    if config.VERBOSE: print 'eus value', objValue
+    #objValue = lp.computeObj()
+    #if config.VERBOSE: print 'eus value', objValue
 
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
@@ -155,7 +150,9 @@ class GreedyConstructionPiAgent(QTPAgent):
 
 
 class MILPAgent(GreedyConstructionPiAgent):
-  def findNextPolicy(self, S, A, R, T, s0, psi, maxV, q):
+  def findNextPolicy(self, S, A, R, T, s0, psi, q):
+    # TODO
+    maxV = []
     return lp.milp(S, A, R, T, s0, psi, maxV)
 
 
