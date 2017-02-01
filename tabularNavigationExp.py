@@ -1,5 +1,6 @@
 from QTPAgent import AlternatingQTPAgent, JointQTPAgent, RandomQueryAgent,\
-  PriorTPAgent, MILPAgent, OptimalPolicyQueryAgent, MILPDemoAgent, OptimalPartialPolicyQueryAgent
+  PriorTPAgent, OptimalPolicyQueryAgent 
+from greedyConstructionAgents import MILPAgent, MILPDemoAgent
 from actionQueryAgents import HeuristicAgent, ActiveSamplingAgent,\
   MILPActionAgent
 from trajAgents import BeliefChangeTrajAgent, RandomTrajAgent, DisagreeTrajAgent,\
@@ -137,12 +138,6 @@ def experiment(cmp, rewardSet, initialPhi):
   elif agentName == "OPT-POLICY-ACT":
     queryType = QueryType.ACTION
     agent = OptimalPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == "OPT-TRAJ-SIMILAR":
-    queryType = QueryType.SIMILAR
-    agent = OptimalPartialPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
-  elif agentName == "OPT-TRAJ-COMMIT":
-    queryType = QueryType.COMMITMENT
-    agent = OptimalPartialPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-DEMO-BATCH":
     # generate policy query first (so we call MILPAgent) and then sample trajectories
     queryType = QueryType.DEMONSTRATION

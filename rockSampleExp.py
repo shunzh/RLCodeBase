@@ -18,9 +18,6 @@ if __name__ == '__main__':
   rockNum = 20
   rewardCandNum = 5
   
-  # feature dimensions, only for REWARD_TYPE == 'feature'
-  dimension = 2
-
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
   except getopt.GetoptError:

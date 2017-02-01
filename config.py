@@ -27,3 +27,7 @@ SAMPLE_TIMES = 20
 
 # keep configuration options for output
 opts = ''
+
+# assume that the weights of features have the maximum value of 1
+WEIGHT_MAX_VALUE = 1
+DIMENSION = 2

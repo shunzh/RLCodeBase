@@ -85,14 +85,16 @@ class RockCollection(TabularNavigation):
     """
     args:
       rockNum: number of rocks to have potentially nontrivial features
+      dimension: dimensionality of the features
     """
     RockCollection.__init__(self, responseTime, width, height, horizon, terminalReward)
     
     # initialize the features for rocks
+    # assume each feature for rocks can be either 1 or 0
     self.feats = util.Counter()
     rocks = random.sample(filter(lambda (x, y): y < cmp.height - 1, cmp.getStates()), rockNum)
     # we assign features randomly for the rocks
-    # different actions share the same feature
+    # let different actions share the same feature
     for rock in rocks:
       for action in self.getPossibleActions():
         self.feats[rock, action] = [random.choice([0, 1]) for _ in range(dimension)]
