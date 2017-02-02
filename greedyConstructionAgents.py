@@ -39,12 +39,46 @@ class GreedyConstructionPiAgent(QTPAgent):
       policyBins[rewardId] = [1 if idx == maxIdx else 0 for idx in xrange(len(q))]
     return policyBins
   
+  def queryIteration(self, args, q, k):
+    # FIXME need debugging
+    numOfIters = 0
+    rewardCandNum = len(self.rewardSet)
+    responseTime = self.cmp.getResponseTime()
+    horizon = self.cmp.horizon
+    terminalReward = self.cmp.terminalReward
+
+    objValue = lp.computeObj(q, self.phi, args['S'], args['A'], args['R'])
+
+    while True:
+      # compute dominance
+      policyBins = self.computeDominatingPis(args, q)
+
+      # one iteration
+      newQ = []
+      for i in range(k):
+        # which reward candidates the i-th policy dominates?
+        # psi is not normalized, which is fine, since we only needs the optimizing policy
+        psi = [self.phi[idx] if policyBins[idx][i] == 1 else 0 for idx in xrange(rewardCandNum)]
+        if config.VERBOSE: print i, psi
+        agent = self.getFiniteVIAgent(psi, horizon - responseTime, terminalReward, posterior=True)
+        newQ.append(agent.x)
+
+      # compute new eus
+      newObjValue = lp.computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
+      if config.VERBOSE: print newObjValue
+      assert newObjValue >= objValue - 0.001, '%f turns to %f' % (objValue, newObjValue)
+      numOfIters += 1
+      if newObjValue <= objValue: break
+      else:
+        objValue = newObjValue
+        q = newQ
+    if config.VERBOSE: print numOfIters
+    
+    return q
+
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
     self.args = args # save a copy
-    rewardCandNum = len(self.rewardSet)
-
-    responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
     terminalReward = self.cmp.terminalReward
 
@@ -57,7 +91,6 @@ class GreedyConstructionPiAgent(QTPAgent):
     bestQ = None
     bestEUS = -numpy.inf
     
-    args['maxV'] = [-numpy.inf] * rewardCandNum
     # keep a copy of currently added policies. may not be used.
     # note that this is passing by inference
     
@@ -76,33 +109,7 @@ class GreedyConstructionPiAgent(QTPAgent):
 
     # query iteration
     # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
-    if self.qi:
-      # FIXME need debugging
-      numOfIters = 0
-      while True:
-        # compute dominance
-        policyBins = self.computeDominatingPis(args, q)
-
-        # one iteration
-        newQ = []
-        for i in range(k):
-          # which reward candidates the i-th policy dominates?
-          # psi is not normalized, which is fine, since we only needs the optimizing policy
-          psi = [self.phi[idx] if policyBins[idx][i] == 1 else 0 for idx in xrange(rewardCandNum)]
-          if config.VERBOSE: print i, psi
-          agent = self.getFiniteVIAgent(psi, horizon - responseTime, terminalReward, posterior=True)
-          newQ.append(agent.x)
-
-        # compute new eus
-        newObjValue = lp.computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
-        if config.VERBOSE: print newObjValue
-        assert newObjValue >= objValue - 0.001, '%f turns to %f' % (objValue, newObjValue)
-        numOfIters += 1
-        if newObjValue <= objValue: break
-        else:
-          objValue = newObjValue
-          q = newQ
-      if config.VERBOSE: print numOfIters
+    if self.qi: q = self.queryIteration(args, q, k)
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
@@ -151,8 +158,14 @@ class GreedyConstructionPiAgent(QTPAgent):
 
 class MILPAgent(GreedyConstructionPiAgent):
   def findNextPolicy(self, S, A, R, T, s0, psi, q):
-    # TODO
+    rewardCandNum = len(self.rewardSet)
+    horizon = self.cmp.horizon
+
     maxV = []
+    for rewardId in xrange(rewardCandNum):
+      maxV.append(max([self.computeV(pi, S, A, R[rewardId], horizon) for pi in q]))
+    
+    # solve a MILP problem
     return lp.milp(S, A, R, T, s0, psi, maxV)
 
 

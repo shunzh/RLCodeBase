@@ -9,16 +9,16 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
     self.epsilon = 0.01
     # call the parent class.
     # FIXME note that query iteration needs to be turned on for this method, as discussed in our report
-    GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=False)
+    GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
 
-  def findNextPolicy(self, S, A, R, T, s0, psi, maxV, q):
+  def findNextPolicy(self, S, A, R, T, s0, psi, q):
     """
     We exploit the fact that the reward candidates are linearly parameterizable.
     We find all the verticies formed by previous policies, and optimize EUS locally.
     
     Note that R is a set of parameters.
     """
-    print len(q)
+    if config.VERBOSE: print len(q)
     dimension = config.DIMENSION + 1 # V^\pi is the last variable
     # first, we find all the verticies formed by occupancies in q and the borders [0, config.WEIGHT_MAX_VALUE] in each dimension
     # start by creating the matrix x^T \Phi \omega
@@ -59,7 +59,7 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
       b = fullB[subset]
       
       if np.linalg.matrix_rank(a) < dimension:
-        print 'not solvable'
+        if config.VERBOSE: print 'not solvable'
         continue
 
       try:
@@ -71,9 +71,10 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
         else:
           raise
       
-      print 'a', a
-      print 'b', b
-      print 'intersect at', w
+      if config.VERBOSE:
+        print 'a', a
+        print 'b', b
+        print 'intersect at', w
 
       w = w[:-1] # the last one is the paramter for V
 

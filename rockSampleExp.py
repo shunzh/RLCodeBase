@@ -16,7 +16,6 @@ if __name__ == '__main__':
   horizon = height + 1
   rewardVar = 1
   rockNum = 20
-  rewardCandNum = 4
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -35,20 +34,20 @@ if __name__ == '__main__':
         raise Exception('undefined number of rocks')
     elif opt == '-k':
       config.NUMBER_OF_RESPONSES = int(arg)
-    elif opt == '-y':
-      rewardVar = int(arg)
     elif opt == '-r':
       random.seed(int(arg))
       numpy.random.seed(int(arg))
-  config.opts = '_'.join(map(str, [rewardCandNum, config.NUMBER_OF_QUERIES, config.NUMBER_OF_RESPONSES, rewardVar]))
   
   Domain = RockCollection
   terminalReward = util.Counter()
   cmp = Domain(responseTime, width, height, horizon, terminalReward, rockNum)
 
   # start with a test case :)
-  ws = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+  ws = [(x, y) for x in numpy.arange(-1,1,0.2) for y in numpy.arange(-1,1,0.2)]
+  rewardCandNum = len(ws)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
+
+  config.opts = '_'.join(map(str, [rewardCandNum, config.NUMBER_OF_QUERIES, config.NUMBER_OF_RESPONSES]))
 
   experiment(cmp, ws, initialPhi)
