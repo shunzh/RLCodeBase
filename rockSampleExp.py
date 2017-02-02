@@ -47,7 +47,7 @@ if __name__ == '__main__':
   cmp = Domain(responseTime, width, height, horizon, terminalReward, rockNum)
 
   # start with a test case :)
-  ws = [(0, 0), (0, 1), (1, 0), (1, 1)]
+  ws = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 

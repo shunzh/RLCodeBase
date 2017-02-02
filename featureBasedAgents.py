@@ -36,26 +36,17 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
       fullA = np.vstack((fullA, a))
     fullB = np.zeros((len(fullA), 1))
     
-    print 'first'
-    print fullA
-    print fullB
-
     # add borders
     for i in range(dimension - 1):
       a = np.zeros(dimension)
       a[i] = 1
-      a[dimension - 1] = -1
       # left border
       fullA = np.vstack((fullA, a))
-      fullB = np.vstack((fullB, 0))
+      fullB = np.vstack((fullB, -config.WEIGHT_MAX_VALUE))
       # right border
       fullA = np.vstack((fullA, a))
       fullB = np.vstack((fullB, config.WEIGHT_MAX_VALUE))
       
-    print 'second'
-    print fullA
-    print fullB
-
     # now iterate over all verticies 
     maxEUS = -np.inf
     optPi = None
@@ -67,7 +58,9 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
       a = fullA[subset]
       b = fullB[subset]
       
-      if np.linalg.matrix_rank(a) < dimension: continue
+      if np.linalg.matrix_rank(a) < dimension:
+        print 'not solvable'
+        continue
 
       try:
         w = np.linalg.solve(a, b)
@@ -78,10 +71,14 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
         else:
           raise
       
+      print 'a', a
+      print 'b', b
+      print 'intersect at', w
+
       w = w[:-1] # the last one is the paramter for V
 
       # optimize the reward parameter w and its neighbors to find the one with the highest EUS
-      if any(wi < 0 or wi > config.WEIGHT_MAX_VALUE for wi in w): continue
+      if any(abs(wi) > config.WEIGHT_MAX_VALUE for wi in w): continue
       x = self.optimizeW(np.transpose(w))
 
       # compute EUS of union of q and {x}
