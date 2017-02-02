@@ -61,15 +61,14 @@ class GreedyConstructionPiAgent(QTPAgent):
     args['maxV'] = [-numpy.inf] * rewardCandNum
     # keep a copy of currently added policies. may not be used.
     # note that this is passing by inference
-    args['q'] = q 
     
     # start with the prior optimal policy
-    q = [self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True).x]
+    args['q'] = [self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True).x]
     # start adding following policies
     for i in range(1, k):
       if config.VERBOSE: print 'iter.', i
       x = self.findNextPolicy(**args)
-      q.append(x)
+      args['q'].append(x)
 
     #objValue = lp.computeObj()
     #if config.VERBOSE: print 'eus value', objValue

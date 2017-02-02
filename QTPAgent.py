@@ -167,7 +167,10 @@ class QTPAgent:
     
     return: a function of state action pair that returns its reward under reward parameter w
     """
-    return lambda state, action: numpy.dot(w, self.cmp.getFeatures(state, action))
+    def wtr(state, action):
+      # leave space here for debugging
+      return numpy.dot(w, self.cmp.getFeatures(state, action))
+    return wtr
 
   def optimizeW(self, w):
     """

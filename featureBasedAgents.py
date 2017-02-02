@@ -18,42 +18,57 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
     
     Note that R is a set of parameters.
     """
-    dimension = config.DIMENSION
+    print len(q)
+    dimension = config.DIMENSION + 1 # V^\pi is the last variable
     # first, we find all the verticies formed by occupancies in q and the borders [0, config.WEIGHT_MAX_VALUE] in each dimension
     # start by creating the matrix x^T \Phi \omega
-    fullA = np.array((0, dimension))
+    fullA = np.zeros((0, dimension))
 
     # add hyperplanes for policies in q
     for x in q:
-      a = np.zeros((1, dimension))
-      for i in range(dimension):
+      a = np.zeros(dimension)
+      for i in range(dimension - 1):
         # compute <\Phi_i, x> and add to this a
         a[i] = sum(self.cmp.getFeatures(s, act)[i] * x[s, act] for s in S for act in A)
+      a[dimension - 1] = -1
       
       # add a vector of feature occupancy of policy x to fullA
-      np.vstack((fullA, a))
+      fullA = np.vstack((fullA, a))
     fullB = np.zeros((len(fullA), 1))
     
+    print 'first'
+    print fullA
+    print fullB
+
     # add borders
-    for i in range(dimension):
+    for i in range(dimension - 1):
       a = np.zeros(dimension)
       a[i] = 1
+      a[dimension - 1] = -1
       # left border
-      np.vstack((fullA, a))
-      np.vstack((fullB, 0))
+      fullA = np.vstack((fullA, a))
+      fullB = np.vstack((fullB, 0))
       # right border
-      np.vstack((fullA, a))
-      np.vstack((fullB, config.WEIGHT_MAX_VALUE))
+      fullA = np.vstack((fullA, a))
+      fullB = np.vstack((fullB, config.WEIGHT_MAX_VALUE))
       
+    print 'second'
+    print fullA
+    print fullB
+
     # now iterate over all verticies 
     maxEUS = -np.inf
     optPi = None
     from itertools import combinations
-    for subset in combinations(range(len(fullA)), dimension + 1):
+    for subset in combinations(range(len(fullA)), dimension):
       # TODO filter the subset that have borders of the same dimension to make this process more efficient
+      subset = list(subset)
 
       a = fullA[subset]
       b = fullB[subset]
+      
+      if np.linalg.matrix_rank(a) < dimension: continue
+
       try:
         w = np.linalg.solve(a, b)
       except np.linalg.LinAlgError as err:
@@ -63,8 +78,11 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
         else:
           raise
       
+      w = w[:-1] # the last one is the paramter for V
+
       # optimize the reward parameter w and its neighbors to find the one with the highest EUS
-      x = self.optimizeW(w)
+      if any(wi < 0 or wi > config.WEIGHT_MAX_VALUE for wi in w): continue
+      x = self.optimizeW(np.transpose(w))
 
       # compute EUS of union of q and {x}
       eus = lp.computeObj(q + [x], psi, S, A, R)
