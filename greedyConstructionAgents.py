@@ -57,18 +57,19 @@ class GreedyConstructionPiAgent(QTPAgent):
     bestQ = None
     bestEUS = -numpy.inf
     
-    q = []
     args['maxV'] = [-numpy.inf] * rewardCandNum
     # keep a copy of currently added policies. may not be used.
     # note that this is passing by inference
     
     # start with the prior optimal policy
-    args['q'] = [self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True).x]
+    q = [self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True).x]
+    args['q'] = q
     # start adding following policies
     for i in range(1, k):
       if config.VERBOSE: print 'iter.', i
       x = self.findNextPolicy(**args)
-      args['q'].append(x)
+      q.append(x)
+      args['q'] = q
 
     #objValue = lp.computeObj()
     #if config.VERBOSE: print 'eus value', objValue

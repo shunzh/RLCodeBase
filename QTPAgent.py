@@ -335,7 +335,9 @@ class QTPAgent:
       if sum(phi) != 0:
         phi = [x / sum(phi) for x in phi]
         distr[tuple(phi)] += resProb
-        self.responseToPhi[(tuple(query), res)] = tuple(phi)
+        #FIXME have trouble to hash policies
+        # this will only be used in simulation, called by `respond' method
+        #self.responseToPhi[(tuple(query), res)] = tuple(phi)
 
     # should be true if implemented correctly
     assert all(candAllocated)
