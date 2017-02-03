@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
   # rock collection
   cmp = RockCollection(responseTime, width, height, horizon, terminalReward, rockNum)
-  ws = [(random.random(), random.random(), random.random()) for _ in range(50)]
+  ws = [(random.random(), random.random(), random.random()) for _ in range(rewardCandNum)]
 
   rewardCandNum = len(ws)
 
@@ -51,4 +51,5 @@ if __name__ == '__main__':
 
   config.opts = '_'.join(map(str, [rewardCandNum, config.NUMBER_OF_RESPONSES]))
 
+  print config.opts
   experiment(cmp, ws, initialPhi)
