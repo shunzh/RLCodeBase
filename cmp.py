@@ -29,6 +29,10 @@ class ControlledMarkovProcess(MarkovDecisionProcess):
     # this field is needed for reward queries
     self.possibleRewardValues = None
 
+  def getFeatures(self, state, action):
+    # the features are determined in the constructor function
+    return self.feats[state, action]
+
   def decorate(self, gamma, queries):
     self.gamma = gamma
     

@@ -1,5 +1,5 @@
 import util
-from tabularNavigation import RockCollection
+from tabularNavigation import RockCollection, ThreeStateToy
 from tabularNavigationExp import experiment
 import getopt
 import sys
@@ -38,12 +38,14 @@ if __name__ == '__main__':
       random.seed(int(arg))
       numpy.random.seed(int(arg))
   
-  Domain = RockCollection
   terminalReward = util.Counter()
-  cmp = Domain(responseTime, width, height, horizon, terminalReward, rockNum)
+  cmp = RockCollection(responseTime, width, height, horizon, terminalReward, rockNum)
+  #cmp = ThreeStateToy(responseTime, horizon, terminalReward)
 
-  # start with a test case :)
+  # rock collection
   ws = [(x, y) for x in numpy.arange(-1,1,0.2) for y in numpy.arange(-1,1,0.2)]
+  # three states
+  #ws = [(-1,), (0,), (1,)]
   rewardCandNum = len(ws)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum

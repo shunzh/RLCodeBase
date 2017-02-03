@@ -63,6 +63,14 @@ class ThreeStateToy(TabularNavigation):
     self.noise = 0
     ControlledMarkovProcess.__init__(self, responseTime, horizon, terminalReward)
 
+    self.feats = util.Counter()
+    for s in self.getStates():
+      for a in self.getPossibleActions():
+        self.feats[(s, a)] = [0]
+    self.feats[(0, 0), (-1, 0)] = [-1]
+    self.feats[(0, 0), (1, 0)] = [1]
+    self.feats[(0, 0), (0, 1)] = [0]
+
   def getStates(self):
     return [(0, 0), (-1, 0), (1, 0), (0, 1)]
   
@@ -102,35 +110,11 @@ class RockCollection(TabularNavigation):
         else:
           self.feats[state, action] = [0,] * config.DIMENSION
   
-  def getFeatures(self, state, action):
-    # the features are determined in the constructor function
-    return self.feats[state, action]
-
   def getPossibleActions(self, state=None):
     return [(-1, 1), (0, 1), (1, 1)]
 
   def isTerminal(self, state):
     return state[1] == self.height - 1
-
-
-class RockCollectionDiagonal(TabularNavigation):
-  def getPossibleActions(self, state=None):
-    return [(1, 0), (0, 1)]
-
-  def getTransitionStatesAndProbs(self, state, action):
-    """
-    Should be careful for rock collection domain.
-    When the agent reaches the border, any action it takes must take it one step to the goal deterministically.
-    So any policy has a finite horizon. This is essential for our way of implementing trajectory queries
-    (because the distance metric requires sub-trajectories have the same length).
-    """
-    x, y = state
-    if x == self.width - 1:
-      return [((x, y+1), 1)]
-    elif y == self.height - 1:
-      return [((x+1, y), 1)]
-    else:
-      return TabularNavigation.getTransitionStatesAndProbs(self, state, action)
 
 
 class TabularNavigationKWay(TabularNavigation):

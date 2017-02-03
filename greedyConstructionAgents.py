@@ -59,20 +59,17 @@ class GreedyConstructionPiAgent(QTPAgent):
         # which reward candidates the i-th policy dominates?
         # psi is not normalized, which is fine, since we only needs the optimizing policy
         psi = [self.phi[idx] if policyBins[idx][i] == 1 else 0 for idx in xrange(rewardCandNum)]
-        if config.VERBOSE: print i, psi
         agent = self.getFiniteVIAgent(psi, horizon - responseTime, terminalReward, posterior=True)
         newQ.append(agent.x)
 
       # compute new eus
       newObjValue = lp.computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
-      if config.VERBOSE: print newObjValue
       assert newObjValue >= objValue - 0.001, '%f turns to %f' % (objValue, newObjValue)
       numOfIters += 1
       if newObjValue <= objValue: break
       else:
         objValue = newObjValue
         q = newQ
-    if config.VERBOSE: print numOfIters
     
     return q
 
