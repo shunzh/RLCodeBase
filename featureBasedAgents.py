@@ -2,14 +2,23 @@ from greedyConstructionAgents import GreedyConstructionPiAgent
 import numpy as np
 import config
 import lp
+import random
 
 class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
   def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma):
     # step size for local search
-    self.epsilon = 0.01
+    self.epsilon = 0.1
     # call the parent class.
     # FIXME note that query iteration needs to be turned on for this method, as discussed in our report
     GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
+
+  def sampleNeighbor(self, w):
+    wp = []
+    for wi in w:
+      candidates = [wi, wi + self.epsilon, wi - self.epsilon]
+      candidates = filter(lambda _: _ >= -config.WEIGHT_MAX_VALUE and _ <= config.WEIGHT_MAX_VALUE, candidates)
+      wp.append(random.choice(wi))
+    return wp
 
   def findNextPolicy(self, S, A, R, T, s0, psi, q):
     """
@@ -80,10 +89,22 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
 
       # optimize the reward parameter w and its neighbors to find the one with the highest EUS
       if any(abs(wi) > config.WEIGHT_MAX_VALUE for wi in w): continue
+
       x = self.optimizeW(np.transpose(w))
+      eus = lp.computeObj(q + [x], psi, S, A, R)
+      for iter in range(5):
+        betterNeighborFound = False
+        for neighIdx in range(5):
+          wp = self.sampleNeighbor(w)
+          xp = self.optimizeW(np.transpose(w))
+          eusp = lp.computeObj(q + [xp], psi, S, A, R)
+          if eusp > eus:
+            w = wp
+            betterNeighborFound = True
+            break
+        if not betterNeighborFound: break
 
       # compute EUS of union of q and {x}
-      eus = lp.computeObj(q + [x], psi, S, A, R)
       if eus > maxEUS:
         maxEUS = eus
         optPi = x
