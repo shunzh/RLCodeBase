@@ -92,6 +92,9 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
 
       x = self.optimizeW(np.transpose(w))
       eus = lp.computeObj(q + [x], psi, S, A, R)
+      """
+      # code for local search
+      # didn't find better ones in the neighbor. why?
       for iter in range(5):
         betterNeighborFound = False
         for neighIdx in range(5):
@@ -103,6 +106,7 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
             betterNeighborFound = True
             break
         if not betterNeighborFound: break
+      """
 
       # compute EUS of union of q and {x}
       if eus > maxEUS:

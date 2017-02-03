@@ -9,13 +9,13 @@ import config
 import numpy
 
 if __name__ == '__main__':
-  width = 5
+  width = 10
   height = 30
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + 1
   rewardVar = 1
-  rockNum = 20
+  rockNum = 50
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -43,7 +43,7 @@ if __name__ == '__main__':
   #cmp = ThreeStateToy(responseTime, horizon, terminalReward)
 
   # rock collection
-  ws = [(x, y) for x in numpy.arange(-1,1,0.2) for y in numpy.arange(-1,1,0.2)]
+  ws = [(x, y) for x in numpy.arange(-1,1,0.1) for y in numpy.arange(-1,1,0.1)]
   # three states
   #ws = [(-1,), (0,), (1,)]
   rewardCandNum = len(ws)

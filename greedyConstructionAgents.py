@@ -39,13 +39,14 @@ class GreedyConstructionPiAgent(QTPAgent):
       policyBins[rewardId] = [1 if idx == maxIdx else 0 for idx in xrange(len(q))]
     return policyBins
   
-  def queryIteration(self, args, q, k):
+  def queryIteration(self, args, q):
     # FIXME need debugging
     numOfIters = 0
     rewardCandNum = len(self.rewardSet)
     responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
     terminalReward = self.cmp.terminalReward
+    k = size(q)
 
     objValue = lp.computeObj(q, self.phi, args['S'], args['A'], args['R'])
 
@@ -64,6 +65,7 @@ class GreedyConstructionPiAgent(QTPAgent):
 
       # compute new eus
       newObjValue = lp.computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
+      print newObjValue, objValue
       assert newObjValue >= objValue - 0.001, '%f turns to %f' % (objValue, newObjValue)
       numOfIters += 1
       if newObjValue <= objValue: break
@@ -99,14 +101,12 @@ class GreedyConstructionPiAgent(QTPAgent):
       if config.VERBOSE: print 'iter.', i
       x = self.findNextPolicy(**args)
       q.append(x)
+
+      # query iteration
+      # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
+      if self.qi: q = self.queryIteration(args, q, k)
+
       args['q'] = q
-
-    #objValue = lp.computeObj()
-    #if config.VERBOSE: print 'eus value', objValue
-
-    # query iteration
-    # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
-    if self.qi: q = self.queryIteration(args, q, k)
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q

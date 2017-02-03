@@ -114,7 +114,7 @@ def experiment(cmp, rewardSet, initialPhi):
     agent = FeatureBasedPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-POLICY":
     queryType = QueryType.POLICY
-    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+    agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
   elif agentName == "MILP-QI-POLICY":
     queryType = QueryType.POLICY
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
