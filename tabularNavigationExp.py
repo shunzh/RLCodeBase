@@ -12,7 +12,8 @@ import random
 import getopt
 import config
 from cmp import QueryType
-from featureBasedAgents import FeatureBasedPolicyQueryAgent
+from featureBasedAgents import FeatureBasedPolicyQueryAgent,\
+  RandomFeatureQueryAgent
 
 flags = "r:l:s:d:a:vq:P:t:k:n:y:"
 
@@ -112,6 +113,9 @@ def experiment(cmp, rewardSet, initialPhi):
   elif agentName == "FEAT-GREEDY":
     queryType = QueryType.POLICY
     agent = FeatureBasedPolicyQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
+  elif agentName == "FEAT-RANDOM":
+    queryType = QueryType.POLICY
+    agent = RandomFeatureQueryAgent(cmp, rewardSet, initialPhi, queryType, gamma)
   elif agentName == "MILP-POLICY":
     queryType = QueryType.POLICY
     agent = MILPAgent(cmp, rewardSet, initialPhi, queryType, gamma, qi=True)

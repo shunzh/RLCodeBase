@@ -9,13 +9,14 @@ import config
 import numpy
 
 if __name__ == '__main__':
-  width = 10
+  width = 5
   height = 30
   # the time step that the agent receives the response
   responseTime = 0
   horizon = height + 1
   rewardVar = 1
-  rockNum = 50
+  rockNum = 20
+  rewardCandNum = 50
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)
@@ -25,13 +26,7 @@ if __name__ == '__main__':
     if opt == '-t':
       config.TRAJECTORY_LENGTH = int(arg)
     elif opt == '-n':
-      if int(arg) == 5:
-        pass
-      elif int(arg) == 10:
-        rockNum = 40
-        rewardCandNum = 10
-      else:
-        raise Exception('undefined number of rocks')
+      rewardCandNum = int(arg)
     elif opt == '-k':
       config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-r':
@@ -39,17 +34,21 @@ if __name__ == '__main__':
       numpy.random.seed(int(arg))
   
   terminalReward = util.Counter()
-  cmp = RockCollection(responseTime, width, height, horizon, terminalReward, rockNum)
-  #cmp = ThreeStateToy(responseTime, horizon, terminalReward)
+  
+  # three-state domain
+  """
+  cmp = ThreeStateToy(responseTime, horizon, terminalReward)
+  ws = [(-1,), (1,)]
+  """
 
   # rock collection
-  ws = [(x, y) for x in numpy.arange(-1,1,0.1) for y in numpy.arange(-1,1,0.1)]
-  # three states
-  #ws = [(-1,), (0,), (1,)]
+  cmp = RockCollection(responseTime, width, height, horizon, terminalReward, rockNum)
+  ws = [(random.random(), random.random(), random.random()) for _ in range(50)]
+
   rewardCandNum = len(ws)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
-  config.opts = '_'.join(map(str, [rewardCandNum, config.NUMBER_OF_QUERIES, config.NUMBER_OF_RESPONSES]))
+  config.opts = '_'.join(map(str, [rewardCandNum, config.NUMBER_OF_RESPONSES]))
 
   experiment(cmp, ws, initialPhi)

@@ -41,12 +41,11 @@ class GreedyConstructionPiAgent(QTPAgent):
   
   def queryIteration(self, args, q):
     # FIXME need debugging
-    numOfIters = 0
     rewardCandNum = len(self.rewardSet)
     responseTime = self.cmp.getResponseTime()
     horizon = self.cmp.horizon
     terminalReward = self.cmp.terminalReward
-    k = size(q)
+    k = len(q)
 
     objValue = lp.computeObj(q, self.phi, args['S'], args['A'], args['R'])
 
@@ -65,15 +64,14 @@ class GreedyConstructionPiAgent(QTPAgent):
 
       # compute new eus
       newObjValue = lp.computeObj(newQ, self.phi, args['S'], args['A'], args['R'])
-      print newObjValue, objValue
+      if config.VERBOSE: print newObjValue, objValue
       assert newObjValue >= objValue - 0.001, '%f turns to %f' % (objValue, newObjValue)
-      numOfIters += 1
       if newObjValue <= objValue: break
       else:
         objValue = newObjValue
         q = newQ
     
-    return q
+    return q, objValue
 
   def learn(self):
     args = easyDomains.convert(self.cmp, self.rewardSet, self.phi)
@@ -96,6 +94,8 @@ class GreedyConstructionPiAgent(QTPAgent):
     # start with the prior optimal policy
     q = [self.getFiniteVIAgent(self.phi, horizon, terminalReward, posterior=True).x]
     args['q'] = q
+    objValue = None # k won't be 1, fine
+
     # start adding following policies
     for i in range(1, k):
       if config.VERBOSE: print 'iter.', i
@@ -104,14 +104,14 @@ class GreedyConstructionPiAgent(QTPAgent):
 
       # query iteration
       # for each x \in q, what is q -> x; \psi? replace x with the optimal posterior policy
-      if self.qi: q = self.queryIteration(args, q, k)
+      if self.qi: q, objValue = self.queryIteration(args, q)
 
       args['q'] = q
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
       #return q, objValue # THIS RETURNS EUS, NOT EPU
-      return q, None
+      return q, objValue
     if self.queryType == QueryType.PARTIAL_POLICY:
       idx = 0
       objValue = self.getQValue(self.cmp.state, None, q)

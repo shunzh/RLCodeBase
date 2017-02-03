@@ -8,7 +8,7 @@ SAVE_TO_FILE = True
 PRINT = 'perf'
 
 NUMBER_OF_QUERIES = 1
-NUMBER_OF_RESPONSES = 2
+NUMBER_OF_RESPONSES = 3
 
 # a parameter for k way domains
 CONNECTION_TYPE = 'grid'
@@ -30,4 +30,4 @@ opts = ''
 
 # define the range of weights be between [-WEIGHT_MAX_VALUE, WEIGHT_MAX_VALUE]
 WEIGHT_MAX_VALUE = 1
-DIMENSION = 2
+DIMENSION = 3

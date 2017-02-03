@@ -13,6 +13,11 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
     GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=True)
 
   def sampleNeighbor(self, w):
+    """
+    sample a reward parameter near w
+    
+    DUMMY not implementing in this way now.
+    """
     wp = []
     for wi in w:
       candidates = [wi, wi + self.epsilon, wi - self.epsilon]
@@ -59,6 +64,7 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
     # now iterate over all verticies 
     maxEUS = -np.inf
     optPi = None
+    ws = []
     from itertools import combinations
     for subset in combinations(range(len(fullA)), dimension):
       # TODO filter the subset that have borders of the same dimension to make this process more efficient
@@ -71,14 +77,7 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
         if config.VERBOSE: print 'not solvable'
         continue
 
-      try:
-        w = np.linalg.solve(a, b)
-      except np.linalg.LinAlgError as err:
-        if 'Singular matrix' in err.message:
-          print 'this matrix is singular, continue'
-          continue
-        else:
-          raise
+      w = np.linalg.solve(a, b)
       
       if config.VERBOSE:
         print 'a', a
@@ -86,6 +85,10 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
         print 'intersect at', w
 
       w = w[:-1] # the last one is the paramter for V
+      for wi in ws:
+        if wi == ws: continue
+      else:
+        ws.append((w,))
 
       # optimize the reward parameter w and its neighbors to find the one with the highest EUS
       if any(abs(wi) > config.WEIGHT_MAX_VALUE for wi in w): continue
@@ -114,3 +117,18 @@ class FeatureBasedPolicyQueryAgent(GreedyConstructionPiAgent):
         optPi = x
     
     return optPi
+
+
+class RandomFeatureQueryAgent(GreedyConstructionPiAgent):
+  """
+  find the next policy randomly 
+  """
+  def __init__(self, cmp, rewardSet, initialPhi, queryType, gamma):
+    GreedyConstructionPiAgent.__init__(self, cmp, rewardSet, initialPhi, queryType, gamma, qi=False)
+
+  def findNextPolicy(self, S, A, R, T, s0, psi, q):
+    # find a random w
+    w = np.array([-config.WEIGHT_MAX_VALUE + 2 * config.WEIGHT_MAX_VALUE * random.random() for _ in range(config.DIMENSION)])
+    x = self.optimizeW(np.transpose(w))
+    return x
+
