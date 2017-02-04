@@ -43,13 +43,12 @@ if __name__ == '__main__':
 
   # rock collection
   cmp = RockCollection(responseTime, width, height, horizon, terminalReward, rockNum)
-  ws = [(random.random(), random.random(), random.random()) for _ in range(rewardCandNum)]
+  ws = [[random.random() for dim in range(config.DIMENSION)] for _ in range(rewardCandNum)]
 
   rewardCandNum = len(ws)
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
-  config.opts = '_'.join(map(str, [rewardCandNum, config.NUMBER_OF_RESPONSES]))
+  config.opts = '_'.join(map(str, [rewardCandNum, config.DIMENSION, config.NUMBER_OF_RESPONSES]))
 
-  print config.opts
   experiment(cmp, ws, initialPhi)
