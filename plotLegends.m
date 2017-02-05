@@ -8,10 +8,7 @@ function main()
   end
 
   axis off
-  legend('Greedy q^*_\Pi', 'Feature Based', 'Random Query');
-  %legend('Opt q^*_\Pi', 'Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
-  %legend('Greedy q^*_\Pi', 'Query Projection', 'Belief Change', 'Disagreement', 'Random Query');
+  legend('MILP', 'Feature Based', 'Random Query');
 
-  %set(gcf,'PaperUnits','inches','PaperPosition',[0 0 3 1.5])
   print('-deps', ['rsLegend.eps'], '-r100');
 end

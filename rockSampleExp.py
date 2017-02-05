@@ -49,6 +49,6 @@ if __name__ == '__main__':
 
   initialPhi = [1.0 / rewardCandNum] * rewardCandNum
 
-  config.opts = '_'.join(map(str, [rewardCandNum, config.DIMENSION, config.NUMBER_OF_RESPONSES]))
+  config.opts = '_'.join(map(str, [rewardCandNum, config.NUMBER_OF_RESPONSES]))
 
   experiment(cmp, ws, initialPhi)

@@ -30,4 +30,4 @@ opts = ''
 
 # define the range of weights be between [-WEIGHT_MAX_VALUE, WEIGHT_MAX_VALUE]
 WEIGHT_MAX_VALUE = 1
-DIMENSION = 5
+DIMENSION = 3

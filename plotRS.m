@@ -42,8 +42,7 @@ function main()
   ylim([0; Inf]);
   b = superbar(d, 'E', c, 'BarFaceColor', colors);
 
-  legend('Greedy q^*_\Pi', 'Feature Based', 'Random Query');
-  xlabel('Reward Candidate Numbers')
+  xlabel('Numbers of Reward Candidates')
   ylabel('EVOI');
 
   set(gca, 'Xtick', 1:3, 'XtickLabel', {'10', '50', '100'});
@@ -59,8 +58,7 @@ function main()
   ylim([0; Inf]);
   b = superbar(d, 'E', c, 'BarFaceColor', colors);
 
-  %legend('Greedy q^*_\Pi', 'Feature Based', 'Random Query');
-  xlabel('Reward Candidate Numbers')
+  xlabel('Numbers of Reward Candidates')
   ylabel('Computation Time (sec.)');
 
   set(gca, 'Xtick', 1:3, 'XtickLabel', {'10', '50', '100'});
