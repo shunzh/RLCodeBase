@@ -2,7 +2,8 @@ for i in `seq 0 19`
 do
   echo $i
 
-  t = 2
+  t = 2 # the number of queries
+
   #for agent in OPT-POLICY MILP-POLICY MILP-SIMILAR SIMILAR-VARIATION SIMILAR-DISAGREE SIMILAR-RANDOM
   for agent in MILP-SIMILAR SIMILAR-VARIATION SIMILAR-DISAGREE SIMILAR-RANDOM
   do

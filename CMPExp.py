@@ -15,9 +15,7 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
       for psi, prob in psiProbs:
         agent.resetPsi(list(psi))
         fQ, fQValue = computeQ(agent, times - 1)
-        print times, fQValue
         qSum += prob * fQValue
-      print times, 'sum', qSum
       return q, qSum
     else:
       return q, qValue
@@ -28,7 +26,6 @@ def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   
   priorAgent = agent.getFiniteVIAgent(priorPsi, cmp.horizon, cmp.terminalReward, posterior=True)
   priorV = priorAgent.getValue(cmp.state)
-  print 'priorV', priorV
   
   # add query type here
   if config.VERBOSE: print 'q', q
