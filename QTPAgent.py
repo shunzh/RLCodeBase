@@ -638,7 +638,7 @@ class MILPAgent(QTPAgent):
 
       x = milp(**args)
       q.append(x)
-
+    
     objValue = computeObj(q, self.phi, args['S'], args['A'], args['R']) # SO THIS SHOULD BE ONLY AN APPROXIMATION
     if config.VERBOSE: print 'eus value', objValue
 
@@ -674,7 +674,7 @@ class MILPAgent(QTPAgent):
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
-      return q, None
+      return q, self.getQValue(self.cmp.state, q)
     if self.queryType == QueryType.PARTIAL_POLICY:
       idx = 0
       objValue = self.getQValue(self.cmp.state, None, q)

@@ -24,7 +24,7 @@ if __name__ == '__main__':
     raise Exception('Unknown flag')
   for opt, arg in opts:
     if opt == '-t':
-      config.TRAJECTORY_LENGTH = int(arg)
+      config.NUMBER_OF_QUERIES = int(arg)
     elif opt == '-n':
       if int(arg) == 5:
         pass

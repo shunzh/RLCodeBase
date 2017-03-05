@@ -57,8 +57,9 @@ class MILPTrajAgent(MILPAgent):
     minH = min(hValues.values())
     minStatesIndices = filter(lambda _: hValues[_] == minH, hValues.keys())
     minState, minIndices = random.choice(minStatesIndices)
+    # trajs is the trajectory query we are going to return, same for the following agents
     trajs = [self.sampleTrajFromRewardCandidate(idx, minState) for idx in minIndices]
-    return trajs, None
+    return trajs, self.getQValue(self.cmp.state, None, trajs)
 
 
 class DisagreeTrajAgent(QTPAgent):
@@ -89,7 +90,7 @@ class DisagreeTrajAgent(QTPAgent):
     maxStatesIndices = filter(lambda _: hValues[_] == maxH, hValues.keys())
     maxState, maxIndices = random.choice(maxStatesIndices)
     trajs = [self.sampleTrajFromRewardCandidate(idx, maxState) for idx in maxIndices]
-    return trajs, None
+    return trajs, self.getQValue(self.cmp.state, None, trajs)
 
 
 class BeliefChangeTrajAgent(QTPAgent):
@@ -126,7 +127,7 @@ class BeliefChangeTrajAgent(QTPAgent):
     maxStatesIndices = filter(lambda _: hValues[_] == maxH, hValues.keys())
     maxState, maxIndices = random.choice(maxStatesIndices)
     trajs = [self.sampleTrajFromRewardCandidate(idx, maxState) for idx in maxIndices]
-    return trajs, None
+    return trajs, self.getQValue(self.cmp.state, None, trajs)
 
 
 class RandomTrajAgent(QTPAgent):
@@ -141,4 +142,4 @@ class RandomTrajAgent(QTPAgent):
       q = [tuple(self.sampleTrajectory(None, s, hori=config.TRAJECTORY_LENGTH, to='trajectory')) for _ in xrange(k)]
       if any(len(u) < config.TRAJECTORY_LENGTH for u in q): continue
       else: break
-    return q, None
+    return q, self.getQValue(self.cmp.state, None, q)

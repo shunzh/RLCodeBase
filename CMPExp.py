@@ -4,33 +4,32 @@ import copy
 
 def experiment(cmp, agent, gamma, rewardSet, queryType, horizon=float('inf')):
   t = time.time()
+  
+  def computeQ(agent, times):
+    q, qValue = agent.learn()
 
-  """
-  def computeQ(agent, t):
-    q, pi, qValue = agent.learn()
-    #print agent.phi, qValue
-
-    if t > 1:
+    if times > 1:
       qSum = 0
       psiProbs = agent.getPossiblePhiAndProbs(q)
+      # for all possible responses, plan accordingly
       for psi, prob in psiProbs:
         agent.resetPsi(list(psi))
-        q = computeQ(agent, t - 1)
-        qSum += prob * qValue
-      return q
+        fQ, fQValue = computeQ(agent, times - 1)
+        print times, fQValue
+        qSum += prob * fQValue
+      print times, 'sum', qSum
+      return q, qSum
     else:
-      return q
-  """
+      return q, qValue
 
-  q, qValue = agent.learn()
+  priorPsi = list(agent.phi)
+  q, qValue = computeQ(agent, config.NUMBER_OF_QUERIES)
   timeElapsed = time.time() - t
   
-  priorAgent = agent.getFiniteVIAgent(agent.phi, cmp.horizon, cmp.terminalReward, posterior=True)
+  priorAgent = agent.getFiniteVIAgent(priorPsi, cmp.horizon, cmp.terminalReward, posterior=True)
   priorV = priorAgent.getValue(cmp.state)
+  print 'priorV', priorV
   
-  if qValue == None:
-    qValue = agent.getQValue(agent.cmp.state, None, q)
-
   # add query type here
   if config.VERBOSE: print 'q', q
  
