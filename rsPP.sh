@@ -2,10 +2,10 @@ for i in `seq 0 19`
 do
   echo $i
 
-  t = 2 # the number of queries
+  t=2 # the number of queries
 
   #for agent in OPT-POLICY MILP-POLICY MILP-SIMILAR SIMILAR-VARIATION SIMILAR-DISAGREE SIMILAR-RANDOM
-  for agent in MILP-SIMILAR SIMILAR-VARIATION SIMILAR-DISAGREE SIMILAR-RANDOM
+  for agent in MILP-POLICY #MILP-SIMILAR SIMILAR-VARIATION SIMILAR-DISAGREE SIMILAR-RANDOM
   do
     python rockSampleExp.py -r $i -a $agent -y 1 -k 2 -t $t
     python rockSampleExp.py -r $i -a $agent -y 2 -k 2 -t $t

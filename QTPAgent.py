@@ -674,7 +674,7 @@ class MILPAgent(QTPAgent):
 
     if self.queryType == QueryType.POLICY:
       # if asking policies directly, then return q
-      return q, self.getQValue(self.cmp.state, q)
+      return q, self.getQValue(self.cmp.state, None, q)
     if self.queryType == QueryType.PARTIAL_POLICY:
       idx = 0
       objValue = self.getQValue(self.cmp.state, None, q)
