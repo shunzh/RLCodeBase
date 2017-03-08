@@ -1,15 +1,14 @@
 function main()
   %agents = {'OPT-POLICY', 'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
-  %agents = {'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
-  agents = {'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
+  agents = {'MILP-POLICY', 'MILP-SIMILAR', 'SIMILAR-VARIATION', 'SIMILAR-DISAGREE', 'SIMILAR-RANDOM'};
 
   % driving
   agentIds = 1 : size(agents, 2);
   rewardVars = [1, 2, 3];
 
   % default values of variables
-  numOfQuery_ = 1;
-  rewardCand_ = 5;
+  numOfQuery_ = 3;
+  rewardCand_ = 10;
   numOfResponse_ = 2;
 
   for agentId = 1 : size(agents, 2)
@@ -31,8 +30,8 @@ function main()
 
   d = squeeze(cell2mat(dataM(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))';
   c = squeeze(cell2mat(dataCI(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))';
-  %d = [[0.05; 0.05; 0.05], d];
-  %c = [[0; 0; 0], c];
+  d = [[0; 0; 0], d];
+  c = [[0; 0; 0], c];
   d
   c
 
@@ -42,13 +41,13 @@ function main()
 
   set(gca, 'Xtick', rewardVars, 'XtickLabel', {'#1', '#2', '#3'});
   set(gcf,'PaperUnits','inches','PaperPosition',[0 0 4 3])
-  print('-deps', ['rsn', num2str(rewardCand_), 'k', num2str(numOfResponse_), '.eps'], '-r100');
+  print('-deps', ['rsn', num2str(rewardCand_), 'k', num2str(numOfResponse_), 't', num2str(numOfQuery_), '.eps'], '-r100');
 
 
   d = squeeze(cell2mat(dataTM(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))';
   c = squeeze(cell2mat(dataTCI(agentIds, rewardCand_, numOfQuery_, numOfResponse_, rewardVars)))';
-  %d = [[0.05; 0.05; 0.05], d];
-  %c = [[0; 0; 0], c];
+  d = [[0; 0; 0], d];
+  c = [[0; 0; 0], c];
   d
   c
   figure;
@@ -57,7 +56,7 @@ function main()
 
   set(gca, 'Xtick', rewardVars, 'XtickLabel', {'#1', '#2', '#3'});
   set(gcf,'PaperUnits','inches','PaperPosition',[0 0 4 3])
-  print('-deps', ['rsn', num2str(rewardCand_), 'k', num2str(numOfResponse_), 't.eps'], '-r100');
+  print('-deps', ['rsn', num2str(rewardCand_), 'k', num2str(numOfResponse_), 'T.eps'], '-r100');
 end
 
 function [m, ci] = process(data)

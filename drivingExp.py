@@ -67,7 +67,6 @@ if __name__ == '__main__':
   for car in cmp.cars: niceDriver(leftPreferred, car)
   for car in cmp.cars: niceDriver(rightPreferred, car)
   
-
   rewardSet = []
   rewardSet.append(lambda s, a: rewards[0][s])
   rewardSet.append(lambda s, a: rewards[1][s])

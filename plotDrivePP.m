@@ -23,7 +23,7 @@ function main()
     end
   end
 
-  colors = repmat((1:5) / 6, 3, 1)';
+  colors = repmat((1:6) / 7, 3, 1)';
   colors = permute(colors, [3 1 2]);
 
   %for agentId = 1 : size(agents, 2)
@@ -35,6 +35,8 @@ function main()
   %end
   d = squeeze(cell2mat(dataM(agentIds, rewardCand_, numOfQuery_, numOfResponses, trajLen_)))'
   c = squeeze(cell2mat(dataCI(agentIds, rewardCand_, numOfQuery_, numOfResponses, trajLen_)))'
+  d = [[0; 0; 0], d];
+  c = [[0; 0; 0], c];
   figure;
   ylim([0; Inf]);
   b = superbar(d, 'E', c, 'BarFaceColor', colors);
