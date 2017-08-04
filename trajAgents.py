@@ -122,6 +122,8 @@ class BeliefChangeTrajAgent(QTPAgent):
           # note that we need to keep the information of which state to generate queries
           # and what reward candidates the policies are optimazing
           hValues[(s, tuple(indices))] += prob * sum(abs(p1 - p2) for p1, p2 in zip(psi, self.phi))
+          #print psi, self.phi, sum(abs(p1 - p2) for p1, p2 in zip(psi, self.phi))
+    #print hValues
 
     maxH = max(hValues.values())
     maxStatesIndices = filter(lambda _: hValues[_] == maxH, hValues.keys())

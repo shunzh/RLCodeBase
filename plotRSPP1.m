@@ -7,7 +7,7 @@ function main()
   rewardVars = [1, 2, 3];
 
   % default values of variables
-  numOfQuery_ = 3;
+  numOfQuery_ = 8;
   rewardCand_ = 10;
   numOfResponse_ = 2;
 

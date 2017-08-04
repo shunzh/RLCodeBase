@@ -1,8 +1,8 @@
-for i in `seq 20 39`
+for i in `seq 0 19`
 do
   echo $i
 
-  t=3
+  t=8
   for agent in MILP-POLICY MILP-SIMILAR SIMILAR-VARIATION SIMILAR-DISAGREE SIMILAR-RANDOM
   do
     python rockSampleExp.py -n 10 -r $i -a $agent -y 1 -k 2 -t $t
