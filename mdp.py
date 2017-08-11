@@ -17,19 +17,19 @@ class MarkovDecisionProcess:
     Return a list of all states in the MDP.
     Not generally possible for large MDPs.
     """
-    abstract
+    raise Exception('abstract method')
         
   def getStartState(self):
     """
     Return the start state
     """
-    abstract
+    raise Exception('abstract method')
 
   def getPossibleActions(self, state):
     """
     Return list of possible actions from 'state'.
     """
-    abstract
+    raise Exception('abstract method')
 
   def getStateActionPairs(self):
     """
@@ -57,10 +57,10 @@ class MarkovDecisionProcess:
     learning in general, we do not know these
     probabilities nor do we directly model them.
     """
-    abstract
+    raise Exception('abstract method')
         
   def getReward(self, state):
-    abstract
+    raise Exception('abstract method')
 
   def isTerminal(self, state):
     """

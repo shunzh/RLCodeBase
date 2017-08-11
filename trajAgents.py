@@ -4,7 +4,6 @@ import easyDomains
 import config
 import util
 import random
-import copy
 import scipy.stats
 import numpy
 from policyGradientAgents import PolicyGradientQueryAgent
