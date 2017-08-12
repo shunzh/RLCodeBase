@@ -37,13 +37,13 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(S, A, r, T, s0, constraints={}):
+def lpDual(S, A, r, T, s0, constraints={}, positiveConstraints={}):
   """
   Solve the dual problem of lp
   Same arguments
   
-  constraint [(s, a)] that the agent is required to visit
-  
+  for ((s, a), occ) in constraints, we want x(s, a) == occ
+
   Note that this is a lower level function that does not consider feature extraction.
   r should be a reward function, not a reward parameter.
   """
@@ -55,19 +55,25 @@ def lpDual(S, A, r, T, s0, constraints={}):
   Ar = range(len(A))
  
   x = m.new((len(S), len(A)), lb=0, ub=1, name='x')
+
+  # make sure x is a valid occupancy
   for sp in Sr:
     if S[sp] == s0:
       m.constrain(sum([x[sp, ap] for ap in Ar]) == 1)
     else:
       m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
   
+  # == constraints
   for (s, a), occ in constraints.items():
     m.constrain(x[S.index(s), A.index(a)] == occ)
+
+  # >= constraints
+  for (s, a), occ in positiveConstraints.items():
+    m.constrain(x[S.index(s), A.index(a)] >= occ)
 
   # obj
   obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
-
 
 def milp(S, A, R, T, s0, psi, maxV):
   """

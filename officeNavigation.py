@@ -61,11 +61,23 @@ def main():
   def doorOpGen(idx, door):
     def doorOp(s, a):
       loc = s[LOCATION]
-      #TODO
+      doorState = s[idx]
+      if loc == door:
+        if doorState == OPEN and a == 'closeDoor': doorState = CLOSED
+        elif doorState == CLOSED and a == 'openDoor': doorState = OPEN
+      return doorState
+    return doorOp
+  
+  def switchOp(s, a):
+    loc = s[LOCATION]
+    switchState = s[SWITCH]
+    if loc == switch and a == 'turnOffSwitch': switchState = OFF 
+    return switchState
 
   tFunc = [move,
            stepOnBoxGen(BOX1, box1), stepOnBoxGen(BOX2, box2), stepOnBoxGen(BOX3, box3),
-           ]
+           doorOpGen(DOOR1, door1), doorOpGen(DOOR2, door2),
+           switchOp]
 
   s0 = [(0, 0), # robot's location
         CLEAN, CLEAN, CLEAN, # boxes are clean
