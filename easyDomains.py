@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import itertools
 
 def convert(cmp, rewardSet, psi):
   """
@@ -78,4 +79,22 @@ def getChainDomain(length):
   ret['s0'] = length / 2
   ret['psi'] = [1]
   
+  return ret
+
+def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0):
+  ret = {}
+
+  ret['S'] = itertools.product(*sSets)
+  ret['A'] = aSets
+  # factored reward function
+  #ret['r'] = lambda state, action: sum(r(s, a) for s, r in zip(state, rFunc))
+  # nonfactored reward function
+  ret['r'] = rFunc
+
+  # t(s, a, s') = \prod t_i(s, a, s_i)
+  #FIXME assume deterministic transitions for now to make the life easier!
+  ret['T'] = lambda state, action, sp: 1 if sp == (t(s, action) for s, t in zip(state, tFunc)) else 0
+
+  ret['s0'] = s0
+
   return ret

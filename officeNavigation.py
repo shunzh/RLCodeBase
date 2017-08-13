@@ -91,3 +91,4 @@ def main():
 
   # the domain handler
   officeNav = ConstrainedFactoredMDP(sSets, cIndices, a, rFunc, tFunc, isTerminal, s0, isTerminal, gamma)
+

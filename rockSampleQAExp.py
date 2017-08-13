@@ -1,6 +1,6 @@
 import util
 from tabularNavigation import TabularNavigationToy
-from AugmentedCMP import AugmentedCMP
+import augmentedCMP.AugmentedCMP
 from cmp import QueryType
 import numpy as np
 from valueIterationAgents import ValueIterationAgent
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
   startTime = time.time()
   cmpDomain = TabularNavigationToy(queries, trueReward, gamma, width, height, np.inf, rocks, 0.5)
-  domain = AugmentedCMP(cmpDomain, rewardSet, initialPsi, queryType, gamma, 1, awina=True)
+  domain = augmentedCMP(cmpDomain, rewardSet, initialPsi, queryType, gamma, 1, awina=True)
   initValues = domain.getVIInitial()
   
   agent = ValueIterationAgent(domain, discount=gamma, initValues=initValues)
