@@ -27,14 +27,20 @@ class ConsQueryAgent():
                              for s in self.statesWithDifferentFeats(idx, s0[idx])}
     args['constraints'] = constraints
     args['positiveConstraints'] = {}
-    lpDual(**args)
+    rawOpt = lpDual(**args)
 
+    irrFeats = []
     # solve the problem which only constrains one feature
-    constraints = {(s, a): 0 for a in A
-                             for s in self.statesWithDifferentFeats(idx, s0[idx])}
-    args['constraints'] = {}
-    args['positiveConstraints'] = constraints
-    lpDual(**args)
+    for idx in range(featLength):
+      constraints = {(s, a): 0 for a in A
+                               for s in self.statesWithDifferentFeats(idx, s0[idx])}
+      args['constraints'] = {}
+      args['positiveConstraints'] = constraints
+      opt = lpDual(**args)
+      
+      if opt <= rawOpt: irrFeats.append(idx)
+    
+    return irrFeats
   
   # find marginalized state space
   def statesWithSameFeats(self, idx, value):

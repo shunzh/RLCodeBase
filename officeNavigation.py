@@ -1,4 +1,5 @@
-from factoredMdp import ConstrainedFactoredMDP
+import easyDomains
+from consQueryAgents import ConsQueryAgent
 
 LOCATION = 0
 BOX1 = 1
@@ -37,19 +38,19 @@ def main():
            [0, 1]] #switch
   cIndices = range(1, len(sSets)) # location is not a constraint
 
-  a = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1),\
+  aSets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1),\
        'openDoor', 'closeDoor', 'turnOffSwitch']
   
   def move(s, a):  
+    loc = s[LOCATION]
     if type(a) == 'tuple':
-      loc = s[LOCATION]
       sp = (loc[0] + a[0], loc[1] + a[1])
       if sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height:
         # so it's not out of the border
         if not (s[DOOR1] == CLOSED and sp == door1 or s[DOOR2] == CLOSED and sp == door2):
           # doors are fine
           return sp
-    return s
+    return loc
   
   def stepOnBoxGen(idx, box):
     def stepOnBox(s, a):
@@ -84,11 +85,14 @@ def main():
         OPEN, CLOSED, # door 1 is open
         1] # switch is on
   isTerminal = lambda s: s[SWITCH] == OFF # switch is off
-  gamma = 1
   
   # there is a reward of -1 at any step except when goal is reached
   rFunc = lambda s, a: 0 if isTerminal(s) and a == (0, 0) else -1
 
   # the domain handler
-  officeNav = ConstrainedFactoredMDP(sSets, cIndices, a, rFunc, tFunc, isTerminal, s0, isTerminal, gamma)
+  officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0)
+  agent = ConsQueryAgent(officeNav, cIndices)
+  print agent.findIrrelevantFeats()
 
+if __name__ == '__main__':
+  main()
