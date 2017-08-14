@@ -32,8 +32,7 @@ def main():
   switch = (4, 2)
   
   # pairs of adjacent locations that are blocked by a wall
-  #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
-  walls = []
+  walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
   
   # location, box1, box2, door1, door2, carpet, switch
   sSets = [[(x, y) for x in range(width) for y in range(height)],
@@ -44,7 +43,7 @@ def main():
   # the robot can change its locations and manipulate the switch
   cIndices = range(1, SWITCH) # location is not a constraint
 
-  aSets = [(1, 0), (0, 1), #(-1, 0), (0, -1),
+  aSets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1),
            #'openDoor', 'closeDoor',
            'turnOffSwitch']
  
@@ -91,28 +90,18 @@ def main():
            switchOp]
 
   s0 = ((0, 0), # robot's location
-        STEPPED, STEPPED, STEPPED,# CLEAN, CLEAN, CLEAN, # boxes are clean
+        CLEAN, CLEAN, CLEAN, # boxes are clean
         #OPEN, OPEN, # door 1 is open
         ON) # switch is on
   
+  terminal = lambda s: s[SWITCH] == OFF
+
   # there is a reward of -1 at any step except when goal is reached
-  rFunc = lambda s, a: 10 if s[LOCATION] == switch and  s[SWITCH] == ON and a == 'turnOffSwitch' else -1
+  rFunc = lambda s, a: 0 if s[SWITCH] == OFF else -1
   
-  gamma = 1
-
   # the domain handler
-  officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma)
+  officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal)
   
-  # sanity checks
-  """
-  print officeNav['T'](((0, 1), OPEN, CLOSED, ON), 'closeDoor', ((0, 1), CLOSED, CLOSED, ON))
-  print officeNav['T'](((2, 1), OPEN, CLOSED, ON), 'openDoor', ((2, 1), OPEN, OPEN, ON))
-  print officeNav['T'](((0, 1), OPEN, CLOSED, ON), (1, 0), ((1, 1), OPEN, CLOSED, ON))
-  print officeNav['T'](((2, 1), OPEN, OPEN, ON), (1, 0), ((3, 1), OPEN, OPEN, ON))
-  print officeNav['T'](((2, 1), OPEN, CLOSED, ON), (1, 0), ((2, 1), OPEN, CLOSED, ON))
-  print officeNav['T'](((4, 2), OPEN, CLOSED, ON), 'turnOffSwitch', ((4, 2), OPEN, CLOSED, OFF))
-  """
-
   agent = ConsQueryAgent(officeNav, cIndices)
   print agent.findIrrelevantFeats()
 

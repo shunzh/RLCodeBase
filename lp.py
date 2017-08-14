@@ -37,7 +37,7 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints=[]):
+def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraints=[]):
   """
   Solve the dual problem of lp
   Same arguments
@@ -52,13 +52,17 @@ def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints=[]):
   Sr = range(len(S))
   Ar = range(len(A))
  
-  x = m.new((len(S), len(A)), lb=0, ub=1, name='x')
+  x = m.new((len(S), len(A)), lb=0, name='x')
 
   # make sure x is a valid occupancy
   for sp in Sr:
     # x (x(s) - \gamma * T) = \sigma
-    m.constrain(sum([x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar]) == (S[sp] == s0))
-    #print S[sp], [(S[s], A[a]) for s in Sr for a in Ar if T(S[s], A[a], S[sp]) > 0]
+    # and make sure there is no flow back from the terminal states
+    if not terminal(S[sp]):
+      m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp]) * (not terminal(S[s]))) for s in Sr for a in Ar) == (S[sp] == s0))
+      #print S[sp], [(S[s], A[a]) for s in Sr for a in Ar if T(S[s], A[a], S[sp]) > 0]
+    else:
+      m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp]) * (not terminal(S[sp]))) for s in Sr for a in Ar) == (S[sp] == s0))
   
   # == constraints
   for (s, a), occ in constraints.items():
@@ -66,7 +70,7 @@ def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints=[]):
 
   # >= constraints
   if len(positiveConstraints) > 0:
-    m.constrain(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= 0.1)
+    m.constrain(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= 1)
 
   # obj
   obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
