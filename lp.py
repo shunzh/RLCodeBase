@@ -71,8 +71,8 @@ def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints={}):
   # obj
   obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
   #for sp in Sr:
-  #  print S[sp]
-  #  print sum([m[x][sp, ap] for ap in Ar]) - gamma * sum([m[x][s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar])
+  #  if S[sp] != s0:
+  #    print sp, sum([m[x][sp, ap] for ap in Ar]) - gamma * sum([m[x][s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar])
 
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 

@@ -31,7 +31,8 @@ class ConsQueryAgent():
     args['positiveConstraints'] = {}
     rawOpt, occ = lpDual(**args)
     print rawOpt
-    #pprint.pprint(occ)
+    for s, prob in occ.items():
+      if prob > 0: print s, prob
 
     irrFeats = []
     # solve the problem which only constrains one feature

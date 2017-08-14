@@ -36,10 +36,10 @@ def main():
            #[0, 1], [0, 1], [0, 1], #boxes
            [0, 1], [0, 1], #doors
            [0, 1]] #switch
-  cIndices = range(1, len(sSets)) # location is not a constraint
+  cIndices = range(1, len(sSets) - 1) # location is not a constraint
 
   aSets = [(0, 0), (1, 0), (0, 1),#(-1, 0), (0, -1),
-           'openDoor', 'closeDoor',
+           'openDoor', #'closeDoor',
            'turnOffSwitch']
 
  
@@ -47,7 +47,7 @@ def main():
     loc = s[LOCATION]
     if type(a) == tuple:
       sp = (loc[0] + a[0], loc[1] + a[1])
-      if sp[0] >= 0 and sp[1] >= 0:
+      if sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height:
         # so it's not out of the border
         if not (s[DOOR1] == CLOSED and sp == door1 or s[DOOR2] == CLOSED and sp == door2):
           # doors are fine
@@ -89,19 +89,25 @@ def main():
         OPEN, CLOSED, # door 1 is open
         ON) # switch is on
   isTerminal = lambda s: s[SWITCH] == OFF # switch is off
+  #isTerminal = lambda s: s[LOCATION] == (width - 1, height - 1) # top right corner
   
   # there is a reward of -1 at any step except when goal is reached
-  rFunc = lambda s, a: 10 if isTerminal(s) else -1
+  rFunc = lambda s, a: 1 if isTerminal(s) else 0
   
-  gamma = 0.9
+  gamma = .9
 
   # the domain handler
   officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma)
+  
+  # sanity checks
+  """
   print officeNav['T'](((0, 1), OPEN, CLOSED, ON), 'closeDoor', ((0, 1), CLOSED, CLOSED, ON))
   print officeNav['T'](((2, 1), OPEN, CLOSED, ON), 'openDoor', ((2, 1), OPEN, OPEN, ON))
   print officeNav['T'](((0, 1), OPEN, CLOSED, ON), (1, 0), ((1, 1), OPEN, CLOSED, ON))
   print officeNav['T'](((2, 1), OPEN, OPEN, ON), (1, 0), ((3, 1), OPEN, OPEN, ON))
   print officeNav['T'](((2, 1), OPEN, CLOSED, ON), (1, 0), ((2, 1), OPEN, CLOSED, ON))
+  print officeNav['T'](((4, 2), OPEN, CLOSED, ON), 'turnOffSwitch', ((4, 2), OPEN, CLOSED, OFF))
+  """
 
   agent = ConsQueryAgent(officeNav, cIndices)
   print agent.findIrrelevantFeats()
