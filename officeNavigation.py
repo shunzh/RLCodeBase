@@ -36,7 +36,7 @@ def main():
   cIndices = range(1, len(sSets)) # location is not a constraint
 
   #aSets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1),
-  aSets = [(1, 0), (0, 1)]
+  aSets = [(0, 0), (1, 0), (0, 1)]
           #'openDoor', #'closeDoor',
           #'turnOffSwitch']
   
@@ -87,9 +87,11 @@ def main():
   
   # there is a reward of -1 at any step except when goal is reached
   rFunc = lambda s, a: 10 if isTerminal(s) else -1
+  
+  gamma = 1
 
   # the domain handler
-  officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0)
+  officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma)
   print officeNav
   agent = ConsQueryAgent(officeNav, cIndices)
   print agent.findIrrelevantFeats()

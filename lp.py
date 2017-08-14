@@ -37,7 +37,7 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(S, A, r, T, s0, constraints={}, positiveConstraints={}):
+def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints={}):
   """
   Solve the dual problem of lp
   Same arguments
@@ -58,12 +58,8 @@ def lpDual(S, A, r, T, s0, constraints={}, positiveConstraints={}):
 
   # make sure x is a valid occupancy
   for sp in Sr:
-    if S[sp] == s0:
-      m.constrain(sum([x[sp, ap] for ap in Ar]) == 1)
-      print 's0', S[sp]
-    else:
-      m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
-      print S[sp], [(S[s], A[a]) for s in Sr for a in Ar if T(S[s], A[a], S[sp]) > 0]
+    m.constrain(sum([x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar]) == (S[sp] == s0))
+    #print S[sp], [(S[s], A[a]) for s in Sr for a in Ar if T(S[s], A[a], S[sp]) > 0]
   
   # == constraints
   for (s, a), occ in constraints.items():
@@ -75,6 +71,10 @@ def lpDual(S, A, r, T, s0, constraints={}, positiveConstraints={}):
 
   # obj
   obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
+  #for sp in Sr:
+  #  print S[sp]
+  #  print sum([m[x][sp, ap] for ap in Ar]) - gamma * sum([m[x][s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar])
+
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 
 def milp(S, A, R, T, s0, psi, maxV):
