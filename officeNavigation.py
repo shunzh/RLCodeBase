@@ -36,10 +36,12 @@ def main():
            #[0, 1], [0, 1], [0, 1], #boxes
            [0, 1], [0, 1], #doors
            [0, 1]] #switch
+  
+  # the robot can change its locations and manipulate the switch
   cIndices = range(1, len(sSets) - 1) # location is not a constraint
 
   aSets = [(0, 0), (1, 0), (0, 1),#(-1, 0), (0, -1),
-           'openDoor', #'closeDoor',
+           'openDoor', 'closeDoor',
            'turnOffSwitch']
 
  

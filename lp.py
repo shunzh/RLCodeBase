@@ -37,7 +37,7 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints={}):
+def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints=[]):
   """
   Solve the dual problem of lp
   Same arguments
@@ -65,8 +65,8 @@ def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints={}):
     m.constrain(x[S.index(s), A.index(a)] == occ)
 
   # >= constraints
-  for (s, a), occ in positiveConstraints.items():
-    m.constrain(x[S.index(s), A.index(a)] >= occ)
+  if len(positiveConstraints) > 0:
+    m.constrain(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= 0.1)
 
   # obj
   obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
