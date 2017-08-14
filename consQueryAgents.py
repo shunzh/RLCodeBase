@@ -44,6 +44,8 @@ class ConsQueryAgent():
       args['positiveConstraints'] = constraints
       opt, occ = lpDual(**args)
       print opt
+      for s, prob in occ.items():
+        if prob > 0: print s, prob
       
       if opt <= rawOpt: irrFeats.append(idx)
     
