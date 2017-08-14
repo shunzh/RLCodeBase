@@ -60,8 +60,10 @@ def lpDual(S, A, r, T, s0, constraints={}, positiveConstraints={}):
   for sp in Sr:
     if S[sp] == s0:
       m.constrain(sum([x[sp, ap] for ap in Ar]) == 1)
+      print 's0', S[sp]
     else:
       m.constrain(sum([x[sp, ap] for ap in Ar]) == sum([x[s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar]))
+      print S[sp], [(S[s], A[a]) for s in Sr for a in Ar if T(S[s], A[a], S[sp]) > 0]
   
   # == constraints
   for (s, a), occ in constraints.items():

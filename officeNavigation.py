@@ -37,20 +37,18 @@ def main():
 
   #aSets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1),
   aSets = [(1, 0), (0, 1)]
-       #'openDoor', #'closeDoor',
-       #'turnOffSwitch']
+          #'openDoor', #'closeDoor',
+          #'turnOffSwitch']
   
   def move(s, a):  
     loc = s[LOCATION]
     if type(a) == tuple:
       sp = (loc[0] + a[0], loc[1] + a[1])
-      if sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height:
-        return sp
+      return sp
+      #if sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height:
         # so it's not out of the border
         #if not (s[DOOR1] == CLOSED and sp == door1 or s[DOOR2] == CLOSED and sp == door2):
           # doors are fine
-      else:
-        return 'terminal'
     return loc
   
   def stepOnBoxGen(idx, box):
@@ -88,7 +86,7 @@ def main():
   isTerminal = lambda s: s[0] == (width - 1, height - 1) # switch is off
   
   # there is a reward of -1 at any step except when goal is reached
-  rFunc = lambda s, a: 10 if isTerminal(s) and a == (0, 0) else -1
+  rFunc = lambda s, a: 10 if isTerminal(s) else -1
 
   # the domain handler
   officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0)
