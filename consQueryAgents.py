@@ -1,4 +1,5 @@
 from lp import lpDual
+import pprint
 
 class ConsQueryAgent():
   def __init__(self, mdp, consIdx):
@@ -9,6 +10,7 @@ class ConsQueryAgent():
     consIdx: specify a set of indices of features that the robot is not supposed to change without querying 
     """
     self.mdp = mdp
+    self.consIdx = consIdx
   
   def findIrrelevantFeats(self):
     """
@@ -23,20 +25,22 @@ class ConsQueryAgent():
     
     # solve the raw problem
     constraints = {(s, a): 0 for a in A
-                             for idx in range(featLength)
+                             for idx in self.consIdx
                              for s in self.statesWithDifferentFeats(idx, s0[idx])}
     args['constraints'] = constraints
     args['positiveConstraints'] = {}
-    rawOpt = lpDual(**args)
+    rawOpt, occ = lpDual(**args)
+    print rawOpt
+    pprint.pprint(occ)
 
     irrFeats = []
     # solve the problem which only constrains one feature
-    for idx in range(featLength):
+    for idx in self.consIdx:
       constraints = {(s, a): 0 for a in A
                                for s in self.statesWithDifferentFeats(idx, s0[idx])}
       args['constraints'] = {}
       args['positiveConstraints'] = constraints
-      opt = lpDual(**args)
+      opt = lpDual(**args)[0]
       
       if opt <= rawOpt: irrFeats.append(idx)
     

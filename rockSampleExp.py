@@ -16,7 +16,7 @@ if __name__ == '__main__':
   horizon = height + 1
   rewardVar = 1
   rockNum = 20
-  rewardCandNum = 50
+  rewardCandNum = 5
   
   try:
     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)

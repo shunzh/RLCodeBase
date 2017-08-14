@@ -1,0 +1,133 @@
+[1mdiff --git a/consQueryAgents.py b/consQueryAgents.py[m
+[1mindex 2fdac64..7157782 100644[m
+[1m--- a/consQueryAgents.py[m
+[1m+++ b/consQueryAgents.py[m
+[36m@@ -1,4 +1,5 @@[m
+ from lp import lpDual[m
+[32m+[m[32mimport pprint[m
+ [m
+ class ConsQueryAgent():[m
+   def __init__(self, mdp, consIdx):[m
+[36m@@ -25,9 +26,13 @@[m [mclass ConsQueryAgent():[m
+     constraints = {(s, a): 0 for a in A[m
+                              for idx in range(featLength)[m
+                              for s in self.statesWithDifferentFeats(idx, s0[idx])}[m
+[31m-    args['constraints'] = constraints[m
+[32m+[m[32m    #args['constraints'] = constraints[m
+[32m+[m[32m    args['constraints'] = {}[m
+     args['positiveConstraints'] = {}[m
+[31m-    rawOpt = lpDual(**args)[m
+[32m+[m[32m    print 'run raw opt'[m
+[32m+[m[32m    rawOpt, occ = lpDual(**args)[m
+[32m+[m[32m    print rawOpt[m
+[32m+[m[32m    pprint.pprint(occ)[m
+ [m
+     irrFeats = [][m
+     # solve the problem which only constrains one feature[m
+[36m@@ -36,7 +41,7 @@[m [mclass ConsQueryAgent():[m
+                                for s in self.statesWithDifferentFeats(idx, s0[idx])}[m
+       args['constraints'] = {}[m
+       args['positiveConstraints'] = constraints[m
+[31m-      opt = lpDual(**args)[m
+[32m+[m[32m      opt = lpDual(**args)[0][m
+       [m
+       if opt <= rawOpt: irrFeats.append(idx)[m
+     [m
+[1mdiff --git a/easyDomains.py b/easyDomains.py[m
+[1mindex ae798ff..f013215 100644[m
+[1m--- a/easyDomains.py[m
+[1m+++ b/easyDomains.py[m
+[36m@@ -93,8 +93,8 @@[m [mdef getFactoredMDP(sSets, aSets, rFunc, tFunc, s0):[m
+ [m
+   # t(s, a, s') = \prod t_i(s, a, s_i)[m
+   #FIXME assume deterministic transitions for now to make the life easier![m
+[31m-  ret['T'] = lambda state, action, sp: 1 if sp == (t(s, action) for s, t in zip(state, tFunc)) else 0[m
+[31m-[m
+[32m+[m[32m  transFunc = lambda state, action, sp: 1 if sp == tuple([t(state, action) for t in tFunc]) else 0[m
+[32m+[m[32m  ret['T'] = transFunc[m[41m [m
+   ret['s0'] = s0[m
+ [m
+   return ret[m
+\ No newline at end of file[m
+[1mdiff --git a/officeNavigation.py b/officeNavigation.py[m
+[1mindex b5230da..2e66402 100644[m
+[1m--- a/officeNavigation.py[m
+[1m+++ b/officeNavigation.py[m
+[36m@@ -32,24 +32,25 @@[m [mdef main():[m
+   switch = (4, 2)[m
+   [m
+   # location, box1, box2, door1, door2, carpet, switch[m
+[31m-  sSets = [[(x, y) for x in range(width) for y in range(height)],[m
+[31m-           [0, 1], [0, 1], [0, 1], #boxes[m
+[31m-           [0, 1], [0, 1], #doors[m
+[31m-           [0, 1]] #switch[m
+[32m+[m[32m  sSets = [[(x, y) for x in range(width) for y in range(height)]][m
+   cIndices = range(1, len(sSets)) # location is not a constraint[m
+ [m
+[31m-  aSets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1),\[m
+[31m-       'openDoor', 'closeDoor', 'turnOffSwitch'][m
+[32m+[m[32m  #aSets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1),[m
+[32m+[m[32m  aSets = [(1, 0), (0, 1)][m
+[32m+[m[32m       #'openDoor', #'closeDoor',[m
+[32m+[m[32m       #'turnOffSwitch'][m
+   [m
+   def move(s, a):  [m
+     loc = s[LOCATION][m
+[31m-    if type(a) == 'tuple':[m
+[32m+[m[32m    if type(a) == tuple:[m
+       sp = (loc[0] + a[0], loc[1] + a[1])[m
+       if sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height:[m
+[32m+[m[32m        return sp[m
+         # so it's not out of the border[m
+[31m-        if not (s[DOOR1] == CLOSED and sp == door1 or s[DOOR2] == CLOSED and sp == door2):[m
+[32m+[m[32m        #if not (s[DOOR1] == CLOSED and sp == door1 or s[DOOR2] == CLOSED and sp == door2):[m
+           # doors are fine[m
+[31m-          return sp[m
+[32m+[m[32m      else:[m
+[32m+[m[32m        return 'terminal'[m
+     return loc[m
+   [m
+   def stepOnBoxGen(idx, box):[m
+[36m@@ -75,22 +76,20 @@[m [mdef main():[m
+     if loc == switch and a == 'turnOffSwitch': switchState = OFF [m
+     return switchState[m
+ [m
+[31m-  tFunc = [move,[m
+[31m-           stepOnBoxGen(BOX1, box1), stepOnBoxGen(BOX2, box2), stepOnBoxGen(BOX3, box3),[m
+[31m-           doorOpGen(DOOR1, door1), doorOpGen(DOOR2, door2),[m
+[31m-           switchOp][m
+[32m+[m[32m  tFunc = [move][m
+ [m
+[31m-  s0 = [(0, 0), # robot's location[m
+[31m-        CLEAN, CLEAN, CLEAN, # boxes are clean[m
+[31m-        OPEN, CLOSED, # door 1 is open[m
+[31m-        1] # switch is on[m
+[31m-  isTerminal = lambda s: s[SWITCH] == OFF # switch is off[m
+[32m+[m[32m  s0 = ((0, 0),) # robot's location[m
+[32m+[m[32m  isTerminal = lambda s: s[0] == (width - 1, height - 1) # switch is off[m
+   [m
+   # there is a reward of -1 at any step except when goal is reached[m
+   rFunc = lambda s, a: 0 if isTerminal(s) and a == (0, 0) else -1[m
+ [m
+   # the domain handler[m
+   officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0)[m
+[32m+[m[32m  print officeNav[m
+[32m+[m[32m  print 'move', move(((0, 0),), (0, 1))[m
+[32m+[m[32m  print 'trans', officeNav['T'](((0, 0),), (0, 1), ((0, 1),))[m
+[32m+[m[32m  print 'trans', officeNav['T'](((1, 0),), (0, 1), ((1, 1),))[m
+   agent = ConsQueryAgent(officeNav, cIndices)[m
+   print agent.findIrrelevantFeats()[m
+ [m
+[1mdiff --git a/rockSampleExp.py b/rockSampleExp.py[m
+[1mindex 24c718f..2a431a6 100644[m
+[1m--- a/rockSampleExp.py[m
+[1m+++ b/rockSampleExp.py[m
+[36m@@ -16,7 +16,7 @@[m [mif __name__ == '__main__':[m
+   horizon = height + 1[m
+   rewardVar = 1[m
+   rockNum = 20[m
+[31m-  rewardCandNum = 50[m
+[32m+[m[32m  rewardCandNum = 5[m
+   [m
+   try:[m
+     opts, args = getopt.getopt(sys.argv[1:], tabularNavigationExp.flags)[m
