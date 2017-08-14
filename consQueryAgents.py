@@ -31,16 +31,17 @@ class ConsQueryAgent():
     args['positiveConstraints'] = {}
     rawOpt, occ = lpDual(**args)
     print rawOpt
-    pprint.pprint(occ)
+    #pprint.pprint(occ)
 
     irrFeats = []
     # solve the problem which only constrains one feature
     for idx in self.consIdx:
-      constraints = {(s, a): 0 for a in A
+      constraints = {(s, a): 0.1 for a in A
                                for s in self.statesWithDifferentFeats(idx, s0[idx])}
       args['constraints'] = {}
       args['positiveConstraints'] = constraints
-      opt = lpDual(**args)[0]
+      opt, occ = lpDual(**args)
+      print idx, opt
       
       if opt <= rawOpt: irrFeats.append(idx)
     

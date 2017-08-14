@@ -42,8 +42,6 @@ def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints={}):
   Solve the dual problem of lp
   Same arguments
   
-  for ((s, a), occ) in constraints, we want x(s, a) == occ
-
   Note that this is a lower level function that does not consider feature extraction.
   r should be a reward function, not a reward parameter.
   """
@@ -58,6 +56,7 @@ def lpDual(S, A, r, T, s0, gamma=1, constraints={}, positiveConstraints={}):
 
   # make sure x is a valid occupancy
   for sp in Sr:
+    # x (x(s) - \gamma * T) = \sigma
     m.constrain(sum([x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar]) == (S[sp] == s0))
     #print S[sp], [(S[s], A[a]) for s in Sr for a in Ar if T(S[s], A[a], S[sp]) > 0]
   
