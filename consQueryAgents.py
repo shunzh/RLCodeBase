@@ -38,8 +38,7 @@ class ConsQueryAgent():
     # solve the problem which only constrains one feature
     for idx in self.consIdx:
       print idx
-      constraints = [(s, a) for a in A
-                            for s in self.statesWithDifferentFeats(idx, s0[idx])]
+      constraints = self.statesTransitToDifferentFeatures(idx, s0[idx])
       args['constraints'] = {}
       args['positiveConstraints'] = constraints
       opt, occ = lpDual(**args)
@@ -54,5 +53,17 @@ class ConsQueryAgent():
   # find marginalized state space
   def statesWithSameFeats(self, idx, value):
     return filter(lambda s: s[idx] == value, self.mdp['S'])
+
   def statesWithDifferentFeats(self, idx, value):
     return filter(lambda s: s[idx] != value, self.mdp['S'])
+
+  def statesTransitToDifferentFeatures(self, idx, value):
+    ret = []
+    for s in self.mdp['S']:
+      if s[idx] == value:
+        for a in self.mdp['A']:
+          for sp in self.mdp['S']:
+            if self.mdp['T'](s, a, sp) > 0 and sp[idx] != value:
+              ret.append((s, a))
+              break
+    return ret
