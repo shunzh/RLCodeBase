@@ -65,6 +65,7 @@ class ConsQueryAgent():
     opt, x = lpDual(**args)
     args['domPis'] = [x]
     args['consIdx'] = self.consIdx
+    print opt
     
     # iterate until no more dominating policies are found
     while True:

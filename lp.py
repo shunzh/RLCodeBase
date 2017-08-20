@@ -171,10 +171,10 @@ def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
   # note: i don't think expressions in constraints can call other functions
   for y in domPis:
     # note that y is indexed by elements in S x A, not numbered indices
-    m.constrain(sum((x[s, a] - y[S[s], A[a]]) *\
-                    (r(S[s], A[a]) +\
-                     sum(- rmax * (S[s][consIdx[i]] != s0[consIdx[i]]) * z[i] for i in range(consLen)))\
-                     for s in Sr for a in Ar)\
+    m.constrain(sum(x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar) -\
+                sum(y[S[s], A[a]] *
+                    (r(S[s], A[a]) + sum(- rmax * (S[s][consIdx[i]] != s0[consIdx[i]]) * z[i] for i in range(consLen)))\
+                    for s in Sr for a in Ar)\
                 >= t)
    
   for s in Sr:
