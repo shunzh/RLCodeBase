@@ -74,9 +74,6 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraint
 
   # obj
   obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
-  #for sp in Sr:
-  #  if S[sp] != s0:
-  #    print sp, sum([m[x][sp, ap] for ap in Ar]) - gamma * sum([m[x][s, a] * T(S[s], A[a], S[sp]) for s in Sr for a in Ar])
 
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 
@@ -141,7 +138,7 @@ def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
   find the next dominating policy given domPis or decide there are no more dominating policies
   """
   rmax = 10000
-  M = 0.001
+  M = 0.01
   consLen = len(consIdx)
 
   m = CPlexModel()
@@ -155,6 +152,7 @@ def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
   # decision variables
   x = m.new((len(S), len(A)), lb=0, name='x')
   z = m.new(consLen, vtype=bool, name='z')
+  #z = [0, 1, 0] # test for office nav domain
   t = m.new(name='t')
   
   # flow conservation
@@ -180,12 +178,14 @@ def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
   for s in Sr:
     for a in Ar:
       for i in range(consLen):
-        m.constrain(M * x[s, a] - z[i] >= 1)
+        if S[s][consIdx[i]] != s0[consIdx[i]]:
+          m.constrain(x[s, a] - z[i] >= 0.9)
+          break
 
   # obj
   obj = m.maximize(t)
- 
-  return obj, x
+  
+  return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
   
 
 def computeObj(q, psi, S, A, R):
@@ -205,40 +205,6 @@ def computeValue(pi, r, S, A):
     for a in A:
       sum += pi[s, a] * r(s, a)
   return sum
-
-def rockDomain():
-  size = 10
-  numRocks = 3
-  rewardCandNum = 3
-  args = easyDomains.getRockDomain(size, numRocks, rewardCandNum, fixedRocks=True)
-  k = 3 # number of responses
-  
-  q = [] # query set
-
-  for i in range(k):
-    if i == 0:
-      args['maxV'] = [0] * rewardCandNum
-    else:
-      # find the optimal policy so far that achieves the best on each reward candidate
-      args['maxV'] = []
-      for rewardId in xrange(rewardCandNum):
-        args['maxV'].append(max([computeValue(pi, args['R'][rewardId], args['S'], args['A']) for pi in q]))
-
-    x = milp(**args)
-    q.append(x)
-
-    hList = []
-    for s in args['S']:
-      hValue = 0
-      for a in args['A']:
-        bins = [0] * 10
-        for pi in q:
-          id = min([int(10 * pi[s, a]), 9])
-          bins[id] += 1
-        hValue += scipy.stats.entropy(bins)
-      hList.append((s, hValue))
-
-    hList = sorted(hList, reverse=True, key=lambda _: _[1])
 
 def toyDomain():
   args = easyDomains.getChainDomain(10)

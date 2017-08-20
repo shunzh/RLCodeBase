@@ -66,12 +66,14 @@ class ConsQueryAgent():
     args['domPis'] = [x]
     args['consIdx'] = self.consIdx
     print opt
+    printOccupancy(x)
     
     # iterate until no more dominating policies are found
     while True:
       opt, x = domPiMilp(**args)
       args['domPis'].append(x)
       print opt
+      printOccupancy(x)
       
       if opt == 0: break
     
@@ -98,3 +100,8 @@ class ConsQueryAgent():
               ret.append((s, a))
               break
     return ret
+
+def printOccupancy(x):
+  for sa, occ in x.items():
+    if occ > 0: print sa, occ
+

@@ -24,8 +24,8 @@ def main():
   height = 3
   
   # some objects
-  box1 = (2, 1)
-  box2 = (2, 0)
+  box1 = (2, 0)
+  box2 = (2, 1)
   box3 = (0, 2)
   #door1 = (1, 1)
   #door2 = (3, 1)
