@@ -103,7 +103,8 @@ def milp(S, A, R, T, s0, psi, maxV):
   Ar = range(len(A))
   
   # decision variables
-  x = m.new((len(S), len(A)), lb=0, ub=1, name='x')
+  # FIXME i removed upper bound of x. it shoundn't have such bound without transient-state assumption, right?
+  x = m.new((len(S), len(A)), lb=0, name='x')
   z = m.new(rLen, vtype=bool, name='z')
   y = m.new(rLen, name='y')
 
@@ -134,6 +135,57 @@ def milp(S, A, R, T, s0, psi, maxV):
     for a in Ar:
       res[S[s], A[a]] = m[x][s, a] 
   return res
+
+def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
+  """
+  find the next dominating policy given domPis or decide there are no more dominating policies
+  """
+  rmax = 10000
+  M = 0.001
+  consLen = len(consIdx)
+
+  m = CPlexModel()
+  if not config.VERBOSE: m.setVerbosity(0)
+
+  # state range
+  Sr = range(len(S))
+  # action range
+  Ar = range(len(A))
+  
+  # decision variables
+  x = m.new((len(S), len(A)), lb=0, name='x')
+  z = m.new(consLen, vtype=bool, name='z')
+  t = m.new(name='t')
+  
+  # flow conservation
+  for sp in Sr:
+    # x (x(s) - \gamma * T) = \sigma
+    # and make sure there is no flow back from the terminal states
+    if not terminal(S[sp]):
+      m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp]) * (not terminal(S[s]))) for s in Sr for a in Ar) == (S[sp] == s0))
+      #print S[sp], [(S[s], A[a]) for s in Sr for a in Ar if T(S[s], A[a], S[sp]) > 0]
+    else:
+      m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp]) * (not terminal(S[sp]))) for s in Sr for a in Ar) == (S[sp] == s0))
+
+  # t is the lower bound of the difference between x and y
+  # note: i don't think expressions in constraints can call other functions
+  for y in domPis:
+    m.constrain(sum((x[s, a] - y[s, a]) *\
+                    (r(S[s], A[a]) +\
+                     0 )\
+                     for s in Sr for a in Ar)\
+                >= t)
+   
+  for s in Sr:
+    for a in Ar:
+      for i in range(consLen):
+        m.constrain(M * x[s, a] - z[i] >= 1)
+
+  # obj
+  obj = m.maximize(t)
+ 
+  return obj, x
+  
 
 def computeObj(q, psi, S, A, R):
   rLen = len(R)

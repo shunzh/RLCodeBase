@@ -1,7 +1,12 @@
-from lp import lpDual
+from lp import lpDual, domPiMilp
 import pprint
 
 class ConsQueryAgent():
+  """
+  Find queries in constraint-uncertain mdps. May formulate constraints as negative rewards.
+
+  TODO only implementing some auxiliary functions. 
+  """
   def __init__(self, mdp, consIdx):
     """
     can't think of a class it should inherit..
@@ -14,6 +19,7 @@ class ConsQueryAgent():
   
   def findIrrelevantFeats(self):
     """
+    DEPRECIATED. the crietrion is too strong. unlikely to rule out any features.
     use the dual lp problem to solve such problem.
 
     return: (occupancy measure, optimal value)
@@ -49,6 +55,30 @@ class ConsQueryAgent():
       if opt <= rawOpt: irrFeats.append(idx)
     
     return irrFeats
+  
+  def findDominatingPolicies(self):
+    """
+    Solve MILP problems to incrementally add dominating policies to a set
+    """
+    args = self.mdp
+    
+    opt, x = lpDual(**args)
+    args['domPis'] = [x]
+    args['consIdx'] = self.consIdx
+    
+    # iterate until no more dominating policies are found
+    while True:
+      opt, x = domPiMilp(**args)
+      args['domPis'].append(x)
+      print opt
+      
+      if opt == 0: break
+    
+    return args['domPis']
+
+  def envFeatureChanged(self, s0, s):
+    # decide if s violates any environmental feature
+    return any(s0[i] != s[i] for i in self.consIdx)
   
   # find marginalized state space
   def statesWithSameFeats(self, idx, value):

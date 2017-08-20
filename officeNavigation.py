@@ -97,13 +97,15 @@ def main():
   terminal = lambda s: s[SWITCH] == OFF
 
   # there is a reward of -1 at any step except when goal is reached
+  # note that the domain of this function should not include any environmental features!
   rFunc = lambda s, a: 0 if s[SWITCH] == OFF else -1
   
   # the domain handler
   officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal)
   
   agent = ConsQueryAgent(officeNav, cIndices)
-  print agent.findIrrelevantFeats()
+  #print agent.findIrrelevantFeats()
+  print len(agent.findDominatingPolicies())
 
 if __name__ == '__main__':
   main()
