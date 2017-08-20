@@ -170,9 +170,10 @@ def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
   # t is the lower bound of the difference between x and y
   # note: i don't think expressions in constraints can call other functions
   for y in domPis:
-    m.constrain(sum((x[s, a] - y[s, a]) *\
+    # note that y is indexed by elements in S x A, not numbered indices
+    m.constrain(sum((x[s, a] - y[S[s], A[a]]) *\
                     (r(S[s], A[a]) +\
-                     0 )\
+                     sum(- rmax * (S[s][consIdx[i]] != s0[consIdx[i]]) * z[i] for i in range(consLen)))\
                      for s in Sr for a in Ar)\
                 >= t)
    
