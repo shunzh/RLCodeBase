@@ -29,7 +29,7 @@ def main():
   box3 = (0, 2)
   #door1 = (1, 1)
   #door2 = (3, 1)
-  switch = (4, 2)
+  switch = (width - 1, height - 1)
   
   # pairs of adjacent locations that are blocked by a wall
   walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
