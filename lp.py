@@ -138,7 +138,7 @@ def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
   find the next dominating policy given domPis or decide there are no more dominating policies
   """
   rmax = 10000
-  M = 0.01
+  M = 100
   consLen = len(consIdx)
 
   m = CPlexModel()
@@ -176,14 +176,15 @@ def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
                 >= t)
    
   for s in Sr:
-    for a in Ar:
-      for i in range(consLen):
-        if S[s][consIdx[i]] != s0[consIdx[i]]:
-          m.constrain(x[s, a] - z[i] >= 0.9)
-          break
+    for i in range(consLen):
+      if S[s][consIdx[i]] != s0[consIdx[i]]:
+        for a in Ar:
+          m.constrain(z[i] + M * x[s, a] <= 1)
 
   # obj
   obj = m.maximize(t)
+  
+  print m[z]
   
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
   
