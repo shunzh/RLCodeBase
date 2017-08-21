@@ -98,17 +98,17 @@ def main():
   
   agent = ConsQueryAgent(officeNav, cIndices)
 
+  """
   start = time.time()
   agent.findDominatingPolicies()
   end = time.time()
   writeToFile('milp.out', end - start)
+  """
 
-"""
   start = time.time()
   agent.findDominatingPoliciesBruteForce()
   end = time.time()
   writeToFile('brute.out', end - start)
-"""
 
 def writeToFile(name, value):
   f = open(name, 'w') # not appending

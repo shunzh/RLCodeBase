@@ -85,7 +85,6 @@ class ConsQueryAgent():
     Baseline. we can find all dominating policies by enumerating all possible constraint assignment
     """
     args = self.mdp
-    featLength = len(args['S'][0])
     s0 = args['s0']
     A = args['A']
     
@@ -98,11 +97,14 @@ class ConsQueryAgent():
                                for idx in activeCons
                                for s in self.statesWithDifferentFeats(idx, s0[idx])}
       args['constraints'] = constraints
-      rawOpt, occ = lpDual(**args)
       
-      domPis.append(occ)
+      # FIXME having memory issue, so just dry run
+      lpDual(**args)
+
+      #rawOpt, occ = lpDual(**args)
+      #domPis.append(occ)
     
-    return domPis
+    #return domPis
 
   # find marginalized state space
   def statesWithSameFeats(self, idx, value):
