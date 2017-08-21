@@ -13,6 +13,13 @@ import heapq, random
 import pickle
 import numpy as np
 
+def powerset(iterable):
+  from itertools import combinations
+  s = list(iterable)
+  for r in range(len(s)+1):
+    for _ in combinations(s, r):
+      yield _
+
 def getValueDistance(w1, w2):
   """
     Return:

@@ -71,7 +71,7 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraint
   # >= constraints
   if len(positiveConstraints) > 0:
     m.constrain(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= 1)
-
+    
   # obj
   obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
 

@@ -1,13 +1,6 @@
 import easyDomains
 from consQueryAgents import ConsQueryAgent
-
-LOCATION = 0
-BOX1 = 1
-BOX2 = 2
-BOX3 = 3
-#DOOR1 = 3
-#DOOR2 = 4
-SWITCH = 4
+import time
 
 OPEN = 1
 CLOSED = 0
@@ -20,25 +13,26 @@ OFF = 0
 
 def main():
   # specify the size of the domain, which are the robot's possible locations
-  width = 5
-  height = 3
+  width = 4
+  height = 4
   
   # some objects
-  box1 = (2, 0)
-  box2 = (2, 1)
-  box3 = (0, 2)
+  boxes = [(0, 2), (1, 2), (2, 2), (3, 2)]
   #door1 = (1, 1)
   #door2 = (3, 1)
   switch = (width - 1, height - 1)
+
+  LOCATION = 0
+  SWITCH = len(boxes) + 1
   
   # pairs of adjacent locations that are blocked by a wall
-  walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
+  #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
+  walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
-  sSets = [[(x, y) for x in range(width) for y in range(height)],
-           [0, 1], [0, 1], [0, 1], #boxes
-           #[0, 1], [0, 1], #doors
-           [0, 1]] #switch
+  sSets = [[(x, y) for x in range(width) for y in range(height)]] +\
+          [[0, 1] for _ in boxes] +\
+          [[0, 1]] #switch
   
   # the robot can change its locations and manipulate the switch
   cIndices = range(1, SWITCH) # location is not a constraint
@@ -84,15 +78,14 @@ def main():
     if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
 
-  tFunc = [move,
-           stepOnBoxGen(BOX1, box1), stepOnBoxGen(BOX2, box2), stepOnBoxGen(BOX3, box3),
-           #doorOpGen(DOOR1, door1), doorOpGen(DOOR2, door2),
-           switchOp]
+  tFunc = [move] +\
+          [stepOnBoxGen(i+1, boxes[i]) for i in range(len(boxes))] +\
+          [switchOp]
 
-  s0 = ((0, 0), # robot's location
-        CLEAN, CLEAN, CLEAN, # boxes are clean
-        #OPEN, OPEN, # door 1 is open
-        ON) # switch is on
+  s0List = [(0, 0)] +\
+           [CLEAN for _ in range(len(boxes))] +\
+           [ON] # switch is on
+  s0 = tuple(s0List)
   
   terminal = lambda s: s[SWITCH] == OFF
 
@@ -104,8 +97,23 @@ def main():
   officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal)
   
   agent = ConsQueryAgent(officeNav, cIndices)
-  #print agent.findIrrelevantFeats()
-  print len(agent.findDominatingPolicies())
+
+  start = time.time()
+  agent.findDominatingPolicies()
+  end = time.time()
+  writeToFile('milp.out', end - start)
+
+"""
+  start = time.time()
+  agent.findDominatingPoliciesBruteForce()
+  end = time.time()
+  writeToFile('brute.out', end - start)
+"""
+
+def writeToFile(name, value):
+  f = open(name, 'w') # not appending
+  f.write(str(value))
+  f.close()
 
 if __name__ == '__main__':
   main()

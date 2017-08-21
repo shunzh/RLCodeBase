@@ -1,5 +1,6 @@
 from lp import lpDual, domPiMilp
 import pprint
+from util import powerset
 
 class ConsQueryAgent():
   """
@@ -79,10 +80,30 @@ class ConsQueryAgent():
     
     return args['domPis']
 
-  def envFeatureChanged(self, s0, s):
-    # decide if s violates any environmental feature
-    return any(s0[i] != s[i] for i in self.consIdx)
-  
+  def findDominatingPoliciesBruteForce(self):
+    """
+    Baseline. we can find all dominating policies by enumerating all possible constraint assignment
+    """
+    args = self.mdp
+    featLength = len(args['S'][0])
+    s0 = args['s0']
+    A = args['A']
+    
+    domPis = []
+ 
+    for activeCons in powerset(self.consIdx):
+      print activeCons
+      # solve the raw problem
+      constraints = {(s, a): 0 for a in A
+                               for idx in activeCons
+                               for s in self.statesWithDifferentFeats(idx, s0[idx])}
+      args['constraints'] = constraints
+      rawOpt, occ = lpDual(**args)
+      
+      domPis.append(occ)
+    
+    return domPis
+
   # find marginalized state space
   def statesWithSameFeats(self, idx, value):
     return filter(lambda s: s[idx] == value, self.mdp['S'])
