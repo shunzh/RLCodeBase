@@ -1,9 +1,8 @@
 try:
-  from pycpx import CPlexModel
+  from pycpx import CPlexModel, CPlexException
 except ImportError:
   print "can't import CPlexModel"
 import easyDomains
-import scipy.stats
 import config
 import util
 
@@ -39,7 +38,7 @@ def lp(S, A, r, T, s0):
 
 def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraints=[]):
   """
-  Solve the dual problem of lp
+  Solve the dual problem of lp, maybe with some constraints
   Same arguments
   
   Note that this is a lower level function that does not consider feature extraction.
@@ -73,7 +72,12 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraint
     m.constrain(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= 1)
     
   # obj
-  obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
+  try:
+    obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
+  except CPlexException as err:
+    print 'Exception', err
+    # we return obj value as None and occ measure as {}. this should be handled correctly
+    return None, {}
 
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 

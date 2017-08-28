@@ -98,6 +98,7 @@ class ConsQueryAgent():
       opt, x = lpDual(**args)
       
       # check how many features are violated
+      # x is {} if no feasible features
       occupiedFeats = set()
       for sa, occ in x.items():
         if occ > 0:
@@ -118,31 +119,31 @@ class ConsQueryAgent():
     
     return list(relFeats)
 
-  def findDominatingPoliciesBruteForce(self):
+  def findRelevantFeatsBruteForce(self):
     """
-    Baseline. we can find all dominating policies by enumerating all possible constraint assignment
+    Baseline. we can find all relevant features by enumerating all dominating policies
     """
     args = self.mdp
-    s0 = args['s0']
     A = args['A']
     
-    domPis = []
+    relFeats = set()
  
-    for activeCons in powerset(self.consIdx):
+    for activeCons in powerset(range(self.consSetsSize)):
       print activeCons
       # solve the raw problem
-      constraints = {(s, a): 0 for a in A
-                               for idx in activeCons
-                               for s in self.statesWithDifferentFeats(idx, s0[idx])}
-      args['constraints'] = constraints
-      
-      # FIXME having memory issue, so just dry run
-      lpDual(**args)
+      args['constraints'] = {(s, a): 0 for a in A
+                             for idx in activeCons
+                             for s in self.consSets[idx]}
+      opt, x = lpDual(**args)
 
-      #rawOpt, occ = lpDual(**args)
-      #domPis.append(occ)
-    
-    #return domPis
+      for sa, occ in x.items():
+        if occ > 0:
+          s, a = sa
+          for idx in range(self.consSetsSize):
+            if s in self.consSets[idx]: 
+              relFeats.add(idx)
+
+    return list(relFeats)
 
   # find marginalized state space
   def statesWithSameFeats(self, idx, value):

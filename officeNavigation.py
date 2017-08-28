@@ -128,14 +128,19 @@ def classicOfficNav():
 
 def flatOfficNav():
   width = 10
-  height = 10
+  height = 5
 
   getRandLoc = lambda: (random.randint(0, width - 1), random.randint(0, height - 1))
   mdp = {}
   
   # some objects
-  numOfCons = 10
+  numOfCons = 5
   objectsInOneCons = 5
+
+  #mdp['s0'] = (4, 4)
+  mdp['s0'] = getRandLoc()
+  #switch = (4, 6)
+  switch = getRandLoc()
 
   mdp['S'] = [(x, y) for x in range(width) for y in range(height)]
   mdp['A'] = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)] 
@@ -147,18 +152,17 @@ def flatOfficNav():
     return s == sp # bounced back
   mdp['T'] = move
   mdp['r'] = lambda s, a: -1 if s != switch else 0
-  mdp['s0'] = (4, 4) #getRandLoc()
 
-  switch = (4, 6) #getRandLoc()
   mdp['terminal'] = lambda s: s == switch # terminates when the robot arrives at the switch
   
-  #consSets = [[getRandLoc() for _ in range(objectsInOneCons)] for cons in range(numOfCons)]
-  consSets = [[(4, 5)], [(0, 0)]]
+  consSets = [[getRandLoc() for _ in range(objectsInOneCons)] for cons in range(numOfCons)]
+  #consSets = [[(4, 5)], [(0, 0)]]
 
   agent = ConsQueryAgent(mdp, consSets)
 
   start = time.time()
   print agent.findRelevantFeatures()
+  #print agent.findRelevantFeatsBruteForce()
   end = time.time()
   print end - start
 
@@ -171,7 +175,7 @@ def writeToFile(name, value):
 
 if __name__ == '__main__':
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'r')
+    opts, args = getopt.getopt(sys.argv[1:], 'r:')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
