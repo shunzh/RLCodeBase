@@ -8,19 +8,22 @@ class ConsQueryAgent():
 
   TODO only implementing some auxiliary functions. 
   """
-  def __init__(self, mdp, consIdx):
+  def __init__(self, mdp, consSets):
     """
     can't think of a class it should inherit..
 
-    mdp: a factored mdp
-    consIdx: specify a set of indices of features that the robot is not supposed to change without querying 
+    consSets: a set of possible constraints. consSets[i] is a set of states.
+              if i-th constraint is active, then the robot cannot visit consSets[i]
     """
     self.mdp = mdp
-    self.consIdx = consIdx
+    self.consSets = consSets
+    self.consSetsSize = len(consSets)
   
   def findIrrelevantFeats(self):
     """
-    DEPRECIATED. the crietrion is too strong. unlikely to rule out any features.
+    DEPRECIATED. The criterion is too strong. unlikely to rule out any features.
+    TODO. still using consIdx rather than consSets. need updates.
+
     use the dual lp problem to solve such problem.
 
     return: (occupancy measure, optimal value)
@@ -91,7 +94,7 @@ class ConsQueryAgent():
 
       args['constraints'] = {(s, a): 0 for a in A
                              for idx in activeCons
-                             for s in self.statesWithDifferentFeats(idx, s0[idx])}
+                             for s in self.consSets[idx]}
       opt, x = lpDual(**args)
       
       # check how many features are violated
@@ -99,8 +102,8 @@ class ConsQueryAgent():
       for sa, occ in x.items():
         if occ > 0:
           s, a = sa
-          for idx in self.consIdx:
-            if s[idx] != s0[idx]: 
+          for idx in range(self.consSetsSize):
+            if s in self.consSets[idx]: 
               occupiedFeats.add(idx)
 
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
@@ -109,7 +112,7 @@ class ConsQueryAgent():
       relFeats = relFeats.union(occupiedFeats)
       relFeatPowerSet = set(powerset(relFeats))
 
-      print beta
+      print 'beta', beta
       #print opt
       #printOccupancy(x)
     

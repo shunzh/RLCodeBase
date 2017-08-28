@@ -11,7 +11,6 @@ import random
 import getopt
 import config
 from cmp import QueryType
-from mountainCar import MountainCar, MountainCarToy
 import numpy
 from tabularNavigation import ThreeStateToy
 from driving import Driving
