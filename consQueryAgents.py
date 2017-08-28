@@ -57,28 +57,60 @@ class ConsQueryAgent():
     
     return irrFeats
   
-  def findDominatingPolicies(self):
+  def findRelevantFeatures(self):
     """
     Solve MILP problems to incrementally add dominating policies to a set
     """
     args = self.mdp
-    
-    opt, x = lpDual(**args)
-    args['domPis'] = [x]
+    s0 = args['s0']
+    A = args['A']
+
+    beta = [] # rules to keep
+    relFeats = set()
     args['consIdx'] = self.consIdx
-    print opt
-    printOccupancy(x)
+    
+    relFeatPowerSet = set(powerset(relFeats))
+    subsetsConsidered = []
     
     # iterate until no more dominating policies are found
     while True:
-      opt, x = domPiMilp(**args)
-      if opt == 0: break
+      subsetsToConsider = relFeatPowerSet.difference(subsetsConsidered)
 
-      args['domPis'].append(x)
-      print opt
-      printOccupancy(x)
+      if len(subsetsToConsider) == 0: break
+
+      # find the subset with the smallest size
+      activeCons = min(subsetsToConsider, key=lambda _: len(_))
+      
+      skipThisCons = False
+      for enf, relax in beta:
+        if enf.issubset(activeCons) and len(relax.intersection(activeCons)) == 0:
+          # this subset can be ignored
+          skipThisCons = True
+          break
+      if skipThisCons: continue
+
+      args['constraints'] = {(s, a): 0 for a in A
+                             for idx in activeCons
+                             for s in self.statesWithDifferentFeats(idx, s0[idx])}
+      opt, x = lpDual(**args)
+      
+      # check how many features are violated
+      occupiedFeats = set()
+      for sa, occ in x:
+        if occ > 0:
+          s, a = sa
+          for idx in self.consIdx:
+            if s[idx] != s0[idx]: 
+              occupiedFeats.add(idx)
+
+      # beta records that we would not enforce activeCons and relax occupiedFeats in the future
+      beta.append((activeCons, occupiedFeats))
+      relFeatPowerSet = set(powerset(relFeats))
+
+      #print opt
+      #printOccupancy(x)
     
-    return args['domPis']
+    return list(relFeats)
 
   def findDominatingPoliciesBruteForce(self):
     """
