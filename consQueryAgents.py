@@ -119,6 +119,12 @@ class ConsQueryAgent():
     
     return list(relFeats)
 
+  def findRelevantFeatsUsingHeu(self):
+    """
+    Alg. 3 in paper, which finds a superset of all relevant features
+    """
+    pass
+
   def findRelevantFeatsBruteForce(self):
     """
     Baseline. we can find all relevant features by enumerating all dominating policies

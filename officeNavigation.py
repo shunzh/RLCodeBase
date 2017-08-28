@@ -16,6 +16,8 @@ CLEAN = 0
 ON = 1
 OFF = 0 
 
+method = 'alg1'
+
 def classicOfficNav():
   """
   The office navigation domain specified in the report using a factored representation.
@@ -161,21 +163,30 @@ def flatOfficNav():
   agent = ConsQueryAgent(mdp, consSets)
 
   start = time.time()
-  print agent.findRelevantFeatures()
-  #print agent.findRelevantFeatsBruteForce()
+  if method == 'alg1':
+    feats = agent.findRelevantFeatures()
+  elif method == 'alg3':
+    feats = agent.findRelevantFeatsBruteForce()
+  else:
+    raise Exception('unknown alg')
   end = time.time()
-  print end - start
+  elapsed = end - start
+
+  print feats, elapsed
+  
+  writeToFile(method + 'Feats.out', feats)
+  writeToFile(method + 'Time.out', elapsed)
 
 
 def writeToFile(name, value):
-  f = open(name, 'w') # not appending
-  f.write(str(value))
+  f = open(name, 'a') # not appending
+  f.write(str(value) + '\n')
   f.close()
 
 
 if __name__ == '__main__':
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'r:')
+    opts, args = getopt.getopt(sys.argv[1:], 'r:a:')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
@@ -183,5 +194,7 @@ if __name__ == '__main__':
       random.seed(int(arg))
       numpy.random.seed(int(arg))
       scipy.random.seed(int(arg))
+    elif opt == '-a':
+      method = arg
  
   flatOfficNav()
