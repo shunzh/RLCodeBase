@@ -67,7 +67,6 @@ class ConsQueryAgent():
 
     beta = [] # rules to keep
     relFeats = set()
-    args['consIdx'] = self.consIdx
     
     relFeatPowerSet = set(powerset(relFeats))
     subsetsConsidered = []
@@ -80,6 +79,7 @@ class ConsQueryAgent():
 
       # find the subset with the smallest size
       activeCons = min(subsetsToConsider, key=lambda _: len(_))
+      subsetsConsidered.append(activeCons)
       
       skipThisCons = False
       for enf, relax in beta:
@@ -96,7 +96,7 @@ class ConsQueryAgent():
       
       # check how many features are violated
       occupiedFeats = set()
-      for sa, occ in x:
+      for sa, occ in x.items():
         if occ > 0:
           s, a = sa
           for idx in self.consIdx:
@@ -104,9 +104,12 @@ class ConsQueryAgent():
               occupiedFeats.add(idx)
 
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
-      beta.append((activeCons, occupiedFeats))
+      beta.append((set(activeCons), occupiedFeats))
+
+      relFeats = relFeats.union(occupiedFeats)
       relFeatPowerSet = set(powerset(relFeats))
 
+      print beta
       #print opt
       #printOccupancy(x)
     

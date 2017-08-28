@@ -13,11 +13,11 @@ OFF = 0
 
 def main():
   # specify the size of the domain, which are the robot's possible locations
-  width = 4
-  height = 4
+  width = 5
+  height = 3
   
   # some objects
-  boxes = [(0, 2), (1, 2), (2, 2), (3, 2)]
+  boxes = [(0, 2), (2, 0), (2, 1)]
   #door1 = (1, 1)
   #door2 = (3, 1)
   switch = (width - 1, height - 1)
@@ -26,8 +26,8 @@ def main():
   SWITCH = len(boxes) + 1
   
   # pairs of adjacent locations that are blocked by a wall
-  #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
-  walls = []
+  walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
+  #walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
   sSets = [[(x, y) for x in range(width) for y in range(height)]] +\
