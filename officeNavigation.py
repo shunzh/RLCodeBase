@@ -129,7 +129,7 @@ def classicOfficNav():
 
 
 def flatOfficNav():
-  width = 10
+  width = 5
   height = 5
 
   getRandLoc = lambda: (random.randint(0, width - 1), random.randint(0, height - 1))
@@ -139,10 +139,10 @@ def flatOfficNav():
   numOfCons = 5
   objectsInOneCons = 5
 
-  #mdp['s0'] = (4, 4)
-  mdp['s0'] = getRandLoc()
-  #switch = (4, 6)
-  switch = getRandLoc()
+  mdp['s0'] = (0, 0)
+  #mdp['s0'] = getRandLoc()
+  switch = (1, 2)
+  #switch = getRandLoc()
 
   mdp['S'] = [(x, y) for x in range(width) for y in range(height)]
   mdp['A'] = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)] 
@@ -157,8 +157,8 @@ def flatOfficNav():
 
   mdp['terminal'] = lambda s: s == switch # terminates when the robot arrives at the switch
   
-  consSets = [[getRandLoc() for _ in range(objectsInOneCons)] for cons in range(numOfCons)]
-  #consSets = [[(4, 5)], [(0, 0)]]
+  #consSets = [[getRandLoc() for _ in range(objectsInOneCons)] for cons in range(numOfCons)]
+  consSets = [[(0, 1)], [(1, 1)], [(3, 0)]]
 
   agent = ConsQueryAgent(mdp, consSets)
 
@@ -166,6 +166,8 @@ def flatOfficNav():
   if method == 'alg1':
     feats = agent.findRelevantFeatures()
   elif method == 'alg3':
+    feats = agent.findRelevantFeatsUsingHeu()
+  elif method == 'brute':
     feats = agent.findRelevantFeatsBruteForce()
   else:
     raise Exception('unknown alg')

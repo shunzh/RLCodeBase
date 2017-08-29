@@ -1,4 +1,4 @@
-from lp import lpDual, domPiMilp
+from lp import lpDual, domPiMilp, decomposePiLP, computeValue
 import pprint
 from util import powerset
 
@@ -123,7 +123,62 @@ class ConsQueryAgent():
     """
     Alg. 3 in paper, which finds a superset of all relevant features
     """
-    pass
+    args = self.mdp
+    S = args['S']
+    A = args['A']
+
+    relFeats = set()
+    
+    # find the policy with all constraints relaxed
+    bestOpt, bestX = lpDual(**args)
+    bestXOccupied = findOccupiedStates(bestX)
+    for idx in range(self.consSetsSize):
+      for s in bestXOccupied:
+        if s in self.consSets[idx]: 
+          relFeats.add(idx)
+          break
+    print 'best x'
+    printOccSA(bestX)
+    print relFeats
+
+    # find the policy with all constraints enforced
+    args['constraints'] = {(s, a): 0 for a in A
+                           for s in S
+                           for consSet in self.consSets
+                           if s in consSet}
+    rawOpt, rawX = lpDual(**args)
+
+    while True:
+      # the optimal policy that has to change some features other than known relevant features
+      args['constraints'] = {}
+      args['positiveConstraints'] = [(s, a) for a in A
+                             for idx in range(self.consSetsSize)
+                             if not idx in relFeats
+                             for s in self.consSets[idx]]
+      print 'pc', args['positiveConstraints']
+      opt, x = lpDual(**args)
+      
+      print 'x occ'
+      printOccSA(x)
+
+      if x == {}: break # such pi does not exist
+
+      sigma, y = decomposePiLP(S, A, args['T'], args['s0'], args['terminal'], bestX, x)
+      
+      print 'sigma', sigma
+      print computeValue(y, args['r'], S, A) / (1 - sigma), rawOpt
+      if computeValue(y, args['r'], S, A) / (1 - sigma) <= rawOpt: break
+
+      yOccupied = findOccupiedStates(y)
+      for idx in range(self.consSetsSize):
+        for s in yOccupied:
+          if s in self.consSets[idx]: 
+            relFeats.add(idx)
+            break
+
+      print relFeats
+   
+    return relFeats
 
   def findRelevantFeatsBruteForce(self):
     """
@@ -169,7 +224,15 @@ class ConsQueryAgent():
               break
     return ret
 
-def printOccupancy(x):
+def findOccupiedStates(x):
+  states = set()
+  for sa, occ in x.items():
+    if occ > 0:
+      s, a = sa
+      states.add(s)
+  
+  return states
+
+def printOccSA(x):
   for sa, occ in x.items():
     if occ > 0: print sa, occ
-

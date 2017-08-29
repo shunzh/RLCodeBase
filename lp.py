@@ -69,7 +69,7 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraint
 
   # >= constraints
   if len(positiveConstraints) > 0:
-    m.constrain(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= 1)
+    m.constrain(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= 0.1)
     
   # obj
   try:
@@ -80,6 +80,37 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraint
     return None, {}
 
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
+
+def decomposePiLP(S, A, T, s0, terminal, rawX, x, gamma=1):
+  m = CPlexModel()
+  if not config.VERBOSE: m.setVerbosity(0)
+
+  # useful constants
+  Sr = range(len(S))
+  Ar = range(len(A))
+ 
+  y = m.new((len(S), len(A)), lb=0, name='y')
+  sigma = m.new(lb=0, ub=1, name='sigma')
+  
+  for s in Sr:
+    for a in Ar:
+      # note that x and rawX use S x A as domains
+      m.constrain(sigma * rawX[S[s], A[a]] + y[s, a] == x[S[s], A[a]])
+
+  # make sure y is a valid occupancy
+  for sp in Sr:
+    # x (x(s) - \gamma * T) = \sigma
+    # and make sure there is no flow back from the terminal states
+    if not terminal(S[sp]):
+      m.constrain(sum(y[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp]) * (not terminal(S[s]))) for s in Sr for a in Ar) == (1 - sigma) * (S[sp] == s0))
+    else:
+      m.constrain(sum(y[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp]) * (not terminal(S[sp]))) for s in Sr for a in Ar) == (1 - sigma) * (S[sp] == s0))
+ 
+  obj = m.maximize(sigma)
+  
+  # return sigma and the value of y
+  return obj, {(S[s], A[a]): m[y][s, a] for s in Sr for a in Ar}
+
 
 def milp(S, A, R, T, s0, psi, maxV):
   """
