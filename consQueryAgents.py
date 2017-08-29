@@ -200,7 +200,10 @@ class ConsQueryAgent():
       args['constraints'] = {(s, a): 0 for a in A
                              for idx in activeCons
                              for s in self.consSets[idx]}
+      #print args['constraints']
       opt, x = lpDual(**args)
+      #print opt
+      #printOccSA(x)
 
       for idx in range(self.consSetsSize):
         for sa, occ in x.items():
@@ -208,7 +211,7 @@ class ConsQueryAgent():
             s, a = sa
             if s in self.consSets[idx]: 
               relFeats.add(idx)
-              print 'add', idx
+              #print 'add', idx
 
     return list(relFeats)
 

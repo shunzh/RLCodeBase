@@ -130,15 +130,15 @@ def classicOfficNav():
 
 
 def flatOfficNav():
-  width = 5
-  height = 5
+  width = 10
+  height = 10
 
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
   mdp = {}
   
   # some objects
   numOfCons = 5
-  objectsInOneCons = 2
+  objectsInOneCons = 1
   
   mdp['s0'] = (0, 0)
   #switch = (8, 8)
@@ -183,13 +183,13 @@ def flatOfficNav():
     elif s == move(s, a): return -100
     else:
       for cons in consSets:
-        if s in cons: return -1.001
+        if s in cons: return -1.01
       return -1
       
-  mdp['r'] = lambda s, a: -1 if s != switch else 0
+  mdp['r'] = reward
 
   # terminates when the robot arrives at the switch or at the border
-  mdp['terminal'] = lambda s: s == switch or s[0] == width - 1 or s[1] == height - 1
+  mdp['terminal'] = lambda s: s == switch
   
   agent = ConsQueryAgent(mdp, consSets)
 
