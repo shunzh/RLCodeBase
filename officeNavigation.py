@@ -6,6 +6,7 @@ import sys
 import random
 import numpy
 import scipy
+from httplib import MOVED_PERMANENTLY
 
 OPEN = 1
 CLOSED = 0
@@ -132,34 +133,64 @@ def flatOfficNav():
   width = 5
   height = 5
 
-  getRandLoc = lambda: (random.randint(0, width - 1), random.randint(0, height - 1))
+  getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
   mdp = {}
   
   # some objects
   numOfCons = 5
-  objectsInOneCons = 5
-
-  mdp['s0'] = (0, 0)
-  #mdp['s0'] = getRandLoc()
-  switch = (1, 2)
-  #switch = getRandLoc()
-
-  mdp['S'] = [(x, y) for x in range(width) for y in range(height)]
-  mdp['A'] = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)] 
+  objectsInOneCons = 2
   
-  def move(s, a, sp):
+  mdp['s0'] = (0, 0)
+  #switch = (8, 8)
+  switch = getRandLoc()
+
+  consSets = [[getRandLoc() for _ in range(objectsInOneCons)] for cons in range(numOfCons)]
+  #consSets = [[(0, 1)], [(1, 1)], [(1, 0)]]
+
+  print switch, consSets
+  
+  mdp['S'] = [(x, y) for x in range(width) for y in range(height)]
+  #mdp['A'] = [(1, 0), (0, 1), (-1, 0), (0, -1)] 
+  mdp['A'] = [(1, 0), (0, 1), (1, 1)] 
+  
+  # the posterior state of taking a in s without noise
+  def move(s, a):
     moved = (s[0] + a[0], s[1] + a[1])
     if moved[0] >= 0 and moved[0] < width and moved[1] >= 0 and moved[1] < height:
-      return sp == moved
-    return s == sp # bounced back
-  mdp['T'] = move
+      return moved
+    else:
+      return s
+
+  """
+  # stochastic transition
+  def transit(s, a, sp):
+    prob = 0
+    for ap in mdp['A']:
+      if ap == a:
+        if sp == move(s, a): prob += 1 - noise
+      elif move(s, ap) == sp:
+        prob += noise / (len(mdp['A']) - 1)
+    return prob
+  """
+  def transit(s, a, sp):
+    return move(s, a) == sp
+
+  mdp['T'] = transit
+  
+  def reward(s, a):
+    if s == switch: return 0
+    # don't bounce
+    elif s == move(s, a): return -100
+    else:
+      for cons in consSets:
+        if s in cons: return -1.001
+      return -1
+      
   mdp['r'] = lambda s, a: -1 if s != switch else 0
 
-  mdp['terminal'] = lambda s: s == switch # terminates when the robot arrives at the switch
+  # terminates when the robot arrives at the switch or at the border
+  mdp['terminal'] = lambda s: s == switch or s[0] == width - 1 or s[1] == height - 1
   
-  #consSets = [[getRandLoc() for _ in range(objectsInOneCons)] for cons in range(numOfCons)]
-  consSets = [[(0, 1)], [(1, 1)], [(3, 0)]]
-
   agent = ConsQueryAgent(mdp, consSets)
 
   start = time.time()

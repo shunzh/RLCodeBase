@@ -147,6 +147,9 @@ class ConsQueryAgent():
                            for consSet in self.consSets
                            if s in consSet}
     rawOpt, rawX = lpDual(**args)
+    if rawOpt == None:
+      # no feasible policies when all constraitns are enforced
+      return range(self.consSetsSize)
 
     while True:
       # the optimal policy that has to change some features other than known relevant features
@@ -165,6 +168,8 @@ class ConsQueryAgent():
 
       sigma, y = decomposePiLP(S, A, args['T'], args['s0'], args['terminal'], bestX, x)
       
+      if sigma == 1: break # y == bestX
+
       print 'sigma', sigma
       print computeValue(y, args['r'], S, A) / (1 - sigma), rawOpt
       if computeValue(y, args['r'], S, A) / (1 - sigma) <= rawOpt: break
@@ -197,12 +202,13 @@ class ConsQueryAgent():
                              for s in self.consSets[idx]}
       opt, x = lpDual(**args)
 
-      for sa, occ in x.items():
-        if occ > 0:
-          s, a = sa
-          for idx in range(self.consSetsSize):
+      for idx in range(self.consSetsSize):
+        for sa, occ in x.items():
+          if occ > 0:
+            s, a = sa
             if s in self.consSets[idx]: 
               relFeats.add(idx)
+              print 'add', idx
 
     return list(relFeats)
 
