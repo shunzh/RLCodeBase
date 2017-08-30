@@ -147,9 +147,6 @@ class ConsQueryAgent():
                            for consSet in self.consSets
                            if s in consSet}
     rawOpt, rawX = lpDual(**args)
-    if rawOpt == None:
-      # no feasible policies when all constraitns are enforced
-      return range(self.consSetsSize)
 
     while True:
       # the optimal policy that has to change some features other than known relevant features
@@ -158,12 +155,8 @@ class ConsQueryAgent():
                              for idx in range(self.consSetsSize)
                              if not idx in relFeats
                              for s in self.consSets[idx]]
-      print 'pc', args['positiveConstraints']
       opt, x = lpDual(**args)
       
-      print 'x occ'
-      printOccSA(x)
-
       if x == {}: break # such pi does not exist
 
       sigma, y = decomposePiLP(S, A, args['T'], args['s0'], args['terminal'], bestX, x)

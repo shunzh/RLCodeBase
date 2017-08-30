@@ -137,8 +137,8 @@ def flatOfficNav():
   mdp = {}
   
   # some objects
-  numOfCons = 5
-  objectsInOneCons = 1
+  numOfCons = 10
+  objectsInOneCons = 2
   
   mdp['s0'] = (0, 0)
   #switch = (8, 8)
@@ -183,7 +183,8 @@ def flatOfficNav():
     elif s == move(s, a): return -100
     else:
       for cons in consSets:
-        if s in cons: return -1.01
+        # discourage the robot to occupy constraint-violating states unless necessary
+        if s in cons: return -1.001
       return -1
       
   mdp['r'] = reward
@@ -207,7 +208,7 @@ def flatOfficNav():
 
   print feats, elapsed
   
-  writeToFile(method + 'Feats.out', feats)
+  writeToFile(method + 'Feats.out', len(feats))
   writeToFile(method + 'Time.out', elapsed)
 
 
