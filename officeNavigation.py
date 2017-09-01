@@ -17,99 +17,121 @@ CLEAN = 0
 ON = 1
 OFF = 0 
 
-method = 'alg1'
+OPENDOOR = 'openDoor'
+CLOSEDOOR = 'closeDoor'
+TURNOFFSWITCH = 'turnOffSwitch'
 
 def classicOfficNav():
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
-  However, this domain is hard to scale up since we have control variables |S|x|A|.
      _________
   2 |C|     |S|
-  1 |  __C__  |
+  1 |  D_C_D  |
   0 |R___C____|
      0 1 2 3 4
   """
   # specify the size of the domain, which are the robot's possible locations
+  getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
+
   width = 5
   height = 3
+  horizon = 10
   
-    # some objects
-  boxes = [(0, 2), (1, 2), (2, 2), (3, 2)]
-  #door1 = (1, 1)
-  #door2 = (3, 1)
+  # some objects
+  boxes = []
+  carpets = [(2, 0), (2, 1), (0, 2)]
+  doors = [(1, 1), (3, 1)]
   switch = (width - 1, height - 1)
 
-  LOCATION = 0
-  SWITCH = len(boxes) + 1
+  lIndex = 0
+  cIndexStart = lIndex + 1
+  cSize = len(carpets)
+  dIndexStart = cIndexStart + cSize
+  dSize = len(doors)
+  sIndex = dIndexStart + dSize
+  tIndex = sIndex + 1
+  
+  cIndex = range(cIndexStart, cIndexStart + cSize)
+  dIndex = range(dIndexStart, dIndexStart + dSize)
   
   # pairs of adjacent locations that are blocked by a wall
-  #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
-  walls = []
+  walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
+  #walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
-  sSets = [[(x, y) for x in range(width) for y in range(height)]] +\
-          [[0, 1] for _ in boxes] +\
-          [[0, 1]] #switch
+  allLocations = [(x, y) for x in range(width) for y in range(height)]
+  sSets = [allLocations] +\
+          [[CLEAN, STEPPED] for _ in carpets] +\
+          [[CLOSED, OPEN] for _ in doors] +\
+          [[0, 1]] +\
+          [range(horizon)]
   
   # the robot can change its locations and manipulate the switch
-  cIndices = range(1, SWITCH) # location is not a constraint
+  cIndices = cIndex + dIndex
 
-  aSets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1),
-           #'openDoor', 'closeDoor',
-           'turnOffSwitch']
+  aSets = [(1, 0), (0, 1), (-1, 0), (0, -1),
+           OPENDOOR, CLOSEDOOR,
+           TURNOFFSWITCH]
  
-  def move(s, a):
-    loc = s[LOCATION]
-    if type(a) == tuple:
+  # factored transition function
+  def navigate(s, a):
+    loc = s[lIndex]
+    if a in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
       sp = (loc[0] + a[0], loc[1] + a[1])
-      if sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height:
-        # so it's not out of the border
-        if True: #not (s[DOOR1] == CLOSED and sp == door1 or s[DOOR2] == CLOSED and sp == door2):
-          # doors are fine
-          blockedByWall = any(loc in wall and sp in wall for wall in walls)
-          if not blockedByWall: return sp
+      # not blocked by borders, closed doors or walls
+      if not (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
+         not any(s[idx] == CLOSED and sp == s[idx] for idx in dIndex) and\
+         not any(loc in wall and sp in wall for wall in walls):
+        return sp
     return loc
   
-  def stepOnBoxGen(idx, box):
-    def stepOnBox(s, a):
-      loc = s[LOCATION]
-      boxState = s[idx]
-      if loc == box: return STEPPED
-      else: return boxState
-    return stepOnBox
+  def carpetOpGen(idx, carpet):
+    def carpetOp(s, a):
+      loc = s[lIndex]
+      carpetState = s[idx]
+      if loc == carpet: return STEPPED
+      else: return carpetState
+    return carpetOp
   
   def doorOpGen(idx, door):
     def doorOp(s, a):
-      loc = s[LOCATION]
-      doorState = s[idx]
-      if loc in [(door[0] - 1, door[1]), (door[0], door[1])]:
-        if a == 'closeDoor': doorState = CLOSED
-        elif a == 'openDoor': doorState = OPEN
-        # otherwise the door state is unchanged
+      if a in [OPENDOOR, CLOSEDOOR]:
+        loc = s[lIndex]
+        doorState = s[idx]
+        if loc in [(door[0] - 1, door[1]), (door[0], door[1])]:
+          if a == CLOSEDOOR: doorState = CLOSED
+          elif a == OPENDOOR: doorState = OPEN
+          # otherwise the door state is unchanged
       return doorState
     return doorOp
   
   def switchOp(s, a):
-    loc = s[LOCATION]
-    switchState = s[SWITCH]
+    loc = s[lIndex]
+    switchState = s[sIndex]
     if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
+  
+  # time elapses
+  def timeOp(s, a):
+    return s+1
 
-  tFunc = [move] +\
-          [stepOnBoxGen(i+1, boxes[i]) for i in range(len(boxes))] +\
-          [switchOp]
+  tFunc = [navigate] +\
+          [carpetOpGen(cIndexStart + i, carpets[i]) for i in range(cSize)] +\
+          [doorOpGen(dIndexStart + 1, doors[i]) for i in range(dSize)] +\
+          [switchOp] +\
+          [timeOp]
 
   s0List = [(0, 0)] +\
            [CLEAN for _ in range(len(boxes))] +\
            [ON] # switch is on
   s0 = tuple(s0List)
   
-  terminal = lambda s: s[SWITCH] == OFF
+  terminal = lambda s: s[tIndex] == horizon
 
   # there is a reward of -1 at any step except when goal is reached
   # note that the domain of this function should not include any environmental features!
-  rFunc = lambda s, a: 0 if s[SWITCH] == OFF else -1
+  rFunc = lambda s, a: 0 if s[sIndex] == OFF else -1
   
   # the domain handler
   officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal)
@@ -130,6 +152,10 @@ def classicOfficNav():
 
 
 def flatOfficNav():
+  """
+  An efficient and theoretically-unsound way to implement the office navigation domain.
+  Rather than having features, we only have a set of possible constraints.
+  """
   width = 10
   height = 10
 
@@ -137,7 +163,7 @@ def flatOfficNav():
   mdp = {}
   
   # some objects
-  numOfCons = 10
+  numOfCons = 20
   objectsInOneCons = 2
   
   mdp['s0'] = (0, 0)
@@ -219,6 +245,9 @@ def writeToFile(name, value):
 
 
 if __name__ == '__main__':
+  # default values of parameters
+  method = 'alg1'
+
   try:
     opts, args = getopt.getopt(sys.argv[1:], 'r:a:')
   except getopt.GetoptError:
@@ -226,9 +255,12 @@ if __name__ == '__main__':
   for opt, arg in opts:
     if opt == '-r':
       random.seed(int(arg))
+
+      # not necessarily using the following packages, but just to be sure
       numpy.random.seed(int(arg))
       scipy.random.seed(int(arg))
     elif opt == '-a':
       method = arg
  
-  flatOfficNav()
+  #flatOfficNav()
+  classicOfficNav()

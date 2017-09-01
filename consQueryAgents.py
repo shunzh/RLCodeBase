@@ -121,7 +121,8 @@ class ConsQueryAgent():
 
   def findRelevantFeatsUsingHeu(self):
     """
-    Alg. 3 in paper, which finds a superset of all relevant features
+    FIXME not updated.
+    This finds a superset of all relevant features
     """
     args = self.mdp
     S = args['S']
