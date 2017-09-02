@@ -62,21 +62,23 @@ class ConsQueryAgent():
   
   def findRelevantFeatures(self):
     """
-    Solve MILP problems to incrementally add dominating policies to a set
+    Incrementally add dominating policies to a set
     """
     args = self.mdp
     s0 = args['s0']
     A = args['A']
 
     beta = [] # rules to keep
-    relFeats = set()
+    allCons = set()
     
-    relFeatPowerSet = set(powerset(relFeats))
+    allConsPowerset = set(powerset(allCons))
     subsetsConsidered = []
+    
+    numberOfPruning = 0
     
     # iterate until no more dominating policies are found
     while True:
-      subsetsToConsider = relFeatPowerSet.difference(subsetsConsidered)
+      subsetsToConsider = allConsPowerset.difference(subsetsConsidered)
 
       if len(subsetsToConsider) == 0: break
 
@@ -90,25 +92,18 @@ class ConsQueryAgent():
           # this subset can be ignored
           skipThisCons = True
           break
-      if skipThisCons: continue
+      if skipThisCons:
+        numberOfPruning += 1
+        continue
 
-      args['constraints'] = {(s, a): 0 for a in A
-                             for idx in activeCons
-                             for s in self.consSets[idx]}
+      args['constraints'] = set.union(*activeCons)
       opt, x = lpDual(**args)
       
-      # check how many features are violated
-      # x is {} if no feasible features
-      occupiedFeats = set()
-      for sa, occ in x.items():
-        if occ > 0:
-          s, a = sa
-          for idx in range(self.consSetsSize):
-            if s in self.consSets[idx]: 
-              occupiedFeats.add(idx)
+      # check violated constraints
+      violatedCons = self.findViolatedConstraints(x)
 
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
-      beta.append((set(activeCons), occupiedFeats))
+      beta.append((activeCons, violatedCons))
 
       relFeats = relFeats.union(occupiedFeats)
       relFeatPowerSet = set(powerset(relFeats))
@@ -121,7 +116,7 @@ class ConsQueryAgent():
 
   def findRelevantFeatsUsingHeu(self):
     """
-    FIXME not updated.
+    FIXME not sure whether we are going to include this algorithm. not updated.
     This finds a superset of all relevant features
     """
     args = self.mdp
@@ -209,13 +204,25 @@ class ConsQueryAgent():
 
     return list(relFeats)
 
-  # find marginalized state space
-  def statesWithSameFeats(self, idx, value):
-    return filter(lambda s: s[idx] == value, self.mdp['S'])
+  def findViolatedConstraints(self, x):
+    # set of changed features
+    var = {}
+    # set of features that are different from the initial value at time step T
+    notReversed = {}
+    
+    for idx in range(self.consSetsSize):
+      for sa, occ in x.items():
+        if occ > 0:
+          s, a = sa
+          if s[idx] != self.mdp['s0'][idx]:
+            var.add(idx)
+            if s[-1] == self.horizon:
+              notReversed.add(idx)
+    return (var, notReversed)
 
+  # FIXME remove or not? only used by depreciated methods
   def statesWithDifferentFeats(self, idx, value):
     return filter(lambda s: s[idx] != value, self.mdp['S'])
-
   def statesTransitToDifferentFeatures(self, idx, value):
     ret = []
     for s in self.mdp['S']:

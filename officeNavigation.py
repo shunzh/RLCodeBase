@@ -123,8 +123,9 @@ def classicOfficNav():
           [timeOp]
 
   s0List = [(0, 0)] +\
-           [CLEAN for _ in range(len(boxes))] +\
-           [ON] # switch is on
+           [CLEAN for _ in range(len(carpets))] +\
+           [OPEN, CLOSED] +\
+           [ON, 0]
   s0 = tuple(s0List)
   
   terminal = lambda s: s[tIndex] == horizon
