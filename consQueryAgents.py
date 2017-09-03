@@ -2,6 +2,9 @@ from lp import lpDual, domPiMilp, decomposePiLP, computeValue
 import pprint
 from util import powerset
 
+VAR = 0
+NONREVERSED = 1
+
 class ConsQueryAgent():
   """
   Find queries in constraint-uncertain mdps. May formulate constraints as negative rewards.
@@ -12,8 +15,8 @@ class ConsQueryAgent():
     """
     can't think of a class it should inherit..
 
-    consSets: a set of possible constraints. consSets[i] is a set of states.
-              if i-th constraint is active, then the robot cannot visit consSets[i]
+    mdp: a factored mdp
+    consSets: the set of environmental feature indices
     """
     self.mdp = mdp
     self.consSets = consSets
@@ -69,8 +72,8 @@ class ConsQueryAgent():
     A = args['A']
 
     beta = [] # rules to keep
+
     allCons = set()
-    
     allConsPowerset = set(powerset(allCons))
     subsetsConsidered = []
     
@@ -96,7 +99,7 @@ class ConsQueryAgent():
         numberOfPruning += 1
         continue
 
-      args['constraints'] = set.union(*activeCons)
+      args['constraints'] = self.constructConstraints(activeCons)
       opt, x = lpDual(**args)
       
       # check violated constraints
@@ -105,14 +108,14 @@ class ConsQueryAgent():
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
       beta.append((activeCons, violatedCons))
 
-      relFeats = relFeats.union(occupiedFeats)
-      relFeatPowerSet = set(powerset(relFeats))
+      allCons = allCons.union(violatedCons)
+      allConsPowerset = set(powerset(relFeats))
 
       print 'beta', beta
       #print opt
       #printOccupancy(x)
-    
-    return list(relFeats)
+
+    return allCons
 
   def findRelevantFeatsUsingHeu(self):
     """
@@ -204,25 +207,46 @@ class ConsQueryAgent():
 
     return list(relFeats)
 
+  def constructConstraints(self, cons):
+    """
+    Construct set of constraint equations by the specification in cons
+    """
+    constraints = {}
+    for con in cons:
+      consType, consIdx = con
+      if consType == VAR:
+        constraints.update({(s, a): 0 for a in self.mdp['A']
+                                      for s in self.statesWithDifferentFeats[consIdx]})
+      elif consType == NONREVERSED:
+        constraints.update({(s, a): 0 for a in self.mdp['A']
+                                      for s in self.statesWithDifferentFeats[consIdx]
+                                      if s[-1] == self.horizon})
+      else: raise Exception('unknown constraint type')
+
+    return constraints
+
   def findViolatedConstraints(self, x):
     # set of changed features
-    var = {}
+    var = set()
     # set of features that are different from the initial value at time step T
-    notReversed = {}
+    notReversed = set()
     
-    for idx in range(self.consSetsSize):
-      for sa, occ in x.items():
-        if occ > 0:
-          s, a = sa
-          if s[idx] != self.mdp['s0'][idx]:
-            var.add(idx)
-            if s[-1] == self.horizon:
-              notReversed.add(idx)
-    return (var, notReversed)
+    for idx in self.consSets:
+      # states violated by idx
+      violatedStates = statesWithDifferentFeats(idx)
+      for s in violatedStates:
+        if any(x[s, a] > 0 for a in self.mdp['A']):
+          var.add(idx)
+          if s[-1] == self.horizon:
+            notReversed.add(idx)
+
+    # needs to be hashable
+    return tuple([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in nonReversed])
+    
+  def statesWithDifferentFeats(self, idx):
+    return filter(lambda s: s[idx] != self.mdp['s0'][idx], self.mdp['S'])
 
   # FIXME remove or not? only used by depreciated methods
-  def statesWithDifferentFeats(self, idx, value):
-    return filter(lambda s: s[idx] != value, self.mdp['S'])
   def statesTransitToDifferentFeatures(self, idx, value):
     ret = []
     for s in self.mdp['S']:
