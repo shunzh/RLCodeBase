@@ -123,7 +123,7 @@ def classicOfficNav():
   
   # the action to finish the task
   def exitOp(s, a):
-    if s[lIndex] == switch and a == EXIT:
+    if s[-1] == TERMINATED or a == EXIT:
       return TERMINATED
     else:
       return INPROCESS
@@ -151,10 +151,8 @@ def classicOfficNav():
   # there is a reward of -1 at any step except when goal is reached
   # note that the domain of this function should not include any environmental features!
   def reward(s, a):
-    if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
+    if s[-1] == INPROCESS and s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
       return 1
-    elif s[lIndex] == switch and a == EXIT:
-      return 0.01
     else:
       return 0
   rFunc = reward
@@ -164,7 +162,7 @@ def classicOfficNav():
   
   print navigate(((0, 0), 0, 0, 1, 0, 1, 0), (1, 0))
   
-  agent = ConsQueryAgent(officeNav, cIndices)
+  agent = ConsQueryAgent(officeNav, cIndices, horizon)
 
   start = time.time()
   agent.findRelevantFeatures()

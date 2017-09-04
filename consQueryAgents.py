@@ -11,7 +11,7 @@ class ConsQueryAgent():
 
   TODO only implementing some auxiliary functions. 
   """
-  def __init__(self, mdp, consSets):
+  def __init__(self, mdp, consSets, horizon=1000):
     """
     can't think of a class it should inherit..
 
@@ -19,6 +19,7 @@ class ConsQueryAgent():
     consSets: the set of environmental feature indices
     """
     self.mdp = mdp
+    self.horizon = horizon
     self.consSets = consSets
     self.consSetsSize = len(consSets)
   
@@ -69,6 +70,7 @@ class ConsQueryAgent():
     """
     args = self.mdp
     s0 = args['s0']
+    S = args['S']
     A = args['A']
 
     beta = [] # rules to keep
@@ -100,22 +102,31 @@ class ConsQueryAgent():
         continue
 
       args['constraints'] = self.constructConstraints(activeCons)
-      print 'lpDual', allCons
+      args['positiveConstraints'] = [(s, a) for a in A
+                                     for s in S
+                                     if args['terminal'](s)]
+      args['positiveConstraintsOcc'] = args['gamma'] ** self.horizon / (1 - args['gamma'])
       opt, x = lpDual(**args)
       
       # check violated constraints
       violatedCons = self.findViolatedConstraints(x)
 
-      # beta records that we would not enforce activeCons and relax occupiedFeats in the future
-      beta.append((activeCons, violatedCons))
+      beta.append((set(activeCons), set(violatedCons)))
 
-      allCons = allCons.union(violatedCons)
+      # beta records that we would not enforce activeCons and relax occupiedFeats in the future
+      for idx in self.consSets:
+        if (NONREVERSED, idx) in violatedCons:
+          allCons.add((NONREVERSED, idx))
+        elif (NONREVERSED, idx) in activeCons and (VAR, idx) in violatedCons:
+          allCons.add((VAR, idx))
+
       allConsPowerset = set(powerset(allCons))
 
       print 'beta', beta
+      print 'allCons', allCons
       print opt
       printOccSA(x)
-
+    
     return allCons
 
   def findRelevantFeatsUsingHeu(self):
@@ -217,10 +228,10 @@ class ConsQueryAgent():
       consType, consIdx = con
       if consType == VAR:
         constraints.update({(s, a): 0 for a in self.mdp['A']
-                                      for s in self.statesWithDifferentFeats[consIdx]})
+                                      for s in self.statesWithDifferentFeats(consIdx)})
       elif consType == NONREVERSED:
         constraints.update({(s, a): 0 for a in self.mdp['A']
-                                      for s in self.statesWithDifferentFeats[consIdx]
+                                      for s in self.statesWithDifferentFeats(consIdx)
                                       if self.mdp['terminal'](s)})
       else: raise Exception('unknown constraint type')
 
@@ -241,8 +252,7 @@ class ConsQueryAgent():
           if self.mdp['terminal'](s):
             notReversed.add(idx)
 
-    # needs to be hashable
-    return tuple([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
+    return set([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
     
   def statesWithDifferentFeats(self, idx):
     return filter(lambda s: s[idx] != self.mdp['s0'][idx], self.mdp['S'])
