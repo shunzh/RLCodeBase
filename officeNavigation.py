@@ -17,16 +17,20 @@ CLEAN = 0
 ON = 1
 OFF = 0 
 
+INPROCESS = 0
+TERMINATED = 1
+
 OPENDOOR = 'openDoor'
 CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
+EXIT = 'exit'
 
 def classicOfficNav():
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
      _________
-  2 |C|     |S|
+  2 | |     |S|
   1 |  D_C_D  |
   0 |R___C____|
      0 1 2 3 4
@@ -34,14 +38,19 @@ def classicOfficNav():
   # specify the size of the domain, which are the robot's possible locations
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
-  width = 5
-  height = 3
-  horizon = 10
+  width = 3
+  height = 2
+  #width = 5
+  #height = 3
+  # time is 0, 1, ..., horizon
+  horizon = 3
+  #horizon = 8
   
   # some objects
-  boxes = []
-  carpets = [(2, 0), (2, 1), (0, 2)]
-  doors = [(1, 1), (3, 1)]
+  carpets = [(1, 0), (1, 1)]
+  #carpets = [(2, 0), (2, 1)]
+  doors = []
+  #doors = [(1, 1), (3, 1)]
   switch = (width - 1, height - 1)
 
   lIndex = 0
@@ -50,14 +59,13 @@ def classicOfficNav():
   dIndexStart = cIndexStart + cSize
   dSize = len(doors)
   sIndex = dIndexStart + dSize
-  tIndex = sIndex + 1
   
   cIndex = range(cIndexStart, cIndexStart + cSize)
   dIndex = range(dIndexStart, dIndexStart + dSize)
   
   # pairs of adjacent locations that are blocked by a wall
-  walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
-  #walls = []
+  #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
+  walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
@@ -65,14 +73,15 @@ def classicOfficNav():
           [[CLEAN, STEPPED] for _ in carpets] +\
           [[CLOSED, OPEN] for _ in doors] +\
           [[0, 1]] +\
-          [range(horizon)]
+          [[0, 1]]
   
   # the robot can change its locations and manipulate the switch
   cIndices = cIndex + dIndex
 
   aSets = [(1, 0), (0, 1), (-1, 0), (0, -1),
            OPENDOOR, CLOSEDOOR,
-           TURNOFFSWITCH]
+           TURNOFFSWITCH,
+           EXIT]
  
   # factored transition function
   def navigate(s, a):
@@ -80,7 +89,7 @@ def classicOfficNav():
     if a in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
       sp = (loc[0] + a[0], loc[1] + a[1])
       # not blocked by borders, closed doors or walls
-      if not (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
+      if (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
          not any(s[idx] == CLOSED and sp == s[idx] for idx in dIndex) and\
          not any(loc in wall and sp in wall for wall in walls):
         return sp
@@ -96,9 +105,9 @@ def classicOfficNav():
   
   def doorOpGen(idx, door):
     def doorOp(s, a):
+      loc = s[lIndex]
+      doorState = s[idx]
       if a in [OPENDOOR, CLOSEDOOR]:
-        loc = s[lIndex]
-        doorState = s[idx]
         if loc in [(door[0] - 1, door[1]), (door[0], door[1])]:
           if a == CLOSEDOOR: doorState = CLOSED
           elif a == OPENDOOR: doorState = OPEN
@@ -112,37 +121,55 @@ def classicOfficNav():
     if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
   
-  # time elapses
-  def timeOp(s, a):
-    return s+1
+  # the action to finish the task
+  def exitOp(s, a):
+    if s[lIndex] == switch and a == EXIT:
+      return TERMINATED
+    else:
+      return INPROCESS
 
   tFunc = [navigate] +\
           [carpetOpGen(cIndexStart + i, carpets[i]) for i in range(cSize)] +\
-          [doorOpGen(dIndexStart + 1, doors[i]) for i in range(dSize)] +\
+          [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
           [switchOp] +\
-          [timeOp]
+          [exitOp]
 
+  """
   s0List = [(0, 0)] +\
-           [CLEAN for _ in range(len(carpets))] +\
+           [CLEAN for _ in carpets] +\
            [OPEN, CLOSED] +\
-           [ON, 0]
+           [ON, INPROCESS]
+  """
+  s0List = [(0, 0)] +\
+           [CLEAN for _ in carpets] +\
+           [ON, INPROCESS]
   s0 = tuple(s0List)
   
-  terminal = lambda s: s[tIndex] == horizon
+  terminal = lambda s: s[-1] == TERMINATED
+  gamma = 0.9
 
   # there is a reward of -1 at any step except when goal is reached
   # note that the domain of this function should not include any environmental features!
-  rFunc = lambda s, a: 0 if s[sIndex] == OFF else -1
+  def reward(s, a):
+    if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
+      return 1
+    elif s[lIndex] == switch and a == EXIT:
+      return 0.01
+    else:
+      return 0
+  rFunc = reward
   
   # the domain handler
-  officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal)
+  officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
+  
+  print navigate(((0, 0), 0, 0, 1, 0, 1, 0), (1, 0))
   
   agent = ConsQueryAgent(officeNav, cIndices)
 
   start = time.time()
   agent.findRelevantFeatures()
   end = time.time()
-  writeToFile('milp.out', end - start)
+  #writeToFile('milp.out', end - start)
 
   """
   start = time.time()

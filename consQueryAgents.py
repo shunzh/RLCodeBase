@@ -100,6 +100,7 @@ class ConsQueryAgent():
         continue
 
       args['constraints'] = self.constructConstraints(activeCons)
+      print 'lpDual', allCons
       opt, x = lpDual(**args)
       
       # check violated constraints
@@ -109,11 +110,11 @@ class ConsQueryAgent():
       beta.append((activeCons, violatedCons))
 
       allCons = allCons.union(violatedCons)
-      allConsPowerset = set(powerset(relFeats))
+      allConsPowerset = set(powerset(allCons))
 
       print 'beta', beta
-      #print opt
-      #printOccupancy(x)
+      print opt
+      printOccSA(x)
 
     return allCons
 
@@ -220,7 +221,7 @@ class ConsQueryAgent():
       elif consType == NONREVERSED:
         constraints.update({(s, a): 0 for a in self.mdp['A']
                                       for s in self.statesWithDifferentFeats[consIdx]
-                                      if s[-1] == self.horizon})
+                                      if self.mdp['terminal'](s)})
       else: raise Exception('unknown constraint type')
 
     return constraints
@@ -233,15 +234,15 @@ class ConsQueryAgent():
     
     for idx in self.consSets:
       # states violated by idx
-      violatedStates = statesWithDifferentFeats(idx)
+      violatedStates = self.statesWithDifferentFeats(idx)
       for s in violatedStates:
         if any(x[s, a] > 0 for a in self.mdp['A']):
           var.add(idx)
-          if s[-1] == self.horizon:
+          if self.mdp['terminal'](s):
             notReversed.add(idx)
 
     # needs to be hashable
-    return tuple([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in nonReversed])
+    return tuple([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
     
   def statesWithDifferentFeats(self, idx):
     return filter(lambda s: s[idx] != self.mdp['s0'][idx], self.mdp['S'])

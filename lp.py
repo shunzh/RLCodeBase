@@ -50,6 +50,8 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraint
   # useful constants
   Sr = range(len(S))
   Ar = range(len(A))
+
+  print len(Sr), len(Ar)
  
   x = m.new((len(S), len(A)), lb=0, name='x')
 

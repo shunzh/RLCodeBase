@@ -81,7 +81,7 @@ def getChainDomain(length):
   
   return ret
 
-def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal):
+def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma=1):
   ret = {}
 
   ret['S'] = [s for s in itertools.product(*sSets)]
@@ -97,5 +97,6 @@ def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal):
   ret['T'] = transFunc 
   ret['s0'] = s0
   ret['terminal'] = terminal
+  ret['gamma'] = gamma
 
   return ret
