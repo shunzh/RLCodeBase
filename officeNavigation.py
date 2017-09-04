@@ -38,19 +38,14 @@ def classicOfficNav():
   # specify the size of the domain, which are the robot's possible locations
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
-  width = 3
-  height = 2
-  #width = 5
-  #height = 3
+  width = 5
+  height = 3
   # time is 0, 1, ..., horizon
-  horizon = 4
-  #horizon = 8
+  horizon = 8
   
   # some objects
-  carpets = [(1, 0), (1, 1)]
-  #carpets = [(2, 0), (2, 1)]
-  doors = []
-  #doors = [(1, 1), (3, 1)]
+  carpets = [(2, 0), (2, 1)]
+  doors = [(1, 1), (3, 1)]
   switch = (width - 1, height - 1)
 
   lIndex = 0
@@ -64,8 +59,8 @@ def classicOfficNav():
   dIndex = range(dIndexStart, dIndexStart + dSize)
   
   # pairs of adjacent locations that are blocked by a wall
-  #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
-  walls = []
+  walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
+  #walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
@@ -131,15 +126,10 @@ def classicOfficNav():
           [switchOp] +\
           [timeOp]
 
-  """
   s0List = [(0, 0)] +\
            [CLEAN for _ in carpets] +\
            [OPEN, CLOSED] +\
-           [ON, INPROCESS]
-  """
-  s0List = [(0, 0)] +\
-           [CLEAN for _ in carpets] +\
-           [ON, INPROCESS]
+           [ON, 0]
   s0 = tuple(s0List)
   
   terminal = lambda s: s[-1] == horizon
@@ -156,8 +146,6 @@ def classicOfficNav():
   
   # the domain handler
   officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
-  
-  print navigate(((0, 0), 0, 0, 1, 0, 1, 0), (1, 0))
   
   agent = ConsQueryAgent(officeNav, cIndices)
 
