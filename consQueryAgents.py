@@ -11,7 +11,7 @@ class ConsQueryAgent():
 
   TODO only implementing some auxiliary functions. 
   """
-  def __init__(self, mdp, consSets, horizon=1000):
+  def __init__(self, mdp, consSets):
     """
     can't think of a class it should inherit..
 
@@ -19,7 +19,6 @@ class ConsQueryAgent():
     consSets: the set of environmental feature indices
     """
     self.mdp = mdp
-    self.horizon = horizon
     self.consSets = consSets
     self.consSetsSize = len(consSets)
   
@@ -102,10 +101,13 @@ class ConsQueryAgent():
         continue
 
       args['constraints'] = self.constructConstraints(activeCons)
+      # tried put occupancy constraints to force the agent to `exit'.. doesn't seem to work
+      """
       args['positiveConstraints'] = [(s, a) for a in A
                                      for s in S
                                      if args['terminal'](s)]
       args['positiveConstraintsOcc'] = args['gamma'] ** self.horizon / (1 - args['gamma'])
+      """
       opt, x = lpDual(**args)
       
       # check violated constraints

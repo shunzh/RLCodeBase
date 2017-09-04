@@ -43,7 +43,7 @@ def classicOfficNav():
   #width = 5
   #height = 3
   # time is 0, 1, ..., horizon
-  horizon = 3
+  horizon = 4
   #horizon = 8
   
   # some objects
@@ -73,7 +73,7 @@ def classicOfficNav():
           [[CLEAN, STEPPED] for _ in carpets] +\
           [[CLOSED, OPEN] for _ in doors] +\
           [[0, 1]] +\
-          [[0, 1]]
+          [range(horizon + 1)]
   
   # the robot can change its locations and manipulate the switch
   cIndices = cIndex + dIndex
@@ -121,18 +121,15 @@ def classicOfficNav():
     if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
   
-  # the action to finish the task
-  def exitOp(s, a):
-    if s[-1] == TERMINATED or a == EXIT:
-      return TERMINATED
-    else:
-      return INPROCESS
+  # time elapses
+  def timeOp(s, a):
+    return s[-1] + 1
 
   tFunc = [navigate] +\
           [carpetOpGen(cIndexStart + i, carpets[i]) for i in range(cSize)] +\
           [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
           [switchOp] +\
-          [exitOp]
+          [timeOp]
 
   """
   s0List = [(0, 0)] +\
@@ -145,13 +142,13 @@ def classicOfficNav():
            [ON, INPROCESS]
   s0 = tuple(s0List)
   
-  terminal = lambda s: s[-1] == TERMINATED
+  terminal = lambda s: s[-1] == horizon
   gamma = 0.9
 
   # there is a reward of -1 at any step except when goal is reached
   # note that the domain of this function should not include any environmental features!
   def reward(s, a):
-    if s[-1] == INPROCESS and s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
+    if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
       return 1
     else:
       return 0
@@ -162,7 +159,7 @@ def classicOfficNav():
   
   print navigate(((0, 0), 0, 0, 1, 0, 1, 0), (1, 0))
   
-  agent = ConsQueryAgent(officeNav, cIndices, horizon)
+  agent = ConsQueryAgent(officeNav, cIndices)
 
   start = time.time()
   agent.findRelevantFeatures()

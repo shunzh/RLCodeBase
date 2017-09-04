@@ -59,7 +59,11 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraint
   for sp in Sr:
     # x (x(s) - \gamma * T) = \sigma
     # and make sure there is no flow back from the terminal states
-    m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == (S[sp] == s0))
+    if not terminal(S[sp]):
+      m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])  ) for s in Sr for a in Ar) == (S[sp] == s0))
+      #print S[sp], [(S[s], A[a]) for s in Sr for a in Ar if T(S[s], A[a], S[sp]) > 0]
+    else:
+      m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])  ) for s in Sr for a in Ar) == (S[sp] == s0))
   
   # == constraints
   for (s, a), occ in constraints.items():
