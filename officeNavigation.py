@@ -85,7 +85,7 @@ def classicOfficNav():
       sp = (loc[0] + a[0], loc[1] + a[1])
       # not blocked by borders, closed doors or walls
       if (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
-         not any(s[idx] == CLOSED and sp == s[idx] for idx in dIndex) and\
+         not any(s[idx] == CLOSED and sp == doors[idx - dIndexStart] for idx in dIndex) and\
          not any(loc in wall and sp in wall for wall in walls):
         return sp
     return loc
@@ -146,7 +146,7 @@ def classicOfficNav():
   
   # the domain handler
   officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
-  
+
   agent = ConsQueryAgent(officeNav, cIndices)
 
   start = time.time()

@@ -84,7 +84,6 @@ def getChainDomain(length):
 def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma=1):
   ret = {}
 
-  ret['S'] = [s for s in itertools.product(*sSets)]
   ret['A'] = aSets
   # factored reward function
   #ret['r'] = lambda state, action: sum(r(s, a) for s, r in zip(state, rFunc))
@@ -93,10 +92,28 @@ def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma=1):
 
   # t(s, a, s') = \prod t_i(s, a, s_i)
   #FIXME assume deterministic transitions for now to make the life easier!
-  transFunc = lambda state, action, sp: 1 if sp == tuple([t(state, action) for t in tFunc]) else 0
+  transit = lambda state, action: tuple([t(state, action) for t in tFunc])
+  transFunc = lambda state, action, sp: 1 if sp == transit(state, action) else 0
   ret['T'] = transFunc 
   ret['s0'] = s0
   ret['terminal'] = terminal
   ret['gamma'] = gamma
+
+  print transit(((2, 1), 0, 0, 1, 0, 1, 3), (1, 0))
+  
+  # construct the set of reachable states
+  ret['S'] = []
+  buffer = [s0]
+  while len(buffer) > 0:
+    # add the last batch to S
+    ret['S'] += buffer
+    newBuffer = []
+    for s in buffer:
+      if not terminal(s):
+        for a in aSets:
+          sp = transit(s, a)
+          if not sp in ret['S'] and not sp in newBuffer: 
+            newBuffer.append(sp)
+    buffer = newBuffer
 
   return ret
