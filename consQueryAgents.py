@@ -68,9 +68,6 @@ class ConsQueryAgent():
     Incrementally add dominating policies to a set
     """
     args = self.mdp
-    s0 = args['s0']
-    S = args['S']
-    A = args['A']
 
     beta = [] # rules to keep
 
@@ -79,6 +76,7 @@ class ConsQueryAgent():
     subsetsConsidered = []
     
     numberOfPruning = 0
+    totalNumber = 0
     
     # iterate until no more dominating policies are found
     while True:
