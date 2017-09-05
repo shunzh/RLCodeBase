@@ -99,7 +99,7 @@ def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma=1):
   ret['terminal'] = terminal
   ret['gamma'] = gamma
 
-  print transit(((2, 1), 0, 0, 1, 0, 1, 3), (1, 0))
+  #print transit(((2, 1), 0, 0, 1, 0, 1, 3), (1, 0))
   
   # construct the set of reachable states
   ret['S'] = []

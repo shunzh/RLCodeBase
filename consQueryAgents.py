@@ -111,7 +111,10 @@ class ConsQueryAgent():
       opt, x = lpDual(**args)
       
       # check violated constraints
-      violatedCons = self.findViolatedConstraints(x)
+      if x == {}:
+        violatedCons = ()
+      else:
+        violatedCons = self.findViolatedConstraints(x)
 
       beta.append((set(activeCons), set(violatedCons)))
 
