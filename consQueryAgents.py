@@ -1,6 +1,9 @@
 from lp import lpDual, domPiMilp, decomposePiLP, computeValue
 import pprint
 from util import powerset
+import easyDomains
+import copy
+import util
 
 VAR = 0
 NONREVERSED = 1
@@ -11,72 +14,39 @@ class ConsQueryAgent():
 
   TODO only implementing some auxiliary functions. 
   """
-  def __init__(self, mdp, consSets):
+  def __init__(self, sSets, aSets, rFunc, tFunc, s0, terminal, gamma, consSets, dependentSets):
     """
     can't think of a class it should inherit..
 
     mdp: a factored mdp
     consSets: the set of environmental feature indices
     """
-    self.mdp = mdp
+    self.sSets = sSets # set of possible values of features for all features
+    self.aSets = aSets
+    self.rFunc = rFunc
+    self.tFunc = tFunc
+    self.s0 = s0
+    self.terminal = terminal
+    self.gamma = gamma
+    
+    self.transit = lambda state, action: tuple([t(state, action) for t in tFunc])
+
+    # indices of constraints
     self.consSets = consSets
     self.consSetsSize = len(consSets)
-  
-  def findIrrelevantFeats(self):
-    """
-    DEPRECIATED. The criterion is too strong. unlikely to rule out any features.
-    TODO. still using consIdx rather than consSets. need updates.
-
-    use the dual lp problem to solve such problem.
-
-    return: (occupancy measure, optimal value)
-    """
-    args = self.mdp
-    featLength = len(args['S'][0])
-    s0 = args['s0']
-    A = args['A']
     
-    # solve the raw problem
-    constraints = {(s, a): 0 for a in A
-                             for idx in self.consIdx
-                             for s in self.statesWithDifferentFeats(idx, s0[idx])}
-    args['constraints'] = constraints
-    args['positiveConstraints'] = []
-    rawOpt, occ = lpDual(**args)
-    print rawOpt
-    for s, prob in occ.items():
-      if prob > 0: print s, prob
-
-    irrFeats = []
-    # solve the problem which only constrains one feature
-    for idx in self.consIdx:
-      print idx
-      constraints = self.statesTransitToDifferentFeatures(idx, s0[idx])
-      args['constraints'] = {}
-      args['positiveConstraints'] = constraints
-      opt, occ = lpDual(**args)
-      print opt
-      for s, prob in occ.items():
-        if prob > 0: print s, prob
-      
-      if opt <= rawOpt: irrFeats.append(idx)
-    
-    return irrFeats
+    # set of features that should not be masked
+    self.dependentSets = dependentSets
   
   def findRelevantFeatures(self):
     """
     Incrementally add dominating policies to a set
     """
-    args = self.mdp
-
     beta = [] # rules to keep
 
     allCons = set()
     allConsPowerset = set(powerset(allCons))
     subsetsConsidered = []
-    
-    numberOfPruning = 0
-    totalNumber = 0
     
     # iterate until no more dominating policies are found
     while True:
@@ -87,7 +57,7 @@ class ConsQueryAgent():
       # find the subset with the smallest size
       activeCons = min(subsetsToConsider, key=lambda _: len(_))
       subsetsConsidered.append(activeCons)
-      
+
       skipThisCons = False
       for enf, relax in beta:
         if enf.issubset(activeCons) and len(relax.intersection(activeCons)) == 0:
@@ -95,19 +65,21 @@ class ConsQueryAgent():
           skipThisCons = True
           break
       if skipThisCons:
-        numberOfPruning += 1
         continue
 
-      args['constraints'] = self.constructConstraints(activeCons)
-      # tried put occupancy constraints to force the agent to `exit'.. doesn't seem to work
-      """
-      args['positiveConstraints'] = [(s, a) for a in A
-                                     for s in S
-                                     if args['terminal'](s)]
-      args['positiveConstraintsOcc'] = args['gamma'] ** self.horizon / (1 - args['gamma'])
-      """
-      opt, x = lpDual(**args)
+      maskIdx = [_ for _ in self.consSets if not (VAR, _) in activeCons
+                                         and not (NONREVERSED, _) in activeCons
+                                         and not _ in self.dependentSets]
+      mdp = self.constructReducedFactoredMDP(maskIdx)
+
+      mdp['constraints'] = self.constructConstraints(activeCons, mdp)
+      opt, x = lpDual(**mdp)
+      print 'occ'
+      printOccSA(x)
       
+      x = self.constructRawPolicy(x, maskIdx)
+      print 'rawocc'
+      printOccSA(x)
       # check violated constraints
       if x == {}:
         violatedCons = ()
@@ -128,10 +100,36 @@ class ConsQueryAgent():
       print 'beta', beta
       print 'allCons', allCons
       print opt
-      printOccSA(x)
     
     return allCons
 
+  def constructReducedFactoredMDP(self, maskIdx):
+    sSets = copy.copy(self.sSets)
+    tFunc = copy.copy(self.tFunc)
+
+    for idx in maskIdx:
+      sSets[idx] = [self.s0[idx]]
+      tFunc[idx] = lambda s, a: s[idx]
+
+    return easyDomains.getFactoredMDP(sSets, self.aSets, self.rFunc, tFunc, self.s0, self.terminal, self.gamma)
+  
+  # FIXME assuming deterministic transition
+  def constructRawPolicy(self, x, maskIdx):
+    newX = util.Counter()
+    newS = self.s0
+    mask = lambda state: tuple([self.s0[idx] if idx in maskIdx else state[idx] for idx in range(len(self.s0))])
+
+    while True:
+      s = newS
+      # add the last batch to S
+      for a in self.aSets:
+        if (mask(s), a) in x.keys() and x[(mask(s), a)] > 0:
+          newX[(s, a)] = x[mask(s), a]
+          newS = self.transit(s, a)
+          break
+      if self.terminal(s): break
+    return newX
+  
   def findRelevantFeatsUsingHeu(self):
     """
     FIXME not sure whether we are going to include this algorithm. not updated.
@@ -222,7 +220,7 @@ class ConsQueryAgent():
 
     return list(relFeats)
 
-  def constructConstraints(self, cons):
+  def constructConstraints(self, cons, mdp):
     """
     Construct set of constraint equations by the specification in cons
     """
@@ -230,12 +228,12 @@ class ConsQueryAgent():
     for con in cons:
       consType, consIdx = con
       if consType == VAR:
-        constraints.update({(s, a): 0 for a in self.mdp['A']
-                                      for s in self.statesWithDifferentFeats(consIdx)})
+        constraints.update({(s, a): 0 for a in mdp['A']
+                                      for s in self.statesWithDifferentFeats(consIdx, mdp)})
       elif consType == NONREVERSED:
-        constraints.update({(s, a): 0 for a in self.mdp['A']
-                                      for s in self.statesWithDifferentFeats(consIdx)
-                                      if self.mdp['terminal'](s)})
+        constraints.update({(s, a): 0 for a in mdp['A']
+                                      for s in self.statesWithDifferentFeats(consIdx, mdp)
+                                      if mdp['terminal'](s)})
       else: raise Exception('unknown constraint type')
 
     return constraints
@@ -248,17 +246,16 @@ class ConsQueryAgent():
     
     for idx in self.consSets:
       # states violated by idx
-      violatedStates = self.statesWithDifferentFeats(idx)
-      for s in violatedStates:
-        if any(x[s, a] > 0 for a in self.mdp['A']):
+      for s, a in x.keys():
+        if s[idx] != self.s0[idx] and any(x[s, a] > 0 for a in self.aSets):
           var.add(idx)
-          if self.mdp['terminal'](s):
+          if self.terminal(s):
             notReversed.add(idx)
 
     return set([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
     
-  def statesWithDifferentFeats(self, idx):
-    return filter(lambda s: s[idx] != self.mdp['s0'][idx], self.mdp['S'])
+  def statesWithDifferentFeats(self, idx, mdp):
+    return filter(lambda s: s[idx] != mdp['s0'][idx], mdp['S'])
 
   # FIXME remove or not? only used by depreciated methods
   def statesTransitToDifferentFeatures(self, idx, value):

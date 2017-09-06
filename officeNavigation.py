@@ -47,7 +47,7 @@ def classicOfficNav():
   
   # some objects
   carpets = [(2, 0), (2, 1)]
-  doors = [(1, 1), (3, 1)]
+  doors = []#[(1, 1), (3, 1)]
   switch = (width - 1, height - 1)
   #carpets = [getRandLoc() for _ in xrange(4)]
   #doors = [(width / 2, 0), (width / 2, height - 1)]
@@ -59,6 +59,7 @@ def classicOfficNav():
   dIndexStart = cIndexStart + cSize
   dSize = len(doors)
   sIndex = dIndexStart + dSize
+  tIndex = sIndex + 1
   
   cIndex = range(cIndexStart, cIndexStart + cSize)
   dIndex = range(dIndexStart, dIndexStart + dSize)
@@ -66,6 +67,7 @@ def classicOfficNav():
   # pairs of adjacent locations that are blocked by a wall
   walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
   #walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1)]
+  #walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
@@ -77,6 +79,8 @@ def classicOfficNav():
   
   # the robot can change its locations and manipulate the switch
   cIndices = cIndex + dIndex
+  
+  dependentIdx = [lIndex] + dIndex + [sIndex, tIndex]
 
   aSets = [(1, 0), (0, 1), (-1, 0), (0, -1),
            OPENDOOR, CLOSEDOOR,
@@ -133,7 +137,6 @@ def classicOfficNav():
 
   s0List = [(0, 0)] +\
            [CLEAN for _ in carpets] +\
-           [OPEN, CLOSED] +\
            [ON, 0]
   s0 = tuple(s0List)
   
@@ -150,9 +153,7 @@ def classicOfficNav():
   rFunc = reward
   
   # the domain handler
-  officeNav = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
-
-  agent = ConsQueryAgent(officeNav, cIndices)
+  agent = ConsQueryAgent(sSets, aSets, rFunc, tFunc, s0, terminal, gamma, cIndices, dependentIdx)
 
   start = time.time()
   agent.findRelevantFeatures()

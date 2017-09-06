@@ -84,6 +84,7 @@ def getChainDomain(length):
 def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma=1):
   ret = {}
 
+  #ret['S'] = [s for s in itertools.product(*sSets)]
   ret['A'] = aSets
   # factored reward function
   #ret['r'] = lambda state, action: sum(r(s, a) for s, r in zip(state, rFunc))
