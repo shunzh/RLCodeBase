@@ -1,7 +1,6 @@
-for i in `seq 0 39`
+for i in `seq 0 29`
 do
   echo $i
   #python officeNavigation.py -r $i -a brute
-  python officeNavigation.py -r $i -a alg1
-  python officeNavigation.py -r $i -a alg3
+  python officeNavigation.py -r $i
 done

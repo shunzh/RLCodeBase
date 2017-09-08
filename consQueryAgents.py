@@ -127,7 +127,7 @@ class ConsQueryAgent():
           newX[(s, a)] = x[mask(s), a]
           newS = self.transit(s, a)
           break
-      if self.terminal(s): break
+      if self.terminal(s) or newS == s: break
     return newX
   
   def findRelevantFeatsUsingHeu(self):

@@ -40,18 +40,18 @@ def classicOfficNav():
   # specify the size of the domain, which are the robot's possible locations
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
-  width = 5
-  height = 3
+  width = 10
+  height = 10
   # time is 0, 1, ..., horizon
-  horizon = 8
+  horizon = 10
   
   # some objects
-  carpets = [(2, 0), (2, 1)]
-  doors = []#[(1, 1), (3, 1)]
-  switch = (width - 1, height - 1)
-  #carpets = [getRandLoc() for _ in xrange(4)]
-  #doors = [(width / 2, 0), (width / 2, height - 1)]
-  #switch = getRandLoc()
+  #carpets = [(2, 0), (2, 1)]
+  #doors = [(1, 1), (3, 1)]
+  #switch = (width - 1, height - 1)
+  carpets = [getRandLoc() for _ in xrange(8)]
+  doors = [(width / 2, 0), (width / 2, height - 1)]
+  switch = getRandLoc()
 
   lIndex = 0
   cIndexStart = lIndex + 1
@@ -65,8 +65,8 @@ def classicOfficNav():
   dIndex = range(dIndexStart, dIndexStart + dSize)
   
   # pairs of adjacent locations that are blocked by a wall
-  walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
-  #walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1)]
+  #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
+  walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1)]
   #walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
@@ -137,10 +137,11 @@ def classicOfficNav():
 
   s0List = [(0, 0)] +\
            [CLEAN for _ in carpets] +\
+           [OPEN, CLOSED] +\
            [ON, 0]
   s0 = tuple(s0List)
   
-  terminal = lambda s: s[-1] == horizon
+  terminal = lambda s: s[tIndex] == horizon
   gamma = 0.9
 
   # there is a reward of -1 at any step except when goal is reached
@@ -158,7 +159,7 @@ def classicOfficNav():
   start = time.time()
   agent.findRelevantFeatures()
   end = time.time()
-  #writeToFile('milp.out', end - start)
+  writeToFile('office.out', end - start)
 
   """
   start = time.time()
