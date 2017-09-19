@@ -40,17 +40,17 @@ def classicOfficNav():
   # specify the size of the domain, which are the robot's possible locations
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
-  width = 10
-  height = 10
+  width = 3
+  height = 3
   # time is 0, 1, ..., horizon
-  horizon = 10
+  horizon = 5
   
   # some objects
   #carpets = [(2, 0), (2, 1)]
   #doors = [(1, 1), (3, 1)]
   #switch = (width - 1, height - 1)
-  carpets = [getRandLoc() for _ in xrange(8)]
-  doors = [(width / 2, 0), (width / 2, height - 1)]
+  carpets = [getRandLoc() for _ in xrange(3)]
+  doors = []#[(width / 2, 0), (width / 2, height - 1)]
   switch = getRandLoc()
 
   lIndex = 0
@@ -66,8 +66,8 @@ def classicOfficNav():
   
   # pairs of adjacent locations that are blocked by a wall
   #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
-  walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1)]
-  #walls = []
+  #walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1)]
+  walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
@@ -83,9 +83,7 @@ def classicOfficNav():
   dependentIdx = [lIndex] + dIndex + [sIndex, tIndex]
 
   aSets = [(1, 0), (0, 1), (-1, 0), (0, -1),
-           OPENDOOR, CLOSEDOOR,
-           TURNOFFSWITCH,
-           EXIT]
+           TURNOFFSWITCH]
  
   # factored transition function
   def navigate(s, a):
@@ -137,7 +135,6 @@ def classicOfficNav():
 
   s0List = [(0, 0)] +\
            [CLEAN for _ in carpets] +\
-           [OPEN, CLOSED] +\
            [ON, 0]
   s0 = tuple(s0List)
   
@@ -157,16 +154,10 @@ def classicOfficNav():
   agent = ConsQueryAgent(sSets, aSets, rFunc, tFunc, s0, terminal, gamma, cIndices, dependentIdx)
 
   start = time.time()
-  agent.findRelevantFeatures()
+  relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+  print agent.findMinimaxRegretPolicyQ(3, domPis)
   end = time.time()
-  writeToFile('office.out', end - start)
-
-  """
-  start = time.time()
-  agent.findDominatingPoliciesBruteForce()
-  end = time.time()
-  writeToFile('brute.out', end - start)
-  """
+  #writeToFile('office.out', end - start)
 
 
 def flatOfficNav():
@@ -240,7 +231,7 @@ def flatOfficNav():
 
   start = time.time()
   if method == 'alg1':
-    feats = agent.findRelevantFeatures()
+    feats = agent.findRelevantFeaturesAndDomPis()
   elif method == 'alg3':
     feats = agent.findRelevantFeatsUsingHeu()
   elif method == 'brute':
