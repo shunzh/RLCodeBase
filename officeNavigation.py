@@ -7,6 +7,7 @@ import random
 import numpy
 import scipy
 from httplib import MOVED_PERMANENTLY
+import util
 
 OPEN = 1
 CLOSED = 0
@@ -36,22 +37,26 @@ def classicOfficNav():
      0 1 2 3 4
      
   Also, consider randomize the room for experiments.
+
+  FIXME hacking this function too much.
   """
   # specify the size of the domain, which are the robot's possible locations
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
-  width = 4
-  height = 4
+  width = 3
+  height = 3
   # time is 0, 1, ..., horizon
-  horizon = 8
+  horizon = 7
   
   # some objects
   #carpets = [(2, 0), (2, 1)]
+  #carpets = [getRandLoc() for _ in xrange(4)]
+  carpets = [(1, 0), (1, 1)]
+
   #doors = [(1, 1), (3, 1)]
-  carpets = [getRandLoc() for _ in xrange(4)]
   doors = []#[(width / 2, 0), (width / 2, height - 1)]
 
-  switch = (width - 1, height - 1)
+  switch = (width - 1, 0)
   #switch = getRandLoc()
 
   lIndex = 0
@@ -140,16 +145,19 @@ def classicOfficNav():
   s0 = tuple(s0List)
   
   terminal = lambda s: s[tIndex] == horizon
-  gamma = 1
+  gamma = .9
 
   # there is a reward of -1 at any step except when goal is reached
   # note that the domain of this function should not include any environmental features!
+  bonus = util.Counter()
+  bonus[(2, 1)] = 2
+  bonus[(1, 2)] = 2
   def reward(s, a):
     if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
       return 10
     else:
       # create some random rewards in the domain to break ties
-      return random.random() > .5
+      return bonus[s[lIndex]]
   rFunc = reward
   
   # the domain handler
