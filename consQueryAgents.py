@@ -4,6 +4,7 @@ from util import powerset
 import easyDomains
 import copy
 import util
+from timeit import itertools
 
 VAR = 0
 NONREVERSED = 1
@@ -51,12 +52,11 @@ class ConsQueryAgent():
     mdp['constraints'] = self.constructConstraints(activeCons, mdp)
     opt, x = lpDual(**mdp)
     
-    print 'occ'
-    printOccSA(x)
-    
     x = self.constructRawPolicy(x, maskIdx)
+    """
     print 'rawocc'
     printOccSA(x)
+    """
 
     return x
 
@@ -130,7 +130,7 @@ class ConsQueryAgent():
       # compute MR(q \cup {\pi}) for \pi \in \Gamma
       for pi in domPis.values():
         maxRegret = 0
-        # enumerate the robot's possible response
+        # all possible C \subseteq \mathbf{C}
         for activeCons, advPi in domPis.items():
           feasiblePis = filter(lambda _: self.piSatisfiesCons(_, activeCons), q + [pi])
           robotPi = max(feasiblePis, key=lambda _: self.computeValue(_))
@@ -147,6 +147,36 @@ class ConsQueryAgent():
 
     print 'minMaxRegretValue', minMaxRegretValue
     return q 
+
+  def findGlobalMinimaxRegretPolicyQ(self, k, domPis):
+    minMaxRegretValue = float('inf')
+    minMaxRegretQ = None
+
+    # help it with always adding the non-constraint-violating policy
+    defaultPi = self.findConstrainedOptPi([(VAR, _) for _ in self.consSets])
+
+    # find ALL k-subset of dominating policies
+    for otherPis in itertools.combinations(domPis.values(), k - 1):
+      q = [defaultPi] + list(otherPis)
+      # compute maximum regret of q
+      maxRegret = 0
+
+      # all possible C \subseteq \mathbf{C}
+      for activeCons, advPi in domPis.items():
+        feasiblePis = filter(lambda _: self.piSatisfiesCons(_, activeCons), q)
+        robotPi = max(feasiblePis, key=lambda _: self.computeValue(_))
+        regret = self.computeValue(advPi) - self.computeValue(robotPi)
+        assert regret >= 0, 'regret is %f' % regret
+        maxRegret = max(maxRegret, regret)
+      
+      if maxRegret < minMaxRegretValue:
+        minMaxRegretValue = maxRegret
+        minMaxRegretQ = q
+    
+    assert minMaxRegretQ != None
+
+    print 'minMaxRegretValue', minMaxRegretValue
+    return minMaxRegretQ
 
   def findMinimaxRegretConstraintQ(self, k, domPis):
     pass

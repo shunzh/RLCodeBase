@@ -43,20 +43,19 @@ def classicOfficNav():
   # specify the size of the domain, which are the robot's possible locations
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
-  width = 3
-  height = 3
+  width = 4
+  height = 4
   # time is 0, 1, ..., horizon
   horizon = 7
   
   # some objects
   #carpets = [(2, 0), (2, 1)]
-  #carpets = [getRandLoc() for _ in xrange(4)]
-  carpets = [(1, 0), (1, 1)]
+  carpets = [getRandLoc() for _ in xrange(4)]
 
   #doors = [(1, 1), (3, 1)]
   doors = []#[(width / 2, 0), (width / 2, height - 1)]
 
-  switch = (width - 1, 0)
+  switch = (width - 1, height - 1)
   #switch = getRandLoc()
 
   lIndex = 0
@@ -150,8 +149,8 @@ def classicOfficNav():
   # there is a reward of -1 at any step except when goal is reached
   # note that the domain of this function should not include any environmental features!
   bonus = util.Counter()
-  bonus[(2, 1)] = 2
-  bonus[(1, 2)] = 2
+  for loc in allLocations: bonus[loc] = random.random() < .5
+
   def reward(s, a):
     if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
       return 10
@@ -163,10 +162,20 @@ def classicOfficNav():
   # the domain handler
   agent = ConsQueryAgent(sSets, aSets, rFunc, tFunc, s0, terminal, gamma, cIndices, dependentIdx)
 
-  start = time.time()
+  k = 2
+
   relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-  agent.findMinimaxRegretPolicyQ(3, domPis)
+
+  start = time.time()
+  agent.findMinimaxRegretPolicyQ(k, domPis)
   end = time.time()
+  print end - start
+
+  start = time.time()
+  agent.findGlobalMinimaxRegretPolicyQ(k, domPis)
+  end = time.time()
+  print end - start
+
   #writeToFile('office.out', end - start)
 
 
