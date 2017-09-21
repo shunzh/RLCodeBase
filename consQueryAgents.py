@@ -103,14 +103,11 @@ class ConsQueryAgent():
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
       beta.append((set(activeCons), set(violatedCons)))
 
-      allCons.union(violatedCons)
-      """
       for idx in self.consSets:
         if (NONREVERSED, idx) in violatedCons:
           allCons.add((NONREVERSED, idx))
         elif (NONREVERSED, idx) in activeCons and (VAR, idx) in violatedCons:
           allCons.add((VAR, idx))
-      """
 
       allConsPowerset = set(powerset(allCons))
 
@@ -130,14 +127,15 @@ class ConsQueryAgent():
     for i in range(2, k + 1):
       minMaxRegretValue = float('inf')
       minMaxRegretPi = None
-      # potential to improve efficiency here. only need to consider \pi \in \Pi_{C_{i-1}}
+      # compute MR(q \cup {\pi}) for \pi \in \Gamma
       for pi in domPis.values():
         maxRegret = 0
+        # enumerate the robot's possible response
         for activeCons, advPi in domPis.items():
           feasiblePis = filter(lambda _: self.piSatisfiesCons(_, activeCons), q + [pi])
           robotPi = max(feasiblePis, key=lambda _: self.computeValue(_))
           regret = self.computeValue(advPi) - self.computeValue(robotPi)
-          assert regret >= 0
+          assert regret >= 0, 'regret is %f' % regret
           maxRegret = max(maxRegret, regret)
         
         if maxRegret < minMaxRegretValue:
@@ -147,7 +145,11 @@ class ConsQueryAgent():
       assert minMaxRegretPi != None
       q.append(minMaxRegretPi)
 
+    print 'minMaxRegretValue', minMaxRegretValue
     return q 
+
+  def findMinimaxRegretConstraintQ(self, k, domPis):
+    pass
 
   def constructReducedFactoredMDP(self, maskIdx):
     sSets = copy.copy(self.sSets)
@@ -305,8 +307,7 @@ class ConsQueryAgent():
           if self.terminal(s):
             notReversed.add(idx)
 
-    #return set([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
-    return set([(VAR, idx) for idx in var])
+    return set([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
     
   def statesWithDifferentFeats(self, idx, mdp):
     return filter(lambda s: s[idx] != mdp['s0'][idx], mdp['S'])

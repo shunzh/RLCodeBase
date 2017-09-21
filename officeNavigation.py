@@ -40,18 +40,19 @@ def classicOfficNav():
   # specify the size of the domain, which are the robot's possible locations
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
-  width = 3
-  height = 3
+  width = 4
+  height = 4
   # time is 0, 1, ..., horizon
-  horizon = 5
+  horizon = 8
   
   # some objects
   #carpets = [(2, 0), (2, 1)]
   #doors = [(1, 1), (3, 1)]
-  #switch = (width - 1, height - 1)
-  carpets = [getRandLoc() for _ in xrange(3)]
+  carpets = [getRandLoc() for _ in xrange(4)]
   doors = []#[(width / 2, 0), (width / 2, height - 1)]
-  switch = getRandLoc()
+
+  switch = (width - 1, height - 1)
+  #switch = getRandLoc()
 
   lIndex = 0
   cIndexStart = lIndex + 1
@@ -139,15 +140,16 @@ def classicOfficNav():
   s0 = tuple(s0List)
   
   terminal = lambda s: s[tIndex] == horizon
-  gamma = 0.9
+  gamma = 1
 
   # there is a reward of -1 at any step except when goal is reached
   # note that the domain of this function should not include any environmental features!
   def reward(s, a):
     if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
-      return 1
+      return 10
     else:
-      return 0
+      # create some random rewards in the domain to break ties
+      return random.random() > .5
   rFunc = reward
   
   # the domain handler
@@ -155,7 +157,7 @@ def classicOfficNav():
 
   start = time.time()
   relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-  print agent.findMinimaxRegretPolicyQ(3, domPis)
+  agent.findMinimaxRegretPolicyQ(3, domPis)
   end = time.time()
   #writeToFile('office.out', end - start)
 
