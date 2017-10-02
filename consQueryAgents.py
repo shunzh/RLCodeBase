@@ -53,10 +53,6 @@ class ConsQueryAgent():
     opt, x = lpDual(**mdp)
     
     x = self.constructRawPolicy(x, maskIdx)
-    """
-    print 'rawocc'
-    printOccSA(x)
-    """
 
     return x
 
@@ -129,15 +125,9 @@ class ConsQueryAgent():
       minMaxRegretPi = None
       # compute MR(q \cup {\pi}) for \pi \in \Gamma
       for pi in domPis.values():
-        maxRegret = 0
         # all possible C \subseteq \mathbf{C}
-        for activeCons, advPi in domPis.items():
-          feasiblePis = filter(lambda _: self.piSatisfiesCons(_, activeCons), q + [pi])
-          robotPi = max(feasiblePis, key=lambda _: self.computeValue(_))
-          regret = self.computeValue(advPi) - self.computeValue(robotPi)
-          assert regret >= 0, 'regret is %f' % regret
-          maxRegret = max(maxRegret, regret)
-        
+        maxRegret, advPi = self.findMRAdvPi(q + [pi], domPis)
+
         if maxRegret < minMaxRegretValue:
           minMaxRegretValue = maxRegret
           minMaxRegretPi = pi
@@ -178,8 +168,54 @@ class ConsQueryAgent():
     print 'minMaxRegretValue', minMaxRegretValue
     return minMaxRegretQ
 
-  def findMinimaxRegretConstraintQ(self, k, domPis):
-    pass
+  def findMinimaxRegretConstraintQ(self, k, domPis, pruning=True):
+    """
+    Finding a minimax k-element constraint query.
+    
+    Use pruning if pruning=True, otherwise brute force.
+    """
+    candQVCs = {} # candidate queries and their violated constraints
+    mr = {}
+
+    for q in itertools.combinations(self.consSets, k):
+      if pruning:
+        # check the pruning condition
+        dominatedQ = False
+        for candQ in candQVCs.keys():
+          if set(q).union(candQVCs[candQ]).issubset(candQ):
+            dominatedQ = True
+        if dominatedQ: continue
+      
+      mr[q], candQVCs[q] = self.findMRAdvPi(q, domPis)
+    
+    # return the one with the minimum regret
+    return min(mr.keys(), lambda _: mr[_])
+
+  def findMRAdvPi(self, q, domPis):
+    """
+    Find the adversarial policy given q and domPis
+    
+    Now searching over all dominating policies, maybe take some time.. can use MILP instead?
+    """
+    maxRegret = 0
+    advPi = None
+
+    for pi in domPis.values():
+      # intersection of q and constraints violated by pi
+      consRobotCanViolate = q.intersection(self.findViolatedConstraints(pi))
+
+      # the robot's optimal policy given the constraints above
+      robotPi = self.findConstrainedOptPi(self.consSets.difference(consRobotCanViolate))
+
+      regret = self.computeValue(pi) - self.computeValue(robotPi)
+
+      assert regret >= 0, 'regret is %f' % regret
+      if regret > maxRegret:
+        maxRegret = regret
+        advPi = pi
+  
+    assert advPi != None
+    return maxRegret, advPi
 
   def constructReducedFactoredMDP(self, maskIdx):
     sSets = copy.copy(self.sSets)
@@ -188,7 +224,7 @@ class ConsQueryAgent():
     for idx in maskIdx:
       sSets[idx] = [self.s0[idx]]
       tFunc[idx] = lambda s, a: s[idx]
-
+    
     return easyDomains.getFactoredMDP(sSets, self.aSets, self.rFunc, tFunc, self.s0, self.terminal, self.gamma)
   
   # FIXME assuming deterministic transition

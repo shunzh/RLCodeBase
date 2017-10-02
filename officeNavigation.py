@@ -43,14 +43,14 @@ def classicOfficNav():
   # specify the size of the domain, which are the robot's possible locations
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
-  width = 4
-  height = 4
+  width = 5
+  height = 5
   # time is 0, 1, ..., horizon
-  horizon = 7
+  horizon = width + height - 1
   
   # some objects
   #carpets = [(2, 0), (2, 1)]
-  carpets = [getRandLoc() for _ in xrange(4)]
+  carpets = [getRandLoc() for _ in xrange(6)]
 
   #doors = [(1, 1), (3, 1)]
   doors = []#[(width / 2, 0), (width / 2, height - 1)]
@@ -149,7 +149,7 @@ def classicOfficNav():
   # there is a reward of -1 at any step except when goal is reached
   # note that the domain of this function should not include any environmental features!
   bonus = util.Counter()
-  for loc in allLocations: bonus[loc] = random.random() < .5
+  for loc in allLocations: bonus[loc] = random.random() < .4
 
   def reward(s, a):
     if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
@@ -162,7 +162,7 @@ def classicOfficNav():
   # the domain handler
   agent = ConsQueryAgent(sSets, aSets, rFunc, tFunc, s0, terminal, gamma, cIndices, dependentIdx)
 
-  k = 2
+  k = 3
 
   relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
