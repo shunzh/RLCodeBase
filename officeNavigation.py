@@ -40,9 +40,9 @@ def classicOfficNav():
 
   FIXME hacking this function too much.
   """
-  # specify the size of the domain, which are the robot's possible locations
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
+  # specify the size of the domain, which are the robot's possible locations
   width = 5
   height = 5
   # time is 0, 1, ..., horizon
@@ -50,10 +50,10 @@ def classicOfficNav():
   
   # some objects
   #carpets = [(2, 0), (2, 1)]
-  carpets = [getRandLoc() for _ in xrange(6)]
+  carpets = [getRandLoc() for _ in xrange(5)]
 
   #doors = [(1, 1), (3, 1)]
-  doors = []#[(width / 2, 0), (width / 2, height - 1)]
+  doors = [(width / 2, height / 2)]
 
   switch = (width - 1, height - 1)
   #switch = getRandLoc()
@@ -71,8 +71,10 @@ def classicOfficNav():
   
   # pairs of adjacent locations that are blocked by a wall
   #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
-  #walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1)]
-  walls = []
+
+  # splitting the room into two smaller rooms.
+  # the robot can only access to the other room by going through a door in the middle or a corridor at the top
+  walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1) if _ != height / 2]
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
@@ -85,6 +87,7 @@ def classicOfficNav():
   # the robot can change its locations and manipulate the switch
   cIndices = cIndex + dIndex
   
+  # the transition function depends on the following features
   dependentIdx = [lIndex] + dIndex + [sIndex, tIndex]
 
   aSets = [(1, 0), (0, 1), (-1, 0), (0, -1),
@@ -140,6 +143,7 @@ def classicOfficNav():
 
   s0List = [(0, 0)] +\
            [CLEAN for _ in carpets] +\
+           [CLOSED for _ in doors] +\
            [ON, 0]
   s0 = tuple(s0List)
   

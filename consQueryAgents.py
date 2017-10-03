@@ -33,7 +33,7 @@ class ConsQueryAgent():
     self.transit = lambda state, action: tuple([t(state, action) for t in tFunc])
 
     # indices of constraints
-    self.consSets = consSets
+    self.consSets = set(consSets)
     self.consSetsSize = len(consSets)
     
     # set of features that should not be masked
@@ -168,7 +168,7 @@ class ConsQueryAgent():
     print 'minMaxRegretValue', minMaxRegretValue
     return minMaxRegretQ
 
-  def findMinimaxRegretConstraintQ(self, k, domPis, pruning=True):
+  def findMinimaxRegretConstraintQ(self, k, domPis, pruning=False):
     """
     Finding a minimax k-element constraint query.
     
@@ -202,10 +202,11 @@ class ConsQueryAgent():
 
     for pi in domPis.values():
       # intersection of q and constraints violated by pi
-      consRobotCanViolate = q.intersection(self.findViolatedConstraints(pi))
+      consRobotCanViolate = set(q).intersection(self.findViolatedConstraints(pi))
 
       # the robot's optimal policy given the constraints above
-      robotPi = self.findConstrainedOptPi(self.consSets.difference(consRobotCanViolate))
+      invarFeats = self.consSets.difference(consRobotCanViolate)
+      robotPi = self.findConstrainedOptPi([(VAR, _) for _ in invarFeats])
 
       regret = self.computeValue(pi) - self.computeValue(robotPi)
 
