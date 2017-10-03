@@ -103,6 +103,7 @@ class ConsQueryAgent():
     mr = {}
 
     for q in itertools.combinations(relFeats, k):
+      print q
       if pruning:
         # check the pruning condition
         dominatedQ = False
@@ -123,6 +124,7 @@ class ConsQueryAgent():
     Now searching over all dominating policies, maybe take some time.. can use MILP instead?
     """
     maxRegret = 0
+    maxValues = None
     advPi = None
 
     for pi in domPis.values():
@@ -133,105 +135,19 @@ class ConsQueryAgent():
       invarFeats = set(self.consIndices).difference(consRobotCanViolate)
       robotPi = self.findConstrainedOptPi([(VAR, _) for _ in invarFeats])
 
-      regret = self.computeValue(pi) - self.computeValue(robotPi)
+      humanValue = self.computeValue(pi)
+      robotValue = self.computeValue(robotPi)
+      regret = humanValue - robotValue
 
       assert regret >= 0, 'regret is %f' % regret
-      if regret >= maxRegret:
+      if regret > maxRegret or (regret == maxRegret and advPi == None):
         maxRegret = regret
         advPi = pi
+        maxValues = (humanValue, robotValue) # not used, just for debugging
   
     assert advPi != None
+    print maxValues, maxRegret
     return maxRegret, advPi
-
-  def findRelevantFeatsUsingHeu(self):
-    """
-    FIXME not sure whether we are going to include this algorithm. not updated.
-    This finds a superset of all relevant features
-    """
-    args = self.mdp
-    S = args['S']
-    A = args['A']
-
-    relFeats = set()
-    
-    # find the policy with all constraints relaxed
-    bestOpt, bestX = lpDual(**args)
-    bestXOccupied = findOccupiedStates(bestX)
-    for idx in range(self.consSetsSize):
-      for s in bestXOccupied:
-        if s in self.consSets[idx]: 
-          relFeats.add(idx)
-          break
-    print 'best x'
-    printOccSA(bestX)
-    print relFeats
-
-    # find the policy with all constraints enforced
-    args['constraints'] = {(s, a): 0 for a in A
-                           for s in S
-                           for consSet in self.consSets
-                           if s in consSet}
-    rawOpt, rawX = lpDual(**args)
-
-    while True:
-      # the optimal policy that has to change some features other than known relevant features
-      args['constraints'] = {}
-      args['positiveConstraints'] = [(s, a) for a in A
-                             for idx in range(self.consSetsSize)
-                             if not idx in relFeats
-                             for s in self.consSets[idx]]
-      opt, x = lpDual(**args)
-      
-      if x == {}: break # such pi does not exist
-
-      sigma, y = decomposePiLP(S, A, args['T'], args['s0'], args['terminal'], bestX, x)
-      
-      if sigma == 1: break # y == bestX
-
-      print 'sigma', sigma
-      print computeValue(y, args['r'], S, A) / (1 - sigma), rawOpt
-      if computeValue(y, args['r'], S, A) / (1 - sigma) <= rawOpt: break
-
-      yOccupied = findOccupiedStates(y)
-      for idx in range(self.consSetsSize):
-        for s in yOccupied:
-          if s in self.consSets[idx]: 
-            relFeats.add(idx)
-            break
-
-      print relFeats
-   
-    return relFeats
-
-  def findRelevantFeatsBruteForce(self):
-    """
-    Baseline. we can find all relevant features by enumerating all dominating policies
-    """
-    args = self.mdp
-    A = args['A']
-    
-    relFeats = set()
- 
-    for activeCons in powerset(range(self.consSetsSize)):
-      print activeCons
-      # solve the raw problem
-      args['constraints'] = {(s, a): 0 for a in A
-                             for idx in activeCons
-                             for s in self.consSets[idx]}
-      #print args['constraints']
-      opt, x = lpDual(**args)
-      #print opt
-      #printOccSA(x)
-
-      for idx in range(self.consSetsSize):
-        for sa, occ in x.items():
-          if occ > 0:
-            s, a = sa
-            if s in self.consSets[idx]: 
-              relFeats.add(idx)
-              #print 'add', idx
-
-    return list(relFeats)
 
   def constructConstraints(self, cons, mdp):
     """

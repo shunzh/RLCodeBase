@@ -43,16 +43,22 @@ def classicOfficNav():
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
   # specify the size of the domain, which are the robot's possible locations
-  width = 5
-  height = 5
+  width = 6
+  height = 2
   # time is 0, 1, ..., horizon
   #horizon = width + height - 1
   
-  #doors = [(1, 1), (3, 1)]
   doors = []#[(width / 2, height / 2)]
 
-  switch = (width - 1, height - 1)
+  switch = (width - 1, 0)
   #switch = getRandLoc()
+
+  #numOfCarpets = 5
+  #carpets = [getRandLoc() for _ in numOfCarpets]
+  carpets = [(2, 0), (3, 0), (4, 0)]
+
+  # number of elements in the query
+  k = 3
 
   lIndex = 0
   dIndexStart = lIndex + 1
@@ -152,11 +158,9 @@ def classicOfficNav():
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
 
   # states that should not be visited
-  numOfCarpets = 5
-  consStates = [[s for s in mdp['S'] if s[lIndex] == getRandLoc()] for _ in xrange(numOfCarpets)] # let's not make carpets features but constraints directly
+  # let's not make carpets features but constraints directly
+  consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
   agent = ConsQueryAgent(mdp, consStates)
-
-  k = 3
 
   relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
