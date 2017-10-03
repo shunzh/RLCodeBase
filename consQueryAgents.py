@@ -112,12 +112,12 @@ class ConsQueryAgent():
             dominatedQ = True
         if dominatedQ: continue
       
-      mr[q], candQVCs[q] = self.findMRAdvPi(q, domPis)
+      mr[q], candQVCs[q] = self.findMRAdvPi(q, relFeats, domPis)
     
     # return the one with the minimum regret
     return min(mr.keys(), lambda _: mr[_])
 
-  def findMRAdvPi(self, q, domPis):
+  def findMRAdvPi(self, q, relFeats, domPis):
     """
     Find the adversarial policy given q and domPis
     
@@ -130,10 +130,10 @@ class ConsQueryAgent():
     for pi in domPis.values():
       # intersection of q and constraints violated by pi
       consRobotCanViolate = set(q).intersection(self.findViolatedConstraints(pi))
-
+      
       # the robot's optimal policy given the constraints above
-      invarFeats = set(self.consIndices).difference(consRobotCanViolate)
-      robotPi = self.findConstrainedOptPi([(VAR, _) for _ in invarFeats])
+      invarFeats = set(relFeats).difference(consRobotCanViolate)
+      robotPi = self.findConstrainedOptPi(invarFeats)
 
       humanValue = self.computeValue(pi)
       robotValue = self.computeValue(robotPi)
