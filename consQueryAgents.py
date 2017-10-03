@@ -1,9 +1,8 @@
 from lp import lpDual, domPiMilp, decomposePiLP, computeValue
 import pprint
 from util import powerset
-import easyDomains
 import copy
-import util
+import numpy
 from timeit import itertools
 
 VAR = 0
@@ -120,6 +119,25 @@ class ConsQueryAgent():
     
     # return the one with the minimum regret
     return min(mr.keys(), lambda _: mr[_])
+
+  def findChaindAdvConstraintQ(self, k, relFeats, domPis):
+    q = set()
+    while len(q) <= k:
+      sizeOfQ = len(q)
+
+      mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
+      q.union(self.findViolatedConstraints(advPi))
+      
+      if len(q) == sizeOfQ: break # no more constraints to add
+    
+    # may exceed k constraints. return the first k constraints only
+    return q[:k]
+
+  def findRandomConstraintQ(self, k, relFeats):
+    return numpy.random.choice(relFeats, k)
+  
+  def findNoQ(self):
+    return []
 
   def findMRAdvPi(self, q, relFeats, domPis):
     """
