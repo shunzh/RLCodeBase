@@ -1,13 +1,11 @@
 import easyDomains
 from consQueryAgents import ConsQueryAgent
 import time
-import getopt
-import sys
 import random
 import numpy
 import scipy
-from httplib import MOVED_PERMANENTLY
-import util
+import pickle
+import gc
 
 OPEN = 1
 CLOSED = 0
@@ -26,9 +24,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-method = None
-
-def classicOfficNav():
+def classicOfficNav(method):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -42,23 +38,22 @@ def classicOfficNav():
 
   FIXME hacking this function too much.
   """
-  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 2))
+  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(1, height - 1))
 
   # specify the size of the domain, which are the robot's possible locations
-  width = 3
+  width = 5
   height = 5
   # time is 0, 1, ..., horizon
   #horizon = width + height - 1
   
   doors = []#[(width / 2, height / 2)]
 
-  switch = (width - 1, 0)
+  switch = (width - 1, height - 1)
   #switch = getRandLoc()
 
-  numOfCarpets = 10
-  #carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
-  carpets = [(1, 0), (1, 1), (1, 2), (1, 3)]
-
+  numOfCarpets = 5
+  carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
+  
   # number of elements in the query
   k = 2
 
@@ -85,13 +80,13 @@ def classicOfficNav():
           [[CLOSED, OPEN] for _ in doors] +\
           [[0, 1]]
   
-  aSets = [(1, 0), (0, 1), (-1, 0), (0, -1),
+  aSets = [(1, 0), (0, 1), (1, 1),
            TURNOFFSWITCH]
  
   # factored transition function
   def navigate(s, a):
     loc = s[lIndex]
-    if a in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
+    if a in [(1, 0), (0, 1), (1, 1)]:
       sp = (loc[0] + a[0], loc[1] + a[1])
       # not blocked by borders, closed doors or walls
       if (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
@@ -153,54 +148,45 @@ def classicOfficNav():
 
   start = time.time()
   if method == 'brute':
-    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=False)
+    q, mr = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=False)
   elif method == 'alg1':
-    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=True)
-  elif method == 'cadv':
-    q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
+    q, mr = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=True)
+  elif method == 'chain':
+    q, mr = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
   elif method == 'random':
-    q = agent.findRandomConstraintQ(k, relFeats)
+    q, mr = agent.findRandomConstraintQ(k, relFeats, domPis)
   elif method == 'nq':
-    q = []
+    q, mr = agent.findNoConstraintQ(k, relFeats, domPis)
   else:
     raise Exception('unknown method', method)
   end = time.time()
-  print end - start
 
-  indices = numpy.random.choice(range(len(relFeats)), 2)
-  violableCons = [list(relFeats)[_] for _ in indices]
+  #indices = numpy.random.choice(range(len(relFeats)), len(relFeats) * violableRatio)
+  #violableCons = [list(relFeats)[_] for _ in indices]
   
-  print q, violableCons
-
-  print agent.findRegret(q, violableCons, relFeats)
-
-  #writeToFile('office.out', end - start)
-
-# deleted flat domain here. kinda merged into the function above
-
-def writeToFile(name, value):
-  f = open(name, 'a') # not appending
-  f.write(str(value) + '\n')
-  f.close()
+  return mr, end - start
 
 
 if __name__ == '__main__':
   # default values of parameters
   method = 'alg1'
+  mrs = {}
+  times = {}
 
-  try:
-    opts, args = getopt.getopt(sys.argv[1:], 'r:a:')
-  except getopt.GetoptError:
-    raise Exception('Unknown flag')
-  for opt, arg in opts:
-    if opt == '-r':
-      random.seed(int(arg))
-
+  for method in ['brute', 'alg1', 'chain', 'random', 'nq']:
+    for rnd in range(20):
+      random.seed(rnd)
       # not necessarily using the following packages, but just to be sure
-      numpy.random.seed(int(arg))
-      scipy.random.seed(int(arg))
-    elif opt == '-a':
-      method = arg
- 
-  #flatOfficNav()
-  classicOfficNav()
+      numpy.random.seed(rnd)
+      scipy.random.seed(rnd)
+     
+      #flatOfficNav()
+      mr, timeElapsed = classicOfficNav(method)
+
+      mrs[(method, rnd)] = mr
+      times[(method, rnd)] = timeElapsed
+      
+      gc.collect()
+
+  pickle.dump(mrs, open('mrs', 'wb'))
+  pickle.dump(times, open('times', 'wb'))

@@ -1,4 +1,4 @@
-from lp import lpDual, domPiMilp, decomposePiLP, computeValue
+from lp import lpDual, computeValue
 import pprint
 from util import powerset
 import copy
@@ -115,12 +115,21 @@ class ConsQueryAgent():
           continue
 
       mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
+
+      if pruning:
+        candQVCs[q] = self.findViolatedConstraints(advPi)
+
       mrs[q] = mr
-      candQVCs[q] = self.findViolatedConstraints(advPi)
     
     # return the one with the minimum regret
-    mmq = min(mrs.keys(), key=lambda _: mrs[_])
-    return mmq
+    if mrs == {}:
+      mmq = () # no need to ask anything
+
+      mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis)
+      mrs[mmq] = mr
+    else:
+      mmq = min(mrs.keys(), key=lambda _: mrs[_])
+    return mmq, mrs[mmq]
 
   def findChaindAdvConstraintQ(self, k, relFeats, domPis):
     q = set()
@@ -128,17 +137,28 @@ class ConsQueryAgent():
       sizeOfQ = len(q)
 
       mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
-      q.union(self.findViolatedConstraints(advPi))
+      q = q.union(self.findViolatedConstraints(advPi))
       
       if len(q) == sizeOfQ: break # no more constraints to add
     
     # may exceed k constraints. return the first k constraints only
-    return q[:k]
+    mmq = list(q)[:k]
+    mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis)
+    return mmq, mr
 
-  def findRandomConstraintQ(self, k, relFeats):
+  def findRandomConstraintQ(self, k, relFeats, domPis):
     indices = numpy.random.choice(range(len(relFeats)), k)
-    return [relFeats[_] for _ in indices]
+    q = [list(relFeats)[_] for _ in indices]
+    
+    mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
+    return q, mr
   
+  def findNoConstraintQ(self, k, relFeats, domPis):
+    q = []
+    
+    mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
+    return q, mr
+ 
   def findRegret(self, q, violableCons, relFeats):
     consRobotCanViolate = set(q).intersection(violableCons)
     rInvarCons = set(relFeats).difference(consRobotCanViolate)
