@@ -46,27 +46,21 @@ def classicOfficNav():
   width = 5
   height = 5
   # time is 0, 1, ..., horizon
-  horizon = width + height - 1
+  #horizon = width + height - 1
   
-  # some objects
-  #carpets = [(2, 0), (2, 1)]
-  carpets = [getRandLoc() for _ in xrange(5)]
-
   #doors = [(1, 1), (3, 1)]
-  doors = [(width / 2, height / 2)]
+  doors = []#[(width / 2, height / 2)]
 
   switch = (width - 1, height - 1)
   #switch = getRandLoc()
 
   lIndex = 0
-  cIndexStart = lIndex + 1
-  cSize = len(carpets)
-  dIndexStart = cIndexStart + cSize
+  dIndexStart = lIndex + 1
   dSize = len(doors)
   sIndex = dIndexStart + dSize
-  tIndex = sIndex + 1
+  # note: time is needed when there are reversible features
+  #tIndex = sIndex + 1
   
-  cIndex = range(cIndexStart, cIndexStart + cSize)
   dIndex = range(dIndexStart, dIndexStart + dSize)
   
   # pairs of adjacent locations that are blocked by a wall
@@ -79,17 +73,9 @@ def classicOfficNav():
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
   sSets = [allLocations] +\
-          [[CLEAN, STEPPED] for _ in carpets] +\
           [[CLOSED, OPEN] for _ in doors] +\
-          [[0, 1]] +\
-          [range(horizon + 1)]
+          [[0, 1]]
   
-  # the robot can change its locations and manipulate the switch
-  cIndices = cIndex + dIndex
-  
-  # the transition function depends on the following features
-  dependentIdx = [lIndex] + dIndex + [sIndex, tIndex]
-
   aSets = [(1, 0), (0, 1), (-1, 0), (0, -1),
            TURNOFFSWITCH]
  
@@ -105,6 +91,7 @@ def classicOfficNav():
         return sp
     return loc
   
+  """
   def carpetOpGen(idx, carpet):
     def carpetOp(s, a):
       loc = s[lIndex]
@@ -112,6 +99,7 @@ def classicOfficNav():
       if loc == carpet: return STEPPED
       else: return carpetState
     return carpetOp
+  """
   
   def doorOpGen(idx, door):
     def doorOp(s, a):
@@ -131,144 +119,60 @@ def classicOfficNav():
     if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
   
+  """
   # time elapses
   def timeOp(s, a):
     return s[-1] + 1
+  """
 
   tFunc = [navigate] +\
-          [carpetOpGen(cIndexStart + i, carpets[i]) for i in range(cSize)] +\
           [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
-          [switchOp] +\
-          [timeOp]
+          [switchOp]
 
   s0List = [(0, 0)] +\
-           [CLEAN for _ in carpets] +\
            [CLOSED for _ in doors] +\
-           [ON, 0]
+           [ON]
   s0 = tuple(s0List)
   
-  terminal = lambda s: s[tIndex] == horizon
+  terminal = lambda s: s[lIndex] == switch
   gamma = .9
 
-  # there is a reward of -1 at any step except when goal is reached
-  # note that the domain of this function should not include any environmental features!
-  bonus = util.Counter()
-  for loc in allLocations: bonus[loc] = random.random() < .4
+  # if need to assign random rewards to all states
+  #bonus = util.Counter()
+  #for loc in allLocations: bonus[loc] = random.random() < .4
 
   def reward(s, a):
     if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
       return 10
     else:
       # create some random rewards in the domain to break ties
-      return bonus[s[lIndex]]
+      return 0
   rFunc = reward
   
-  # the domain handler
-  agent = ConsQueryAgent(sSets, aSets, rFunc, tFunc, s0, terminal, gamma, cIndices, dependentIdx)
+  mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
+
+  # states that should not be visited
+  numOfCarpets = 5
+  consStates = [[s for s in mdp['S'] if s[lIndex] == getRandLoc()] for _ in xrange(numOfCarpets)] # let's not make carpets features but constraints directly
+  agent = ConsQueryAgent(mdp, consStates)
 
   k = 3
 
   relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
   start = time.time()
-  agent.findMinimaxRegretPolicyQ(k, domPis)
+  agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, True)
   end = time.time()
   print end - start
 
   start = time.time()
-  agent.findGlobalMinimaxRegretPolicyQ(k, domPis)
+  agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, False)
   end = time.time()
   print end - start
 
   #writeToFile('office.out', end - start)
 
-
-def flatOfficNav():
-  """
-  An efficient and theoretically-unsound way to implement the office navigation domain.
-  Rather than having features, we only have a set of possible constraints.
-  """
-  width = 10
-  height = 10
-
-  getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
-  mdp = {}
-  
-  # some objects
-  numOfCons = 20
-  objectsInOneCons = 2
-  
-  mdp['s0'] = (0, 0)
-  #switch = (8, 8)
-  switch = getRandLoc()
-
-  consSets = [[getRandLoc() for _ in range(objectsInOneCons)] for cons in range(numOfCons)]
-  #consSets = [[(0, 1)], [(1, 1)], [(1, 0)]]
-
-  print switch, consSets
-  
-  mdp['S'] = [(x, y) for x in range(width) for y in range(height)]
-  #mdp['A'] = [(1, 0), (0, 1), (-1, 0), (0, -1)] 
-  mdp['A'] = [(1, 0), (0, 1), (1, 1)] 
-  
-  # the posterior state of taking a in s without noise
-  def move(s, a):
-    moved = (s[0] + a[0], s[1] + a[1])
-    if moved[0] >= 0 and moved[0] < width and moved[1] >= 0 and moved[1] < height:
-      return moved
-    else:
-      return s
-
-  """
-  # stochastic transition
-  def transit(s, a, sp):
-    prob = 0
-    for ap in mdp['A']:
-      if ap == a:
-        if sp == move(s, a): prob += 1 - noise
-      elif move(s, ap) == sp:
-        prob += noise / (len(mdp['A']) - 1)
-    return prob
-  """
-  def transit(s, a, sp):
-    return move(s, a) == sp
-
-  mdp['T'] = transit
-  
-  def reward(s, a):
-    if s == switch: return 0
-    # don't bounce
-    elif s == move(s, a): return -100
-    else:
-      for cons in consSets:
-        # discourage the robot to occupy constraint-violating states unless necessary
-        if s in cons: return -1.001
-      return -1
-      
-  mdp['r'] = reward
-
-  # terminates when the robot arrives at the switch or at the border
-  mdp['terminal'] = lambda s: s == switch
-  
-  agent = ConsQueryAgent(mdp, consSets)
-
-  start = time.time()
-  if method == 'alg1':
-    feats = agent.findRelevantFeaturesAndDomPis()
-  elif method == 'alg3':
-    feats = agent.findRelevantFeatsUsingHeu()
-  elif method == 'brute':
-    feats = agent.findRelevantFeatsBruteForce()
-  else:
-    raise Exception('unknown alg')
-  end = time.time()
-  elapsed = end - start
-
-  print feats, elapsed
-  
-  writeToFile(method + 'Feats.out', len(feats))
-  writeToFile(method + 'Time.out', elapsed)
-
+# deleted flat domain here. kinda merged into the function above
 
 def writeToFile(name, value):
   f = open(name, 'a') # not appending

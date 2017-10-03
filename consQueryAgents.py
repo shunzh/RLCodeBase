@@ -12,47 +12,25 @@ NONREVERSED = 1
 class ConsQueryAgent():
   """
   Find queries in constraint-uncertain mdps. May formulate constraints as negative rewards.
-
-  TODO only implementing some auxiliary functions. 
   """
-  def __init__(self, sSets, aSets, rFunc, tFunc, s0, terminal, gamma, consSets, dependentSets):
+  def __init__(self, mdp, consStates):
     """
     can't think of a class it should inherit..
 
     mdp: a factored mdp
     consSets: the set of environmental feature indices
     """
-    self.sSets = sSets # set of possible values of features for all features
-    self.aSets = aSets
-    self.rFunc = rFunc
-    self.tFunc = tFunc
-    self.s0 = s0
-    self.terminal = terminal
-    self.gamma = gamma
-    
-    self.transit = lambda state, action: tuple([t(state, action) for t in tFunc])
+    self.mdp = mdp
 
     # indices of constraints
-    self.consSets = set(consSets)
-    self.consSetsSize = len(consSets)
-    
-    # set of features that should not be masked
-    self.dependentSets = dependentSets
-    
-    # get the raw state space. this is useful
-    ret = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
-    self.rawStateSpace = ret['S']
+    self.consStates = consStates
+    self.consIndices = range(len(consStates))
   
   def findConstrainedOptPi(self, activeCons):
-    maskIdx = [_ for _ in self.consSets if not (VAR, _) in activeCons
-                                       and not (NONREVERSED, _) in activeCons
-                                       and not _ in self.dependentSets]
-    mdp = self.constructReducedFactoredMDP(maskIdx)
+    mdp = copy.copy(self.mdp)
 
     mdp['constraints'] = self.constructConstraints(activeCons, mdp)
     opt, x = lpDual(**mdp)
-    
-    x = self.constructRawPolicy(x, maskIdx)
 
     return x
 
@@ -99,11 +77,14 @@ class ConsQueryAgent():
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
       beta.append((set(activeCons), set(violatedCons)))
 
+      """
       for idx in self.consSets:
         if (NONREVERSED, idx) in violatedCons:
           allCons.add((NONREVERSED, idx))
         elif (NONREVERSED, idx) in activeCons and (VAR, idx) in violatedCons:
           allCons.add((VAR, idx))
+      """
+      allCons.update(violatedCons)
 
       allConsPowerset = set(powerset(allCons))
 
@@ -112,63 +93,7 @@ class ConsQueryAgent():
     
     return allCons, dominatingPolicies
 
-  def findMinimaxRegretPolicyQ(self, k, domPis):
-    """
-    Greedy construction method to find the minimax regret policy.
-    Its optimality guarantee is unknown!
-    """
-    # initialize with the non-constraint-violating policy
-    q = [self.findConstrainedOptPi([(VAR, _) for _ in self.consSets])]
-
-    for i in range(2, k + 1):
-      minMaxRegretValue = float('inf')
-      minMaxRegretPi = None
-      # compute MR(q \cup {\pi}) for \pi \in \Gamma
-      for pi in domPis.values():
-        # all possible C \subseteq \mathbf{C}
-        maxRegret, advPi = self.findMRAdvPi(q + [pi], domPis)
-
-        if maxRegret < minMaxRegretValue:
-          minMaxRegretValue = maxRegret
-          minMaxRegretPi = pi
-
-      assert minMaxRegretPi != None
-      q.append(minMaxRegretPi)
-
-    print 'minMaxRegretValue', minMaxRegretValue
-    return q 
-
-  def findGlobalMinimaxRegretPolicyQ(self, k, domPis):
-    minMaxRegretValue = float('inf')
-    minMaxRegretQ = None
-
-    # help it with always adding the non-constraint-violating policy
-    defaultPi = self.findConstrainedOptPi([(VAR, _) for _ in self.consSets])
-
-    # find ALL k-subset of dominating policies
-    for otherPis in itertools.combinations(domPis.values(), k - 1):
-      q = [defaultPi] + list(otherPis)
-      # compute maximum regret of q
-      maxRegret = 0
-
-      # all possible C \subseteq \mathbf{C}
-      for activeCons, advPi in domPis.items():
-        feasiblePis = filter(lambda _: self.piSatisfiesCons(_, activeCons), q)
-        robotPi = max(feasiblePis, key=lambda _: self.computeValue(_))
-        regret = self.computeValue(advPi) - self.computeValue(robotPi)
-        assert regret >= 0, 'regret is %f' % regret
-        maxRegret = max(maxRegret, regret)
-      
-      if maxRegret < minMaxRegretValue:
-        minMaxRegretValue = maxRegret
-        minMaxRegretQ = q
-    
-    assert minMaxRegretQ != None
-
-    print 'minMaxRegretValue', minMaxRegretValue
-    return minMaxRegretQ
-
-  def findMinimaxRegretConstraintQ(self, k, domPis, pruning=False):
+  def findMinimaxRegretConstraintQ(self, k, relFeats, domPis, pruning=False):
     """
     Finding a minimax k-element constraint query.
     
@@ -177,7 +102,7 @@ class ConsQueryAgent():
     candQVCs = {} # candidate queries and their violated constraints
     mr = {}
 
-    for q in itertools.combinations(self.consSets, k):
+    for q in itertools.combinations(relFeats, k):
       if pruning:
         # check the pruning condition
         dominatedQ = False
@@ -205,46 +130,19 @@ class ConsQueryAgent():
       consRobotCanViolate = set(q).intersection(self.findViolatedConstraints(pi))
 
       # the robot's optimal policy given the constraints above
-      invarFeats = self.consSets.difference(consRobotCanViolate)
+      invarFeats = set(self.consIndices).difference(consRobotCanViolate)
       robotPi = self.findConstrainedOptPi([(VAR, _) for _ in invarFeats])
 
       regret = self.computeValue(pi) - self.computeValue(robotPi)
 
       assert regret >= 0, 'regret is %f' % regret
-      if regret > maxRegret:
+      if regret >= maxRegret:
         maxRegret = regret
         advPi = pi
   
     assert advPi != None
     return maxRegret, advPi
 
-  def constructReducedFactoredMDP(self, maskIdx):
-    sSets = copy.copy(self.sSets)
-    tFunc = copy.copy(self.tFunc)
-
-    for idx in maskIdx:
-      sSets[idx] = [self.s0[idx]]
-      tFunc[idx] = lambda s, a: s[idx]
-    
-    return easyDomains.getFactoredMDP(sSets, self.aSets, self.rFunc, tFunc, self.s0, self.terminal, self.gamma)
-  
-  # FIXME assuming deterministic transition
-  def constructRawPolicy(self, x, maskIdx):
-    newX = util.Counter()
-    newS = self.s0
-    mask = lambda state: tuple([self.s0[idx] if idx in maskIdx else state[idx] for idx in range(len(self.s0))])
-
-    while True:
-      s = newS
-      # add the last batch to S
-      for a in self.aSets:
-        if (mask(s), a) in x.keys() and x[(mask(s), a)] > 0:
-          newX[(s, a)] = x[mask(s), a]
-          newS = self.transit(s, a)
-          break
-      if self.terminal(s) or newS == s: break
-    return newX
-  
   def findRelevantFeatsUsingHeu(self):
     """
     FIXME not sure whether we are going to include this algorithm. not updated.
@@ -344,7 +242,7 @@ class ConsQueryAgent():
       consType, consIdx = con
       if consType == VAR:
         constraints.update({(s, a): 0 for a in mdp['A']
-                                      for s in self.statesWithDifferentFeats(consIdx, mdp)})
+                                      for s in self.consStates[consIdx]})
       elif consType == NONREVERSED:
         constraints.update({(s, a): 0 for a in mdp['A']
                                       for s in self.statesWithDifferentFeats(consIdx, mdp)
@@ -354,7 +252,7 @@ class ConsQueryAgent():
     return constraints
 
   def computeValue(self, x):
-    return computeValue(x, self.rFunc, self.rawStateSpace, self.aSets)
+    return computeValue(x, self.mdp['r'], self.mdp['S'], self.mdp['A'])
 
   def piSatisfiesCons(self, x, cons):
     violatedCons = self.findViolatedConstraints(x)
@@ -366,15 +264,17 @@ class ConsQueryAgent():
     # set of features that are different from the initial value at time step T
     notReversed = set()
     
-    for idx in self.consSets:
+    for idx in self.consIndices:
       # states violated by idx
       for s, a in x.keys():
-        if s[idx] != self.s0[idx] and any(x[s, a] > 0 for a in self.aSets):
+        if any(x[s, a] > 0 for a in self.mdp['A']) and s in self.consStates[idx]:
           var.add(idx)
-          if self.terminal(s):
+          if self.mdp['terminal'](s):
             notReversed.add(idx)
-
-    return set([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
+    
+    #FIXME not sure how to deal with nonreversed features for now. ignore them.
+    return set([(VAR, idx) for idx in var])
+    #return set([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
     
   def statesWithDifferentFeats(self, idx, mdp):
     return filter(lambda s: s[idx] != mdp['s0'][idx], mdp['S'])
