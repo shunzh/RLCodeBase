@@ -43,8 +43,8 @@ def classicOfficNav():
   getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
 
   # specify the size of the domain, which are the robot's possible locations
-  width = 6
-  height = 2
+  width = 3
+  height = 6
   # time is 0, 1, ..., horizon
   #horizon = width + height - 1
   
@@ -55,10 +55,10 @@ def classicOfficNav():
 
   #numOfCarpets = 5
   #carpets = [getRandLoc() for _ in numOfCarpets]
-  carpets = [(2, 0), (3, 0), (4, 0)]
+  carpets = [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]
 
   # number of elements in the query
-  k = 3
+  k = 2
 
   lIndex = 0
   dIndexStart = lIndex + 1
@@ -74,7 +74,8 @@ def classicOfficNav():
 
   # splitting the room into two smaller rooms.
   # the robot can only access to the other room by going through a door in the middle or a corridor at the top
-  walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1) if _ != height / 2]
+  #walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1) if _ != height / 2]
+  walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
@@ -166,11 +167,6 @@ def classicOfficNav():
 
   start = time.time()
   agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, True)
-  end = time.time()
-  print end - start
-
-  start = time.time()
-  agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, False)
   end = time.time()
   print end - start
 

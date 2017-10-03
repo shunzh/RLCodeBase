@@ -103,16 +103,20 @@ class ConsQueryAgent():
     mr = {}
 
     for q in itertools.combinations(relFeats, k):
-      print q
+      print 'q', q
+
       if pruning:
         # check the pruning condition
         dominatedQ = False
         for candQ in candQVCs.keys():
-          if set(q).union(candQVCs[candQ]).issubset(candQ):
+          if set(q).intersection(candQVCs[candQ]).issubset(candQ):
             dominatedQ = True
-        if dominatedQ: continue
-      
-      mr[q], candQVCs[q] = self.findMRAdvPi(q, relFeats, domPis)
+        if dominatedQ:
+          print q, 'is dominated'
+          continue
+
+      mr[q], advPi = self.findMRAdvPi(q, relFeats, domPis)
+      candQVCs[q] = self.findViolatedConstraints(advPi)
     
     # return the one with the minimum regret
     return min(mr.keys(), lambda _: mr[_])
