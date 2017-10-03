@@ -99,7 +99,7 @@ class ConsQueryAgent():
     Use pruning if pruning=True, otherwise brute force.
     """
     candQVCs = {} # candidate queries and their violated constraints
-    mr = {}
+    mrs = {}
 
     for q in itertools.combinations(relFeats, k):
       print 'q', q
@@ -114,11 +114,13 @@ class ConsQueryAgent():
           print q, 'is dominated'
           continue
 
-      mr[q], advPi = self.findMRAdvPi(q, relFeats, domPis)
+      mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
+      mrs[q] = mr
       candQVCs[q] = self.findViolatedConstraints(advPi)
     
     # return the one with the minimum regret
-    return min(mr.keys(), lambda _: mr[_])
+    mmq = min(mrs.keys(), key=lambda _: mrs[_])
+    return mmq
 
   def findChaindAdvConstraintQ(self, k, relFeats, domPis):
     q = set()
@@ -134,10 +136,18 @@ class ConsQueryAgent():
     return q[:k]
 
   def findRandomConstraintQ(self, k, relFeats):
-    return numpy.random.choice(relFeats, k)
+    indices = numpy.random.choice(range(len(relFeats)), k)
+    return [relFeats[_] for _ in indices]
   
-  def findNoQ(self):
-    return []
+  def findRegret(self, q, violableCons, relFeats):
+    consRobotCanViolate = set(q).intersection(violableCons)
+    rInvarCons = set(relFeats).difference(consRobotCanViolate)
+    robotPi = self.findConstrainedOptPi(rInvarCons)
+    
+    hInvarCons = set(relFeats).difference(violableCons)
+    humanPi = self.findConstrainedOptPi(hInvarCons)
+    
+    return self.computeValue(humanPi) - self.computeValue(robotPi)
 
   def findMRAdvPi(self, q, relFeats, domPis):
     """

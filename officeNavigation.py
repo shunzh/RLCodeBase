@@ -26,6 +26,8 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
+method = None
+
 def classicOfficNav():
   """
   The office navigation domain specified in the report using a factored representation.
@@ -40,11 +42,11 @@ def classicOfficNav():
 
   FIXME hacking this function too much.
   """
-  getRandLoc = lambda: (random.randint(0, width - 2), random.randint(0, height - 2))
+  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 2))
 
   # specify the size of the domain, which are the robot's possible locations
   width = 3
-  height = 6
+  height = 5
   # time is 0, 1, ..., horizon
   #horizon = width + height - 1
   
@@ -53,9 +55,9 @@ def classicOfficNav():
   switch = (width - 1, 0)
   #switch = getRandLoc()
 
-  #numOfCarpets = 5
-  #carpets = [getRandLoc() for _ in numOfCarpets]
-  carpets = [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]
+  numOfCarpets = 10
+  #carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
+  carpets = [(1, 0), (1, 1), (1, 2), (1, 3)]
 
   # number of elements in the query
   k = 2
@@ -98,16 +100,6 @@ def classicOfficNav():
         return sp
     return loc
   
-  """
-  def carpetOpGen(idx, carpet):
-    def carpetOp(s, a):
-      loc = s[lIndex]
-      carpetState = s[idx]
-      if loc == carpet: return STEPPED
-      else: return carpetState
-    return carpetOp
-  """
-  
   def doorOpGen(idx, door):
     def doorOp(s, a):
       loc = s[lIndex]
@@ -126,12 +118,6 @@ def classicOfficNav():
     if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
   
-  """
-  # time elapses
-  def timeOp(s, a):
-    return s[-1] + 1
-  """
-
   tFunc = [navigate] +\
           [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
           [switchOp]
@@ -166,9 +152,27 @@ def classicOfficNav():
   relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
   start = time.time()
-  agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, True)
+  if method == 'brute':
+    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=False)
+  elif method == 'alg1':
+    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=True)
+  elif method == 'cadv':
+    q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
+  elif method == 'random':
+    q = agent.findRandomConstraintQ(k, relFeats)
+  elif method == 'nq':
+    q = []
+  else:
+    raise Exception('unknown method', method)
   end = time.time()
   print end - start
+
+  indices = numpy.random.choice(range(len(relFeats)), 2)
+  violableCons = [list(relFeats)[_] for _ in indices]
+  
+  print q, violableCons
+
+  print agent.findRegret(q, violableCons, relFeats)
 
   #writeToFile('office.out', end - start)
 
