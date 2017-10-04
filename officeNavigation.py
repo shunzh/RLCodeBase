@@ -41,8 +41,8 @@ def classicOfficNav(method):
   getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(1, height - 1))
 
   # specify the size of the domain, which are the robot's possible locations
-  width = 5
-  height = 5
+  width = 10
+  height = 10
   # time is 0, 1, ..., horizon
   #horizon = width + height - 1
   
@@ -51,7 +51,7 @@ def classicOfficNav(method):
   switch = (width - 1, height - 1)
   #switch = getRandLoc()
 
-  numOfCarpets = 5
+  numOfCarpets = 10
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
   
   # number of elements in the query

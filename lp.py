@@ -233,10 +233,12 @@ def computeObj(q, psi, S, A, R):
 
 def computeValue(pi, r, S, A):
   sum = 0
-  for s in S:
-    for a in A:
-      sum += pi[s, a] * r(s, a)
-  return sum
+  if pi == {}: return sum
+  else:
+    for s in S:
+      for a in A:
+        sum += pi[s, a] * r(s, a)
+    return sum
 
 def toyDomain():
   args = easyDomains.getChainDomain(10)

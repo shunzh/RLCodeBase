@@ -147,8 +147,11 @@ class ConsQueryAgent():
     return mmq, mr
 
   def findRandomConstraintQ(self, k, relFeats, domPis):
-    indices = numpy.random.choice(range(len(relFeats)), k)
-    q = [list(relFeats)[_] for _ in indices]
+    if len(relFeats) >= k:
+      indices = numpy.random.choice(range(len(relFeats)), k)
+      q = [list(relFeats)[_] for _ in indices]
+    else:
+      q = relFeats
     
     mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
     return q, mr
@@ -185,10 +188,15 @@ class ConsQueryAgent():
       
       # the robot's optimal policy given the constraints above
       invarFeats = set(relFeats).difference(consRobotCanViolate)
-      robotPi = self.findConstrainedOptPi(invarFeats)
+      
+      robotValue = 0
+      for rPi in domPis.values():
+        if self.piSatisfiesCons(rPi, invarFeats):
+          rValue = self.computeValue(rPi)
+          if rValue > robotValue:
+            robotValue = rValue
 
       humanValue = self.computeValue(pi)
-      robotValue = self.computeValue(robotPi)
       regret = humanValue - robotValue
 
       assert regret >= 0, 'regret is %f' % regret

@@ -6,7 +6,9 @@ def main():
   times = pickle.load(open('times', 'rb'))
   
   for method in ['brute', 'alg1', 'chain', 'random', 'nq']:
-    m, ci = process([mrs[method, _] for _ in range(20)])
+    m, ci = process([mrs[method, _] for _ in range(10)])
+    print method, m, ci
+    m, ci = process([times[method, _] for _ in range(10)])
     print method, m, ci
 
 def process(data):
