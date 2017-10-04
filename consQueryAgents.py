@@ -101,34 +101,40 @@ class ConsQueryAgent():
     candQVCs = {} # candidate queries and their violated constraints
     mrs = {}
 
-    for q in itertools.combinations(relFeats, k):
-      print 'q', q
-
-      if pruning:
-        # check the pruning condition
-        dominatedQ = False
-        for candQ in candQVCs.keys():
-          if set(q).intersection(candQVCs[candQ]).issubset(candQ):
-            dominatedQ = True
-        if dominatedQ:
-          print q, 'is dominated'
-          continue
-
-      mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
-
-      if pruning:
-        candQVCs[q] = self.findViolatedConstraints(advPi)
-
-      mrs[q] = mr
-    
-    # return the one with the minimum regret
-    if mrs == {}:
-      mmq = () # no need to ask anything
+    if len(relFeats) < k:
+      mmq = tuple(relFeats)
 
       mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis)
       mrs[mmq] = mr
     else:
-      mmq = min(mrs.keys(), key=lambda _: mrs[_])
+      for q in itertools.combinations(relFeats, k):
+        print 'q', q
+
+        if pruning:
+          # check the pruning condition
+          dominatedQ = False
+          for candQ in candQVCs.keys():
+            if set(q).intersection(candQVCs[candQ]).issubset(candQ):
+              dominatedQ = True
+          if dominatedQ:
+            print q, 'is dominated'
+            continue
+
+        mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
+
+        if pruning:
+          candQVCs[q] = self.findViolatedConstraints(advPi)
+
+        mrs[q] = mr
+      
+      # return the one with the minimum regret
+      if mrs == {}:
+        mmq = () # no need to ask anything
+
+        mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis)
+        mrs[mmq] = mr
+      else:
+        mmq = min(mrs.keys(), key=lambda _: mrs[_])
     return mmq, mrs[mmq]
 
   def findChaindAdvConstraintQ(self, k, relFeats, domPis):

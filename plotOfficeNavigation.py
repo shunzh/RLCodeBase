@@ -2,14 +2,12 @@ import pickle
 from numpy import mean, std, sqrt
 
 def main():
-  mrs = pickle.load(open('mrs', 'rb'))
-  times = pickle.load(open('times', 'rb'))
-  
   for method in ['brute', 'alg1', 'chain', 'random', 'nq']:
-    m, ci = process([mrs[method, _] for _ in range(10)])
-    print method, m, ci
-    m, ci = process([times[method, _] for _ in range(10)])
-    print method, m, ci
+    ret = pickle.load(open(method + '.pkl', 'rb'))
+    m, ci = process([ret['mr', _] for _ in range(20)])
+    print method, '& $', round(m, 4), '\pm', round(ci, 4), '$ &',
+    m, ci = process([ret['time', _] for _ in range(20)])
+    print '$', round(m, 4), '\pm', round(ci, 4), '$ \\\\'
 
 def process(data):
   return mean(data), 1.95 * std(data) / sqrt(len(data))

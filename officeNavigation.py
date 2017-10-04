@@ -6,6 +6,8 @@ import numpy
 import scipy
 import pickle
 import gc
+import getopt
+import sys
 
 OPEN = 1
 CLOSED = 0
@@ -164,29 +166,32 @@ def classicOfficNav(method):
   #indices = numpy.random.choice(range(len(relFeats)), len(relFeats) * violableRatio)
   #violableCons = [list(relFeats)[_] for _ in indices]
   
+  print q, mr
+
   return mr, end - start
 
 
 if __name__ == '__main__':
-  # default values of parameters
-  method = 'alg1'
-  mrs = {}
-  times = {}
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], 'r:a:')
+  except getopt.GetoptError:
+    raise Exception('Unknown flag')
+  for opt, arg in opts:
+    if opt == '-a':
+      method = arg
 
-  for method in ['brute', 'alg1', 'chain', 'random', 'nq']:
-    for rnd in range(20):
-      random.seed(rnd)
-      # not necessarily using the following packages, but just to be sure
-      numpy.random.seed(rnd)
-      scipy.random.seed(rnd)
-     
-      #flatOfficNav()
-      mr, timeElapsed = classicOfficNav(method)
+  ret = {}
 
-      mrs[(method, rnd)] = mr
-      times[(method, rnd)] = timeElapsed
-      
-      gc.collect()
+  for rnd in range(20):
+    random.seed(rnd)
+    # not necessarily using the following packages, but just to be sure
+    numpy.random.seed(rnd)
+    scipy.random.seed(rnd)
+   
+    #flatOfficNav()
+    mr, timeElapsed = classicOfficNav(method)
 
-  pickle.dump(mrs, open('mrs', 'wb'))
-  pickle.dump(times, open('times', 'wb'))
+    ret['mr', rnd] = mr
+    ret['time', rnd] = timeElapsed
+
+  pickle.dump(ret, open(method + '.pkl', 'wb'))
