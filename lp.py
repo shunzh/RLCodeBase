@@ -78,6 +78,12 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraint
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 
 def decomposePiLP(S, A, T, s0, terminal, rawX, x, gamma=1):
+  """
+  DEPRECATED.
+  This tries to decouple a policy into the optimal policy (following no constraints) and another policy \pi'.
+  \pi' may be a dominating policy.
+  Described in Eq. 2 on Aug.29, 2017.
+  """
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
 
@@ -166,7 +172,8 @@ def milp(S, A, R, T, s0, psi, maxV):
 
 def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
   """
-  find the next dominating policy given domPis or decide there are no more dominating policies
+  Finding dominating policies by representing constraints as possible negative rewards.
+  Described in the report on aug.19, 2017.
   """
   rmax = 10000
   M = 0.001
@@ -219,6 +226,45 @@ def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
   
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
   
+def rewardUncertainMILP(S, A, R, T, s0, terminal, k, optV, gamma=1):
+  m = CPlexModel()
+  if not config.VERBOSE: m.setVerbosity(0)
+
+  M = 100000
+
+  # state range
+  Sr = range(len(S))
+  # action range
+  Ar = range(len(A))
+  
+  mr = m.new(name='mr')
+  # decision variables
+  x = m.new((k, len(S), len(A)), lb=0, name='x')
+  v = m.new((k, len(R)), name='v')
+  I = m.new((k, len(R)), vtype=bool, name='I')
+  
+  for r in range(len(R)):
+    m.constrain(mr >= sum(v[i][r]) for i in range(k))
+  
+  for r in range(len(R)):
+    for i in range(k):
+      m.constrain(v[i, r] >= optV[r] - sum(x[i, s, a] * R[r](S[s], A[a]) for s in Sr for a in Ar) - I[i, r] * M)
+
+  # make sure x is a valid occupancy
+  for i in range(k):
+    for sp in Sr:
+      m.constrain(sum(x[i, s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == (S[sp] == s0))
+  
+  for r in range(len(R)):
+    m.constrain(sum(I[i, r] for i in range(k)) == 1)
+  
+  for r in range(len(R)):
+    for i in range(k):
+      m.constrain(v[i, r] >= 0)
+  
+  obj = m.minimize(mr)
+  
+  return obj
 
 def computeObj(q, psi, S, A, R):
   rLen = len(R)
