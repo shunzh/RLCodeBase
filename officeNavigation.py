@@ -5,7 +5,6 @@ import random
 import numpy
 import scipy
 import pickle
-import gc
 import getopt
 import sys
 
@@ -26,7 +25,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(method):
+def classicOfficNav(method, k, numOfCarpets):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -53,12 +52,8 @@ def classicOfficNav(method):
   switch = (width - 1, height - 1)
   #switch = getRandLoc()
 
-  numOfCarpets = 10
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
   
-  # number of elements in the query
-  k = 2
-
   lIndex = 0
   dIndexStart = lIndex + 1
   dSize = len(doors)
@@ -146,22 +141,31 @@ def classicOfficNav(method):
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
   agent = ConsQueryAgent(mdp, consStates)
 
-  relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-
   start = time.time()
+
   if method == 'brute':
-    q, mr = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=False)
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=False)
   elif method == 'alg1':
-    q, mr = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=True)
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=True)
   elif method == 'chain':
-    q, mr = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+    q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
   elif method == 'random':
-    q, mr = agent.findRandomConstraintQ(k, relFeats, domPis)
+    q = agent.findRandomConstraintQ(k)
   elif method == 'nq':
-    q, mr = agent.findNoConstraintQ(k, relFeats, domPis)
+    q = []
   else:
     raise Exception('unknown method', method)
+
   end = time.time()
+
+  # we may need relFeats and domPis for evaluation. they are not timed.
+  if 'relFeats' not in vars() or 'domPis' not in vars():
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+
+  mr, advPi = agent.findMRAdvPi(q, relFeats, domPis)
 
   #indices = numpy.random.choice(range(len(relFeats)), len(relFeats) * violableRatio)
   #violableCons = [list(relFeats)[_] for _ in indices]
@@ -172,26 +176,36 @@ def classicOfficNav(method):
 
 
 if __name__ == '__main__':
+  method = 'alg1'
+  k = 2
+  numOfCarpets = 10
+
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'r:a:')
+    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
     if opt == '-a':
       method = arg
+    elif opt == '-k':
+      k = int(arg)
+    elif opt == '-n':
+      numOfCarpets = int(arg)
+    else:
+      raise Exception('unknown argument')
 
   ret = {}
   
-  for rnd in range(20):
+  for rnd in range(2):
     random.seed(rnd)
     # not necessarily using the following packages, but just to be sure
     numpy.random.seed(rnd)
     scipy.random.seed(rnd)
    
     #flatOfficNav()
-    mr, timeElapsed = classicOfficNav(method)
+    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets)
 
     ret['mr', rnd] = mr
     ret['time', rnd] = timeElapsed
 
-  pickle.dump(ret, open(method + '.pkl', 'wb'))
+  pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'wb'))

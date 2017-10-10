@@ -62,6 +62,7 @@ eval_*
 *.dat
 
 # condor
+*.pkl
 *.out
 *.tar.gz
 experiments

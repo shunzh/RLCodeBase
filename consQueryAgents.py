@@ -102,6 +102,7 @@ class ConsQueryAgent():
     mrs = {}
 
     if len(relFeats) < k:
+      # we have a chance to ask about all of them!
       mmq = tuple(relFeats)
 
       mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis)
@@ -149,25 +150,17 @@ class ConsQueryAgent():
     
     # may exceed k constraints. return the first k constraints only
     mmq = list(q)[:k]
-    mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis)
-    return mmq, mr
+    return mmq
 
-  def findRandomConstraintQ(self, k, relFeats, domPis):
-    if len(relFeats) >= k:
-      indices = numpy.random.choice(range(len(relFeats)), k)
-      q = [list(relFeats)[_] for _ in indices]
+  def findRandomConstraintQ(self, k):
+    if len(self.consIndices) >= k:
+      q = numpy.random.choice(self.consIndices, k)
     else:
-      q = relFeats
+      # no more than k constraints, should not design exp in this way though
+      q = self.consIndices
     
-    mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
-    return q, mr
+    return q
   
-  def findNoConstraintQ(self, k, relFeats, domPis):
-    q = []
-    
-    mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
-    return q, mr
- 
   def findRegret(self, q, violableCons, relFeats):
     consRobotCanViolate = set(q).intersection(violableCons)
     rInvarCons = set(relFeats).difference(consRobotCanViolate)

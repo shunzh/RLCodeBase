@@ -248,7 +248,7 @@ def rewardUncertainMILP(S, A, R, T, s0, terminal, k, optV, gamma=1):
   
   for r in range(len(R)):
     for i in range(k):
-      m.constrain(v[i, r] >= optV[r] - sum(x[i, s, a] * R[r](S[s], A[a]) for s in Sr for a in Ar) - I[i, r] * M)
+      m.constrain(v[i, r] >= optV[r] - sum(x[i, s, a] * R[r](S[s], A[a]) for s in Sr for a in Ar) + I[i, r] * M)
 
   # make sure x is a valid occupancy
   for i in range(k):
