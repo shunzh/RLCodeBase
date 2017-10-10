@@ -196,7 +196,7 @@ if __name__ == '__main__':
 
   ret = {}
   
-  for rnd in range(2):
+  for rnd in range(20):
     random.seed(rnd)
     # not necessarily using the following packages, but just to be sure
     numpy.random.seed(rnd)

@@ -136,7 +136,7 @@ class ConsQueryAgent():
         mrs[mmq] = mr
       else:
         mmq = min(mrs.keys(), key=lambda _: mrs[_])
-    return mmq, mrs[mmq]
+    return mmq
 
   def findChaindAdvConstraintQ(self, k, relFeats, domPis):
     q = set()
@@ -162,6 +162,9 @@ class ConsQueryAgent():
     return q
   
   def findRegret(self, q, violableCons, relFeats):
+    """
+    A utility function that finds regret
+    """
     consRobotCanViolate = set(q).intersection(violableCons)
     rInvarCons = set(relFeats).difference(consRobotCanViolate)
     robotPi = self.findConstrainedOptPi(rInvarCons)

@@ -3,7 +3,7 @@ from numpy import mean, std, sqrt
 import matplotlib.pyplot as plt
 
 def main():
-  trials = 2
+  trials = 20
   m = {}
   ci = {}
   
@@ -22,6 +22,7 @@ def main():
 
   plt.figure()
   for method in methods:
+    print method, [m[method, _, 10] for _ in kRange], [ci[method, _, 10] for _ in kRange]
     plt.errorbar(kRange, [m[method, _, 10] for _ in kRange], [ci[method, _, 10] for _ in kRange])
   plt.title("Maximum regret under different k")
   plt.legend(methods)
@@ -32,6 +33,7 @@ def main():
   plt.figure()
   plt.errorbar(nRange[:2], [m['brute', 2, _] for _ in nRange[:2]], [ci['brute', 2, _] for _ in nRange[:2]])
   for method in methods[1:]:
+    print method, [m[method, 2, _] for _ in nRange], [ci[method, 2, _] for _ in nRange]
     plt.errorbar(nRange, [m[method, 2, _] for _ in nRange], [ci[method, 2, _] for _ in nRange])
   plt.title("Maximum regret under different |C|")
   plt.xlabel('|C|')
