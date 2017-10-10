@@ -76,6 +76,7 @@ class ConsQueryAgent():
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
       beta.append((set(activeCons), set(violatedCons)))
 
+      #FIXME for now, only consider VAR
       """
       for idx in self.consSets:
         if (NONREVERSED, idx) in violatedCons:
@@ -158,6 +159,8 @@ class ConsQueryAgent():
     else:
       # no more than k constraints, should not design exp in this way though
       q = self.consIndices
+    
+    q = [(VAR, _) for _ in q]
     
     return q
   
