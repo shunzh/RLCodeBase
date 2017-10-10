@@ -65,4 +65,5 @@ eval_*
 *.pkl
 *.out
 *.tar.gz
+*.pdf
 experiments

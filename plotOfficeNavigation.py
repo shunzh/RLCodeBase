@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 methods = ['brute', 'alg1', 'chain', 'random', 'nq']
 markers = {'brute': 'o-', 'alg1': '+-', 'chain': 'd-', 'random': '^-', 'nq': '--'}
+legends = ['Brute Force', 'Alg.3', 'CoA', 'Random', 'No Query']
 
 def main():
   trials = 20
@@ -43,8 +44,8 @@ def plot(x, y, yci, title, xlabel, ylabel, filename):
     print method, y(method), yci(method)
     plt.errorbar(x, y(method), yci(method), fmt=markers[method], markersize=8)
   plt.title(title)
-  plt.gcf().set_size_inches(5,4)
-  plt.legend(methods)
+  plt.gcf().set_size_inches(4.5,4)
+  plt.legend(legends)
   plt.xlabel(xlabel)
   plt.ylabel(ylabel)
   plt.savefig(filename + ".pdf", dpi=300, format="pdf")

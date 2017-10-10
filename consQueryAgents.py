@@ -24,6 +24,8 @@ class ConsQueryAgent():
     # indices of constraints
     self.consStates = consStates
     self.consIndices = range(len(consStates))
+
+    self.allCons = [(VAR, _) for _ in self.consIndices]
   
   def findConstrainedOptPi(self, activeCons):
     mdp = copy.copy(self.mdp)
@@ -164,18 +166,22 @@ class ConsQueryAgent():
     
     return q
   
-  def findRegret(self, q, violableCons, relFeats):
+  def findRegret(self, q, violableCons):
     """
-    A utility function that finds regret
+    A utility function that finds regret given the true violable constraints
     """
     consRobotCanViolate = set(q).intersection(violableCons)
-    rInvarCons = set(relFeats).difference(consRobotCanViolate)
+    rInvarCons = set(self.allCons).difference(consRobotCanViolate)
     robotPi = self.findConstrainedOptPi(rInvarCons)
     
-    hInvarCons = set(relFeats).difference(violableCons)
+    hInvarCons = set(self.allCons).difference(violableCons)
     humanPi = self.findConstrainedOptPi(hInvarCons)
     
-    return self.computeValue(humanPi) - self.computeValue(robotPi)
+    hValue = self.computeValue(humanPi)
+    rValue = self.computeValue(robotPi)
+    print (hValue, rValue)
+    
+    return hValue - rValue
 
   def findMRAdvPi(self, q, relFeats, domPis):
     """

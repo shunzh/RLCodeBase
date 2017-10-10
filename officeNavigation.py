@@ -25,7 +25,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(method, k, numOfCarpets):
+def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -161,6 +161,7 @@ def classicOfficNav(method, k, numOfCarpets):
 
   end = time.time()
 
+  """
   # we may need relFeats and domPis for evaluation. they are not timed.
   if 'relFeats' not in vars() or 'domPis' not in vars():
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
@@ -173,6 +174,15 @@ def classicOfficNav(method, k, numOfCarpets):
   print q, mr
 
   return mr, end - start
+  """
+  violableIndices = numpy.random.choice(range(len(agent.allCons)), int(len(agent.allCons) * portionOfViolableCons), replace=False)
+  violableCons = [agent.allCons[_] for _ in violableIndices]
+  
+  print 'violable', violableCons
+  
+  regret = agent.findRegret(q, violableCons)
+  print 'regret', regret
+  return regret, end - start
 
 
 if __name__ == '__main__':
@@ -181,7 +191,7 @@ if __name__ == '__main__':
   numOfCarpets = 10
 
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:')
+    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
@@ -191,6 +201,8 @@ if __name__ == '__main__':
       k = int(arg)
     elif opt == '-n':
       numOfCarpets = int(arg)
+    elif opt == '-p':
+      ratioOfViolable = float(arg)
     else:
       raise Exception('unknown argument')
 
@@ -203,9 +215,9 @@ if __name__ == '__main__':
     scipy.random.seed(rnd)
    
     #flatOfficNav()
-    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets)
+    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, ratioOfViolable)
 
     ret['mr', rnd] = mr
     ret['time', rnd] = timeElapsed
 
-  pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'wb'))
+  pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '.pkl', 'wb'))
