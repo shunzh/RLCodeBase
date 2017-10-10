@@ -166,6 +166,10 @@ class ConsQueryAgent():
     
     return q
   
+  def findMMRByReward(self, k):
+    args = self.mdp
+    q = rewardUncertainMILP(**args)
+
   def findRegret(self, q, violableCons):
     """
     A utility function that finds regret given the true violable constraints
