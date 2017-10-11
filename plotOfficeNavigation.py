@@ -13,7 +13,7 @@ def maximumRegret():
   tci = {}
   
   methods = ['brute', 'alg1', 'chain', 'random', 'nq']
-  legends = ['Brute Force', 'Alg.3', 'CoA', 'Random', 'No Query']
+  legends = ['Brute Force', 'Alg.1', 'CoA', 'Random', 'No Query']
 
   nRange = [5, 10]
   kRange = [2, 3, 4]
@@ -41,14 +41,14 @@ def maximumRegret():
        methods, legends, "|C|", "Computation Time (sec.)", "tc")
 
 def regret():
-  trials = 10
+  trials = 20
   m = {}
   ci = {}
   tm = {}
   tci = {}
   
   methods = ['alg1', 'chain', 'random', 'nq']
-  legends = ['Alg.3', 'CoA', 'Random', 'No Query']
+  legends = ['Alg.1', 'CoA', 'Random', 'No Query']
 
   n = 10
   k = 2
@@ -87,4 +87,4 @@ if __name__ == '__main__':
   matplotlib.rc('font', **font)
 
   regret()
-  maximumRegret()
+  #maximumRegret()

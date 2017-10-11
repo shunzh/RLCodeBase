@@ -208,7 +208,9 @@ if __name__ == '__main__':
 
   ret = {}
   
-  for rnd in range(20):
+  #ret = pickle.load(open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '.pkl', 'rb'))
+
+  for rnd in range(10):
     random.seed(rnd)
     # not necessarily using the following packages, but just to be sure
     numpy.random.seed(rnd)

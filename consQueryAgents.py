@@ -24,6 +24,9 @@ class ConsQueryAgent():
     # indices of constraints
     self.consStates = consStates
     self.consIndices = range(len(consStates))
+    
+    # derive different definition of MR
+    self.constrainHuman = True
 
     self.allCons = [(VAR, _) for _ in self.consIndices]
   
@@ -108,7 +111,7 @@ class ConsQueryAgent():
       # we have a chance to ask about all of them!
       mmq = tuple(relFeats)
 
-      mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis)
+      mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis, k)
       mrs[mmq] = mr
     else:
       for q in itertools.combinations(relFeats, k):
@@ -124,7 +127,7 @@ class ConsQueryAgent():
             print q, 'is dominated'
             continue
 
-        mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
+        mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
 
         if pruning:
           candQVCs[q] = self.findViolatedConstraints(advPi)
@@ -135,7 +138,7 @@ class ConsQueryAgent():
       if mrs == {}:
         mmq = () # no need to ask anything
 
-        mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis)
+        mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis, k)
         mrs[mmq] = mr
       else:
         mmq = min(mrs.keys(), key=lambda _: mrs[_])
@@ -146,7 +149,7 @@ class ConsQueryAgent():
     while len(q) <= k:
       sizeOfQ = len(q)
 
-      mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
+      mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
       q = q.union(self.findViolatedConstraints(advPi))
       
       if len(q) == sizeOfQ: break # no more constraints to add
@@ -166,10 +169,6 @@ class ConsQueryAgent():
     
     return q
   
-  def findMMRByReward(self, k):
-    args = self.mdp
-    q = rewardUncertainMILP(**args)
-
   def findRegret(self, q, violableCons):
     """
     A utility function that finds regret given the true violable constraints
@@ -187,7 +186,7 @@ class ConsQueryAgent():
     
     return hValue - rValue
 
-  def findMRAdvPi(self, q, relFeats, domPis):
+  def findMRAdvPi(self, q, relFeats, domPis, k):
     """
     Find the adversarial policy given q and domPis
     
@@ -198,8 +197,14 @@ class ConsQueryAgent():
     advPi = None
 
     for pi in domPis.values():
+      humanViolated = self.findViolatedConstraints(pi)
+      if self.constrainHuman and len(humanViolated) > k:
+        # we do not consider the case where the human's optimal policy violates more than k constraints
+        # unfair to compare.
+        continue
+
       # intersection of q and constraints violated by pi
-      consRobotCanViolate = set(q).intersection(self.findViolatedConstraints(pi))
+      consRobotCanViolate = set(q).intersection(humanViolated)
       
       # the robot's optimal policy given the constraints above
       invarFeats = set(relFeats).difference(consRobotCanViolate)
@@ -220,6 +225,7 @@ class ConsQueryAgent():
         advPi = pi
         maxValues = (humanValue, robotValue) # not used, just for debugging
   
+    # even with constrainHuman, the non-constraint-violating policy is in \Gamma
     assert advPi != None
     print maxValues, maxRegret
     return maxRegret, advPi

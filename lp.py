@@ -227,6 +227,13 @@ def domPiMilp(S, A, r, T, s0, terminal, domPis, consIdx, gamma=1):
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
   
 def rewardUncertainMILP(S, A, R, T, s0, terminal, k, optV, gamma=1):
+  """
+  The algorithm adapted from
+  Viappiani, Paolo and Boutilier, CraigOptimal. set recommendations based on regret
+
+  This algorithm would find the minimax-regret policy query in our problem.
+  Not sure how to use this algorithm.
+  """
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
 
@@ -264,7 +271,7 @@ def rewardUncertainMILP(S, A, R, T, s0, terminal, k, optV, gamma=1):
   
   obj = m.minimize(mr)
   
-  return m[I], obj
+  return obj, m[I]
 
 def computeObj(q, psi, S, A, R):
   rLen = len(R)
