@@ -2,8 +2,10 @@ import pickle
 from numpy import mean, std, sqrt
 import matplotlib.pyplot as plt
 import matplotlib
+import pylab
 
-markers = {'brute': 'o-', 'alg1': '+-', 'chain': 'd-', 'random': '^-', 'nq': '--'}
+markers = {'brute': 'bo-', 'alg1': 'gs-', 'chain': 'rd-', 'random': 'm^-', 'nq': 'c+-'}
+legends = {'brute': 'Brute Force', 'alg1': 'Alg.1', 'chain': 'CoA', 'random': 'Random', 'nq': 'No Query'}
 
 def maximumRegret():
   trials = 20
@@ -13,10 +15,9 @@ def maximumRegret():
   tci = {}
   
   methods = ['brute', 'alg1', 'chain', 'random', 'nq']
-  legends = ['Brute Force', 'Alg.1', 'CoA', 'Random', 'No Query']
 
   nRange = [5, 10]
-  kRange = [2, 3, 4]
+  kRange = [0, 1, 2, 3, 4]
 
   for n in nRange:
     for k in kRange:
@@ -29,16 +30,24 @@ def maximumRegret():
           print 'unable to read', n, k, method
 
   plot(kRange, lambda method: [m[method, _, 10] for _ in kRange], lambda method: [ci[method, _, 10] for _ in kRange],
-       methods, legends, "k", "Maximum Regret", "mrk")
+       methods, "k", "Maximum Regret", "mrk")
 
   plot(kRange, lambda method: [tm[method, _, 10] for _ in kRange], lambda method: [tci[method, _, 10] for _ in kRange],
-       methods, legends, "k", "Computation Time (sec.)", "tk")
+       methods, "k", "Computation Time (sec.)", "tk")
+
+  """
+  plot(kRange, lambda method: [m[method, _, 5] for _ in kRange], lambda method: [ci[method, _, 10] for _ in kRange],
+       methods, "k", "Maximum Regret", "mrk_c5")
+
+  plot(kRange, lambda method: [tm[method, _, 5] for _ in kRange], lambda method: [tci[method, _, 10] for _ in kRange],
+       methods, "k", "Computation Time (sec.)", "tk_c5")
+  """
 
   plot(nRange, lambda method: [m[method, 2, _] for _ in nRange], lambda method: [ci[method, 2, _] for _ in nRange],
-       methods, legends, "|C|", "Maximum Regret", "mrc")
+       methods, "|C|", "Maximum Regret", "mrc")
 
   plot(nRange, lambda method: [tm[method, 2, _] for _ in nRange], lambda method: [tci[method, 2, _] for _ in nRange],
-       methods, legends, "|C|", "Computation Time (sec.)", "tc")
+       methods, "|C|", "Computation Time (sec.)", "tc")
 
 def regret():
   trials = 20
@@ -64,27 +73,38 @@ def regret():
         print 'unable to read', n, k, method
 
   plot(pRange, lambda method: [m[method, k, n, _] for _ in pRange], lambda method: [ci[method, k, n, _] for _ in pRange],
-       methods, legends, "Ratio of violable constraints", "Regret", "rp")
+       methods, "Ratio of violable constraints", "Regret", "rp")
 
+def printTex(y, yci, t, tci, methods, legends):
+  for i in range(len(methods)):
+    method = methods[i]
+    print legends[i], '& $', round(y(method), 4), '\pm', round(yci(method), 4), '$ &',
+    print '$', round(t(method), 4), '\pm', round(tci(method), 4), '$ \\\\'
 
-def plot(x, y, yci, methods, legends, xlabel, ylabel, filename):
-  plt.figure()
+def plot(x, y, yci, methods, xlabel, ylabel, filename):
+  fig = pylab.figure()
+
+  ax = pylab.gca()
   for method in methods:
     print method, y(method), yci(method)
-    plt.errorbar(x, y(method), yci(method), fmt=markers[method], markersize=8)
-  plt.legend(legends)
-  plt.xlabel(xlabel)
-  plt.ylabel(ylabel)
-  plt.gcf().subplots_adjust(bottom=0.15, left=0.15)
-  plt.savefig(filename + ".pdf", dpi=300, format="pdf")
-  plt.close()
+    lines = ax.errorbar(x, y(method), yci(method), fmt=markers[method], label=legends[method], mfc='none', markersize=15, capsize=5)
+  #plt.legend(legends)
+  pylab.xlabel(xlabel)
+  pylab.ylabel(ylabel)
+  pylab.gcf().subplots_adjust(bottom=0.15, left=0.15)
+  fig.savefig(filename + ".pdf", dpi=300, format="pdf")
+  
+  figLegend = pylab.figure(figsize = (3, 2.5))
+  pylab.figlegend(*ax.get_legend_handles_labels(), loc = 'upper left')
+  figLegend.savefig("legend.pdf", dpi=300, format="pdf")
+
 
 def process(data):
   return mean(data), 1.95 * std(data) / sqrt(len(data))
 
 if __name__ == '__main__':
-  font = {'size': 12}
+  font = {'size': 20}
   matplotlib.rc('font', **font)
 
-  regret()
-  #maximumRegret()
+  #regret()
+  maximumRegret()

@@ -12,7 +12,7 @@ class ConsQueryAgent():
   """
   Find queries in constraint-uncertain mdps. May formulate constraints as negative rewards.
   """
-  def __init__(self, mdp, consStates):
+  def __init__(self, mdp, consStates, constrainHuman=True):
     """
     can't think of a class it should inherit..
 
@@ -26,7 +26,7 @@ class ConsQueryAgent():
     self.consIndices = range(len(consStates))
     
     # derive different definition of MR
-    self.constrainHuman = True
+    self.constrainHuman = constrainHuman
 
     self.allCons = [(VAR, _) for _ in self.consIndices]
   
@@ -48,7 +48,7 @@ class ConsQueryAgent():
     allCons = set()
     allConsPowerset = set(powerset(allCons))
     subsetsConsidered = []
-    
+
     # iterate until no more dominating policies are found
     while True:
       subsetsToConsider = allConsPowerset.difference(subsetsConsidered)
@@ -93,8 +93,8 @@ class ConsQueryAgent():
 
       allConsPowerset = set(powerset(allCons))
 
-      print 'beta', beta
-      print 'allCons', allCons
+      #print 'beta', beta
+      #print 'allCons', allCons
     
     return allCons, dominatingPolicies
 
@@ -107,15 +107,16 @@ class ConsQueryAgent():
     candQVCs = {} # candidate queries and their violated constraints
     mrs = {}
 
+    totalNumber = 0
+    filteredCons = 0
+    
     if len(relFeats) < k:
       # we have a chance to ask about all of them!
       mmq = tuple(relFeats)
-
-      mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis, k)
-      mrs[mmq] = mr
     else:
       for q in itertools.combinations(relFeats, k):
         print 'q', q
+        totalNumber += 1
 
         if pruning:
           # check the pruning condition
@@ -125,23 +126,24 @@ class ConsQueryAgent():
               dominatedQ = True
           if dominatedQ:
             print q, 'is dominated'
+            filteredCons += 1
             continue
 
         mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
 
         if pruning:
           candQVCs[q] = self.findViolatedConstraints(advPi)
+          print 'VCAdv', candQVCs[q]
 
         mrs[q] = mr
       
       # return the one with the minimum regret
       if mrs == {}:
         mmq = () # no need to ask anything
-
-        mr, advPi = self.findMRAdvPi(mmq, relFeats, domPis, k)
-        mrs[mmq] = mr
       else:
         mmq = min(mrs.keys(), key=lambda _: mrs[_])
+    
+    print filteredCons, '/', totalNumber
     return mmq
 
   def findChaindAdvConstraintQ(self, k, relFeats, domPis):

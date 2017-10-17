@@ -161,12 +161,11 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
 
   end = time.time()
 
-  """
   # we may need relFeats and domPis for evaluation. they are not timed.
   if 'relFeats' not in vars() or 'domPis' not in vars():
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
-  mr, advPi = agent.findMRAdvPi(q, relFeats, domPis)
+  mr, advPi = agent.findMRAdvPi(q, relFeats, domPis, k)
 
   #indices = numpy.random.choice(range(len(relFeats)), len(relFeats) * violableRatio)
   #violableCons = [list(relFeats)[_] for _ in indices]
@@ -183,6 +182,7 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   regret = agent.findRegret(q, violableCons)
   print 'regret', regret
   return regret, end - start
+  """
 
 
 if __name__ == '__main__':
@@ -208,18 +208,21 @@ if __name__ == '__main__':
 
   ret = {}
   
-  #ret = pickle.load(open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '.pkl', 'rb'))
+  ret = pickle.load(open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'rb'))
 
-  for rnd in range(10):
+  for rnd in range(10, 20):
     random.seed(rnd)
     # not necessarily using the following packages, but just to be sure
     numpy.random.seed(rnd)
     scipy.random.seed(rnd)
    
     #flatOfficNav()
-    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, ratioOfViolable)
+    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets)
 
     ret['mr', rnd] = mr
     ret['time', rnd] = timeElapsed
 
-  pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '.pkl', 'wb'))
+  if 'ratioOfViolable' in vars():
+    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '.pkl', 'wb'))
+  else:
+    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'wb'))
