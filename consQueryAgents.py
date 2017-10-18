@@ -14,10 +14,11 @@ class ConsQueryAgent():
   """
   def __init__(self, mdp, consStates, constrainHuman=True):
     """
-    can't think of a class it should inherit..
+    can't think of a class it should inherit from..
 
     mdp: a factored mdp
-    consSets: the set of environmental feature indices
+    consStates: consStates[i] is the set of states that should not be visited if constraint i is enforced
+    constrainHuman: if True, the human cannot violate more than k constraints/features #TODO
     """
     self.mdp = mdp
 
@@ -28,7 +29,8 @@ class ConsQueryAgent():
     # derive different definition of MR
     self.constrainHuman = constrainHuman
 
-    self.allCons = [(VAR, _) for _ in self.consIndices]
+    # the set of all possible constraints
+    self.allCons = [(VAR, _) for _ in self.consIndices] + [(NONREVERSED, _) for _ in self.consIndices]
   
   def findConstrainedOptPi(self, activeCons):
     mdp = copy.copy(self.mdp)
@@ -38,7 +40,7 @@ class ConsQueryAgent():
 
     return x
 
-  def findRelevantFeaturesAndDomPis(self):
+  def findRelevantConsAndDomPis(self):
     """
     Incrementally add dominating policies to a set
     """
@@ -81,15 +83,11 @@ class ConsQueryAgent():
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
       beta.append((set(activeCons), set(violatedCons)))
 
-      #FIXME for now, only consider VAR
-      """
-      for idx in self.consSets:
+      for idx in self.consIndices:
         if (NONREVERSED, idx) in violatedCons:
           allCons.add((NONREVERSED, idx))
         elif (NONREVERSED, idx) in activeCons and (VAR, idx) in violatedCons:
           allCons.add((VAR, idx))
-      """
-      allCons.update(violatedCons)
 
       allConsPowerset = set(powerset(allCons))
 
@@ -98,45 +96,62 @@ class ConsQueryAgent():
     
     return allCons, dominatingPolicies
 
-  def findMinimaxRegretConstraintQ(self, k, relFeats, domPis, pruning=False):
+  def findMinimaxRegretConstraintQ(self, k, relCons, domPis, pruning=False):
+    if len(relCons) < k:
+      # we have a chance to ask about all of them!
+      return tuple(relCons)
+    else:
+      queries = itertools.combinations(relCons, k)
+      return self.findMinimaxRegretQ(queries, relCons, domPis, pruning)
+
+  def findMinimaxRegretFeatureQ(self, k, relCons, domPis, pruning=False):
+    relFeats = set([_[1] for _ in relCons])
+    # may not need to consider all constraints
+    findRelCons = lambda feat: filter(lambda _: _[1] == feat, relFeats)
+
+    if len(relFeats) < k:
+      # we have a chance to ask about all of them!
+      return relCons
+    else:
+      queries = [(findRelCons(feat) for feat in feats)
+                 for feats in itertools.combinations(relFeats, k)]
+      return self.findMinimaxRegretQ(queries, relFeats, domPis, pruning)
+
+  def findMinimaxRegretQ(self, queries, relFeats, domPis, pruning):
     """
     Finding a minimax k-element constraint query.
     
-    Use pruning if pruning=True, otherwise brute force.
+    Find feature query instead if featQ==True. The human would label all constraints corresponding to a feature.
+    Use pruning if pruning==True, otherwise brute force.
     """
     candQVCs = {} # candidate queries and their violated constraints
     mrs = {}
 
     totalNumber = 0
     filteredCons = 0
+    for q in queries:
+      print 'q', q
+      totalNumber += 1
+
+      if pruning:
+        # check the pruning condition
+        dominatedQ = False
+        for candQ in candQVCs.keys():
+          if set(q).intersection(candQVCs[candQ]).issubset(candQ):
+            dominatedQ = True
+        if dominatedQ:
+          print q, 'is dominated'
+          filteredCons += 1
+          continue
+
+      mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
+
+      if pruning:
+        candQVCs[q] = self.findViolatedConstraints(advPi)
+        print 'VCAdv', candQVCs[q]
+
+      mrs[q] = mr
     
-    if len(relFeats) < k:
-      # we have a chance to ask about all of them!
-      mmq = tuple(relFeats)
-    else:
-      for q in itertools.combinations(relFeats, k):
-        print 'q', q
-        totalNumber += 1
-
-        if pruning:
-          # check the pruning condition
-          dominatedQ = False
-          for candQ in candQVCs.keys():
-            if set(q).intersection(candQVCs[candQ]).issubset(candQ):
-              dominatedQ = True
-          if dominatedQ:
-            print q, 'is dominated'
-            filteredCons += 1
-            continue
-
-        mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
-
-        if pruning:
-          candQVCs[q] = self.findViolatedConstraints(advPi)
-          print 'VCAdv', candQVCs[q]
-
-        mrs[q] = mr
-      
       # return the one with the minimum regret
       if mrs == {}:
         mmq = () # no need to ask anything
@@ -151,7 +166,7 @@ class ConsQueryAgent():
     while len(q) <= k:
       sizeOfQ = len(q)
 
-      mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
+      mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
       q = q.union(self.findViolatedConstraints(advPi))
       
       if len(q) == sizeOfQ: break # no more constraints to add
@@ -188,7 +203,7 @@ class ConsQueryAgent():
     
     return hValue - rValue
 
-  def findMRAdvPi(self, q, relFeats, domPis, k):
+  def findMRAdvPi(self, q, relFeats, domPis):
     """
     Find the adversarial policy given q and domPis
     
@@ -200,10 +215,13 @@ class ConsQueryAgent():
 
     for pi in domPis.values():
       humanViolated = self.findViolatedConstraints(pi)
+      #FIXME
+      """
       if self.constrainHuman and len(humanViolated) > k:
         # we do not consider the case where the human's optimal policy violates more than k constraints
         # unfair to compare.
         continue
+      """
 
       # intersection of q and constraints violated by pi
       consRobotCanViolate = set(q).intersection(humanViolated)
@@ -244,7 +262,7 @@ class ConsQueryAgent():
                                       for s in self.consStates[consIdx]})
       elif consType == NONREVERSED:
         constraints.update({(s, a): 0 for a in mdp['A']
-                                      for s in self.statesWithDifferentFeats(consIdx, mdp)
+                                      for s in self.consStates[consIdx]
                                       if mdp['terminal'](s)})
       else: raise Exception('unknown constraint type')
 
@@ -271,9 +289,7 @@ class ConsQueryAgent():
           if self.mdp['terminal'](s):
             notReversed.add(idx)
     
-    #FIXME not sure how to deal with nonreversed features for now. ignore them.
-    return set([(VAR, idx) for idx in var])
-    #return set([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
+    return set([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
     
   def statesWithDifferentFeats(self, idx, mdp):
     return filter(lambda s: s[idx] != mdp['s0'][idx], mdp['S'])

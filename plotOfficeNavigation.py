@@ -106,5 +106,5 @@ if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
 
-  #regret()
-  maximumRegret()
+  regret()
+  #maximumRegret()

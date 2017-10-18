@@ -42,12 +42,12 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(1, height - 1))
 
   # specify the size of the domain, which are the robot's possible locations
-  width = 10
-  height = 10
+  width = 4
+  height = 4
   # time is 0, 1, ..., horizon
-  #horizon = width + height - 1
+  horizon = width + height * 2
   
-  doors = []#[(width / 2, height / 2)]
+  doors = [(width / 2, height / 2), (width / 2, height - 1)]
 
   switch = (width - 1, height - 1)
   #switch = getRandLoc()
@@ -68,16 +68,17 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
 
   # splitting the room into two smaller rooms.
   # the robot can only access to the other room by going through a door in the middle or a corridor at the top
-  #walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1) if _ != height / 2]
-  walls = []
+  walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1) if _ != height / 2]
+  #walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
   sSets = [allLocations] +\
           [[CLOSED, OPEN] for _ in doors] +\
-          [[0, 1]]
+          [[0, 1]] +\
+          [range(horizon)]
   
-  aSets = [(1, 0), (0, 1), (1, 1),
+  aSets = [(1, 0), (0, 1), (-1, 0), (0, -1),
            TURNOFFSWITCH]
  
   # factored transition function
@@ -110,16 +111,21 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
     if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
   
+  # time elapses
+  def timeOp(s, a):
+    return s[-1] + 1#s
+
   tFunc = [navigate] +\
           [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
-          [switchOp]
+          [switchOp, timeOp]
 
   s0List = [(0, 0)] +\
            [CLOSED for _ in doors] +\
-           [ON]
+           [ON, 0]
   s0 = tuple(s0List)
   
-  terminal = lambda s: s[lIndex] == switch
+  # terminate only when horizon reaches
+  terminal = lambda s: s[-1] == horizon
   gamma = .9
 
   # if need to assign random rewards to all states
@@ -139,19 +145,20 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   # states that should not be visited
   # let's not make carpets features but constraints directly
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
+  consStates += [[s for s in mdp['S'] if s[idx] != mdp['s0'][idx]] for idx in range(1, 1 + len(doors))]
   agent = ConsQueryAgent(mdp, consStates)
 
   start = time.time()
 
   if method == 'brute':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=False)
+    relCons, domPis = agent.findRelevantConsAndDomPis()
+    q = agent.findMinimaxRegretConstraintQ(k, relCons, domPis, pruning=False)
   elif method == 'alg1':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=True)
+    relCons, domPis = agent.findRelevantConsAndDomPis()
+    q = agent.findMinimaxRegretConstraintQ(k, relCons, domPis, pruning=True)
   elif method == 'chain':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
+    relCons, domPis = agent.findRelevantConsAndDomPis()
+    q = agent.findChaindAdvConstraintQ(k, relCons, domPis)
   elif method == 'random':
     q = agent.findRandomConstraintQ(k)
   elif method == 'nq':
@@ -162,10 +169,10 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   end = time.time()
 
   # we may need relFeats and domPis for evaluation. they are not timed.
-  if 'relFeats' not in vars() or 'domPis' not in vars():
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+  if 'relCons' not in vars() or 'domPis' not in vars():
+    relCons, domPis = agent.findRelevantConsAndDomPis()
 
-  mr, advPi = agent.findMRAdvPi(q, relFeats, domPis, k)
+  mr, advPi = agent.findMRAdvPi(q, relCons, domPis)
 
   #indices = numpy.random.choice(range(len(relFeats)), len(relFeats) * violableRatio)
   #violableCons = [list(relFeats)[_] for _ in indices]
@@ -188,7 +195,7 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
 if __name__ == '__main__':
   method = 'alg1'
   k = 2
-  numOfCarpets = 10
+  numOfCarpets = 2
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:')
@@ -208,9 +215,9 @@ if __name__ == '__main__':
 
   ret = {}
   
-  ret = pickle.load(open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'rb'))
+  #ret = pickle.load(open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'rb'))
 
-  for rnd in range(10, 20):
+  for rnd in range(1):
     random.seed(rnd)
     # not necessarily using the following packages, but just to be sure
     numpy.random.seed(rnd)
