@@ -2,8 +2,6 @@ from lp import lpDual, computeValue
 import pprint
 from util import powerset
 import copy
-import numpy
-from timeit import itertools
 
 VAR = 0
 NONREVERSED = 1
@@ -98,27 +96,6 @@ class ConsQueryAgent():
     print 'number of dom pis', len(domPis)
     return allCons, domPis
 
-  def findMinimaxRegretConstraintQ(self, k, relCons, domPis, pruning=False):
-    if len(relCons) < k:
-      # we have a chance to ask about all of them!
-      return tuple(relCons)
-    else:
-      queries = itertools.combinations(relCons, k)
-      return self.findMinimaxRegretQ(queries, relCons, domPis, pruning)
-
-  def findMinimaxRegretFeatureQ(self, k, relCons, domPis, pruning=False):
-    relFeats = set([_[1] for _ in relCons])
-    # may not need to consider all constraints
-    findRelCons = lambda feat: filter(lambda _: _[1] == feat, relFeats)
-
-    if len(relFeats) < k:
-      # we have a chance to ask about all of them!
-      return relCons
-    else:
-      queries = [(findRelCons(feat) for feat in feats)
-                 for feats in itertools.combinations(relFeats, k)]
-      return self.findMinimaxRegretQ(queries, relFeats, domPis, pruning)
-
   def findMinimaxRegretQ(self, queries, relFeats, domPis, pruning):
     """
     Finding a minimax k-element constraint query.
@@ -129,11 +106,8 @@ class ConsQueryAgent():
     candQVCs = {} # candidate queries and their violated constraints
     mrs = {}
 
-    totalNumber = 0
-    filteredCons = 0
     for q in queries:
       print 'q', q
-      totalNumber += 1
 
       if pruning:
         # check the pruning condition
@@ -143,7 +117,6 @@ class ConsQueryAgent():
             dominatedQ = True
         if dominatedQ:
           print q, 'is dominated'
-          filteredCons += 1
           continue
 
       mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
@@ -160,10 +133,9 @@ class ConsQueryAgent():
       else:
         mmq = min(mrs.keys(), key=lambda _: mrs[_])
     
-    print filteredCons, '/', totalNumber
     return mmq
 
-  def findChaindAdvConstraintQ(self, k, relFeats, domPis):
+  def findChaindAdvQ(self, k, relFeats, domPis):
     q = set()
     while len(q) <= k:
       sizeOfQ = len(q)
@@ -177,17 +149,6 @@ class ConsQueryAgent():
     mmq = list(q)[:k]
     return mmq
 
-  def findRandomConstraintQ(self, k):
-    if len(self.consIndices) >= k:
-      q = numpy.random.choice(self.consIndices, k)
-    else:
-      # no more than k constraints, should not design exp in this way though
-      q = self.consIndices
-    
-    q = [(VAR, _) for _ in q]
-    
-    return q
-  
   def findRegret(self, q, violableCons):
     """
     A utility function that finds regret given the true violable constraints

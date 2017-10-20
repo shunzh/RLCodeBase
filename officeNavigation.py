@@ -7,6 +7,7 @@ import scipy
 import pickle
 import getopt
 import sys
+import itertools
 
 OPEN = 1
 CLOSED = 0
@@ -25,7 +26,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(method, k, numOfCarpets, constrainHuman=False, portionOfViolableCons=0):
+def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=False, portionOfViolableCons=0):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -78,7 +79,7 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman=False, portionOfViol
           [[0, 1]] +\
           [range(horizon)]
   
-  navASets = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+  navASets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)]
   aSets = navASets + [OPENDOOR, CLOSEDOOR, TURNOFFSWITCH]
  
   # factored transition function
@@ -98,6 +99,7 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman=False, portionOfViol
       loc = s[lIndex]
       doorState = s[idx]
       if a in [OPENDOOR, CLOSEDOOR]:
+        # the robot needs to be close to a door to operate on it
         if loc in [(door[0] - 1, door[1]), (door[0], door[1])]:
           if a == CLOSEDOOR: doorState = CLOSED
           elif a == OPENDOOR: doorState = OPEN
@@ -153,17 +155,41 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman=False, portionOfViol
 
   start = time.time()
 
+  def findQuerySpace(cons, k, typeOfQuery):
+    if typeOfQuery == 'cons':
+      # return all possible subset of cons
+      if len(cons) > k:
+        return list(itertools.combinations(cons, k))
+      else:
+        # only one query to consider, that is asking about all constraints
+        return [tuple(cons)]
+    elif typeOfQuery == 'feats':
+      feats = set([_[1] for _ in cons])
+      if len(feats) > k:
+        return [tuple(filter(lambda _: _[1] in feats, cons))
+                for feats in itertools.combinations(feats, k)]
+      else:
+        # only one query to consider, that is asking about all features
+        return [tuple(cons)]
+    else:
+      raise Exception('unknown type of query ' + str(typeOfQuery))
+      
   if method == 'brute':
     relCons, domPis = agent.findRelevantConsAndDomPis()
-    q = agent.findMinimaxRegretConstraintQ(k, relCons, domPis, pruning=False)
+    queries = findQuerySpace(agent.allCons, k, typeOfQuery) # note here. considering ALL constraints
+    q = agent.findMinimaxRegretQ(queries, relCons, domPis, pruning=False)
   elif method == 'alg1':
     relCons, domPis = agent.findRelevantConsAndDomPis()
-    q = agent.findMinimaxRegretConstraintQ(k, relCons, domPis, pruning=True)
+    queries = findQuerySpace(relCons, k, typeOfQuery)
+    print 'queries', queries
+    q = agent.findMinimaxRegretQ(queries, relCons, domPis, pruning=True)
   elif method == 'chain':
     relCons, domPis = agent.findRelevantConsAndDomPis()
-    q = agent.findChaindAdvConstraintQ(k, relCons, domPis)
+    queries = findQuerySpace(relCons, k, typeOfQuery)
+    q = agent.findChaindAdvQ(queries, relCons, domPis)
   elif method == 'random':
-    q = agent.findRandomConstraintQ(k)
+    queries = findQuerySpace(agent.allCons, k, typeOfQuery)
+    q = random.choice(queries)
   elif method == 'nq':
     q = []
   else:
@@ -197,8 +223,10 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman=False, portionOfViol
 
 if __name__ == '__main__':
   method = 'alg1'
-  k = 2
+  k = 1
   numOfCarpets = 2
+  #typeOfQuery = 'feats'
+  typeOfQuery = 'cons'
   constrainHuman = False
 
   try:
@@ -228,7 +256,7 @@ if __name__ == '__main__':
     scipy.random.seed(rnd)
    
     #flatOfficNav()
-    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, constrainHuman)
+    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, typeOfQuery, constrainHuman)
 
     ret['mr', rnd] = mr
     ret['time', rnd] = timeElapsed
