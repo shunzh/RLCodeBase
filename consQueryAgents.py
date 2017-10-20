@@ -12,7 +12,7 @@ class ConsQueryAgent():
   """
   Find queries in constraint-uncertain mdps. May formulate constraints as negative rewards.
   """
-  def __init__(self, mdp, consStates, constrainHuman=True):
+  def __init__(self, mdp, consStates, constrainHuman):
     """
     can't think of a class it should inherit from..
 
@@ -45,7 +45,7 @@ class ConsQueryAgent():
     Incrementally add dominating policies to a set
     """
     beta = [] # rules to keep
-    dominatingPolicies = {}
+    domPis = []
 
     allCons = set()
     allConsPowerset = set(powerset(allCons))
@@ -71,8 +71,8 @@ class ConsQueryAgent():
         continue
 
       x = self.findConstrainedOptPi(activeCons)
-
-      dominatingPolicies[activeCons] = x
+      
+      if x not in domPis: domPis.append(x)
 
       # check violated constraints
       if x == {}:
@@ -94,7 +94,9 @@ class ConsQueryAgent():
       #print 'beta', beta
       #print 'allCons', allCons
     
-    return allCons, dominatingPolicies
+    print 'relevant constraints', allCons
+    print 'number of dom pis', len(domPis)
+    return allCons, domPis
 
   def findMinimaxRegretConstraintQ(self, k, relCons, domPis, pruning=False):
     if len(relCons) < k:
@@ -213,7 +215,7 @@ class ConsQueryAgent():
     maxValues = None
     advPi = None
 
-    for pi in domPis.values():
+    for pi in domPis:
       humanViolated = self.findViolatedConstraints(pi)
       #FIXME
       """
@@ -230,7 +232,7 @@ class ConsQueryAgent():
       invarFeats = set(relFeats).difference(consRobotCanViolate)
       
       robotValue = 0
-      for rPi in domPis.values():
+      for rPi in domPis:
         if self.piSatisfiesCons(rPi, invarFeats):
           rValue = self.computeValue(rPi)
           if rValue > robotValue:

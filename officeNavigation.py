@@ -25,7 +25,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
+def classicOfficNav(method, k, numOfCarpets, constrainHuman=False, portionOfViolableCons=0):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -39,7 +39,7 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
 
   FIXME hacking this function too much.
   """
-  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(1, height - 1))
+  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 1))
 
   # specify the size of the domain, which are the robot's possible locations
   width = 4
@@ -49,10 +49,10 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   
   doors = [(width / 2, height / 2), (width / 2, height - 1)]
 
-  switch = (width - 1, height - 1)
-  #switch = getRandLoc()
+  switch = (width - 1, 0)
 
-  carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
+  #carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
+  carpets = []
   
   lIndex = 0
   dIndexStart = lIndex + 1
@@ -68,7 +68,7 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
 
   # splitting the room into two smaller rooms.
   # the robot can only access to the other room by going through a door in the middle or a corridor at the top
-  walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1) if _ != height / 2]
+  walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(0, height - 1) if _ != height / 2]
   #walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
@@ -78,13 +78,13 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
           [[0, 1]] +\
           [range(horizon)]
   
-  aSets = [(1, 0), (0, 1), (-1, 0), (0, -1),
-           TURNOFFSWITCH]
+  navASets = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+  aSets = navASets + [OPENDOOR, CLOSEDOOR, TURNOFFSWITCH]
  
   # factored transition function
   def navigate(s, a):
     loc = s[lIndex]
-    if a in [(1, 0), (0, 1), (1, 1)]:
+    if a in navASets:
       sp = (loc[0] + a[0], loc[1] + a[1])
       # not blocked by borders, closed doors or walls
       if (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
@@ -113,14 +113,17 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   
   # time elapses
   def timeOp(s, a):
-    return s[-1] + 1#s
+    return s[-1] + 1#sec.
 
   tFunc = [navigate] +\
           [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
           [switchOp, timeOp]
 
+  # initially, the door in the middle is closed
+  # (which may be necessary for the robot to query to find a shorter path at least)
+  # and the door at the top is open (so the robot can always find a feasible policy without querying)
   s0List = [(0, 0)] +\
-           [CLOSED for _ in doors] +\
+           [CLOSED, OPEN] +\
            [ON, 0]
   s0 = tuple(s0List)
   
@@ -146,7 +149,7 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   # let's not make carpets features but constraints directly
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
   consStates += [[s for s in mdp['S'] if s[idx] != mdp['s0'][idx]] for idx in range(1, 1 + len(doors))]
-  agent = ConsQueryAgent(mdp, consStates)
+  agent = ConsQueryAgent(mdp, consStates, constrainHuman)
 
   start = time.time()
 
@@ -196,6 +199,7 @@ if __name__ == '__main__':
   method = 'alg1'
   k = 2
   numOfCarpets = 2
+  constrainHuman = False
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:')
@@ -224,7 +228,7 @@ if __name__ == '__main__':
     scipy.random.seed(rnd)
    
     #flatOfficNav()
-    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets)
+    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, constrainHuman)
 
     ret['mr', rnd] = mr
     ret['time', rnd] = timeElapsed
