@@ -8,26 +8,24 @@ markers = {'brute': 'bo-', 'alg1': 'gs-', 'chain': 'rd-', 'random': 'm^-', 'nq':
 legends = {'brute': 'Brute Force', 'alg1': 'Alg.1', 'chain': 'CoA', 'random': 'Random', 'nq': 'No Query'}
 
 def maximumRegret():
-  trials = 20
+  trials = 2
   m = {}
   ci = {}
   tm = {}
   tci = {}
   
-  methods = ['brute', 'alg1', 'chain', 'random', 'nq']
+  #methods = ['brute', 'alg1', 'chain', 'random', 'nq']
+  methods = ['brute', 'alg1', 'random', 'nq']
 
-  nRange = [5, 10]
-  kRange = [0, 1, 2, 3, 4]
+  nRange = [10]
+  kRange = [0, 1]
 
   for n in nRange:
     for k in kRange:
       for method in methods:
-        try:
-          ret = pickle.load(open(method + '_' + str(k) + '_' + str(n) + '.pkl', 'rb'))
-          m[method, k, n], ci[method, k, n] = process([ret['mr', _] for _ in range(trials)])
-          tm[method, k, n], tci[method, k, n] = process([ret['time', _] for _ in range(trials)])
-        except:
-          print 'unable to read', n, k, method
+        ret = pickle.load(open(method + '_' + str(k) + '_' + str(n) + '.pkl', 'rb'))
+        m[method, k, n], ci[method, k, n] = process([ret['mr', _] for _ in range(trials)])
+        tm[method, k, n], tci[method, k, n] = process([ret['time', _] for _ in range(trials)])
 
   plot(kRange, lambda method: [m[method, _, 10] for _ in kRange], lambda method: [ci[method, _, 10] for _ in kRange],
        methods, "k", "Maximum Regret", "mrk")
@@ -36,18 +34,12 @@ def maximumRegret():
        methods, "k", "Computation Time (sec.)", "tk")
 
   """
-  plot(kRange, lambda method: [m[method, _, 5] for _ in kRange], lambda method: [ci[method, _, 10] for _ in kRange],
-       methods, "k", "Maximum Regret", "mrk_c5")
-
-  plot(kRange, lambda method: [tm[method, _, 5] for _ in kRange], lambda method: [tci[method, _, 10] for _ in kRange],
-       methods, "k", "Computation Time (sec.)", "tk_c5")
-  """
-
   plot(nRange, lambda method: [m[method, 2, _] for _ in nRange], lambda method: [ci[method, 2, _] for _ in nRange],
        methods, "|C|", "Maximum Regret", "mrc")
 
   plot(nRange, lambda method: [tm[method, 2, _] for _ in nRange], lambda method: [tci[method, 2, _] for _ in nRange],
        methods, "|C|", "Computation Time (sec.)", "tc")
+  """
 
 def regret():
   trials = 20
@@ -106,5 +98,5 @@ if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
 
-  regret()
-  #maximumRegret()
+  #regret()
+  maximumRegret()

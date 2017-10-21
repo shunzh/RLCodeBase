@@ -40,19 +40,21 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
 
   FIXME hacking this function too much.
   """
-  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 1))
+  # leave the left column and the top row empty
+  getBoundedRandLoc = lambda: (random.randint(1, width - 2), random.randint(0, height - 2))
 
   # specify the size of the domain, which are the robot's possible locations
-  width = 5
-  height = 5
-  # time is 0, 1, ..., horizon
-  horizon = width + height * 2
+  width = 7
+  height = 10
+  #horizon = width + height * 2
   
-  doors = [(width / 2, height / 2)]
+  doors = [(width / 2, height - 1), (width / 2, random.randint(0, height - 2))]
+  #doors = [(width / 2, height - 1), (width / 2, height / 2)]
 
   switch = (width - 1, 0)
 
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
+  #carpets = []
   
   lIndex = 0
   dIndexStart = lIndex + 1
@@ -68,17 +70,16 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
 
   # splitting the room into two smaller rooms.
   # the robot can only access to the other room by going through a door in the middle or a corridor at the top
-  walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(0, height - 1) if _ != height / 2]
+  walls = [(width / 2, _) for _ in range(height) if (width / 2, _) not in doors]
   #walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
   sSets = [allLocations] +\
           [[CLOSED, OPEN] for _ in doors] +\
-          [[0, 1]] +\
-          [range(horizon)]
+          [[0, 1]]
   
-  navASets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)]
+  navASets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (1, -1)]
   aSets = navASets + [OPENDOOR, CLOSEDOOR, TURNOFFSWITCH]
  
   # factored transition function
@@ -89,7 +90,7 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
       # not blocked by borders, closed doors or walls
       if (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
          not any(s[idx] == CLOSED and sp == doors[idx - dIndexStart] for idx in dIndex) and\
-         not any(loc in wall and sp in wall for wall in walls):
+         sp not in walls:
         return sp
     return loc
   
@@ -112,24 +113,20 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
     if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
   
-  # time elapses
-  def timeOp(s, a):
-    return s[-1] + 1#sec.
-
   tFunc = [navigate] +\
           [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
-          [switchOp, timeOp]
+          [switchOp]
 
   # initially, the door in the middle is closed
   # (which may be necessary for the robot to query to find a shorter path at least)
   # and the door at the top is open (so the robot can always find a feasible policy without querying)
   s0List = [(0, 0)] +\
-           [CLOSED] +\
-           [ON, 0]
+           [OPEN, CLOSED] +\
+           [ON]
   s0 = tuple(s0List)
   
   # terminate only when horizon reaches
-  terminal = lambda s: s[-1] == horizon
+  terminal = lambda s: s[sIndex] == OFF
   gamma = .9
 
   # if need to assign random rewards to all states
@@ -149,7 +146,7 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
   # states that should not be visited
   # let's not make carpets features but constraints directly
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
-  consStates += [[s for s in mdp['S'] if s[idx] != mdp['s0'][idx]] for idx in range(1, 1 + len(doors))]
+  consStates += [[s for s in mdp['S'] if s[idx] != mdp['s0'][idx]] for idx in range(dIndexStart, dIndexStart + len(doors))]
   agent = ConsQueryAgent(mdp, consStates, constrainHuman)
 
   start = time.time()
@@ -223,7 +220,7 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
 if __name__ == '__main__':
   method = 'alg1'
   k = 1
-  numOfCarpets = 5
+  numOfCarpets = 10
   typeOfQuery = 'feats'
   #typeOfQuery = 'cons'
   constrainHuman = False
@@ -248,7 +245,7 @@ if __name__ == '__main__':
   
   #ret = pickle.load(open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'rb'))
 
-  for rnd in range(1):
+  for rnd in range(2):
     random.seed(rnd)
     # not necessarily using the following packages, but just to be sure
     numpy.random.seed(rnd)

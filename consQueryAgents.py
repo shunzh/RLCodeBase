@@ -175,6 +175,7 @@ class ConsQueryAgent():
     maxRegret = 0
     maxValues = None
     advPi = None
+    robotMPi = None
 
     for pi in domPis:
       humanViolated = self.findViolatedConstraints(pi)
@@ -193,11 +194,13 @@ class ConsQueryAgent():
       invarFeats = set(relFeats).difference(consRobotCanViolate)
       
       robotValue = 0
+      robotPi = None
       for rPi in domPis:
         if self.piSatisfiesCons(rPi, invarFeats):
           rValue = self.computeValue(rPi)
           if rValue > robotValue:
             robotValue = rValue
+            robotPi = rPi
 
       humanValue = self.computeValue(pi)
       regret = humanValue - robotValue
@@ -206,10 +209,15 @@ class ConsQueryAgent():
       if regret > maxRegret or (regret == maxRegret and advPi == None):
         maxRegret = regret
         advPi = pi
+        robotMPi = robotPi
         maxValues = (humanValue, robotValue) # not used, just for debugging
   
     # even with constrainHuman, the non-constraint-violating policy is in \Gamma
     assert advPi != None
+    print 'r pi'
+    printOccSA(robotMPi)
+    print 'h pi'
+    printOccSA(advPi)
     print maxValues, maxRegret
     return maxRegret, advPi
 
