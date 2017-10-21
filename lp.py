@@ -5,6 +5,10 @@ except ImportError:
 import easyDomains
 import config
 import util
+import scipy.optimize
+
+#SOLVER = 'SCIPY'
+SOLVER = 'CPLEX'
 
 def lp(S, A, r, T, s0):
   """
@@ -37,6 +41,14 @@ def lp(S, A, r, T, s0):
   return ret
 
 def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraints=[], positiveConstraintsOcc=0.1):
+  if SOLVER == 'SCIPY':
+    return lpDualScipy(S, A, r, T, s0, terminal, gamma, constraints, positiveConstraints, positiveConstraintsOcc)
+  elif SOLVER == 'CPLEX':
+    return lpDualCplex(S, A, r, T, s0, terminal, gamma, constraints, positiveConstraints, positiveConstraintsOcc)
+  else:
+    raise Exception('unknown solver')
+
+def lpDualCplex(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraints=[], positiveConstraintsOcc=0.1):
   """
   Solve the dual problem of lp, maybe with some constraints
   Same arguments
@@ -76,6 +88,49 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraint
     return None, {}
 
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
+
+def lpDualScipy(S, A, r, T, s0, terminal, gamma=1, constraints={}, positiveConstraints=[], positiveConstraintsOcc=0.1):
+  """
+  Solve the dual problem of lp, maybe with some constraints
+  Same arguments
+  
+  Note that this is a lower level function that does not consider feature extraction.
+  r should be a reward function, not a reward parameter.
+  """
+  if positiveConstraints != []:
+    raise Exception('positiveConstraints not supported')
+
+  a_eq = []
+  b_eq = []
+
+  # make sure x is a valid occupancy
+  for sp in S:
+    # x (x(s) - \gamma * T) = \sigma
+    # and make sure there is no flow back from the terminal states
+    a_eq.append([(s == sp) - gamma * T(s, a, sp) for s in S for a in A])
+    b_eq.append(sp == s0)
+  
+  # == constraints
+  for (sc, ac), occ in constraints.items():
+    a_eq.append([1 if s == sc and a == ac else 0 for s in S for a in A])
+    b_eq.append(occ)
+
+  # obj
+  c = [-r(s, a) for s in S for a in A]
+
+  # we have time steps in the state representation, so upper bound is 1
+  res = scipy.optimize.linprog(c, A_eq=a_eq, b_eq=b_eq, options={'maxiter' : 10000})
+
+  print res.message, res.fun, res.x
+
+  occupancy = {}
+  idx = 0
+  for s in S:
+    for a in A:
+      occupancy[s, a] = res.x[idx]
+      idx += 1
+
+  return -res.fun, occupancy
 
 def decomposePiLP(S, A, T, s0, terminal, rawX, x, gamma=1):
   """

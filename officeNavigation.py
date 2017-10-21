@@ -43,17 +43,16 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
   getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 1))
 
   # specify the size of the domain, which are the robot's possible locations
-  width = 4
-  height = 4
+  width = 5
+  height = 5
   # time is 0, 1, ..., horizon
   horizon = width + height * 2
   
-  doors = [(width / 2, height / 2), (width / 2, height - 1)]
+  doors = [(width / 2, height / 2)]
 
   switch = (width - 1, 0)
 
-  #carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
-  carpets = []
+  carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
   
   lIndex = 0
   dIndexStart = lIndex + 1
@@ -125,7 +124,7 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
   # (which may be necessary for the robot to query to find a shorter path at least)
   # and the door at the top is open (so the robot can always find a feasible policy without querying)
   s0List = [(0, 0)] +\
-           [CLOSED, OPEN] +\
+           [CLOSED] +\
            [ON, 0]
   s0 = tuple(s0List)
   
@@ -224,9 +223,9 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
 if __name__ == '__main__':
   method = 'alg1'
   k = 1
-  numOfCarpets = 2
-  #typeOfQuery = 'feats'
-  typeOfQuery = 'cons'
+  numOfCarpets = 5
+  typeOfQuery = 'feats'
+  #typeOfQuery = 'cons'
   constrainHuman = False
 
   try:
