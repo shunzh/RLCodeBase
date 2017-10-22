@@ -2,7 +2,7 @@ for n in 5
 do
   for k in 0 1 2 3
   do
-    for r in `seq 0 9`
+    for r in `seq 10 19`
     do
       python officeNavigation.py -n $n -k $k -r $r -a brute
       python officeNavigation.py -n $n -k $k -r $r -a alg1

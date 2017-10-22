@@ -8,7 +8,7 @@ markers = {'brute': 'bo-', 'alg1': 'gs-', 'chain': 'rd-', 'random': 'm^-', 'nq':
 legends = {'brute': 'Brute Force', 'alg1': 'Alg.1', 'chain': 'CoA', 'random': 'Random', 'nq': 'No Query'}
 
 def maximumRegret():
-  trials = 2
+  trials = 20
   m = {}
   ci = {}
   tm = {}
@@ -22,9 +22,11 @@ def maximumRegret():
   for n in nRange:
     for k in kRange:
       for method in methods:
-        ret = pickle.load(open(method + '_' + str(k) + '_' + str(n) + '.pkl', 'rb'))
-        m[method, k, n], ci[method, k, n] = process([ret['mr', _] for _ in range(trials)])
-        tm[method, k, n], tci[method, k, n] = process([ret['time', _] for _ in range(trials)])
+        ret = {}
+        for r in range(trials):
+          ret[r] = pickle.load(open(method + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+        m[method, k, n], ci[method, k, n] = process([ret[_]['mr'] for _ in range(trials)])
+        tm[method, k, n], tci[method, k, n] = process([ret[_]['time'] for _ in range(trials)])
 
   plot(kRange, lambda method: [m[method, _, 5] for _ in kRange], lambda method: [ci[method, _, 5] for _ in kRange],
        methods, "k", "Maximum Regret", "mrk")
