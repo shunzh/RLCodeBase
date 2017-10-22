@@ -10,7 +10,7 @@ class ConsQueryAgent():
   """
   Find queries in constraint-uncertain mdps. May formulate constraints as negative rewards.
   """
-  def __init__(self, mdp, consStates, constrainHuman):
+  def __init__(self, mdp, consStates, irreversibleSet=[], constrainHuman=False):
     """
     can't think of a class it should inherit from..
 
@@ -24,6 +24,9 @@ class ConsQueryAgent():
     self.consStates = consStates
     self.consIndices = range(len(consStates))
     
+    # this set of constraints use a flattened state representation and cannot be reverted anyway
+    self.irreversibleSet = irreversibleSet
+
     # derive different definition of MR
     self.constrainHuman = constrainHuman
 
@@ -89,8 +92,8 @@ class ConsQueryAgent():
 
       allConsPowerset = set(powerset(allCons))
 
-      #print 'beta', beta
-      #print 'allCons', allCons
+      print 'beta', beta
+      print 'allCons', allCons
     
     print 'relevant constraints', allCons
     print 'number of dom pis', len(domPis)
@@ -135,7 +138,10 @@ class ConsQueryAgent():
     
     return mmq
 
-  def findChaindAdvQ(self, k, relFeats, domPis):
+  def findChaindAdvQ(self, k, relFeats, domPis, queryType='cons'):
+    if queryType != 'cons':
+      raise Exception('only support cons queries so far')
+
     q = set()
     while len(q) <= k:
       sizeOfQ = len(q)
@@ -214,11 +220,13 @@ class ConsQueryAgent():
   
     # even with constrainHuman, the non-constraint-violating policy is in \Gamma
     assert advPi != None
+    """
     print 'r pi'
     printOccSA(robotMPi)
     print 'h pi'
     printOccSA(advPi)
     print maxValues, maxRegret
+    """
     return maxRegret, advPi
 
   def constructConstraints(self, cons, mdp):
@@ -228,7 +236,7 @@ class ConsQueryAgent():
     constraints = {}
     for con in cons:
       consType, consIdx = con
-      if consType == VAR:
+      if consType == VAR or consIdx in self.irreversibleSet:
         constraints.update({(s, a): 0 for a in mdp['A']
                                       for s in self.consStates[consIdx]})
       elif consType == NONREVERSED:
@@ -257,8 +265,10 @@ class ConsQueryAgent():
       for s, a in x.keys():
         if any(x[s, a] > 0 for a in self.mdp['A']) and s in self.consStates[idx]:
           var.add(idx)
-          if self.mdp['terminal'](s):
+          if idx in self.irreversibleSet or self.mdp['terminal'](s):
             notReversed.add(idx)
+            # no need to check other state action pairs
+            break
     
     return set([(VAR, idx) for idx in var] + [(NONREVERSED, idx) for idx in notReversed])
     

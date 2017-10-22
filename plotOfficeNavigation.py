@@ -14,11 +14,10 @@ def maximumRegret():
   tm = {}
   tci = {}
   
-  #methods = ['brute', 'alg1', 'chain', 'random', 'nq']
-  methods = ['brute', 'alg1', 'random', 'nq']
+  methods = ['brute', 'alg1', 'chain', 'random', 'nq']
 
-  nRange = [10]
-  kRange = [0, 1]
+  nRange = [5]
+  kRange = [0, 1, 2, 3]
 
   for n in nRange:
     for k in kRange:
@@ -27,10 +26,10 @@ def maximumRegret():
         m[method, k, n], ci[method, k, n] = process([ret['mr', _] for _ in range(trials)])
         tm[method, k, n], tci[method, k, n] = process([ret['time', _] for _ in range(trials)])
 
-  plot(kRange, lambda method: [m[method, _, 10] for _ in kRange], lambda method: [ci[method, _, 10] for _ in kRange],
+  plot(kRange, lambda method: [m[method, _, 5] for _ in kRange], lambda method: [ci[method, _, 5] for _ in kRange],
        methods, "k", "Maximum Regret", "mrk")
 
-  plot(kRange, lambda method: [tm[method, _, 10] for _ in kRange], lambda method: [tci[method, _, 10] for _ in kRange],
+  plot(kRange, lambda method: [tm[method, _, 5] for _ in kRange], lambda method: [tci[method, _, 5] for _ in kRange],
        methods, "k", "Computation Time (sec.)", "tk")
 
   """

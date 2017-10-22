@@ -41,15 +41,14 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
   FIXME hacking this function too much.
   """
   # leave the left column and the top row empty
-  getBoundedRandLoc = lambda: (random.randint(1, width - 2), random.randint(0, height - 2))
+  getBoundedRandLoc = lambda: (random.randint(2, width - 3), random.randint(0, height - 2))
 
   # specify the size of the domain, which are the robot's possible locations
   width = 7
-  height = 10
+  height = 7
   #horizon = width + height * 2
   
-  doors = [(width / 2, height - 1), (width / 2, random.randint(0, height - 2))]
-  #doors = [(width / 2, height - 1), (width / 2, height / 2)]
+  doors = [(1, 0), (width - 2, 0)]
 
   switch = (width - 1, 0)
 
@@ -70,8 +69,13 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
 
   # splitting the room into two smaller rooms.
   # the robot can only access to the other room by going through a door in the middle or a corridor at the top
-  walls = [(width / 2, _) for _ in range(height) if (width / 2, _) not in doors]
+  #walls = [(width / 2, _) for _ in range(height) if (width / 2, _) not in doors]
   #walls = []
+  
+  # half circle
+  walls = [(1, _) for _ in range(1, height / 2)] +\
+          [(width - 2, _) for _ in range(1, height / 2)] +\
+          [(_, height / 2) for _ in range(1, width - 1)]
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
@@ -79,8 +83,17 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
           [[CLOSED, OPEN] for _ in doors] +\
           [[0, 1]]
   
-  navASets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (1, -1)]
+  navASets = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)]
   aSets = navASets + [OPENDOOR, CLOSEDOOR, TURNOFFSWITCH]
+  
+  for y in range(height):
+    for x in range(width):
+      if (x, y) in walls: print 'X',
+      elif (x, y) in carpets: print carpets.index((x, y)),
+      elif (x, y) in doors: print numOfCarpets + doors.index((x, y)),
+      elif (x, y) == switch: print 'S',
+      else: print ' ',
+    print
  
   # factored transition function
   def navigate(s, a):
@@ -121,7 +134,7 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
   # (which may be necessary for the robot to query to find a shorter path at least)
   # and the door at the top is open (so the robot can always find a feasible policy without querying)
   s0List = [(0, 0)] +\
-           [OPEN, CLOSED] +\
+           [CLOSED, OPEN] +\
            [ON]
   s0 = tuple(s0List)
   
@@ -146,8 +159,9 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
   # states that should not be visited
   # let's not make carpets features but constraints directly
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
+  irreversibleSet = range(len(consStates))
   consStates += [[s for s in mdp['S'] if s[idx] != mdp['s0'][idx]] for idx in range(dIndexStart, dIndexStart + len(doors))]
-  agent = ConsQueryAgent(mdp, consStates, constrainHuman)
+  agent = ConsQueryAgent(mdp, consStates, irreversibleSet, constrainHuman)
 
   start = time.time()
 
@@ -172,7 +186,8 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
       
   if method == 'brute':
     relCons, domPis = agent.findRelevantConsAndDomPis()
-    queries = findQuerySpace(agent.allCons, k, typeOfQuery) # note here. considering ALL constraints
+    # way to slow to consider all constraints, so consider relevant constraints.
+    queries = findQuerySpace(relCons, k, typeOfQuery)
     q = agent.findMinimaxRegretQ(queries, relCons, domPis, pruning=False)
   elif method == 'alg1':
     relCons, domPis = agent.findRelevantConsAndDomPis()
@@ -181,8 +196,7 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
     q = agent.findMinimaxRegretQ(queries, relCons, domPis, pruning=True)
   elif method == 'chain':
     relCons, domPis = agent.findRelevantConsAndDomPis()
-    queries = findQuerySpace(relCons, k, typeOfQuery)
-    q = agent.findChaindAdvQ(queries, relCons, domPis)
+    q = agent.findChaindAdvQ(k, relCons, domPis)
   elif method == 'random':
     queries = findQuerySpace(agent.allCons, k, typeOfQuery)
     q = random.choice(queries)
@@ -220,13 +234,13 @@ def classicOfficNav(method, k, numOfCarpets, typeOfQuery='cons', constrainHuman=
 if __name__ == '__main__':
   method = 'alg1'
   k = 1
-  numOfCarpets = 10
-  typeOfQuery = 'feats'
-  #typeOfQuery = 'cons'
+  numOfCarpets = 5
+  #typeOfQuery = 'feats'
+  typeOfQuery = 'cons'
   constrainHuman = False
 
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:')
+    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:r:')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
@@ -238,6 +252,12 @@ if __name__ == '__main__':
       numOfCarpets = int(arg)
     elif opt == '-p':
       ratioOfViolable = float(arg)
+    elif opt == '-r':
+      rnd = int(arg)
+
+      random.seed(rnd)
+      numpy.random.seed(rnd)
+      scipy.random.seed(rnd)
     else:
       raise Exception('unknown argument')
 
@@ -245,19 +265,13 @@ if __name__ == '__main__':
   
   #ret = pickle.load(open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'rb'))
 
-  for rnd in range(2):
-    random.seed(rnd)
-    # not necessarily using the following packages, but just to be sure
-    numpy.random.seed(rnd)
-    scipy.random.seed(rnd)
-   
-    #flatOfficNav()
-    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, typeOfQuery, constrainHuman)
+  #flatOfficNav()
+  mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, typeOfQuery, constrainHuman)
 
-    ret['mr', rnd] = mr
-    ret['time', rnd] = timeElapsed
+  ret['mr'] = mr
+  ret['time'] = timeElapsed
 
   if 'ratioOfViolable' in vars():
-    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '.pkl', 'wb'))
+    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '_' + str(rnd) + '.pkl', 'wb'))
   else:
-    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'wb'))
+    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
