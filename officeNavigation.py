@@ -141,11 +141,16 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
   agent = ConsQueryAgent(mdp, consStates)
 
+  if method == 'reallyBrute':
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+
   start = time.time()
 
   if method == 'brute':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
     q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=False)
+  elif method == 'reallyBrute':
+    q = agent.findMinimaxRegretConstraintQ(k, agent.allCons, domPis, pruning=False)
   elif method == 'alg1':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
     q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=True)
