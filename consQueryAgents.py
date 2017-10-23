@@ -12,7 +12,7 @@ class ConsQueryAgent():
   """
   Find queries in constraint-uncertain mdps. May formulate constraints as negative rewards.
   """
-  def __init__(self, mdp, consStates, constrainHuman=True):
+  def __init__(self, mdp, consStates, constrainHuman=False):
     """
     can't think of a class it should inherit..
 

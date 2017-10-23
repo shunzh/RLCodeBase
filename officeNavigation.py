@@ -166,6 +166,7 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
 
   end = time.time()
 
+  """
   # we may need relFeats and domPis for evaluation. they are not timed.
   if 'relFeats' not in vars() or 'domPis' not in vars():
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
@@ -187,16 +188,16 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   regret = agent.findRegret(q, violableCons)
   print 'regret', regret
   return regret, end - start
-  """
 
 
 if __name__ == '__main__':
   method = 'alg1'
   k = 2
   numOfCarpets = 10
+  ratioOfViolable = 0
 
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:')
+    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:r:')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
@@ -208,26 +209,25 @@ if __name__ == '__main__':
       numOfCarpets = int(arg)
     elif opt == '-p':
       ratioOfViolable = float(arg)
+    elif opt == '-r':
+      rnd = int(arg)
+
+      random.seed(rnd)
+      # not necessarily using the following packages, but just to be sure
+      numpy.random.seed(rnd)
+      scipy.random.seed(rnd)
     else:
       raise Exception('unknown argument')
 
   ret = {}
   
-  ret = pickle.load(open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'rb'))
+  #flatOfficNav()
+  mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, ratioOfViolable)
 
-  for rnd in range(10, 20):
-    random.seed(rnd)
-    # not necessarily using the following packages, but just to be sure
-    numpy.random.seed(rnd)
-    scipy.random.seed(rnd)
-   
-    #flatOfficNav()
-    mr, timeElapsed = classicOfficNav(method, k, numOfCarpets)
-
-    ret['mr', rnd] = mr
-    ret['time', rnd] = timeElapsed
+  ret['mr'] = mr
+  ret['time'] = timeElapsed
 
   if 'ratioOfViolable' in vars():
-    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '.pkl', 'wb'))
+    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '_' + str(rnd) + '.pkl', 'wb'))
   else:
-    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '.pkl', 'wb'))
+    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
