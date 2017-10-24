@@ -43,7 +43,7 @@ def maximumRegret():
   """
 
 def regret():
-  trials = 20
+  trials = 10
   m = {}
   ci = {}
   tm = {}
@@ -53,8 +53,8 @@ def regret():
   legends = ['Alg.1', 'CoA', 'Random', 'No Query']
 
   n = 10
-  k = 2
-  pRange = [0.1, 0.5, 0.9]
+  k = 1
+  pRange = [0.1, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
 
   for method in methods:
     for p in pRange:
