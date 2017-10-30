@@ -2,6 +2,8 @@ from lp import lpDual, computeValue
 import pprint
 from util import powerset
 import copy
+import numpy
+import random
 
 VAR = 0
 NONREVERSED = 1
@@ -147,7 +149,10 @@ class ConsQueryAgent():
       sizeOfQ = len(q)
 
       mr, advPi = self.findMRAdvPi(q, relFeats, domPis)
-      q = q.union(self.findViolatedConstraints(advPi))
+      newCons = list(self.findViolatedConstraints(advPi))
+      # permulate the new constraints
+      newCons.sort(key=lambda _: random.random())
+      q = q.union(newCons)
       
       if len(q) == sizeOfQ: break # no more constraints to add
     
@@ -195,6 +200,11 @@ class ConsQueryAgent():
 
       # intersection of q and constraints violated by pi
       consRobotCanViolate = set(q).intersection(humanViolated)
+      # possible implications. if the human violate a irreversible constraint,
+      # then var constraint can be violated as well
+      for consIdx in self.consIndices:
+        if (NONREVERSED, consIdx) in self.consIndices:
+          consRobotCanViolate.add((VAR, consIdx))
       
       # the robot's optimal policy given the constraints above
       invarFeats = set(relFeats).difference(consRobotCanViolate)

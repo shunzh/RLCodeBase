@@ -8,7 +8,7 @@ markers = {'brute': 'bo-', 'alg1': 'gs-', 'chain': 'rd-', 'random': 'm^-', 'nq':
 legends = {'brute': 'Brute Force', 'alg1': 'Alg.1', 'chain': 'CoA', 'random': 'Random', 'nq': 'No Query'}
 
 def maximumRegret():
-  trials = 20
+  trials = 10
   m = {}
   ci = {}
   tm = {}
