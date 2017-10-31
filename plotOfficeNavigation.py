@@ -8,7 +8,7 @@ markers = {'brute': 'bo-', 'alg1': 'gs-', 'chain': 'rd-', 'random': 'm^-', 'nq':
 legends = {'brute': 'Brute Force', 'alg1': 'Alg.1', 'chain': 'CoA', 'random': 'Random', 'nq': 'No Query'}
 
 def maximumRegret():
-  trials = 20
+  trials = 3
   m = {}
   ci = {}
   tm = {}
@@ -16,7 +16,7 @@ def maximumRegret():
   
   methods = ['brute', 'alg1', 'chain', 'random', 'nq']
 
-  nRange = [5]
+  nRange = [10]
   kRange = [0, 1, 2, 3]
 
   for n in nRange:
@@ -28,10 +28,10 @@ def maximumRegret():
         m[method, k, n], ci[method, k, n] = process([ret[_]['mr'] for _ in range(trials)])
         tm[method, k, n], tci[method, k, n] = process([ret[_]['time'] for _ in range(trials)])
 
-  plot(kRange, lambda method: [m[method, _, 5] for _ in kRange], lambda method: [ci[method, _, 5] for _ in kRange],
+  plot(kRange, lambda method: [m[method, _, 10] for _ in kRange], lambda method: [ci[method, _, 10] for _ in kRange],
        methods, "k", "Maximum Regret", "mrk")
 
-  plot(kRange, lambda method: [tm[method, _, 5] for _ in kRange], lambda method: [tci[method, _, 5] for _ in kRange],
+  plot(kRange, lambda method: [tm[method, _, 10] for _ in kRange], lambda method: [tci[method, _, 10] for _ in kRange],
        methods, "k", "Computation Time (sec.)", "tk")
 
   """
@@ -54,7 +54,7 @@ def regret():
 
   n = 10
   k = 1
-  pRange = [0.1, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
+  pRange = [0.1, 0.5, 0.9]
 
   for method in methods:
     for p in pRange:
@@ -98,5 +98,5 @@ if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
 
-  regret()
-  #maximumRegret()
+  #regret()
+  maximumRegret()

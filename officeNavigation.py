@@ -25,7 +25,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
+def classicOfficNav(method, k, numOfCarpets, constrainHuman, portionOfViolableCons=0):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -139,7 +139,7 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   # states that should not be visited
   # let's not make carpets features but constraints directly
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
-  agent = ConsQueryAgent(mdp, consStates)
+  agent = ConsQueryAgent(mdp, consStates, constrainHuman)
 
   if method == 'reallyBrute':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
@@ -148,12 +148,12 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
 
   if method == 'brute':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=False)
+    q = agent.findMinimaxRegretConstraintQBruteForce(k, relFeats, domPis)
   elif method == 'reallyBrute':
-    q = agent.findMinimaxRegretConstraintQ(k, agent.allCons, domPis, pruning=False)
+    q = agent.findMinimaxRegretConstraintQBruteForce(k, agent.allCons, domPis)
   elif method == 'alg1':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, pruning=True)
+    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis)
   elif method == 'chain':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
     q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
@@ -166,7 +166,6 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
 
   end = time.time()
 
-  """
   # we may need relFeats and domPis for evaluation. they are not timed.
   if 'relFeats' not in vars() or 'domPis' not in vars():
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
@@ -188,13 +187,14 @@ def classicOfficNav(method, k, numOfCarpets, portionOfViolableCons=0):
   regret = agent.findRegret(q, violableCons)
   print 'regret', regret
   return regret, end - start
+  """
 
 
 if __name__ == '__main__':
   method = 'alg1'
   k = 2
   numOfCarpets = 10
-  ratioOfViolable = 0
+  constrainHuman = False
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:r:')
@@ -222,7 +222,7 @@ if __name__ == '__main__':
   ret = {}
   
   #flatOfficNav()
-  mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, ratioOfViolable)
+  mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, constrainHuman)
 
   ret['mr'] = mr
   ret['time'] = timeElapsed
