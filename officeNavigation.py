@@ -53,6 +53,7 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, portionOfViolableCo
   #switch = getRandLoc()
 
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
+  #carpets = [(width / 2, _) for _ in range(5)]
   
   lIndex = 0
   dIndexStart = lIndex + 1
@@ -77,13 +78,23 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, portionOfViolableCo
           [[CLOSED, OPEN] for _ in doors] +\
           [[0, 1]]
   
-  aSets = [(1, 0), (0, 1), (1, 1),
-           TURNOFFSWITCH]
+  directionalActs = [(1, 0), (0, 1), (1, 1)]
+  aSets = directionalActs + [TURNOFFSWITCH]
  
+  """
+  for y in range(height):
+    for x in range(width):
+      if (x, y) in walls: print 'X',
+      elif (x, y) in carpets: print carpets.index((x, y)),
+      elif (x, y) == switch: print 'S',
+      else: print ' ',
+    print
+  """
+
   # factored transition function
   def navigate(s, a):
     loc = s[lIndex]
-    if a in [(1, 0), (0, 1), (1, 1)]:
+    if a in directionalActs:
       sp = (loc[0] + a[0], loc[1] + a[1])
       # not blocked by borders, closed doors or walls
       if (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
