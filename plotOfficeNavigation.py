@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pylab
 
-markers = {'brute': 'bo-', 'alg1': 'gs-', 'chain': 'rd-', 'random': 'm^-', 'nq': 'c+-'}
-legends = {'brute': 'Brute Force', 'alg1': 'Alg.1', 'chain': 'CoA', 'random': 'Random', 'nq': 'No Query'}
+markers = {'reallyBrute': 'bo--', 'brute': 'bo-', 'alg1': 'gs-', 'chain': 'rd-', 'random': 'm^-', 'nq': 'c+-'}
+legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. cons.)', 'alg1': 'Proposed Algorithm', 'chain': 'CoA', 'random': 'Random', 'nq': 'No Query'}
 
 def maximumRegret():
   trials = 20
@@ -14,32 +14,47 @@ def maximumRegret():
   tm = {}
   tci = {}
   
-  methods = ['brute', 'alg1', 'chain', 'random', 'nq']
+  #methods = ['reallyBrute', 'brute', 'alg1', 'chain', 'random', 'nq']
+  methods = ['reallyBrute', 'brute', 'alg1', 'chain', 'random', 'nq']
+  
+  mr_type = ""
+  #mr_type = " ($MR_k$)"
 
   nRange = [10]
-  kRange = [0, 1, 2, 3]
+  kRange = [2]
 
   for n in nRange:
     for k in kRange:
       for method in methods:
-        ret = {}
-        for r in range(trials):
-          ret[r] = pickle.load(open(method + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
-        m[method, k, n], ci[method, k, n] = process([ret[_]['mr'] for _ in range(trials)])
-        tm[method, k, n], tci[method, k, n] = process([ret[_]['time'] for _ in range(trials)])
+        if method == 'reallyBrute':
+          ret = pickle.load(open(method + '_' + str(k) + '_' + str(n) + '.pkl', 'rb'))
+          m[method, k, n], ci[method, k, n] = process([ret['mr', _] for _ in range(trials)])
+          tm[method, k, n], tci[method, k, n] = process([ret['time', _] for _ in range(trials)])
+        else:
+          ret = {}
+          for r in range(trials):
+            ret[r] = pickle.load(open(method + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+          m[method, k, n], ci[method, k, n] = process([ret[_]['mr'] for _ in range(trials)])
+          tm[method, k, n], tci[method, k, n] = process([ret[_]['time'] for _ in range(trials)])
 
   plot(kRange, lambda method: [m[method, _, 10] for _ in kRange], lambda method: [ci[method, _, 10] for _ in kRange],
-       methods, "k", "Maximum Regret", "mrk")
+       methods, "k", "Maximum Regret" + mr_type, "mrk")
 
   plot(kRange, lambda method: [tm[method, _, 10] for _ in kRange], lambda method: [tci[method, _, 10] for _ in kRange],
        methods, "k", "Computation Time (sec.)", "tk")
-
   """
+
   plot(nRange, lambda method: [m[method, 2, _] for _ in nRange], lambda method: [ci[method, 2, _] for _ in nRange],
-       methods, "|C|", "Maximum Regret", "mrc")
+       methods, "|$\Phi_?$|", "Maximum Regret" + mr_type, "mrc")
 
   plot(nRange, lambda method: [tm[method, 2, _] for _ in nRange], lambda method: [tci[method, 2, _] for _ in nRange],
-       methods, "|C|", "Computation Time (sec.)", "tc")
+       methods, "|$\Phi_?$|", "Computation Time (sec.)", "tc")
+
+  plot(nRange, lambda method: [m[method, 1, _] for _ in nRange], lambda method: [ci[method, 1, _] for _ in nRange],
+       methods, "|$\Phi$|", "Maximum Regret", "mrc_k1")
+
+  plot(nRange, lambda method: [tm[method, 1, _] for _ in nRange], lambda method: [tci[method, 1, _] for _ in nRange],
+       methods, "|$\Phi$|", "Computation Time (sec.)", "tc_k1")
   """
 
 def regret():
@@ -86,7 +101,7 @@ def plot(x, y, yci, methods, xlabel, ylabel, filename):
   pylab.gcf().subplots_adjust(bottom=0.15, left=0.15)
   fig.savefig(filename + ".pdf", dpi=300, format="pdf")
   
-  figLegend = pylab.figure(figsize = (3, 2.5))
+  figLegend = pylab.figure(figsize = (4.5, 3))
   pylab.figlegend(*ax.get_legend_handles_labels(), loc = 'upper left')
   figLegend.savefig("legend.pdf", dpi=300, format="pdf")
 

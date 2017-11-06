@@ -11,7 +11,7 @@ NONREVERSED = 1
 
 class ConsQueryAgent():
   """
-  Find queries in constraint-uncertain mdps. May formulate constraints as negative rewards.
+  Find queries in constraint-uncertain mdps.
   """
   def __init__(self, mdp, consStates, constrainHuman=False):
     """
@@ -114,7 +114,7 @@ class ConsQueryAgent():
     
       return mmq
 
-  def findMinimaxRegretConstraintQ(self, k, relFeats, domPis):
+  def findMinimaxRegretConstraintQ(self, k, relFeats, domPis, scopeHeu=True, filterHeu=True):
     """
     Finding a minimax k-element constraint query.
     
@@ -130,7 +130,10 @@ class ConsQueryAgent():
     mrs = {}
 
     allCons = set()
-    allConsPowerset = set(powerset(allCons))
+    if scopeHeu:
+      allConsPowerset = set(powerset(allCons))
+    else:
+      allConsPowerset = set(itertools.combinations(relFeats, k))
 
     qChecked = []
 
@@ -148,20 +151,23 @@ class ConsQueryAgent():
 
       # check the pruning condition
       dominatedQ = False
-      for candQ in candQVCs.keys():
-        if set(q).intersection(candQVCs[candQ]).issubset(candQ) or\
-           self.findRobotDomPis(q, relFeats, domPis) == self.findRobotDomPis(candQ, relFeats, domPis):
-          dominatedQ = True
-          break
-      if dominatedQ:
-        print q, 'is dominated'
-        continue
+      if filterHeu:
+        for candQ in candQVCs.keys():
+          if set(q).intersection(candQVCs[candQ]).issubset(candQ) or\
+             self.findRobotDomPis(q, relFeats, domPis) == self.findRobotDomPis(candQ, relFeats, domPis):
+            dominatedQ = True
+            break
+        if dominatedQ:
+          print q, 'is dominated'
+          continue
 
       mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
 
       candQVCs[q] = self.findViolatedConstraints(advPi)
       allCons.update(candQVCs[q])
-      allConsPowerset = set(powerset(allCons))
+      if scopeHeu:
+        allConsPowerset = set(powerset(allCons))
+      # allConsPowerset is consistent (all k-subsets) if not scope. no need to update. 
 
       mrs[q] = mr
       

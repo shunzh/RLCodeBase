@@ -165,6 +165,12 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, portionOfViolableCo
   elif method == 'alg1':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
     q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis)
+  elif method == 'alg1NoFilter':
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, filterHeu=False)
+  elif method == 'alg1NoScope':
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, scopeHeu=False)
   elif method == 'chain':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
     q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
