@@ -152,15 +152,14 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, portionOfViolableCo
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
   agent = ConsQueryAgent(mdp, consStates, constrainHuman)
 
-  if method == 'reallyBrute':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-
   start = time.time()
 
   if method == 'brute':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
     q = agent.findMinimaxRegretConstraintQBruteForce(k, relFeats, domPis)
   elif method == 'reallyBrute':
+    # really brute still need domPis to find out MR...
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
     q = agent.findMinimaxRegretConstraintQBruteForce(k, agent.allCons, domPis)
   elif method == 'alg1':
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
