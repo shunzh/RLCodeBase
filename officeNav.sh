@@ -6,7 +6,24 @@ do
     do
       #python officeNavigation.py -n $n -k $k -r $r -a brute
       python officeNavigation.py -n $n -k $k -r $r -a alg1
-      #python officeNavigation.py -n $n -k $k -r $r -a alg1NoFilter
+      python officeNavigation.py -n $n -k $k -r $r -a alg1NoFilter
+      python officeNavigation.py -n $n -k $k -r $r -a alg1NoScope
+      #python officeNavigation.py -n $n -k $k -r $r -a chain
+      #python officeNavigation.py -n $n -k $k -r $r -a random
+      #python officeNavigation.py -n $n -k $k -r $r -a nq
+    done
+  done
+done
+
+for n in 5 15
+do
+  for k in 2
+  do
+    for r in `seq 0 19`
+    do
+      #python officeNavigation.py -n $n -k $k -r $r -a brute
+      python officeNavigation.py -n $n -k $k -r $r -a alg1
+      python officeNavigation.py -n $n -k $k -r $r -a alg1NoFilter
       python officeNavigation.py -n $n -k $k -r $r -a alg1NoScope
       #python officeNavigation.py -n $n -k $k -r $r -a chain
       #python officeNavigation.py -n $n -k $k -r $r -a random

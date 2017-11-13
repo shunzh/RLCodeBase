@@ -125,13 +125,19 @@ class ConsQueryAgent():
       return tuple(relFeats)
 
     # candidate queries and their violated constraints
-    # corresponding to q_{evaluated} in the algorithm?
     candQVCs = {}
     mrs = {}
 
+    # first query to consider
+    q = self.findChaindAdvConstraintQ(k, relFeats, domPis)
+    
+    if len(q) < k: return q # mr = 0 in this case
+
     allCons = set()
+    allCons.update(q)
+
     if scopeHeu:
-      allConsPowerset = set(powerset(allCons))
+      allConsPowerset = set(itertools.combinations(allCons, k))
     else:
       allConsPowerset = set(itertools.combinations(relFeats, k))
 
@@ -143,8 +149,7 @@ class ConsQueryAgent():
       if len(qToConsider) == 0: break
 
       # find the subset with the smallest size
-      q = min(qToConsider, key=lambda _: len(_))
-      if len(q) > k: break
+      q = qToConsider.pop()
       qChecked.append(q)
 
       print 'q', q
@@ -153,8 +158,7 @@ class ConsQueryAgent():
       dominatedQ = False
       if filterHeu:
         for candQ in candQVCs.keys():
-          if set(q).intersection(candQVCs[candQ]).issubset(candQ) or\
-             self.findRobotDomPis(q, relFeats, domPis) == self.findRobotDomPis(candQ, relFeats, domPis):
+          if set(q).intersection(candQVCs[candQ]).issubset(candQ):
             dominatedQ = True
             break
         if dominatedQ:
@@ -166,16 +170,12 @@ class ConsQueryAgent():
       candQVCs[q] = self.findViolatedConstraints(advPi)
       allCons.update(candQVCs[q])
       if scopeHeu:
-        allConsPowerset = set(powerset(allCons))
+        allConsPowerset = set(itertools.combinations(allCons, k))
       # allConsPowerset is consistent (all k-subsets) if not scope. no need to update. 
 
       mrs[q] = mr
       
-    # return the one with the minimum regret
-    if mrs == {}:
-      mmq = () # no need to ask anything
-    else:
-      mmq = min(mrs.keys(), key=lambda _: mrs[_])
+    mmq = min(mrs.keys(), key=lambda _: mrs[_])
   
     return mmq
 

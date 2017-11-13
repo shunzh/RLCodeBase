@@ -210,7 +210,7 @@ if __name__ == '__main__':
   method = 'alg1'
   k = 2
   numOfCarpets = 10
-  constrainHuman = False
+  constrainHuman = True
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:r:')
