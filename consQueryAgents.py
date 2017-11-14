@@ -193,6 +193,15 @@ class ConsQueryAgent():
     mmq = list(q)[:k]
     return mmq
 
+  def findRelevantRandomConstraintQ(self, k, relFeats):
+    if len(relFeats) >= k:
+      q = numpy.random.choice(relFeats, k)
+    else:
+      # no more than k relevant features
+      q = relFeats
+    
+    return q
+ 
   def findRandomConstraintQ(self, k):
     if len(self.consIndices) >= k:
       q = numpy.random.choice(self.consIndices, k)

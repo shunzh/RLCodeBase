@@ -5,15 +5,10 @@ import matplotlib
 import pylab
 from matplotlib.ticker import FormatStrFormatter
 
-markers = {'reallyBrute': 'o', 'brute': 'o',\
-           'alg1': 's', 'alg1NoScope': 's', 'alg1NoFilter': 's',\
-           'chain': 'd', 'random': '^', 'nq': '+'}
-colors = {'reallyBrute': 'b', 'brute': 'b',\
-           'alg1': 'g', 'alg1NoScope': 'g', 'alg1NoFilter': 'g',\
-           'chain': 'r', 'random': 'm', 'nq': 'c'}
-linestyles = {'reallyBrute': '--', 'brute': '-',\
-           'alg1': '-', 'alg1NoScope': '--', 'alg1NoFilter': '-.',\
-           'chain': '-', 'random': '-', 'nq': '-'}
+markers = {'reallyBrute': 'bo--', 'brute': 'bo-',\
+           'alg1': 'gs-', 'alg1NoScope': 'gs--', 'alg1NoFilter': 'gs-.',\
+           'chain': 'rd-', 'random': 'm^-', 'nq': 'c+-'}
+
 legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. cons.)',\
            'alg1': 'Alg. 3',  'alg1NoScope': 'Alg. 3 w/ only Thm. 4.2', 'alg1NoFilter': 'Alg. 3 w/ only Thm. 4.1',\
            'chain': 'CoA', 'random': 'Random', 'nq': 'No Query'}
@@ -30,6 +25,7 @@ def maximumRegretK(mrk=False):
   
   if mrk: # no reallyBrute for mrk
     methods = ['brute', 'alg1', 'alg1NoFilter', 'alg1NoScope', 'chain', 'random', 'nq']
+    #methods = ['brute', 'alg1', 'chain', 'random', 'nq']
   else:
     methods = ['reallyBrute', 'brute', 'alg1', 'alg1NoFilter', 'alg1NoScope', 'chain', 'random', 'nq']
   
@@ -135,8 +131,8 @@ def plot(x, y, yci, methods, xlabel, ylabel, filename):
   ax = pylab.gca()
   for method in methods:
     print method, y(method), yci(method)
-    #lines = ax.errorbar(x, y(method), yci(method), fmt=markers[method], label=legends[method], mfc='none', markersize=15, capsize=5)
-    lines = ax.plot(x, y(method), marker=markers[method], color=colors[method], linestyle=linestyles[method], mfc='none', label=legends[method], markersize=15)
+    lines = ax.errorbar(x, y(method), yci(method), fmt=markers[method], label=legends[method], mfc='none', markersize=15, capsize=5)
+    #lines = ax.plot(x, y(method), marker=markers[method], color=colors[method], linestyle=linestyles[method], mfc='none', label=legends[method], markersize=15)
 
   ax.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
 
@@ -153,16 +149,16 @@ def plot(x, y, yci, methods, xlabel, ylabel, filename):
 
 
 def process(data):
-  return mean(data), 1.95 * std(data) / sqrt(len(data))
+  return mean(data), std(data) / sqrt(len(data))
 
 if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
 
-  #maximumRegretK()
+  maximumRegretK()
   #maximumRegretC()
 
-  maximumRegretK(mrk=True)
-  maximumRegretC(mrk=True)
+  #maximumRegretK(mrk=True)
+  #maximumRegretC(mrk=True)
 
   #regret()
