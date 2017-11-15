@@ -25,7 +25,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(method, k, numOfCarpets, constrainHuman, portionOfViolableCons=0, printRelPhi=False):
+def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViolableCons=0, printRelPhi=False):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -180,10 +180,14 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, portionOfViolableCo
     relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
     q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
   elif method == 'relevantRandom':
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
     q = agent.findRelevantRandomConstraintQ(k, relFeats)
   elif method == 'random':
     q = agent.findRandomConstraintQ(k)
   elif method == 'nq':
+    q = []
+  elif method == 'domPiBruteForce':
+    agent.findRelevantFeaturesBruteForce()
     q = []
   else:
     raise Exception('unknown method', method)
@@ -199,11 +203,12 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, portionOfViolableCo
   #indices = numpy.random.choice(range(len(relFeats)), len(relFeats) * violableRatio)
   #violableCons = [list(relFeats)[_] for _ in indices]
   
-  print q, mr
+  print q, mr, end - start
 
   return mr, end - start
   """
   # for print out regret (not maximum regret)
+  numpy.random.seed(rnd)
   violableIndices = numpy.random.choice(range(len(agent.allCons)), int(len(agent.allCons) * portionOfViolableCons), replace=False)
   violableCons = [agent.allCons[_] for _ in violableIndices]
   
@@ -221,10 +226,10 @@ if __name__ == '__main__':
   numOfCarpets = 10
   constrainHuman = False
   ratioOfViolable = None
-  printRelPhi = True
+  printRelPhi = False
 
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:r:')
+    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:cr:')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
@@ -236,6 +241,8 @@ if __name__ == '__main__':
       numOfCarpets = int(arg)
     elif opt == '-p':
       ratioOfViolable = float(arg)
+    elif opt == '-c':
+      constrainHuman = True
     elif opt == '-r':
       rnd = int(arg)
 
@@ -249,7 +256,7 @@ if __name__ == '__main__':
   ret = {}
   
   #flatOfficNav()
-  mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, constrainHuman, ratioOfViolable, printRelPhi)
+  mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, ratioOfViolable, printRelPhi)
 
   ret['mr'] = mr
   ret['time'] = timeElapsed
@@ -258,6 +265,6 @@ if __name__ == '__main__':
     pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '_' + str(rnd) + '.pkl', 'wb'))
   elif constrainHuman:
     # not distinguishing mr and mrk in filenames, so use a subdirectory
-    pickle.dump(ret, open('mrk/' + method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
+    pickle.dump(ret, open('mr_k/' + method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
   else:
     pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))

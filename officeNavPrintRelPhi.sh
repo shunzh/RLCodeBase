@@ -1,4 +1,4 @@
-for r in `seq 0 19`
+for r in `seq 30 99`
 do
   python officeNavigation.py -n 5 -r $r
   python officeNavigation.py -n 10 -r $r

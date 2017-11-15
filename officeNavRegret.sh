@@ -1,11 +1,10 @@
-for n in 10
+for r in `seq 30 99`
 do
-  #for p in 0.1 0.5 0.9
-  for p in 0.2 0.4 0.6 0.8
+  for n in 10
   do
-    for k in 1
+    for p in 0.1 0.5 0.9
     do
-      for r in `seq 0 19`
+      for k in 2
       do
         python officeNavigation.py -n $n -k $k -p $p -r $r -a alg1
         python officeNavigation.py -n $n -k $k -p $p -r $r -a chain

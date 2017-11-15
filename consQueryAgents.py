@@ -39,6 +39,12 @@ class ConsQueryAgent():
 
     return x
 
+  def findRelevantFeaturesBruteForce(self):
+    allConsPowerset = set(powerset(self.allCons))
+
+    for subsetsToConsider in allConsPowerset:
+      x = self.findConstrainedOptPi(subsetsToConsider)
+
   def findRelevantFeaturesAndDomPis(self):
     """
     Incrementally add dominating policies to a set
@@ -194,8 +200,13 @@ class ConsQueryAgent():
     return mmq
 
   def findRelevantRandomConstraintQ(self, k, relFeats):
-    if len(relFeats) >= k:
-      q = numpy.random.choice(relFeats, k)
+    if len(relFeats) == 0: # possibly k == 0, make a separate case here
+      return []
+    elif len(relFeats) > k:
+      relFeats = list(relFeats)
+      indices = range(len(relFeats))
+      randIndices = numpy.random.choice(indices, k, replace=False)
+      q = [relFeats[_] for _ in randIndices]
     else:
       # no more than k relevant features
       q = relFeats
@@ -204,7 +215,7 @@ class ConsQueryAgent():
  
   def findRandomConstraintQ(self, k):
     if len(self.consIndices) >= k:
-      q = numpy.random.choice(self.consIndices, k)
+      q = numpy.random.choice(self.consIndices, k, replace=False)
     else:
       # no more than k constraints, should not design exp in this way though
       q = self.consIndices
