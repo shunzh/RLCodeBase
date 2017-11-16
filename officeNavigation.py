@@ -39,7 +39,7 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
 
   FIXME hacking this function too much.
   """
-  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(1, height - 1))
+  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 2))
 
   # specify the size of the domain, which are the robot's possible locations
   width = 10
@@ -81,7 +81,6 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
   directionalActs = [(1, 0), (0, 1), (1, 1)]
   aSets = directionalActs + [TURNOFFSWITCH]
  
-  """
   for y in range(height):
     for x in range(width):
       if (x, y) in walls: print 'X',
@@ -89,7 +88,6 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
       elif (x, y) == switch: print 'S',
       else: print ' ',
     print
-  """
 
   # factored transition function
   def navigate(s, a):
@@ -158,69 +156,76 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
     pickle.dump(len(relFeats), open('relPhi_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
     sys.exit(0) # only need to know the number of relevant features
 
+  # find dom pi (which may be used to find queries and will be used for evaluation)
   start = time.time()
-
-  if method == 'brute':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findMinimaxRegretConstraintQBruteForce(k, relFeats, domPis)
-  elif method == 'reallyBrute':
-    # really brute still need domPis to find out MR...
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findMinimaxRegretConstraintQBruteForce(k, agent.allCons, domPis)
-  elif method == 'alg1':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis)
-  elif method == 'alg1NoFilter':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, filterHeu=False)
-  elif method == 'alg1NoScope':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, scopeHeu=False)
-  elif method == 'chain':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
-  elif method == 'relevantRandom':
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    q = agent.findRelevantRandomConstraintQ(k, relFeats)
-  elif method == 'random':
-    q = agent.findRandomConstraintQ(k)
-  elif method == 'nq':
-    q = []
-  elif method == 'domPiBruteForce':
-    agent.findRelevantFeaturesBruteForce()
-    q = []
-  else:
-    raise Exception('unknown method', method)
-
+  relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
   end = time.time()
+  domPiTime = end - start
 
-  # we may need relFeats and domPis for evaluation. they are not timed.
-  if 'relFeats' not in vars() or 'domPis' not in vars():
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+  for method in ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']:
+    start = time.time()
+    if method == 'brute':
+      q = agent.findMinimaxRegretConstraintQBruteForce(k, relFeats, domPis)
+    elif method == 'reallyBrute':
+      # really brute still need domPis to find out MR...
+      q = agent.findMinimaxRegretConstraintQBruteForce(k, agent.allCons, domPis)
+    elif method == 'alg1':
+      q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis)
+    elif method == 'alg1NoFilter':
+      q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, filterHeu=False)
+    elif method == 'alg1NoScope':
+      q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, scopeHeu=False)
+    elif method == 'chain':
+      q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
+    elif method == 'relevantRandom':
+      q = agent.findRelevantRandomConstraintQ(k, relFeats)
+    elif method == 'random':
+      q = agent.findRandomConstraintQ(k)
+    elif method == 'nq':
+      q = []
+    elif method == 'domPiBruteForce':
+      agent.findRelevantFeaturesBruteForce()
+      q = []
+    else:
+      raise Exception('unknown method', method)
+    end = time.time()
 
-  mr, advPi = agent.findMRAdvPi(q, relFeats, domPis, k)
+    runTime = end - start + (0 if method in ['random', 'nq'] else domPiTime)
 
-  #indices = numpy.random.choice(range(len(relFeats)), len(relFeats) * violableRatio)
-  #violableCons = [list(relFeats)[_] for _ in indices]
-  
-  print q, mr, end - start
+    print method, q
 
-  return mr, end - start
-  """
-  # for print out regret (not maximum regret)
-  numpy.random.seed(rnd)
-  violableIndices = numpy.random.choice(range(len(agent.allCons)), int(len(agent.allCons) * portionOfViolableCons), replace=False)
-  violableCons = [agent.allCons[_] for _ in violableIndices]
-  
-  print 'violable', violableCons
-  
-  regret = agent.findRegret(q, violableCons)
-  print 'regret', regret
-  return regret, end - start
-  """
+    mr, advPi = agent.findMRAdvPi(q, relFeats, domPis, k, consHuman=False)
+    mrk, advPi = agent.findMRAdvPi(q, relFeats, domPis, k, consHuman=True)
 
+    regrets = {}
+    # for print out regret (not maximum regret)
+    for portionOfViolableCons in [0.1, 0.5, 0.9]:
+      # some decoupling
+      numpy.random.seed(int(10 * portionOfViolableCons) + rnd)
+      violableIndices = numpy.random.choice(range(len(agent.allCons)), int(len(agent.allCons) * portionOfViolableCons), replace=False)
+      violableCons = [agent.allCons[_] for _ in violableIndices]
+    
+      regrets[portionOfViolableCons] = agent.findRegret(q, violableCons)
+
+    print mr, mrk, regrets, runTime
+    
+    saveToFile(method, constrainHuman, q, mr, mrk, runTime, regrets)
+
+def saveToFile(method, constrainHuman, q, mr, mrk, runTime, regrets):
+  ret = {}
+  ret['mr'] = mr
+  ret['mrk'] = mrk
+  ret['regrets'] = regrets
+  ret['time'] = runTime
+  ret['q'] = q
+
+  postfix = 'mrk' if constrainHuman else 'mr'
+
+  # not distinguishing mr and mrk in filenames, so use a subdirectory
+  pickle.dump(ret, open(method + '_' + postfix + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
 
 if __name__ == '__main__':
+  # default values
   method = 'alg1'
   k = 2
   numOfCarpets = 10
@@ -229,18 +234,14 @@ if __name__ == '__main__':
   printRelPhi = False
 
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'a:k:n:p:cr:')
+    opts, args = getopt.getopt(sys.argv[1:], 'k:n:cr:')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
-    if opt == '-a':
-      method = arg
-    elif opt == '-k':
+    if opt == '-k':
       k = int(arg)
     elif opt == '-n':
       numOfCarpets = int(arg)
-    elif opt == '-p':
-      ratioOfViolable = float(arg)
     elif opt == '-c':
       constrainHuman = True
     elif opt == '-r':
@@ -253,18 +254,4 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  ret = {}
-  
-  #flatOfficNav()
-  mr, timeElapsed = classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, ratioOfViolable, printRelPhi)
-
-  ret['mr'] = mr
-  ret['time'] = timeElapsed
-
-  if ratioOfViolable != None:
-    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(ratioOfViolable) + '_' + str(rnd) + '.pkl', 'wb'))
-  elif constrainHuman:
-    # not distinguishing mr and mrk in filenames, so use a subdirectory
-    pickle.dump(ret, open('mr_k/' + method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
-  else:
-    pickle.dump(ret, open(method + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
+  classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, ratioOfViolable, printRelPhi)

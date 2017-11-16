@@ -1,4 +1,4 @@
-for r in `seq 139 199`
+for r in `seq 0 199`
 do
   for n in 10
   do
@@ -6,8 +6,6 @@ do
     do
       python officeNavigation.py -n $n -k $k -r $r -a brute
       python officeNavigation.py -n $n -k $k -r $r -a alg1
-      python officeNavigation.py -n $n -k $k -r $r -a alg1NoFilter
-      python officeNavigation.py -n $n -k $k -r $r -a alg1NoScope
       python officeNavigation.py -n $n -k $k -r $r -a chain
       python officeNavigation.py -n $n -k $k -r $r -a random
       python officeNavigation.py -n $n -k $k -r $r -a relevantRandom
@@ -21,8 +19,6 @@ do
     do
       python officeNavigation.py -n $n -k $k -r $r -c -a brute
       python officeNavigation.py -n $n -k $k -r $r -c -a alg1
-      python officeNavigation.py -n $n -k $k -r $r -c -a alg1NoFilter
-      python officeNavigation.py -n $n -k $k -r $r -c -a alg1NoScope
       python officeNavigation.py -n $n -k $k -r $r -c -a chain
       python officeNavigation.py -n $n -k $k -r $r -c -a random
       python officeNavigation.py -n $n -k $k -r $r -c -a relevantRandom
@@ -36,8 +32,6 @@ do
     do
       python officeNavigation.py -n $n -k $k -r $r -a brute
       python officeNavigation.py -n $n -k $k -r $r -a alg1
-      python officeNavigation.py -n $n -k $k -r $r -a alg1NoFilter
-      python officeNavigation.py -n $n -k $k -r $r -a alg1NoScope
       python officeNavigation.py -n $n -k $k -r $r -a chain
       python officeNavigation.py -n $n -k $k -r $r -a random
       python officeNavigation.py -n $n -k $k -r $r -a relevantRandom
@@ -51,8 +45,6 @@ do
     do
       python officeNavigation.py -n $n -k $k -r $r -c -a brute
       python officeNavigation.py -n $n -k $k -r $r -c -a alg1
-      python officeNavigation.py -n $n -k $k -r $r -c -a alg1NoFilter
-      python officeNavigation.py -n $n -k $k -r $r -c -a alg1NoScope
       python officeNavigation.py -n $n -k $k -r $r -c -a chain
       python officeNavigation.py -n $n -k $k -r $r -c -a random
       python officeNavigation.py -n $n -k $k -r $r -c -a relevantRandom

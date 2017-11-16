@@ -253,12 +253,16 @@ class ConsQueryAgent():
 
     return pis
 
-  def findMRAdvPi(self, q, relFeats, domPis, k):
+  def findMRAdvPi(self, q, relFeats, domPis, k, consHuman=None):
     """
     Find the adversarial policy given q and domPis
     
+    consHuman can be set to override self.constrainHuman
+    
     Now searching over all dominating policies, maybe take some time.. can use MILP instead?
     """
+    if consHuman == None: consHuman = self.constrainHuman
+
     maxRegret = 0
     maxValues = None
     advPi = None
@@ -267,7 +271,7 @@ class ConsQueryAgent():
       humanViolated = self.findViolatedConstraints(pi)
       humanValue = self.computeValue(pi)
 
-      if self.constrainHuman and len(humanViolated) > k:
+      if consHuman and len(humanViolated) > k:
         # we do not consider the case where the human's optimal policy violates more than k constraints
         # unfair to compare.
         continue
@@ -295,7 +299,6 @@ class ConsQueryAgent():
   
     # even with constrainHuman, the non-constraint-violating policy is in \Gamma
     assert advPi != None
-    print maxValues, maxRegret
     return maxRegret, advPi
 
   def constructConstraints(self, cons, mdp):
