@@ -161,8 +161,11 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
   relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
   end = time.time()
   domPiTime = end - start
+  
+  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
-  for method in ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']:
+  for method in methods:
     start = time.time()
     if method == 'brute':
       q = agent.findMinimaxRegretConstraintQBruteForce(k, relFeats, domPis)
@@ -203,6 +206,7 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
       # some decoupling
       numpy.random.seed(int(10 * portionOfViolableCons) + rnd)
       violableIndices = numpy.random.choice(range(len(agent.allCons)), int(len(agent.allCons) * portionOfViolableCons), replace=False)
+      print violableIndices
       violableCons = [agent.allCons[_] for _ in violableIndices]
     
       regrets[portionOfViolableCons] = agent.findRegret(q, violableCons)

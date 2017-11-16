@@ -14,7 +14,7 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
            'chain': 'CoA', 'relevantRandom': 'Random (rel. feat.)', 'random': 'Random', 'nq': 'No Query'}
 
 def maximumRegretK(mrk=False):
-  trials = 110
+  trials = 18
 
   mr = {}
   time = {}
@@ -24,11 +24,11 @@ def maximumRegretK(mrk=False):
     methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
     #methods = ['brute', 'alg1', 'chain', 'random', 'nq']
   else:
-    #methods = ['reallyBrute', 'brute', 'alg1', 'alg1NoFilter', 'alg1NoScope', 'chain', 'random', 'nq']
-    methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+    #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+    methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
   
-  mr_type = " ($MR_k$)" if mrk else ""
-  prefix = 'mr_k/' if mrk else ""
+  mr_type = 'mrk' if mrk else 'mr'
+  mr_label = " ($MR_k$)" if mrk else ""
 
   n = 10
   kRange = [0, 1, 2, 3]
@@ -39,21 +39,27 @@ def maximumRegretK(mrk=False):
       time[method, k, n] = []
       q[method, k, n] = []
       for r in range(trials):
-        ret = pickle.load(open(prefix + method + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
-        mr[method, k, n].append(ret['mr'])
-        time[method, k, n].append(ret['time'])
-        q[method, k, n].append(ret['q'])
+        if r not in [39]:
+          ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+          mr[method, k, n].append(ret[mr_type])
+          time[method, k, n].append(ret['time'])
+          q[method, k, n].append(ret['q'])
 
   plot(kRange, lambda method: [mean(mr[method, _, n]) for _ in kRange], lambda method: [standardErr(mr[method, _, n]) for _ in kRange],
-       methods, "k", "Maximum Regret" + mr_type, "mrk")
+       methods, "k", "Maximum Regret" + mr_label, "mrk_" + mr_type)
 
   plot(kRange, lambda method: [mean(time[method, _, n]) for _ in kRange], lambda method: [standardErr(time[method, _, n]) for _ in kRange],
-       methods, "k", "Computation Time (sec.)", "tk")
+       methods, "k", "Computation Time (sec.)", "tk_" + mr_type)
 
-  plot(kRange, lambda method: [100.0 * sum(mr[method, k, n][_] == mr['brute', k, 10][_] for _ in range(trials)) / trials for k in kRange], lambda _: [0.0] * len(kRange),
+  # COMPARING WITH ALG1 for now1
+  validTrials = trials 
+  plot(kRange, lambda method: [100.0 * sum(mr[method, k, n][_] == mr['alg1', k, n][_] for _ in range(validTrials)) / validTrials for k in kRange], lambda _: [0.0] * len(kRange),
        methods, "k", "% of Finding a MMR Query", "ratiok")
 
 def maximumRegretC(mrk=False):
+  """
+  DEPRECATED
+  """
   trials = 100
   
   mr = {}
@@ -72,7 +78,6 @@ def maximumRegretC(mrk=False):
       for method in methods:
         mr[method, k, n] = []
         time[method, k, n] = []
-        q[method, k, n] = []
         for r in range(trials):
           if r in [36, 80]: continue
           ret = pickle.load(open(prefix + method + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
@@ -100,8 +105,8 @@ def maximumRegretCVSRelPhi(mrk=False):
   #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
   methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
   
-  mr_type = " ($MR_k$)" if mrk else ""
-  prefix = 'mr_k/' if mrk else ""
+  mr_type = 'mrk' if mrk else 'mr'
+  mr_label = " ($MR_k$)" if mrk else ""
 
   nRange = [5, 10, 15]
   k = 2
@@ -128,45 +133,45 @@ def maximumRegretCVSRelPhi(mrk=False):
 
       for r in range(trials):
         if r in [36, 80]: continue
-        ret = pickle.load(open(prefix + method + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+        ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
         mr[method, k, relPhiNum[n, r] / gran].append(ret['mr'])
         time[method, k, relPhiNum[n, r] / gran].append(ret['time'])
 
   plot([_ * gran for _ in bins], lambda method: [mean(mr[method, k, _]) for _ in bins], lambda method: [standardErr(mr[method, k, _]) for _ in bins],
-       methods, "|$\Phi_{rel}$|", "Maximum Regret" + mr_type, "mrc_phir")
+       methods, "|$\Phi_{rel}$|", "Maximum Regret" + mr_label, "mrc_phir_" + mr_type)
 
   plot([_ * gran for _ in bins], lambda method: [mean(time[method, k, _]) for _ in bins], lambda method: [standardErr(time[method, k, _]) for _ in bins],
-       methods, "|$\Phi_{rel}$|", "Computation Time (sec.)", "tc_phir")
+       methods, "|$\Phi_{rel}$|", "Computation Time (sec.)", "tc_phir_" + mr_type)
 
   plot([_ * gran for _ in bins], lambda method: [100.0 * sum(mr[method, k, bin][_] == mr['brute', 2, bin][_] for _ in range(len(mr['brute', k, bin]))) / len(mr['brute', 2, bin]) for bin in bins], lambda _: [0.0] * len(bins),
-       methods, "|$\Phi_{rel}$|", "% of Finding a MMR Query", "ratioc_phir")
+       methods, "|$\Phi_{rel}$|", "% of Finding a MMR Query", "ratioc_phir_" + mr_type)
 
 
 def regret(mrk=False):
-  trials = 100
-  m = {}
-  ci = {}
+  trials = 58
+  mr = {}
   
   methods = ['alg1', 'chain', 'random', 'nq']
 
-  prefix = 'mr_k/' if mrk else ""
+  mr_type = 'mrk' if mrk else 'mr'
 
-  n = 10
+  n = 15
   k = 2
   pRange = [0.1, 0.5, 0.9]
 
   for method in methods:
+    ret = {}
     for p in pRange:
-      ret = {}
-      for r in range(trials):
-        ret[r] = pickle.load(open(prefix + method + '_' + str(k) + '_' + str(n) + '_' + str(p) + '_' + str(r) + '.pkl', 'rb'))
-      if method == 'random' and p == 0.1: print [(_, ret[_]['mr']) for _ in range(trials)]
-      if method == 'nq' and p == 0.1: print [(_, ret[_]['mr']) for _ in range(trials)]
-      m[method, k, n, p] = mean([ret[_]['mr'] for _ in range(trials)])
-      ci[method, k, n, p] = standardErr([ret[_]['mr'] for _ in range(trials)])
+      mr[method, k, n, p] = []
+    for r in range(trials):
+      if r not in [39]:
+        ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+        for p in pRange:
+          #if method == 'random' and p == 0.1: print [(_, ret[_]['mr']) for _ in range(trials)]
+          mr[method, k, n, p] = [ret['regrets'][p] for _ in range(trials)]
 
-  plot(pRange, lambda method: [m[method, k, n, _] for _ in pRange], lambda method: [ci[method, k, n, _] for _ in pRange],
-       methods, "% of Changeable Features", "Regret", "rp")
+  plot(pRange, lambda method: [mean(mr[method, k, n, _]) for _ in pRange], lambda method: [standardErr(mr[method, k, n, _]) for _ in pRange],
+       methods, "% of Changeable Features", "Regret", "rp" + mr_type)
 
 def printTex(y, yci, t, tci, methods, legends):
   for i in range(len(methods)):
@@ -212,5 +217,5 @@ if __name__ == '__main__':
   #maximumRegretC(mrk=True)
   #maximumRegretCVSRelPhi(mrk=True)
 
-  #regret()
-  regret(mrk=True)
+  regret()
+  #regret(mrk=False)

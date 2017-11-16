@@ -238,6 +238,7 @@ class ConsQueryAgent():
     hValue = self.computeValue(humanPi)
     rValue = self.computeValue(robotPi)
     
+    print 'regret is diff', hValue, rValue
     return hValue - rValue
 
   def findRobotDomPis(self, q, relFeats, domPis):
