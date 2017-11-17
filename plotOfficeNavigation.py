@@ -13,16 +13,19 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
            'alg1': 'MMRQ-k',  'alg1NoScope': 'Alg. 3 w/ only Thm. 4.2', 'alg1NoFilter': 'Alg. 3 w/ only Thm. 4.1',\
            'chain': 'CoA', 'relevantRandom': 'Random (rel. feat.)', 'random': 'Random', 'nq': 'No Query'}
 
-def maximumRegretK(mrk=False):
-  trials = 18
 
+# shared for all functions
+trials = 100
+excluded = [39]
+
+def maximumRegretK(mrk=False):
   mr = {}
   time = {}
   q = {}
   
   if mrk: # no reallyBrute for mrk
-    methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-    #methods = ['brute', 'alg1', 'chain', 'random', 'nq']
+    #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+    methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
   else:
     #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
     methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
@@ -30,7 +33,7 @@ def maximumRegretK(mrk=False):
   mr_type = 'mrk' if mrk else 'mr'
   mr_label = " ($MR_k$)" if mrk else ""
 
-  n = 10
+  n = 15
   kRange = [0, 1, 2, 3]
 
   for k in kRange:
@@ -39,7 +42,7 @@ def maximumRegretK(mrk=False):
       time[method, k, n] = []
       q[method, k, n] = []
       for r in range(trials):
-        if r not in [39]:
+        if r not in excluded:
           ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
           mr[method, k, n].append(ret[mr_type])
           time[method, k, n].append(ret['time'])
@@ -52,7 +55,7 @@ def maximumRegretK(mrk=False):
        methods, "k", "Computation Time (sec.)", "tk_" + mr_type)
 
   # COMPARING WITH ALG1 for now1
-  validTrials = trials 
+  validTrials = trials - len(excluded)
   plot(kRange, lambda method: [100.0 * sum(mr[method, k, n][_] == mr['alg1', k, n][_] for _ in range(validTrials)) / validTrials for k in kRange], lambda _: [0.0] * len(kRange),
        methods, "k", "% of Finding a MMR Query", "ratiok")
 
@@ -60,8 +63,6 @@ def maximumRegretC(mrk=False):
   """
   DEPRECATED
   """
-  trials = 100
-  
   mr = {}
   time = {}
 
@@ -97,8 +98,6 @@ def maximumRegretC(mrk=False):
   """
 
 def maximumRegretCVSRelPhi(mrk=False):
-  trials = 10
-  
   mr = {}
   time = {}
 
@@ -132,7 +131,7 @@ def maximumRegretCVSRelPhi(mrk=False):
         time[method, k, bin] = []
 
       for r in range(trials):
-        if r in [36, 80]: continue
+        if r in excluded: continue
         ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
         mr[method, k, relPhiNum[n, r] / gran].append(ret['mr'])
         time[method, k, relPhiNum[n, r] / gran].append(ret['time'])
@@ -148,10 +147,9 @@ def maximumRegretCVSRelPhi(mrk=False):
 
 
 def regret(mrk=False):
-  trials = 58
   mr = {}
   
-  methods = ['alg1', 'chain', 'random', 'nq']
+  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
   mr_type = 'mrk' if mrk else 'mr'
 
@@ -164,11 +162,11 @@ def regret(mrk=False):
     for p in pRange:
       mr[method, k, n, p] = []
     for r in range(trials):
-      if r not in [39]:
+      if r not in excluded:
         ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
         for p in pRange:
           #if method == 'random' and p == 0.1: print [(_, ret[_]['mr']) for _ in range(trials)]
-          mr[method, k, n, p] = [ret['regrets'][p] for _ in range(trials)]
+          mr[method, k, n, p].append(ret['regrets'][p])
 
   plot(pRange, lambda method: [mean(mr[method, k, n, _]) for _ in pRange], lambda method: [standardErr(mr[method, k, n, _]) for _ in pRange],
        methods, "% of Changeable Features", "Regret", "rp" + mr_type)
@@ -209,13 +207,13 @@ if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
 
-  #maximumRegretK()
+  maximumRegretK()
   #maximumRegretC()
   #maximumRegretCVSRelPhi()
 
-  #maximumRegretK(mrk=True)
+  maximumRegretK(mrk=True)
   #maximumRegretC(mrk=True)
   #maximumRegretCVSRelPhi(mrk=True)
 
   regret()
-  #regret(mrk=False)
+  regret(mrk=True)

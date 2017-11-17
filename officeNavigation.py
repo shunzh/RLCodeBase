@@ -39,14 +39,13 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
 
   FIXME hacking this function too much.
   """
-  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 2))
-
   # specify the size of the domain, which are the robot's possible locations
   width = 10
   height = 10
-  # time is 0, 1, ..., horizon
-  #horizon = width + height - 1
   
+  # do not occupy carpets.
+  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 2))
+
   doors = []#[(width / 2, height / 2)]
 
   switch = (width - 1, height - 1)
@@ -255,6 +254,8 @@ if __name__ == '__main__':
       # not necessarily using the following packages, but just to be sure
       numpy.random.seed(rnd)
       scipy.random.seed(rnd)
+      
+      print 'random seed', rnd
     else:
       raise Exception('unknown argument')
 
