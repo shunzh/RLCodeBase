@@ -80,13 +80,16 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
   directionalActs = [(1, 0), (0, 1), (1, 1)]
   aSets = directionalActs + [TURNOFFSWITCH]
  
+  # check what the world is like
   for y in range(height):
     for x in range(width):
-      if (x, y) in walls: print 'X',
-      elif (x, y) in carpets: print carpets.index((x, y)),
-      elif (x, y) == switch: print 'S',
-      else: print ' ',
+      if (x, y) in walls: print '[ X]',
+      elif (x, y) in carpets: print '[%2d]' % carpets.index((x, y)),
+      elif (x, y) == switch: print '[ S]',
+      else: print '[  ]',
     print
+  
+  for _ in range(len(carpets)): print _, carpets[_]
 
   # factored transition function
   def navigate(s, a):
@@ -128,17 +131,16 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
   s0 = tuple(s0List)
   
   terminal = lambda s: s[lIndex] == switch
-  gamma = .9
+  gamma = 1
 
   # if need to assign random rewards to all states
   #bonus = util.Counter()
   #for loc in allLocations: bonus[loc] = random.random() < .4
 
   def reward(s, a):
-    if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
-      return 10
+    if s[sIndex] == ON:
+      return -1
     else:
-      # create some random rewards in the domain to break ties
       return 0
   rFunc = reward
   
@@ -161,8 +163,8 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
   end = time.time()
   domPiTime = end - start
   
-  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  #methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
   for method in methods:
     start = time.time()
@@ -212,9 +214,9 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
 
     print mr, mrk, regrets, runTime
     
-    saveToFile(method, constrainHuman, q, mr, mrk, runTime, regrets)
+    saveToFile(method, k, numOfCarpets, constrainHuman, q, mr, mrk, runTime, regrets)
 
-def saveToFile(method, constrainHuman, q, mr, mrk, runTime, regrets):
+def saveToFile(method, k, numOfCarpets, constrainHuman, q, mr, mrk, runTime, regrets):
   ret = {}
   ret['mr'] = mr
   ret['mrk'] = mrk

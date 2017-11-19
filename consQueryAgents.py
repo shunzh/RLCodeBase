@@ -85,15 +85,14 @@ class ConsQueryAgent():
       else:
         violatedCons = self.findViolatedConstraints(x)
 
+      print 'x violates', violatedCons
+
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
       beta.append((set(activeCons), set(violatedCons)))
 
       allCons.update(violatedCons)
 
       allConsPowerset = set(powerset(allCons))
-
-      #print 'beta', beta
-      #print 'allCons', allCons
     
     domPis = []
     for pi in dominatingPolicies.values():
@@ -112,6 +111,8 @@ class ConsQueryAgent():
       for q in itertools.combinations(relFeats, k):
         mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
         mrs[q] = mr
+        
+        print q, mr
 
       if mrs == {}:
         mmq = () # no need to ask anything
@@ -158,8 +159,6 @@ class ConsQueryAgent():
       q = qToConsider.pop()
       qChecked.append(q)
 
-      print 'q', q
-
       # check the pruning condition
       dominatedQ = False
       if filterHeu:
@@ -172,6 +171,9 @@ class ConsQueryAgent():
           continue
 
       mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
+      
+      print q, mr
+      printOccSA(advPi)
 
       candQVCs[q] = self.findViolatedConstraints(advPi)
       allCons.update(candQVCs[q])
@@ -187,11 +189,13 @@ class ConsQueryAgent():
 
   def findChaindAdvConstraintQ(self, k, relFeats, domPis):
     q = set()
-    while len(q) <= k:
+    while len(q) < k:
       sizeOfQ = len(q)
 
       mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
-      q = q.union(self.findViolatedConstraints(advPi))
+      violatedCons = self.findViolatedConstraints(advPi)
+      print 'vio cons', violatedCons
+      q = q.union(violatedCons)
       
       if len(q) == sizeOfQ: break # no more constraints to add
     
@@ -238,7 +242,6 @@ class ConsQueryAgent():
     hValue = self.computeValue(humanPi)
     rValue = self.computeValue(robotPi)
     
-    print 'regret is diff', hValue, rValue
     return hValue - rValue
 
   def findRobotDomPis(self, q, relFeats, domPis):
@@ -283,20 +286,23 @@ class ConsQueryAgent():
       # the robot's optimal policy given the constraints above
       invarFeats = set(relFeats).difference(consRobotCanViolate)
       
-      robotValue = 0
+      robotValue = -numpy.inf
+      robotPi = None
       for rPi in domPis:
         if self.piSatisfiesCons(rPi, invarFeats):
           rValue = self.computeValue(rPi)
           if rValue > robotValue:
             robotValue = rValue
+            robotPi = rPi
 
       regret = humanValue - robotValue
       
+      assert robotPi != None
       assert regret >= 0, 'regret is %f' % regret
+
       if regret > maxRegret or (regret == maxRegret and advPi == None):
         maxRegret = regret
         advPi = pi
-        maxValues = (humanValue, robotValue) # not used, just for debugging
   
     # even with constrainHuman, the non-constraint-violating policy is in \Gamma
     assert advPi != None
