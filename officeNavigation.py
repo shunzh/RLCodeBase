@@ -25,7 +25,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViolableCons=0, printRelPhi=False):
+def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -42,14 +42,22 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
   # specify the size of the domain, which are the robot's possible locations
   width = 10
   height = 10
-  
-  # do not occupy carpets.
-  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 2))
+
+  #robot = (0, random.randint(0, height - 1))
+  #switch = (width - 1, random.randint(0, height - 1))
+  robot = (0, 0)
+  switch = (width - 1, height - 1)
+
+  def getBoundedRandLoc():
+    while True:
+      loc = (random.randint(0, width - 1), random.randint(0, height - 1))
+      if not (loc == robot or loc == switch):
+        return loc
+
+  #walls = [(width / 2, _) for _ in range(0, height) if _ != 0 and _ != height / 2]
+  walls = []
 
   doors = []#[(width / 2, height / 2)]
-
-  switch = (width - 1, height - 1)
-  #switch = getRandLoc()
 
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
   #carpets = [(width / 2, _) for _ in range(5)]
@@ -62,14 +70,6 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
   #tIndex = sIndex + 1
   
   dIndex = range(dIndexStart, dIndexStart + dSize)
-  
-  # pairs of adjacent locations that are blocked by a wall
-  #walls = [[(0, 2), (1, 2)], [(1, 0), (1, 1)], [(2, 0), (2, 1)], [(3, 0), (3, 1)], [(3, 2), (4, 2)]]
-
-  # splitting the room into two smaller rooms.
-  # the robot can only access to the other room by going through a door in the middle or a corridor at the top
-  #walls = [[(width / 2, _), (width / 2 + 1, _)] for _ in range(1, height - 1) if _ != height / 2]
-  walls = []
   
   # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
@@ -86,6 +86,7 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
       if (x, y) in walls: print '[ X]',
       elif (x, y) in carpets: print '[%2d]' % carpets.index((x, y)),
       elif (x, y) == switch: print '[ S]',
+      elif (x, y) == robot: print '[ R]',
       else: print '[  ]',
     print
   
@@ -99,7 +100,7 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
       # not blocked by borders, closed doors or walls
       if (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
          not any(s[idx] == CLOSED and sp == doors[idx - dIndexStart] for idx in dIndex) and\
-         not any(loc in wall and sp in wall for wall in walls):
+         not sp in walls:
         return sp
     return loc
   
@@ -125,13 +126,13 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
           [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
           [switchOp]
 
-  s0List = [(0, 0)] +\
+  s0List = [robot] +\
            [CLOSED for _ in doors] +\
            [ON]
   s0 = tuple(s0List)
   
   terminal = lambda s: s[lIndex] == switch
-  gamma = 1
+  gamma = .9
 
   # if need to assign random rewards to all states
   #bonus = util.Counter()
@@ -151,11 +152,10 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
   agent = ConsQueryAgent(mdp, consStates, constrainHuman)
 
-  if printRelPhi:
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    print len(relFeats)
-    pickle.dump(len(relFeats), open('relPhi_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
-    sys.exit(0) # only need to know the number of relevant features
+  # save the number of relevant features to files
+  relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+  print len(relFeats)
+  pickle.dump(len(relFeats), open('relPhi_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
 
   # find dom pi (which may be used to find queries and will be used for evaluation)
   start = time.time()
@@ -163,8 +163,8 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, portionOfViola
   end = time.time()
   domPiTime = end - start
   
-  methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-  #methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
   for method in methods:
     start = time.time()
@@ -235,8 +235,6 @@ if __name__ == '__main__':
   k = 2
   numOfCarpets = 10
   constrainHuman = False
-  ratioOfViolable = None
-  printRelPhi = False
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 'k:n:cr:')
@@ -261,4 +259,4 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd, ratioOfViolable, printRelPhi)
+  classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd)

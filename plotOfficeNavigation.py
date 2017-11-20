@@ -15,8 +15,8 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 
 
 # shared for all functions
-trials = 100
-excluded = [13, 39, 71]
+trials = 44
+excluded = [4, 11, 19, 25, 31, 33, 41]
 
 def maximumRegretK():
   mr = {}
@@ -28,9 +28,10 @@ def maximumRegretK():
   methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
   n = 20
-  kRange = [0, 1, 2, 3]
+  kRange = [1, 2, 3]
 
   for mr_type in ['mr', 'mrk']:
+    print mr_type
     for k in kRange:
       for method in methods:
         # queries that optimize mr_type and measured by mr
@@ -47,24 +48,28 @@ def maximumRegretK():
             time[method, k, n, mr_type].append(ret['time'])
             q[method, k, n, mr_type].append(ret['q'])
 
+    print 'measured by mr'
     plot(kRange, lambda method: [mean(mr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(mr[method, _, n, mr_type]) for _ in kRange],
          methods, "k", "Maximum Regret ($MR$)", mr_type + '_mr')
 
+    print 'measured by mrk'
     plot(kRange, lambda method: [mean(mrk[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(mr[method, _, n, mr_type]) for _ in kRange],
          methods, "k", "Maximum Regret ($MR_k$)", mr_type + '_mrk')
 
+    print 'time'
     plot(kRange, lambda method: [mean(time[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(time[method, _, n, mr_type]) for _ in kRange],
          methods, "k", "Computation Time (sec.)", mr_type + '_t')
 
     # COMPARING WITH ALG1 for now1
+    print 'ratio of finding mmr-q'
     validTrials = trials - len(excluded)
     plot(kRange, lambda method: [100.0 * sum(mr[method, k, n, mr_type][_] == mr['alg1', k, n, mr_type][_] for _ in range(validTrials)) / validTrials for k in kRange], lambda _: [0.0] * len(kRange),
          methods, "k", "% of Finding a MMR Query", "ratiok_" + mr_type)
 
-  # for more debugging
   """
+  # for more debugging
   for k in kRange:
-    print k, {r: mr['alg1', k, n, 'mr'][r] - mr['alg1', k, n, 'mrk'][r] for r in range(validTrials)}
+    print k, {r: mr['alg1', k, n, 'mr'][r] - mr['chain', k, n, 'mr'][r] for r in range(validTrials)}
   """
 
 def maximumRegretCVSRelPhi(mrk=False):
@@ -123,7 +128,7 @@ def regret(mrk=False):
 
   mr_type = 'mrk' if mrk else 'mr'
 
-  n = 20
+  n = 15
   k = 2
   pRange = [0.1, 0.5, 0.9]
 
@@ -177,10 +182,10 @@ if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
 
-  #maximumRegretK()
+  maximumRegretK()
 
   #maximumRegretCVSRelPhi()
   #maximumRegretCVSRelPhi(mrk=True)
 
-  regret()
-  regret(mrk=True)
+  #regret()
+  #regret(mrk=True)

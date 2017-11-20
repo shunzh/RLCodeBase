@@ -173,7 +173,7 @@ class ConsQueryAgent():
       mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
       
       print q, mr
-      printOccSA(advPi)
+      #printOccSA(advPi) # for debug
 
       candQVCs[q] = self.findViolatedConstraints(advPi)
       allCons.update(candQVCs[q])
@@ -298,7 +298,7 @@ class ConsQueryAgent():
       regret = humanValue - robotValue
       
       assert robotPi != None
-      assert regret >= 0, 'regret is %f' % regret
+      assert regret >= -0.00001, 'regret is %f' % regret
 
       if regret > maxRegret or (regret == maxRegret and advPi == None):
         maxRegret = regret
