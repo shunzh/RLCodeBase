@@ -7,6 +7,7 @@ import scipy
 import pickle
 import getopt
 import sys
+import os.path
 
 OPEN = 1
 CLOSED = 0
@@ -25,7 +26,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd):
+def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -42,17 +43,14 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd):
   # specify the size of the domain, which are the robot's possible locations
   width = 10
   height = 10
-
+  
   #robot = (0, random.randint(0, height - 1))
   #switch = (width - 1, random.randint(0, height - 1))
   robot = (0, 0)
   switch = (width - 1, height - 1)
 
-  def getBoundedRandLoc():
-    while True:
-      loc = (random.randint(0, width - 1), random.randint(0, height - 1))
-      if not (loc == robot or loc == switch):
-        return loc
+  # make sure carpets and robots are not covered by carpets
+  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 2))
 
   #walls = [(width / 2, _) for _ in range(0, height) if _ != 0 and _ != height / 2]
   walls = []
@@ -132,18 +130,20 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd):
   s0 = tuple(s0List)
   
   terminal = lambda s: s[lIndex] == switch
-  gamma = .9
 
-  # if need to assign random rewards to all states
-  #bonus = util.Counter()
-  #for loc in allLocations: bonus[loc] = random.random() < .4
-
+  def oldReward(s, a):
+    if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
+      return 10
+    else:
+      # create some random rewards in the domain to break ties
+      return 0
   def reward(s, a):
     if s[sIndex] == ON:
       return -1
     else:
       return 0
   rFunc = reward
+  gamma = 0.99
   
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
 
@@ -152,19 +152,29 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd):
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
   agent = ConsQueryAgent(mdp, consStates, constrainHuman)
 
-  # save the number of relevant features to files
-  relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-  print len(relFeats)
-  pickle.dump(len(relFeats), open('relPhi_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
+  domainFileName = 'domain_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl'
+  if os.path.exists(domainFileName):
+    data = pickle.load(open(domainFileName, 'rb'))
+    if data == 'INITIALIZED':
+      # failure in computing dom pi. do not try again.
+      print "ABORT"
+      return
+    else:
+      (relFeats, domPis, domPiTime) = data
+  else:
+    pickle.dump('INITIALIZED', open(domainFileName, 'wb'))
 
-  # find dom pi (which may be used to find queries and will be used for evaluation)
-  start = time.time()
-  relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-  end = time.time()
-  domPiTime = end - start
-  
-  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+    # find dom pi (which may be used to find queries and will be used for evaluation)
+    start = time.time()
+    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+    end = time.time()
+    domPiTime = end - start
+
+    print "num of rel feats", len(relFeats)
+    pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
+
   methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
   for method in methods:
     start = time.time()
@@ -188,6 +198,7 @@ def classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd):
     elif method == 'nq':
       q = []
     elif method == 'domPiBruteForce':
+      # HACKING compute how long is needed to find a dominating policies by enumeration
       agent.findRelevantFeaturesBruteForce()
       q = []
     else:
@@ -231,7 +242,7 @@ def saveToFile(method, k, numOfCarpets, constrainHuman, q, mr, mrk, runTime, reg
 
 if __name__ == '__main__':
   # default values
-  method = 'alg1'
+  method = None
   k = 2
   numOfCarpets = 10
   constrainHuman = False
@@ -259,4 +270,4 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  classicOfficNav(method, k, numOfCarpets, constrainHuman, rnd)
+  classicOfficNav(k, numOfCarpets, constrainHuman, rnd)
