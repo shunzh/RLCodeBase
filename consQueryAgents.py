@@ -268,7 +268,6 @@ class ConsQueryAgent():
     if consHuman == None: consHuman = self.constrainHuman
 
     maxRegret = 0
-    maxValues = None
     advPi = None
 
     for pi in domPis:

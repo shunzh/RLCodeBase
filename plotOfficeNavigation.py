@@ -5,18 +5,30 @@ import pylab
 from matplotlib.ticker import FormatStrFormatter
 
 markers = {'reallyBrute': 'bo--', 'brute': 'bo-',\
-           'alg1': 'gs-', 'alg1NoScope': 'gs--', 'alg1NoFilter': 'gs-.',\
-           'chain': 'rd-', 'relevantRandom': 'm^-', 'random': 'm^--', 'nq': 'c+-'}
+           'alg1': 'gs-', 'chain': 'rd-',\
+           'alg1mr': 'gs-', 'chainmr': 'rd-',\
+           'alg1mrk': 'gs--', 'chainmrk': 'rd--',\
+           'relevantRandom': 'm^-', 'random': 'm^--', 'nq': 'c+-'}
+
+markerStyle = {'alg1': 's', 'chain': 'd', 'relevantRandom': '^', 'random': '^', 'nq': '+'}
+colorMap = {'alg1': 'g', 'chain': 'r', 'relevantRandom': 'm', 'random': 'm', 'nq': 'c'}
 
 legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
-           'alg1': 'MMRQ-k',  'alg1NoScope': 'Alg. 3 w/ only Thm. 4.2', 'alg1NoFilter': 'Alg. 3 w/ only Thm. 4.1',\
-           'chain': 'CoA', 'relevantRandom': 'Random (rel. feat.)', 'random': 'Random', 'nq': 'No Query'}
+           'alg1': 'MMRQ-k', 'chain': 'CoA',\
+           'alg1mr': 'MMRQ-k ($MR$)', 'chainmr': 'CoA ($MR$)',\
+           'alg1mrk': 'MMRQ-k ($MR_k$)', 'chainmrk': 'CoA ($MR_k$)',\
+           'relevantRandom': 'Random (rel. feat.)', 'random': 'Random', 'nq': 'No Query'}
 
 
 # shared for all functions
-trials = 100
-excluded = [13, 39, 66, 71]
+trials = 59
+excluded = [30, 36]
+#excluded = [71]
+#excluded = [13, 39, 66, 71]
 #excluded = [12, 13, 15, 25, 39, 43, 44, 48, 53, 66, 69, 71, 81]
+
+kRange = [1, 2, 3]
+nRange = [10, 15]
 
 def maximumRegretK():
   mr = {}
@@ -27,12 +39,10 @@ def maximumRegretK():
   #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
   methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
-  kRange = [1, 2, 3, 4]
-
-  for n in [10, 15, 20]:
+  for n in nRange:
     for mr_type in ['mr', 'mrk']:
       mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
-      title = "Queries Optimize " + mr_label + ", $|\Phi_?| = " + str(n) + "$"
+      title = "Objective is " + mr_label + ", $|\Phi_?| = " + str(n) + "$"
       print mr_type
       for k in kRange:
         for method in methods:
@@ -82,8 +92,6 @@ def maximumRegretCVSRelPhi():
   #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
   methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
   
-  nRange = [10, 15, 20]
-
   relPhiNum = {}
   for n in nRange:
     for r in range(trials):
@@ -93,17 +101,23 @@ def maximumRegretCVSRelPhi():
       relPhiNum[n, r] = len(relFeats)
   
   print relPhiNum
-      
-  gran = 2
+
+  # granularity of x axis
+  gran = 3
   bins = range(max(nRange) / gran + 1)
   print bins
 
-  for k in [1, 2, 3, 4]:
+  for k in kRange:
     for mr_type in ['mr', 'mrk']:
       mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
-      title = "Queries Optimize " + mr_label + ", $k = " + str(k) + "$"
+      title = "Objective is " + mr_label + ", $k = " + str(k) + "$"
       print mr_type
+
+      xScatter = {}
+      yScatter = {}
       for method in methods:
+        xScatter[method] = []
+        yScatter[method] = []
         for bin in bins: 
           mr[method, k, bin] = []
           time[method, k, bin] = []
@@ -114,9 +128,14 @@ def maximumRegretCVSRelPhi():
             ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
             mr[method, k, relPhiNum[n, r] / gran].append(ret[mr_type])
             time[method, k, relPhiNum[n, r] / gran].append(ret['time'])
+            
+            xScatter[method].append(relPhiNum[n, r])
+            yScatter[method].append(ret[mr_type])
 
       plot([_ * gran for _ in bins], lambda method: [mean(mr[method, k, _]) for _ in bins], lambda method: [standardErr(mr[method, k, _]) for _ in bins],
            methods, title, "|$\Phi_{rel}$|", "Maximum Regret (" + mr_label + ")", "mrc_" + str(k) + "_" + mr_type)
+
+      #scatter(xScatter, yScatter, methods, title, "|$\Phi_{rel}$|", "Maximum Regret (" + mr_label + ")", "mrc_" + str(k) + "_" + mr_type)
 
       plot([_ * gran for _ in bins], lambda method: [mean(time[method, k, _]) for _ in bins], lambda method: [standardErr(time[method, k, _]) for _ in bins],
            methods, title, "|$\Phi_{rel}$|", "Computation Time (sec.)", "tc_" + str(k) + "_" + mr_type)
@@ -125,30 +144,37 @@ def maximumRegretCVSRelPhi():
            methods, title, "|$\Phi_{rel}$|", "% of Finding a MMR Query", "ratioc_" + str(k) + "_" + mr_type)
 
 
-def regret(mrk=False):
+def regret():
   mr = {}
   
-  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  #methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['alg1', 'chain']
+  legends = ['alg1mr', 'chainmr', 'alg1mrk', 'chainmrk']
 
-  mr_type = 'mrk' if mrk else 'mr'
-
-  n = 15
-  k = 2
   pRange = [0.1, 0.5, 0.9]
 
-  for method in methods:
-    ret = {}
-    for p in pRange:
-      mr[method, k, n, p] = []
-    for r in range(trials):
-      if r not in excluded:
-        ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
-        for p in pRange:
-          #if method == 'random' and p == 0.1: print [(_, ret[_]['mr']) for _ in range(trials)]
-          mr[method, k, n, p].append(ret['regrets'][p])
+  for n in nRange:
+    print n
+    for k in kRange:
+      print k
+      title = "$|\Phi_?| = "+ str(n) + "$, $k = " + str(k) + "$"
 
-  plot(pRange, lambda method: [mean(mr[method, k, n, _]) for _ in pRange], lambda method: [standardErr(mr[method, k, n, _]) for _ in pRange],
-       methods, "% of Changeable Features", "Regret", mr_type + "_regret")
+      for mr_type in ['mr', 'mrk']:
+        print mr_type
+        for method in methods:
+          ret = {}
+          for p in pRange:
+            mr[method + mr_type, k, n, p] = []
+
+          for r in range(trials):
+            if r in excluded: continue
+            ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+            for p in pRange:
+              #if method == 'random' and p == 0.1: print [(_, ret[_]['mr']) for _ in range(trials)]
+              mr[method + mr_type, k, n, p].append(ret['regrets'][p])
+
+      plot(pRange, lambda method: [mean(mr[method, k, n, _]) for _ in pRange], lambda method: [standardErr(mr[method, k, n, _]) for _ in pRange],
+           legends, title, "% of Changeable Features", "Regret", str(n) + "_" + str(k) + "_regret")
 
 def printTex(y, yci, t, tci, methods, legends):
   for i in range(len(methods)):
@@ -163,15 +189,13 @@ def plot(x, y, yci, methods, title, xlabel, ylabel, filename):
   for method in methods:
     print method, y(method), yci(method)
     lines = ax.errorbar(x, y(method), yci(method), fmt=markers[method], label=legends[method], mfc='none', markersize=15, capsize=5)
-    #lines = ax.plot(x, y(method), marker=markers[method], color=colors[method], linestyle=linestyles[method], mfc='none', label=legends[method], markersize=15)
 
   #ax.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
 
-  #plt.legend(legends)
   pylab.title(title)
   pylab.xlabel(xlabel)
   pylab.ylabel(ylabel)
-  #pylab.ylim([-.2, 4])
+  #pylab.ylim([0, 0.2])
   pylab.gcf().subplots_adjust(bottom=0.15, left=0.2)
   fig.savefig(filename + ".pdf", dpi=300, format="pdf")
   
@@ -179,6 +203,19 @@ def plot(x, y, yci, methods, title, xlabel, ylabel, filename):
   pylab.figlegend(*ax.get_legend_handles_labels(), loc = 'upper left')
   figLegend.savefig("legend.pdf", dpi=300, format="pdf")
 
+def scatter(x, y, methods, title, xlabel, ylabel, filename):
+  fig = pylab.figure()
+
+  ax = pylab.gca()
+  for method in methods:
+    ax.scatter(x[method], y[method], marker=markerStyle[method], color=colorMap[method])
+
+  pylab.title(title)
+  pylab.xlabel(xlabel)
+  pylab.ylabel(ylabel)
+  pylab.gcf().subplots_adjust(bottom=0.15, left=0.2)
+  fig.savefig(filename + "_scatter.pdf", dpi=300, format="pdf")
+ 
 
 def standardErr(data):
   return std(data) / sqrt(len(data))
@@ -186,10 +223,9 @@ def standardErr(data):
 if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
-
+  
   maximumRegretK()
 
   maximumRegretCVSRelPhi()
 
-  #regret()
-  #regret(mrk=True)
+  regret()

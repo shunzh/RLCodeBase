@@ -49,8 +49,16 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
   robot = (0, 0)
   switch = (width - 1, height - 1)
 
+  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(1, height - 1))
+  """
   # make sure carpets and robots are not covered by carpets
-  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(0, height - 2))
+  def getBoundedRandLoc():
+    while True:
+      loc = (random.randint(0, width - 1), random.randint(0, height - 1))
+
+      if loc == robot: continue
+      else: return loc
+  """
 
   #walls = [(width / 2, _) for _ in range(0, height) if _ != 0 and _ != height / 2]
   walls = []
@@ -142,8 +150,8 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
       return -1
     else:
       return 0
-  rFunc = reward
-  gamma = 0.99
+  rFunc = oldReward
+  gamma = 0.9
   
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
 
