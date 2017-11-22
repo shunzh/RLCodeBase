@@ -188,14 +188,19 @@ class ConsQueryAgent():
     return mmq
 
   def findChaindAdvConstraintQ(self, k, relFeats, domPis):
-    q = set()
+    q = []
     while len(q) < k:
       sizeOfQ = len(q)
 
       mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
       violatedCons = self.findViolatedConstraints(advPi)
       print 'vio cons', violatedCons
-      q = q.union(violatedCons)
+
+      # we want to be careful about this, add unseen features to q
+      # not disturbing the order of features in q
+      for con in violatedCons:
+        if con not in q:
+          q.append(con)
       
       if len(q) == sizeOfQ: break # no more constraints to add
     
