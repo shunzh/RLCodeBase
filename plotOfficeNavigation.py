@@ -21,14 +21,22 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 
 
 # shared for all functions
-trials = 59
-excluded = [30, 36]
-#excluded = [71]
-#excluded = [13, 39, 66, 71]
-#excluded = [12, 13, 15, 25, 39, 43, 44, 48, 53, 66, 69, 71, 81]
+trials = 300
+excluded = set()
 
 kRange = [1, 2, 3]
 nRange = [10, 15]
+
+def excludeFailedExperiments():
+  for r in range(trials):
+    for n in nRange:
+      domainFileName = 'domain_' + str(n) + '_' + str(r) + '.pkl'
+      ret = pickle.load(open(domainFileName, 'rb'))
+      if ret == 'INITIALIZED':
+        excluded.add(r)
+  
+  excluded.update([30, 36, 184])
+  print 'excluded', excluded
 
 def maximumRegretK():
   mr = {}
@@ -36,8 +44,7 @@ def maximumRegretK():
   time = {}
   q = {}
   
-  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
   for n in nRange:
     for mr_type in ['mr', 'mrk']:
@@ -78,19 +85,17 @@ def maximumRegretK():
       plot(kRange, lambda method: [100.0 * sum(mr[method, k, n, mr_type][_] == mr['alg1', k, n, mr_type][_] for _ in range(validTrials)) / validTrials for k in kRange], lambda _: [0.0] * len(kRange),
            methods, title, "k", "% of Finding a MMR Query", "ratiok_" + str(n) + "_" + mr_type)
 
-  """
   # for more debugging
-  for k in kRange:
-    print k, {r: mr['alg1', k, n, 'mr'][r] - mr['chain', k, n, 'mr'][r] for r in range(validTrials)}
-  """
+  for n in nRange:
+    for k in kRange:
+      print k, n, {r: mr['alg1', k, n, 'mr'][r] - mr['alg1', k, n, 'mrk'][r] for r in range(validTrials)}
 
 def maximumRegretCVSRelPhi():
   mr = {}
   mrk = {}
   time = {}
 
-  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
   
   relPhiNum = {}
   for n in nRange:
@@ -105,7 +110,6 @@ def maximumRegretCVSRelPhi():
   # granularity of x axis
   gran = 3
   bins = range(max(nRange) / gran + 1)
-  print bins
 
   for k in kRange:
     for mr_type in ['mr', 'mrk']:
@@ -223,6 +227,8 @@ def standardErr(data):
 if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
+  
+  excludeFailedExperiments()
   
   maximumRegretK()
 

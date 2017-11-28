@@ -181,8 +181,8 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
     print "num of rel feats", len(relFeats)
     pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
 
-  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
   #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['alg1']
 
   for method in methods:
     start = time.time()
@@ -222,7 +222,7 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
 
     regrets = {}
     # for print out regret (not maximum regret)
-    for portionOfViolableCons in [0.1, 0.5, 0.9]:
+    for portionOfViolableCons in [0.1, 0.15, 0.2, 0.5, 0.8, 1]:
       # some decoupling
       numpy.random.seed(int(10 * portionOfViolableCons) + rnd)
       violableIndices = numpy.random.choice(range(len(agent.allCons)), int(len(agent.allCons) * portionOfViolableCons), replace=False)
