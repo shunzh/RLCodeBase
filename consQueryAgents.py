@@ -302,7 +302,7 @@ class ConsQueryAgent():
       regret = humanValue - robotValue
       
       assert robotPi != None
-      assert regret >= -0.00001, 'regret is %f' % regret
+      assert regret >= -0.00001, 'human %f, robot %f' % (humanValue, robotValue)
 
       if regret > maxRegret or (regret == maxRegret and advPi == None):
         maxRegret = regret

@@ -26,7 +26,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
+def classicOfficNav(k, numOfCarpets, constrainHuman, dry, rnd):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -90,7 +90,8 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
   for y in range(height):
     for x in range(width):
       if (x, y) in walls: print '[ X]',
-      elif (x, y) in carpets: print '[%2d]' % carpets.index((x, y)),
+      elif carpets.count((x, y)) == 1: print '[%2d]' % carpets.index((x, y)),
+      elif carpets.count((x, y)) > 1: print '[%2d*' % carpets.index((x, y)),
       elif (x, y) == switch: print '[ S]',
       elif (x, y) == robot: print '[ R]',
       else: print '[  ]',
@@ -182,7 +183,7 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
     pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
 
   #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-  methods = ['alg1']
+  methods = ['alg1', 'chain']
 
   for method in methods:
     start = time.time()
@@ -217,10 +218,11 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
 
     print method, q
 
-    mr, advPi = agent.findMRAdvPi(q, relFeats, domPis, k, consHuman=False)
+    mr = None
     mrk, advPi = agent.findMRAdvPi(q, relFeats, domPis, k, consHuman=True)
 
     regrets = {}
+    """
     # for print out regret (not maximum regret)
     for portionOfViolableCons in [0.1, 0.15, 0.2, 0.5, 0.8, 1]:
       # some decoupling
@@ -230,10 +232,12 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, rnd):
       violableCons = [agent.allCons[_] for _ in violableIndices]
     
       regrets[portionOfViolableCons] = agent.findRegret(q, violableCons)
+    """
 
     print mr, mrk, regrets, runTime
     
-    saveToFile(method, k, numOfCarpets, constrainHuman, q, mr, mrk, runTime, regrets)
+    if not dry:
+      saveToFile(method, k, numOfCarpets, constrainHuman, q, mr, mrk, runTime, regrets)
 
 def saveToFile(method, k, numOfCarpets, constrainHuman, q, mr, mrk, runTime, regrets):
   ret = {}
@@ -254,9 +258,10 @@ if __name__ == '__main__':
   k = 2
   numOfCarpets = 10
   constrainHuman = False
+  dry = False # do not safe to files if dry run
 
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'k:n:cr:')
+    opts, args = getopt.getopt(sys.argv[1:], 'k:n:cr:d')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
@@ -266,6 +271,8 @@ if __name__ == '__main__':
       numOfCarpets = int(arg)
     elif opt == '-c':
       constrainHuman = True
+    elif opt == '-d':
+      dry = True
     elif opt == '-r':
       rnd = int(arg)
 
@@ -278,4 +285,4 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  classicOfficNav(k, numOfCarpets, constrainHuman, rnd)
+  classicOfficNav(k, numOfCarpets, constrainHuman, dry, rnd)
