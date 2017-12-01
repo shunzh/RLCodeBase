@@ -26,7 +26,7 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(k, numOfCarpets, constrainHuman, dry, rnd):
+def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -41,15 +41,16 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, dry, rnd):
   FIXME hacking this function too much.
   """
   # specify the size of the domain, which are the robot's possible locations
-  width = 10
-  height = 10
+  width = size
+  height = size
   
   #robot = (0, random.randint(0, height - 1))
   #switch = (width - 1, random.randint(0, height - 1))
   robot = (0, 0)
   switch = (width - 1, height - 1)
 
-  getBoundedRandLoc = lambda: (random.randint(1, width - 1), random.randint(1, height - 1))
+  getBoundedRandLoc = lambda: (random.randint(1, width - 2), random.randint(1, height - 1))
+
   """
   # make sure carpets and robots are not covered by carpets
   def getBoundedRandLoc():
@@ -66,8 +67,8 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, dry, rnd):
   doors = []#[(width / 2, height / 2)]
 
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
-  #carpets = [(width / 2, _) for _ in range(5)]
-  
+  carpetRewards = [random.random() for _ in range(numOfCarpets)]
+
   lIndex = 0
   dIndexStart = lIndex + 1
   dSize = len(doors)
@@ -146,13 +147,29 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, dry, rnd):
     else:
       # create some random rewards in the domain to break ties
       return 0
+
   def reward(s, a):
     if s[sIndex] == ON:
-      return -1
+      if s[lIndex] in carpets:
+        carpetId = carpets.index(s[lIndex])
+        return -carpetRewards[carpetId]
+      else:
+        return -1
     else:
       return 0
-  rFunc = oldReward
-  gamma = 0.9
+  
+  def gradientReward(s, a):
+    if s[sIndex] == ON:
+      if s[lIndex] in carpets:
+        return 0
+      else:
+        x, y = s[lIndex]
+        return -(x + y)
+    else:
+      return 0
+ 
+  rFunc = gradientReward
+  gamma = 1
   
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
 
@@ -183,7 +200,7 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, dry, rnd):
     pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
 
   #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-  methods = ['alg1', 'chain']
+  methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
 
   for method in methods:
     start = time.time()
@@ -198,8 +215,10 @@ def classicOfficNav(k, numOfCarpets, constrainHuman, dry, rnd):
       q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, filterHeu=False)
     elif method == 'alg1NoScope':
       q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, scopeHeu=False)
+    elif method == 'naiveChain':
+      q = agent.findChainedAdvConstraintQ(k, relFeats, domPis, informed=False)
     elif method == 'chain':
-      q = agent.findChaindAdvConstraintQ(k, relFeats, domPis)
+      q = agent.findChainedAdvConstraintQ(k, relFeats, domPis, informed=True)
     elif method == 'relevantRandom':
       q = agent.findRelevantRandomConstraintQ(k, relFeats)
     elif method == 'random':
@@ -256,17 +275,21 @@ if __name__ == '__main__':
   # default values
   method = None
   k = 2
-  numOfCarpets = 10
   constrainHuman = False
   dry = False # do not safe to files if dry run
 
+  numOfCarpets = 10
+  size = 6
+
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'k:n:cr:d')
+    opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:d')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
     if opt == '-k':
       k = int(arg)
+    elif opt == '-s':
+      size = int(arg)
     elif opt == '-n':
       numOfCarpets = int(arg)
     elif opt == '-c':
@@ -285,4 +308,4 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  classicOfficNav(k, numOfCarpets, constrainHuman, dry, rnd)
+  classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd)

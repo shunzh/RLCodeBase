@@ -5,18 +5,16 @@ import pylab
 from matplotlib.ticker import FormatStrFormatter
 
 markers = {'reallyBrute': 'bo--', 'brute': 'bo-',\
-           'alg1': 'gs-', 'chain': 'rd-',\
-           'alg1mr': 'gs-', 'chainmr': 'rd-',\
-           'alg1mrk': 'gs--', 'chainmrk': 'rd--',\
+           'alg1': 'gs-',
+           'chain': 'rd-', 'naiveChain': 'rd--',\
            'relevantRandom': 'm^-', 'random': 'm^--', 'nq': 'c+-'}
 
-markerStyle = {'alg1': 's', 'chain': 'd', 'relevantRandom': '^', 'random': '^', 'nq': '+'}
-colorMap = {'alg1': 'g', 'chain': 'r', 'relevantRandom': 'm', 'random': 'm', 'nq': 'c'}
+#markerStyle = {'alg1': 's', 'chain': 'd', 'relevantRandom': '^', 'random': '^', 'nq': '+'}
+#colorMap = {'alg1': 'g', 'chain': 'r', 'relevantRandom': 'm', 'random': 'm', 'nq': 'c'}
 
 legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
-           'alg1': 'MMRQ-k', 'chain': 'CoA',\
-           'alg1mr': 'MMRQ-k ($MR$)', 'chainmr': 'CoA ($MR$)',\
-           'alg1mrk': 'MMRQ-k ($MR_k$)', 'chainmrk': 'CoA ($MR_k$)',\
+           'alg1': 'MMRQ-k',
+           'chain': 'CoA', 'naiveChain': 'Naive CoA',\
            'relevantRandom': 'Random (rel. feat.)', 'random': 'Random', 'nq': 'No Query'}
 
 
@@ -24,10 +22,9 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 trials = 300
 excluded = set()
 
-#methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-methods = ['alg1', 'chain']
-kRange = [1, 2, 3]
-nRange = [10, 15]
+methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
+kRange = [1, 2, 3, 4]
+nRange = [10]
 
 def excludeFailedExperiments():
   for r in range(trials):
@@ -37,7 +34,7 @@ def excludeFailedExperiments():
       if ret == 'INITIALIZED':
         excluded.add(r)
   
-  excluded.update([30, 36, 184])
+  #excluded.update([30, 36, 184])
   print 'excluded', excluded
 
 def maximumRegretK():
@@ -51,7 +48,7 @@ def maximumRegretK():
     print n
     for mr_type in ['mrk']:
       mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
-      title = "Objective is " + mr_label + ", $|\Phi_?| = " + str(n) + "$"
+      title = "$|\Phi_?| = " + str(n) + "$"
       for k in kRange:
         for method in methods:
           # queries that optimize mr_type and measured by mr
@@ -102,14 +99,14 @@ def maximumRegretCVSRelPhi():
   #print relPhiNum
 
   # granularity of x axis
-  gran = 3
+  gran = 1
   bins = range(max(nRange) / gran + 1)
 
   for k in kRange:
     print k
     for mr_type in ['mrk']:
       mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
-      title = "Objective is " + mr_label + ", $k = " + str(k) + "$"
+      title = "$k = " + str(k) + "$"
       print mr_type
 
       xScatter = {}
@@ -147,6 +144,7 @@ def maximumRegretCVSRelPhi():
 
 
 def regret():
+  #FIXME needs update
   mr = {}
   
   #methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
@@ -204,6 +202,7 @@ def plot(x, y, yci, methods, title, xlabel, ylabel, filename):
   pylab.figlegend(*ax.get_legend_handles_labels(), loc = 'upper left')
   figLegend.savefig("legend.pdf", dpi=300, format="pdf")
 
+"""
 def scatter(x, y, methods, title, xlabel, ylabel, filename):
   fig = pylab.figure()
 
@@ -216,6 +215,7 @@ def scatter(x, y, methods, title, xlabel, ylabel, filename):
   pylab.ylabel(ylabel)
   pylab.gcf().subplots_adjust(bottom=0.15, left=0.2)
   fig.savefig(filename + "_scatter.pdf", dpi=300, format="pdf")
+"""
  
 
 def standardErr(data):
@@ -229,6 +229,6 @@ if __name__ == '__main__':
   
   maximumRegretK()
 
-  #maximumRegretCVSRelPhi()
+  maximumRegretCVSRelPhi()
 
   #regret()

@@ -136,10 +136,11 @@ class ConsQueryAgent():
     mrs = {}
 
     # first query to consider
-    q = self.findChaindAdvConstraintQ(k, relFeats, domPis)
+    q = self.findChainedAdvConstraintQ(k, relFeats, domPis)
     
     if len(q) < k: return q # mr = 0 in this case
 
+    # all sufficient features
     allCons = set()
     allCons.update(q)
 
@@ -187,12 +188,16 @@ class ConsQueryAgent():
   
     return mmq
 
-  def findChaindAdvConstraintQ(self, k, relFeats, domPis):
+  def findChainedAdvConstraintQ(self, k, relFeats, domPis, informed=False):
     q = []
     while len(q) < k:
       sizeOfQ = len(q)
-
-      mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
+      
+      if informed:
+        mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k - sizeOfQ, consHuman=True)
+      else:
+        mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k, consHuman=False)
+        
       violatedCons = self.findViolatedConstraints(advPi)
       print 'vio cons', violatedCons
 
