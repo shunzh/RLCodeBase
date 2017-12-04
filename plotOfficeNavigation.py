@@ -37,8 +37,13 @@ def excludeFailedExperiments():
   #excluded.update([30, 36, 184])
   print 'excluded', excluded
 
+# normalize in terms of regret
 def normalize(value, best, worst):
-  return (value - worst) / (best - worst)
+  if best == worst:
+    # just say the algorithm finds the optimal query if this is the case
+    return 0
+  else:
+    return (value - best) / (worst - best)
 
 def maximumRegretK():
   mr = {}
@@ -65,8 +70,14 @@ def maximumRegretK():
               time[method, k, n, mr_type].append(ret['time'])
               q[method, k, n, mr_type].append(ret['q'])
         for method in methods:
+          nmr[method, k, n, mr_type] = []
           for r in range(validTrials):
-            nmr[method, k, n, mr_type].append(normalize(mr[method, k, n, mr_type], mr['alg1', k, n, mr_type], mr['nq', k, n, mr_type]))
+            if method == 'nq':
+              nmr[method, k, n, mr_type].append(1)
+            else:
+              normalizedmr = normalize(mr[method, k, n, mr_type][r], mr['alg1', k, n, mr_type][r], mr['nq', k, n, mr_type][r])
+              if normalizedmr != None:
+                nmr[method, k, n, mr_type].append(normalizedmr)
 
       print 'measured by mr/mrk'
       plot(kRange, lambda method: [mean(mr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(mr[method, _, n, mr_type]) for _ in kRange],
@@ -145,9 +156,15 @@ def maximumRegretCVSRelPhi():
             yScatter[method].append(ret[mr_type])
             
       for method in methodsRelPhi:
-        for n in nRange:
-          for r in range(validTrials):
-            nmr[method, k, n, mr_type].append(normalize(mr[method, k, n, mr_type], mr['alg1', k, n, mr_type], mr['nq', k, n, mr_type]))
+        for bin in bins:
+          nmr[method, k, bin] = []
+          for r in range(len(mr['alg1', k, bin])):
+            if method == 'nq':
+              nmr[method, k, bin].append(1)
+            else:
+              normalizedmr = normalize(mr[method, k, bin][r], mr['alg1', k, bin][r], mr['nq', k, bin][r])
+              if normalizedmr != None:
+                nmr[method, k, bin].append(normalizedmr)
 
       print 'measured by mr/mrk'
       plot([_ * gran for _ in bins], lambda method: [mean(mr[method, k, _]) for _ in bins], lambda method: [standardErr(mr[method, k, _]) for _ in bins],
@@ -252,7 +269,7 @@ if __name__ == '__main__':
   
   #excludeFailedExperiments()
   
-  maximumRegretK()
+  #maximumRegretK()
 
   maximumRegretCVSRelPhi()
 
