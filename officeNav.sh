@@ -1,4 +1,4 @@
-for r in `seq 200 299`
+for r in `seq 0 299`
 do
   for n in 10
   do

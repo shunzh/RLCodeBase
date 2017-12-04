@@ -67,7 +67,6 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   doors = []#[(width / 2, height / 2)]
 
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
-  carpetRewards = [random.random() for _ in range(numOfCarpets)]
 
   lIndex = 0
   dIndexStart = lIndex + 1
@@ -148,11 +147,12 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
       # create some random rewards in the domain to break ties
       return 0
 
+  carpetRewardDict = [-random.random() for _ in range(numOfCarpets)]
   def reward(s, a):
     if s[sIndex] == ON:
       if s[lIndex] in carpets:
         carpetId = carpets.index(s[lIndex])
-        return -carpetRewards[carpetId]
+        return carpetRewardDict[carpetId]
       else:
         return -1
     else:
@@ -167,8 +167,18 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
         return -(x + y)
     else:
       return 0
+    
+  locationRewardDict = {(x, y): -random.random() for x in range(width) for y in range(height)}
+  def locationReward(s, a):
+    if s[sIndex] == ON:
+      if s[lIndex] in carpets:
+        return 0
+      else:
+        return locationRewardDict[s[lIndex]]
+    else:
+      return 0
  
-  rFunc = gradientReward
+  rFunc = locationReward
   gamma = 1
   
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
@@ -199,8 +209,8 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
     print "num of rel feats", len(relFeats)
     pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
 
-  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-  methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
+  #methods = ['brute']
+  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
   for method in methods:
     start = time.time()

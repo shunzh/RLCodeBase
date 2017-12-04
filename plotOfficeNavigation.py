@@ -22,7 +22,7 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 trials = 300
 excluded = set()
 
-methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
+methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 kRange = [1, 2, 3, 4]
 nRange = [10]
 
@@ -37,8 +37,12 @@ def excludeFailedExperiments():
   #excluded.update([30, 36, 184])
   print 'excluded', excluded
 
+def normalize(value, best, worst):
+  return (value - worst) / (best - worst)
+
 def maximumRegretK():
   mr = {}
+  nmr = {}
   time = {}
   q = {}
   
@@ -51,9 +55,7 @@ def maximumRegretK():
       title = "$|\Phi_?| = " + str(n) + "$"
       for k in kRange:
         for method in methods:
-          # queries that optimize mr_type and measured by mr
           mr[method, k, n, mr_type] = []
-          # queries that optimize mr_type and measured by mrk
           time[method, k, n, mr_type] = []
           q[method, k, n, mr_type] = []
           for r in range(trials):
@@ -62,10 +64,17 @@ def maximumRegretK():
               mr[method, k, n, mr_type].append(ret[mr_type])
               time[method, k, n, mr_type].append(ret['time'])
               q[method, k, n, mr_type].append(ret['q'])
-      
+        for method in methods:
+          for r in range(validTrials):
+            nmr[method, k, n, mr_type].append(normalize(mr[method, k, n, mr_type], mr['alg1', k, n, mr_type], mr['nq', k, n, mr_type]))
+
       print 'measured by mr/mrk'
       plot(kRange, lambda method: [mean(mr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(mr[method, _, n, mr_type]) for _ in kRange],
-           methods, title, "k", "Maximum Regret (" + mr_label + ")", "mr_" + str(n) + "_" + mr_type)
+           methods, title, "k", mr_label, "mr_" + str(n) + "_" + mr_type)
+
+      print 'measured by normalized mr/mrk'
+      plot(kRange, lambda method: [mean(nmr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(nmr[method, _, n, mr_type]) for _ in kRange],
+           methods, title, "k", "Normalized " + mr_label, "nmr_" + str(n) + "_" + mr_type)
 
       print 'time'
       plot(kRange, lambda method: [mean(time[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(time[method, _, n, mr_type]) for _ in kRange],
@@ -86,7 +95,10 @@ def maximumRegretK():
 
 def maximumRegretCVSRelPhi():
   mr = {}
+  nmr = {}
   time = {}
+
+  validTrials = trials - len(excluded)
 
   relPhiNum = {}
   for n in nRange:
@@ -104,6 +116,10 @@ def maximumRegretCVSRelPhi():
 
   for k in kRange:
     print k
+    #if k <= 2: methodsRelPhi = ['brute'] + methods
+    #else: methodsRelPhi = methods
+    methodsRelPhi = methods
+
     for mr_type in ['mrk']:
       mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
       title = "$k = " + str(k) + "$"
@@ -111,7 +127,7 @@ def maximumRegretCVSRelPhi():
 
       xScatter = {}
       yScatter = {}
-      for method in methods:
+      for method in methodsRelPhi:
         xScatter[method] = []
         yScatter[method] = []
         for bin in bins: 
@@ -127,16 +143,25 @@ def maximumRegretCVSRelPhi():
             
             xScatter[method].append(relPhiNum[n, r])
             yScatter[method].append(ret[mr_type])
+            
+      for method in methodsRelPhi:
+        for n in nRange:
+          for r in range(validTrials):
+            nmr[method, k, n, mr_type].append(normalize(mr[method, k, n, mr_type], mr['alg1', k, n, mr_type], mr['nq', k, n, mr_type]))
 
       print 'measured by mr/mrk'
       plot([_ * gran for _ in bins], lambda method: [mean(mr[method, k, _]) for _ in bins], lambda method: [standardErr(mr[method, k, _]) for _ in bins],
-           methods, title, "|$\Phi_{rel}$|", "Maximum Regret (" + mr_label + ")", "mrc_" + str(k) + "_" + mr_type)
+           methodsRelPhi, title, "|$\Phi_{rel}$|", mr_label, "mrc_" + str(k) + "_" + mr_type)
+
+      print 'measured by normalized mr/mrk'
+      plot([_ * gran for _ in bins], lambda method: [mean(nmr[method, k, _]) for _ in bins], lambda method: [standardErr(nmr[method, k, _]) for _ in bins],
+           methodsRelPhi, title, "|$\Phi_{rel}$|", "Normalized " + mr_label, "nmrc_" + str(k) + "_" + mr_type)
 
       #scatter(xScatter, yScatter, methods, title, "|$\Phi_{rel}$|", "Maximum Regret (" + mr_label + ")", "mrc_" + str(k) + "_" + mr_type)
 
       print 'time'
       plot([_ * gran for _ in bins], lambda method: [mean(time[method, k, _]) for _ in bins], lambda method: [standardErr(time[method, k, _]) for _ in bins],
-           methods, title, "|$\Phi_{rel}$|", "Computation Time (sec.)", "tc_" + str(k) + "_" + mr_type)
+           methodsRelPhi, title, "|$\Phi_{rel}$|", "Computation Time (sec.)", "tc_" + str(k) + "_" + mr_type)
 
       print 'ratio of finding mmr-q'
       plot([_ * gran for _ in bins], lambda method: [100.0 * sum(mr[method, k, bin][_] == mr['alg1', k, bin][_] for _ in range(len(mr['alg1', k, bin]))) / (len(mr['alg1', k, bin])) if len(mr['alg1', k, bin]) > 0 else nan for bin in bins], lambda _: [0.0] * len(bins),
@@ -225,7 +250,7 @@ if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
   
-  excludeFailedExperiments()
+  #excludeFailedExperiments()
   
   maximumRegretK()
 

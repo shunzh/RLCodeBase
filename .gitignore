@@ -60,10 +60,9 @@ docs/_build/
 # experiments should be ignored
 eval_*
 *.dat
+*.pkl
 
 # condor
-*.pkl
 *.out
 *.tar.gz
 *.pdf
-experiments
