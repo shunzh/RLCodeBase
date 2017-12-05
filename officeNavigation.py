@@ -288,8 +288,8 @@ if __name__ == '__main__':
   constrainHuman = False
   dry = False # do not safe to files if dry run
 
-  numOfCarpets = 10
-  size = 6
+  numOfCarpets = 15
+  size = 10
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:d')

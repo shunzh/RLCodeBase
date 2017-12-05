@@ -1,5 +1,6 @@
 import pickle
 from numpy import mean, std, sqrt, nan
+import numpy
 import matplotlib
 import pylab
 from matplotlib.ticker import FormatStrFormatter
@@ -10,7 +11,7 @@ markers = {'reallyBrute': 'bo--', 'brute': 'bo-',\
            'relevantRandom': 'm^-', 'random': 'm^--', 'nq': 'c+-'}
 
 #markerStyle = {'alg1': 's', 'chain': 'd', 'relevantRandom': '^', 'random': '^', 'nq': '+'}
-#colorMap = {'alg1': 'g', 'chain': 'r', 'relevantRandom': 'm', 'random': 'm', 'nq': 'c'}
+colorMap = {'alg1': 'g', 'chain': 'r', 'relevantRandom': 'm', 'random': 'm', 'nq': 'c'}
 
 legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
            'alg1': 'MMRQ-k',
@@ -22,7 +23,6 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 trials = 300
 excluded = set()
 
-methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 kRange = [1, 2, 3, 4]
 nRange = [10]
 
@@ -40,16 +40,19 @@ def excludeFailedExperiments():
 # normalize in terms of regret
 def normalize(value, best, worst):
   if best == worst:
-    # just say the algorithm finds the optimal query if this is the case
-    return 0
+    # makes no sense
+    return None
   else:
     return (value - best) / (worst - best)
 
 def maximumRegretK():
   mr = {}
-  nmr = {}
+  nmr = {} # normalized mr
+  dmr = {} # delta mr
   time = {}
   q = {}
+  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
   
   validTrials = trials - len(excluded)
 
@@ -65,19 +68,26 @@ def maximumRegretK():
           q[method, k, n, mr_type] = []
           for r in range(trials):
             if r not in excluded:
-              ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
-              mr[method, k, n, mr_type].append(ret[mr_type])
-              time[method, k, n, mr_type].append(ret['time'])
-              q[method, k, n, mr_type].append(ret['q'])
+              try:
+                ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+                mr[method, k, n, mr_type].append(ret[mr_type])
+                time[method, k, n, mr_type].append(ret['time'])
+                q[method, k, n, mr_type].append(ret['q'])
+              except IOError:
+                print 'not reading', method, k, n, r
+
         for method in methods:
           nmr[method, k, n, mr_type] = []
+          dmr[method, k, n, mr_type] = []
           for r in range(validTrials):
-            if method == 'nq':
-              nmr[method, k, n, mr_type].append(1)
-            else:
-              normalizedmr = normalize(mr[method, k, n, mr_type][r], mr['alg1', k, n, mr_type][r], mr['nq', k, n, mr_type][r])
-              if normalizedmr != None:
-                nmr[method, k, n, mr_type].append(normalizedmr)
+            normalizedmr = normalize(mr[method, k, n, mr_type][r], mr['alg1', k, n, mr_type][r], mr['nq', k, n, mr_type][r])
+            if normalizedmr != None:
+              nmr[method, k, n, mr_type].append(normalizedmr)
+            
+            dmr[method, k, n, mr_type].append(mr[method, k, n, mr_type][r] - mr['alg1', k, n, mr_type][r])
+            
+          mrkFrequency(dmr[method, k, n, mr_type], method, legends[method] + ", k = " + str(k), "$MR(\Phi_q) - MR(\Phi_q^{MMR})$", "Frequency",
+                       "mrkFreq_" + method + "_" + str(n) + "_" + str(k))
 
       print 'measured by mr/mrk'
       plot(kRange, lambda method: [mean(mr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(mr[method, _, n, mr_type]) for _ in kRange],
@@ -95,19 +105,22 @@ def maximumRegretK():
       print 'ratio of finding mmr-q'
       plot(kRange, lambda method: [100.0 * sum(mr[method, k, n, mr_type][_] == mr['alg1', k, n, mr_type][_] for _ in range(validTrials)) / validTrials for k in kRange], lambda _: [0.0] * len(kRange),
            methods, title, "k", "% of Finding a MMR Query", "ratiok_" + str(n) + "_" + mr_type)
-
+  
+  """
   print 'debug'
   validSeq = [_ for _ in range(trials) if _ not in excluded]
   for n in nRange:
     for k in kRange:
       print k, n, {validSeq[r]: mr['alg1', k, n, 'mrk'][r] - mr['chain', k, n, 'mrk'][r] for r in range(validTrials) if
                    mr['alg1', k, n, 'mrk'][r] - mr['chain', k, n, 'mrk'][r] != 0}
+  """
 
 
 def maximumRegretCVSRelPhi():
   mr = {}
-  nmr = {}
+  nmr = {} # normalized mr
   time = {}
+  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
   validTrials = trials - len(excluded)
 
@@ -127,9 +140,6 @@ def maximumRegretCVSRelPhi():
 
   for k in kRange:
     print k
-    #if k <= 2: methodsRelPhi = ['brute'] + methods
-    #else: methodsRelPhi = methods
-    methodsRelPhi = methods
 
     for mr_type in ['mrk']:
       mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
@@ -138,7 +148,7 @@ def maximumRegretCVSRelPhi():
 
       xScatter = {}
       yScatter = {}
-      for method in methodsRelPhi:
+      for method in methods:
         xScatter[method] = []
         yScatter[method] = []
         for bin in bins: 
@@ -148,6 +158,7 @@ def maximumRegretCVSRelPhi():
         for n in nRange:
           for r in range(trials):
             if r in excluded: continue
+            #FIXME weird to read the data file multiple times, but we are representing in a different way. should be fine.
             ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
             mr[method, k, relPhiNum[n, r] / gran].append(ret[mr_type])
             time[method, k, relPhiNum[n, r] / gran].append(ret['time'])
@@ -155,30 +166,27 @@ def maximumRegretCVSRelPhi():
             xScatter[method].append(relPhiNum[n, r])
             yScatter[method].append(ret[mr_type])
             
-      for method in methodsRelPhi:
+      for method in methods:
         for bin in bins:
           nmr[method, k, bin] = []
           for r in range(len(mr['alg1', k, bin])):
-            if method == 'nq':
-              nmr[method, k, bin].append(1)
-            else:
-              normalizedmr = normalize(mr[method, k, bin][r], mr['alg1', k, bin][r], mr['nq', k, bin][r])
-              if normalizedmr != None:
-                nmr[method, k, bin].append(normalizedmr)
+            normalizedmr = normalize(mr[method, k, bin][r], mr['alg1', k, bin][r], mr['nq', k, bin][r])
+            if normalizedmr != None:
+              nmr[method, k, bin].append(normalizedmr)
 
       print 'measured by mr/mrk'
       plot([_ * gran for _ in bins], lambda method: [mean(mr[method, k, _]) for _ in bins], lambda method: [standardErr(mr[method, k, _]) for _ in bins],
-           methodsRelPhi, title, "|$\Phi_{rel}$|", mr_label, "mrc_" + str(k) + "_" + mr_type)
+           methods, title, "|$\Phi_{rel}$|", mr_label, "mrc_" + str(k) + "_" + mr_type)
 
       print 'measured by normalized mr/mrk'
       plot([_ * gran for _ in bins], lambda method: [mean(nmr[method, k, _]) for _ in bins], lambda method: [standardErr(nmr[method, k, _]) for _ in bins],
-           methodsRelPhi, title, "|$\Phi_{rel}$|", "Normalized " + mr_label, "nmrc_" + str(k) + "_" + mr_type)
+           methods, title, "|$\Phi_{rel}$|", "Normalized " + mr_label, "nmrc_" + str(k) + "_" + mr_type)
 
       #scatter(xScatter, yScatter, methods, title, "|$\Phi_{rel}$|", "Maximum Regret (" + mr_label + ")", "mrc_" + str(k) + "_" + mr_type)
 
       print 'time'
       plot([_ * gran for _ in bins], lambda method: [mean(time[method, k, _]) for _ in bins], lambda method: [standardErr(time[method, k, _]) for _ in bins],
-           methodsRelPhi, title, "|$\Phi_{rel}$|", "Computation Time (sec.)", "tc_" + str(k) + "_" + mr_type)
+           methods, title, "|$\Phi_{rel}$|", "Computation Time (sec.)", "tc_" + str(k) + "_" + mr_type)
 
       print 'ratio of finding mmr-q'
       plot([_ * gran for _ in bins], lambda method: [100.0 * sum(mr[method, k, bin][_] == mr['alg1', k, bin][_] for _ in range(len(mr['alg1', k, bin]))) / (len(mr['alg1', k, bin])) if len(mr['alg1', k, bin]) > 0 else nan for bin in bins], lambda _: [0.0] * len(bins),
@@ -244,21 +252,19 @@ def plot(x, y, yci, methods, title, xlabel, ylabel, filename):
   pylab.figlegend(*ax.get_legend_handles_labels(), loc = 'upper left')
   figLegend.savefig("legend.pdf", dpi=300, format="pdf")
 
-"""
-def scatter(x, y, methods, title, xlabel, ylabel, filename):
+def mrkFrequency(x, method, title, xlabel, ylabel, filename):
   fig = pylab.figure()
 
   ax = pylab.gca()
-  for method in methods:
-    ax.scatter(x[method], y[method], marker=markerStyle[method], color=colorMap[method])
+  weights = numpy.ones_like(x)/float(len(x))
+  ax.hist(x, color=colorMap[method], weights=weights)
 
   pylab.title(title)
   pylab.xlabel(xlabel)
   pylab.ylabel(ylabel)
-  pylab.gcf().subplots_adjust(bottom=0.15, left=0.2)
-  fig.savefig(filename + "_scatter.pdf", dpi=300, format="pdf")
-"""
- 
+  pylab.ylim([0, 1])
+  pylab.gcf().subplots_adjust(bottom=0.2, left=0.2)
+  fig.savefig(filename + ".pdf", dpi=300, format="pdf")
 
 def standardErr(data):
   return std(data) / sqrt(len(data))
@@ -269,8 +275,8 @@ if __name__ == '__main__':
   
   #excludeFailedExperiments()
   
-  #maximumRegretK()
+  maximumRegretK()
 
-  maximumRegretCVSRelPhi()
+  #maximumRegretCVSRelPhi()
 
   #regret()
