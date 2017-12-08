@@ -1,0 +1,4 @@
+convert mrkFreq_chain_10_2.pdf mrkFreq_naiveChain_10_2.pdf mrkFreq_relevantRandom_10_2.pdf mrkFreq_random_10_2.pdf mrkFreq_nq_10_2.pdf +append mrkFreq_10_2.png
+convert mrkFreq_chain_10_3.pdf mrkFreq_naiveChain_10_3.pdf mrkFreq_relevantRandom_10_3.pdf mrkFreq_random_10_3.pdf mrkFreq_nq_10_3.pdf +append mrkFreq_10_3.png
+convert mrkFreq_chain_10_4.pdf mrkFreq_naiveChain_10_4.pdf mrkFreq_relevantRandom_10_4.pdf mrkFreq_random_10_4.pdf mrkFreq_nq_10_4.pdf +append mrkFreq_10_4.png
+convert mrkFreq_10_2.png mrkFreq_10_3.png mrkFreq_10_4.png -append mrkFreq.png

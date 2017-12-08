@@ -194,7 +194,7 @@ class ConsQueryAgent():
       sizeOfQ = len(q)
       
       if informed:
-        mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k - sizeOfQ, consHuman=True)
+        mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k - sizeOfQ, consHuman=True, tolerated=q)
       else:
         mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k, consHuman=False)
         
@@ -267,11 +267,12 @@ class ConsQueryAgent():
 
     return pis
 
-  def findMRAdvPi(self, q, relFeats, domPis, k, consHuman=None):
+  def findMRAdvPi(self, q, relFeats, domPis, k, consHuman=None, tolerated=[]):
     """
     Find the adversarial policy given q and domPis
     
     consHuman can be set to override self.constrainHuman
+    makesure that |humanViolated \ tolerated| <= k
     
     Now searching over all dominating policies, maybe take some time.. can use MILP instead?
     """
@@ -284,7 +285,7 @@ class ConsQueryAgent():
       humanViolated = self.findViolatedConstraints(pi)
       humanValue = self.computeValue(pi)
 
-      if consHuman and len(humanViolated) > k:
+      if consHuman and len(set(humanViolated).difference(tolerated)) > k:
         # we do not consider the case where the human's optimal policy violates more than k constraints
         # unfair to compare.
         continue

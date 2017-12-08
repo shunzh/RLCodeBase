@@ -11,7 +11,7 @@ markers = {'reallyBrute': 'bo--', 'brute': 'bo-',\
            'relevantRandom': 'm^-', 'random': 'm^--', 'nq': 'c+-'}
 
 #markerStyle = {'alg1': 's', 'chain': 'd', 'relevantRandom': '^', 'random': '^', 'nq': '+'}
-colorMap = {'alg1': 'g', 'chain': 'r', 'relevantRandom': 'm', 'random': 'm', 'nq': 'c'}
+colorMap = {'alg1': 'g', 'chain': 'r', 'naiveChain': 'r', 'relevantRandom': 'm', 'random': 'm', 'nq': 'c'}
 
 legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
            'alg1': 'MMRQ-k',
@@ -20,10 +20,10 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 
 
 # shared for all functions
-trials = 300
+trials = 100
 excluded = set()
 
-kRange = [1, 2, 3, 4]
+kRange = range(10)
 nRange = [10]
 
 def excludeFailedExperiments():
@@ -51,11 +51,18 @@ def maximumRegretK():
   dmr = {} # delta mr
   time = {}
   q = {}
-  #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
   
   validTrials = trials - len(excluded)
 
+  relPhiNum = {}
+  for n in nRange:
+    for r in range(trials):
+      if r in excluded: continue
+      domainFileName = 'domain_' + str(n) + '_' + str(r) + '.pkl'
+      (relFeats, domPis, domPiTime) = pickle.load(open(domainFileName, 'rb'))
+      relPhiNum[n, r] = len(relFeats)
+ 
   for n in nRange:
     print n
     for mr_type in ['mrk']:
@@ -97,9 +104,12 @@ def maximumRegretK():
       plot(kRange, lambda method: [mean(nmr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(nmr[method, _, n, mr_type]) for _ in kRange],
            methods, title, "k", "Normalized " + mr_label, "nmr_" + str(n) + "_" + mr_type)
 
+      """
+      # FIXME may require plotting brute force as well
       print 'time'
       plot(kRange, lambda method: [mean(time[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(time[method, _, n, mr_type]) for _ in kRange],
            methods, title, "k", "Computation Time (sec.)", "t_" + str(n) + "_" + mr_type)
+      """
 
       # COMPARING WITH ALG1 for now
       print 'ratio of finding mmr-q'
@@ -111,8 +121,10 @@ def maximumRegretK():
   validSeq = [_ for _ in range(trials) if _ not in excluded]
   for n in nRange:
     for k in kRange:
-      print k, n, {validSeq[r]: mr['alg1', k, n, 'mrk'][r] - mr['chain', k, n, 'mrk'][r] for r in range(validTrials) if
-                   mr['alg1', k, n, 'mrk'][r] - mr['chain', k, n, 'mrk'][r] != 0}
+      print k, n, [(validSeq[r], relPhiNum[n, r], mr['chain', k, n, 'mrk'][r] - mr['naiveChain', k, n, 'mrk'][r],
+                    len(q['chain', k, n, 'mrk'][r]), len(q['naiveChain', k, n, 'mrk'][r]))
+                   for r in range(validTrials) if
+                   mr['chain', k, n, 'mrk'][r] > mr['naiveChain', k, n, 'mrk'][r]]
   """
 
 
@@ -120,7 +132,7 @@ def maximumRegretCVSRelPhi():
   mr = {}
   nmr = {} # normalized mr
   time = {}
-  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
 
   validTrials = trials - len(excluded)
 
@@ -201,7 +213,7 @@ def regret():
   methods = ['alg1']
   legends = ['alg1mr', 'alg1mrk']
 
-  pRange = [0.1, 0.15, 0.2, 0.5, 0.8, 1]
+  pRange = [0.1, 0.2, 0.5, 0.8, 0.9]
 
   for n in nRange:
     print n
@@ -265,6 +277,8 @@ def mrkFrequency(x, method, title, xlabel, ylabel, filename):
   pylab.ylim([0, 1])
   pylab.gcf().subplots_adjust(bottom=0.2, left=0.2)
   fig.savefig(filename + ".pdf", dpi=300, format="pdf")
+  
+  pylab.close()
 
 def standardErr(data):
   return std(data) / sqrt(len(data))

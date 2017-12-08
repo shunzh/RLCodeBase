@@ -209,8 +209,8 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
     print "num of rel feats", len(relFeats)
     pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
 
-  #methods = ['brute']
-  methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+  methods = ['chain']
+  #methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
 
   for method in methods:
     start = time.time()
@@ -247,30 +247,26 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
 
     print method, q
 
-    mr = None
     mrk, advPi = agent.findMRAdvPi(q, relFeats, domPis, k, consHuman=True)
 
     regrets = {}
-    """
+
     # for print out regret (not maximum regret)
-    for portionOfViolableCons in [0.1, 0.15, 0.2, 0.5, 0.8, 1]:
+    for portionOfViolableCons in [0.1, 0.2, 0.5, 0.8, 0.9]:
       # some decoupling
-      numpy.random.seed(int(10 * portionOfViolableCons) + rnd)
+      numpy.random.seed(int(10 * portionOfViolableCons + rnd))
       violableIndices = numpy.random.choice(range(len(agent.allCons)), int(len(agent.allCons) * portionOfViolableCons), replace=False)
-      print violableIndices
       violableCons = [agent.allCons[_] for _ in violableIndices]
     
       regrets[portionOfViolableCons] = agent.findRegret(q, violableCons)
-    """
 
-    print mr, mrk, regrets, runTime
+    print mrk, regrets, runTime
     
     if not dry:
-      saveToFile(method, k, numOfCarpets, constrainHuman, q, mr, mrk, runTime, regrets)
+      saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regrets)
 
-def saveToFile(method, k, numOfCarpets, constrainHuman, q, mr, mrk, runTime, regrets):
+def saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regrets):
   ret = {}
-  ret['mr'] = mr
   ret['mrk'] = mrk
   ret['regrets'] = regrets
   ret['time'] = runTime
@@ -288,8 +284,8 @@ if __name__ == '__main__':
   constrainHuman = False
   dry = False # do not safe to files if dry run
 
-  numOfCarpets = 15
-  size = 10
+  numOfCarpets = 10
+  size = 6
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:d')
