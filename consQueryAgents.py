@@ -252,7 +252,10 @@ class ConsQueryAgent():
     hValue = self.computeValue(humanPi)
     rValue = self.computeValue(robotPi)
     
-    return hValue - rValue
+    regret = hValue - rValue
+    assert regret >= -0.00001, 'human %f, robot %f' % (hValue, rValue)
+
+    return regret
 
   def findRobotDomPis(self, q, relFeats, domPis):
     """

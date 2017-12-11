@@ -20,11 +20,13 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 
 
 # shared for all functions
-trials = 100
+trials = 300
 excluded = set()
 
 kRange = range(10)
+#kRange = range(1, 5)
 nRange = [10]
+pRange = [0.1, 0.2, 0.5, 0.8, 0.9]
 
 def excludeFailedExperiments():
   for r in range(trials):
@@ -51,6 +53,9 @@ def maximumRegretK():
   dmr = {} # delta mr
   time = {}
   q = {}
+  regrets = {}
+
+  #methods = ['brute', 'alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
   methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
   
   validTrials = trials - len(excluded)
@@ -73,6 +78,8 @@ def maximumRegretK():
           mr[method, k, n, mr_type] = []
           time[method, k, n, mr_type] = []
           q[method, k, n, mr_type] = []
+          for p in pRange:
+            regrets[method, k, n, mr_type, p] = []
           for r in range(trials):
             if r not in excluded:
               try:
@@ -80,6 +87,8 @@ def maximumRegretK():
                 mr[method, k, n, mr_type].append(ret[mr_type])
                 time[method, k, n, mr_type].append(ret['time'])
                 q[method, k, n, mr_type].append(ret['q'])
+                for p in pRange:
+                  regrets[method, k, n, mr_type, p].append(ret['regrets'][p])
               except IOError:
                 print 'not reading', method, k, n, r
 
@@ -95,6 +104,9 @@ def maximumRegretK():
             
           mrkFrequency(dmr[method, k, n, mr_type], method, legends[method] + ", k = " + str(k), "$MR(\Phi_q) - MR(\Phi_q^{MMR})$", "Frequency",
                        "mrkFreq_" + method + "_" + str(n) + "_" + str(k))
+        
+        plot(pRange, lambda method: [mean(regrets[method, k, n, mr_type, _]) for _ in pRange], lambda method: [standardErr(regrets[method, k, n, mr_type, _]) for _ in pRange],
+             methods, title, "% of Changeable Features", "Regret", str(n) + "_" + str(k) + "_regret")
 
       print 'measured by mr/mrk'
       plot(kRange, lambda method: [mean(mr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(mr[method, _, n, mr_type]) for _ in kRange],
@@ -104,18 +116,17 @@ def maximumRegretK():
       plot(kRange, lambda method: [mean(nmr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(nmr[method, _, n, mr_type]) for _ in kRange],
            methods, title, "k", "Normalized " + mr_label, "nmr_" + str(n) + "_" + mr_type)
 
-      """
-      # FIXME may require plotting brute force as well
-      print 'time'
-      plot(kRange, lambda method: [mean(time[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(time[method, _, n, mr_type]) for _ in kRange],
-           methods, title, "k", "Computation Time (sec.)", "t_" + str(n) + "_" + mr_type)
-      """
-
       # COMPARING WITH ALG1 for now
       print 'ratio of finding mmr-q'
       plot(kRange, lambda method: [100.0 * sum(mr[method, k, n, mr_type][_] == mr['alg1', k, n, mr_type][_] for _ in range(validTrials)) / validTrials for k in kRange], lambda _: [0.0] * len(kRange),
            methods, title, "k", "% of Finding a MMR Query", "ratiok_" + str(n) + "_" + mr_type)
+
+      # FIXME may require plotting brute force as well
+      print 'time'
+      plot(kRange, lambda method: [mean(time[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(time[method, _, n, mr_type]) for _ in kRange],
+           methods, title, "k", "Computation Time (sec.)", "t_" + str(n) + "_" + mr_type)
   
+  assert all(_ >= 0 for _ in regrets.values())
   """
   print 'debug'
   validSeq = [_ for _ in range(trials) if _ not in excluded]
@@ -124,7 +135,7 @@ def maximumRegretK():
       print k, n, [(validSeq[r], relPhiNum[n, r], mr['chain', k, n, 'mrk'][r] - mr['naiveChain', k, n, 'mrk'][r],
                     len(q['chain', k, n, 'mrk'][r]), len(q['naiveChain', k, n, 'mrk'][r]))
                    for r in range(validTrials) if
-                   mr['chain', k, n, 'mrk'][r] > mr['naiveChain', k, n, 'mrk'][r]]
+                   k == relPhiNum[n ,r] and mr['chain', k, n, 'mrk'][r] > mr['naiveChain', k, n, 'mrk'][r]]
   """
 
 
@@ -205,38 +216,6 @@ def maximumRegretCVSRelPhi():
            methods, title, "|$\Phi_{rel}$|", "% of Finding a MMR Query", "ratioc_" + str(k) + "_" + mr_type)
 
 
-def regret():
-  #FIXME needs update
-  mr = {}
-  
-  #methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
-  methods = ['alg1']
-  legends = ['alg1mr', 'alg1mrk']
-
-  pRange = [0.1, 0.2, 0.5, 0.8, 0.9]
-
-  for n in nRange:
-    print n
-    for k in kRange:
-      print k
-      title = "$|\Phi_?| = "+ str(n) + "$, $k = " + str(k) + "$"
-
-      for mr_type in ['mr', 'mrk']:
-        for method in methods:
-          ret = {}
-          for p in pRange:
-            mr[method + mr_type, k, n, p] = []
-
-          for r in range(trials):
-            if r in excluded: continue
-            ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
-            for p in pRange:
-              #if method == 'random' and p == 0.1: print [(_, ret[_]['mr']) for _ in range(trials)]
-              mr[method + mr_type, k, n, p].append(ret['regrets'][p])
-
-      plot(pRange, lambda method: [mean(mr[method, k, n, _]) for _ in pRange], lambda method: [standardErr(mr[method, k, n, _]) for _ in pRange],
-           legends, title, "% of Changeable Features", "Regret", str(n) + "_" + str(k) + "_regret")
-
 def printTex(y, yci, t, tci, methods, legends):
   for i in range(len(methods)):
     method = methods[i]
@@ -263,6 +242,8 @@ def plot(x, y, yci, methods, title, xlabel, ylabel, filename):
   figLegend = pylab.figure(figsize = (4.5, 3))
   pylab.figlegend(*ax.get_legend_handles_labels(), loc = 'upper left')
   figLegend.savefig("legend.pdf", dpi=300, format="pdf")
+  
+  pylab.close()
 
 def mrkFrequency(x, method, title, xlabel, ylabel, filename):
   fig = pylab.figure()
@@ -292,5 +273,3 @@ if __name__ == '__main__':
   maximumRegretK()
 
   #maximumRegretCVSRelPhi()
-
-  #regret()

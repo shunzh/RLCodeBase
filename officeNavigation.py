@@ -209,8 +209,7 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
     print "num of rel feats", len(relFeats)
     pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
 
-  methods = ['chain']
-  #methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
+  methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
 
   for method in methods:
     start = time.time()
@@ -249,6 +248,7 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
 
     mrk, advPi = agent.findMRAdvPi(q, relFeats, domPis, k, consHuman=True)
 
+    """
     regrets = {}
 
     # for print out regret (not maximum regret)
@@ -259,16 +259,22 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
       violableCons = [agent.allCons[_] for _ in violableIndices]
     
       regrets[portionOfViolableCons] = agent.findRegret(q, violableCons)
+    """
+    numpy.random.seed(2 * (1 + rnd)) # avoid weird coupling, e.g., the ones that are queried are exactly the true changeable ones
+    violableIndices = numpy.random.choice(range(len(agent.allCons)), k, replace=False)
+    violableCons = [agent.allCons[_] for _ in violableIndices]
+  
+    regret = agent.findRegret(q, violableCons)
 
-    print mrk, regrets, runTime
+    print mrk, regret, runTime
     
     if not dry:
-      saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regrets)
+      saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
 
 def saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regrets):
   ret = {}
   ret['mrk'] = mrk
-  ret['regrets'] = regrets
+  ret['regret'] = regrets
   ret['time'] = runTime
   ret['q'] = q
 
