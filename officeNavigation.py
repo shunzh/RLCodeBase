@@ -211,6 +211,11 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
 
   methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
 
+  # decide the true changeable features for expected regrets
+  numpy.random.seed(2 * (1 + rnd)) # avoid weird coupling, e.g., the ones that are queried are exactly the true changeable ones
+  violableIndices = numpy.random.choice(range(len(agent.allCons)), k, replace=False)
+  violableCons = [agent.allCons[_] for _ in violableIndices]
+
   for method in methods:
     start = time.time()
     if method == 'brute':
@@ -260,10 +265,6 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
     
       regrets[portionOfViolableCons] = agent.findRegret(q, violableCons)
     """
-    numpy.random.seed(2 * (1 + rnd)) # avoid weird coupling, e.g., the ones that are queried are exactly the true changeable ones
-    violableIndices = numpy.random.choice(range(len(agent.allCons)), k, replace=False)
-    violableCons = [agent.allCons[_] for _ in violableIndices]
-  
     regret = agent.findRegret(q, violableCons)
 
     print mrk, regret, runTime
@@ -291,7 +292,7 @@ if __name__ == '__main__':
   dry = False # do not safe to files if dry run
 
   numOfCarpets = 10
-  size = 6
+  size = 10
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:d')

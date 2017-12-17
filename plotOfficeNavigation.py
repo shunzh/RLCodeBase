@@ -11,7 +11,7 @@ markers = {'reallyBrute': 'bo--', 'brute': 'bo-',\
            'relevantRandom': 'm^-', 'random': 'm^--', 'nq': 'c+-'}
 
 #markerStyle = {'alg1': 's', 'chain': 'd', 'relevantRandom': '^', 'random': '^', 'nq': '+'}
-colorMap = {'alg1': 'g', 'chain': 'r', 'naiveChain': 'r', 'relevantRandom': 'm', 'random': 'm', 'nq': 'c'}
+colorMap = {'brute': 'b', 'alg1': 'g', 'chain': 'r', 'naiveChain': 'r', 'relevantRandom': 'm', 'random': 'm', 'nq': 'c'}
 
 legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
            'alg1': 'MMRQ-k',
@@ -53,7 +53,7 @@ def maximumRegretK():
   dmr = {} # delta mr
   time = {}
   q = {}
-  regrets = {}
+  regret = {}
 
   #methods = ['brute', 'alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
   methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
@@ -67,6 +67,9 @@ def maximumRegretK():
       domainFileName = 'domain_' + str(n) + '_' + str(r) + '.pkl'
       (relFeats, domPis, domPiTime) = pickle.load(open(domainFileName, 'rb'))
       relPhiNum[n, r] = len(relFeats)
+  
+  # plot distribution over # of relevant features
+  #hist(relPhiNum.values(), 'brute', '', '$|\Phi_{rel}|$', 'Frequency', 'numRelPhi')
  
   for n in nRange:
     print n
@@ -78,8 +81,7 @@ def maximumRegretK():
           mr[method, k, n, mr_type] = []
           time[method, k, n, mr_type] = []
           q[method, k, n, mr_type] = []
-          for p in pRange:
-            regrets[method, k, n, mr_type, p] = []
+          regret[method, k, n, mr_type] = []
           for r in range(trials):
             if r not in excluded:
               try:
@@ -87,8 +89,7 @@ def maximumRegretK():
                 mr[method, k, n, mr_type].append(ret[mr_type])
                 time[method, k, n, mr_type].append(ret['time'])
                 q[method, k, n, mr_type].append(ret['q'])
-                for p in pRange:
-                  regrets[method, k, n, mr_type, p].append(ret['regrets'][p])
+                #regret[method, k, n, mr_type].append(ret['regret'])
               except IOError:
                 print 'not reading', method, k, n, r
 
@@ -102,12 +103,9 @@ def maximumRegretK():
             
             dmr[method, k, n, mr_type].append(mr[method, k, n, mr_type][r] - mr['alg1', k, n, mr_type][r])
             
-          mrkFrequency(dmr[method, k, n, mr_type], method, legends[method] + ", k = " + str(k), "$MR(\Phi_q) - MR(\Phi_q^{MMR})$", "Frequency",
+          hist(dmr[method, k, n, mr_type], method, legends[method] + ", k = " + str(k), "$MR(\Phi_q) - MR(\Phi_q^{MMR})$", "Frequency",
                        "mrkFreq_" + method + "_" + str(n) + "_" + str(k))
         
-        plot(pRange, lambda method: [mean(regrets[method, k, n, mr_type, _]) for _ in pRange], lambda method: [standardErr(regrets[method, k, n, mr_type, _]) for _ in pRange],
-             methods, title, "% of Changeable Features", "Regret", str(n) + "_" + str(k) + "_regret")
-
       print 'measured by mr/mrk'
       plot(kRange, lambda method: [mean(mr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(mr[method, _, n, mr_type]) for _ in kRange],
            methods, title, "k", mr_label, "mr_" + str(n) + "_" + mr_type)
@@ -121,12 +119,18 @@ def maximumRegretK():
       plot(kRange, lambda method: [100.0 * sum(mr[method, k, n, mr_type][_] == mr['alg1', k, n, mr_type][_] for _ in range(validTrials)) / validTrials for k in kRange], lambda _: [0.0] * len(kRange),
            methods, title, "k", "% of Finding a MMR Query", "ratiok_" + str(n) + "_" + mr_type)
 
+      """
+      print 'measured by expected regret'
+      plot(kRange, lambda method: [mean(regret[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(regret[method, _, n, mr_type]) for _ in kRange],
+           methods, title, "k", "Expected Regret", "regret_" + str(n) + "_" + mr_type)
+      """
+
       # FIXME may require plotting brute force as well
       print 'time'
       plot(kRange, lambda method: [mean(time[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(time[method, _, n, mr_type]) for _ in kRange],
            methods, title, "k", "Computation Time (sec.)", "t_" + str(n) + "_" + mr_type)
   
-  assert all(_ >= 0 for _ in regrets.values())
+  assert all(_ >= 0 for _ in regret.values())
   """
   print 'debug'
   validSeq = [_ for _ in range(trials) if _ not in excluded]
@@ -245,7 +249,7 @@ def plot(x, y, yci, methods, title, xlabel, ylabel, filename):
   
   pylab.close()
 
-def mrkFrequency(x, method, title, xlabel, ylabel, filename):
+def hist(x, method, title, xlabel, ylabel, filename):
   fig = pylab.figure()
 
   ax = pylab.gca()
