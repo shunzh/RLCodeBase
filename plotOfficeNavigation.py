@@ -23,10 +23,11 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 trials = 300
 excluded = set()
 
-kRange = range(10)
-#kRange = range(1, 5)
+kRange = range(6)
 nRange = [10]
-pRange = [0.1, 0.2, 0.5, 0.8, 0.9]
+
+#methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
 def excludeFailedExperiments():
   for r in range(trials):
@@ -36,7 +37,18 @@ def excludeFailedExperiments():
       if ret == 'INITIALIZED':
         excluded.add(r)
   
-  #excluded.update([30, 36, 184])
+  for n in nRange:
+    for mr_type in ['mrk']:
+      for k in kRange:
+        for method in methods:
+          for r in range(trials):
+            if r not in excluded:
+              try:
+                ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+              except IOError:
+                print 'not reading', method, k, n, r
+                excluded.add(r)
+
   print 'excluded', excluded
 
 # normalize in terms of regret
@@ -54,9 +66,6 @@ def maximumRegretK():
   time = {}
   q = {}
   regret = {}
-
-  #methods = ['brute', 'alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
-  methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
   
   validTrials = trials - len(excluded)
 
@@ -69,7 +78,7 @@ def maximumRegretK():
       relPhiNum[n, r] = len(relFeats)
   
   # plot distribution over # of relevant features
-  #hist(relPhiNum.values(), 'brute', '', '$|\Phi_{rel}|$', 'Frequency', 'numRelPhi')
+  hist(relPhiNum.values(), 'brute', '', '$|\Phi_{rel}|$', 'Frequency', 'numRelPhi')
  
   for n in nRange:
     print n
@@ -119,16 +128,16 @@ def maximumRegretK():
       plot(kRange, lambda method: [100.0 * sum(mr[method, k, n, mr_type][_] == mr['alg1', k, n, mr_type][_] for _ in range(validTrials)) / validTrials for k in kRange], lambda _: [0.0] * len(kRange),
            methods, title, "k", "% of Finding a MMR Query", "ratiok_" + str(n) + "_" + mr_type)
 
-      """
       print 'measured by expected regret'
       plot(kRange, lambda method: [mean(regret[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(regret[method, _, n, mr_type]) for _ in kRange],
            methods, title, "k", "Expected Regret", "regret_" + str(n) + "_" + mr_type)
-      """
 
+      """
       # FIXME may require plotting brute force as well
       print 'time'
       plot(kRange, lambda method: [mean(time[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(time[method, _, n, mr_type]) for _ in kRange],
            methods, title, "k", "Computation Time (sec.)", "t_" + str(n) + "_" + mr_type)
+      """
   
   assert all(_ >= 0 for _ in regret.values())
   """
@@ -147,7 +156,6 @@ def maximumRegretCVSRelPhi():
   mr = {}
   nmr = {} # normalized mr
   time = {}
-  methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
 
   validTrials = trials - len(excluded)
 
@@ -272,8 +280,8 @@ if __name__ == '__main__':
   font = {'size': 20}
   matplotlib.rc('font', **font)
   
-  #excludeFailedExperiments()
+  excludeFailedExperiments()
   
   maximumRegretK()
 
-  #maximumRegretCVSRelPhi()
+  maximumRegretCVSRelPhi()

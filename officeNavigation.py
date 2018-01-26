@@ -253,18 +253,6 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
 
     mrk, advPi = agent.findMRAdvPi(q, relFeats, domPis, k, consHuman=True)
 
-    """
-    regrets = {}
-
-    # for print out regret (not maximum regret)
-    for portionOfViolableCons in [0.1, 0.2, 0.5, 0.8, 0.9]:
-      # some decoupling
-      numpy.random.seed(int(10 * portionOfViolableCons + rnd))
-      violableIndices = numpy.random.choice(range(len(agent.allCons)), int(len(agent.allCons) * portionOfViolableCons), replace=False)
-      violableCons = [agent.allCons[_] for _ in violableIndices]
-    
-      regrets[portionOfViolableCons] = agent.findRegret(q, violableCons)
-    """
     regret = agent.findRegret(q, violableCons)
 
     print mrk, regret, runTime
@@ -272,10 +260,10 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
     if not dry:
       saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
 
-def saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regrets):
+def saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret):
   ret = {}
   ret['mrk'] = mrk
-  ret['regret'] = regrets
+  ret['regret'] = regret
   ret['time'] = runTime
   ret['q'] = q
 
@@ -292,7 +280,7 @@ if __name__ == '__main__':
   dry = False # do not safe to files if dry run
 
   numOfCarpets = 10
-  size = 10
+  size = 6
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:d')
