@@ -13,18 +13,21 @@ class ConsQueryAgent():
   """
   Find queries in constraint-uncertain mdps.
   """
-  def __init__(self, mdp, consStates, constrainHuman=False):
+  def __init__(self, mdp, consStates, goalConsStates=[], constrainHuman=False):
     """
     can't think of a class it should inherit..
 
     mdp: a factored mdp
-    consSets: the set of environmental feature indices
+    consSets: [[states that \phi is changed] for \phi in unknown features]
+    goalConsStates: states where the goals are not satisfied
     """
     self.mdp = mdp
 
     # indices of constraints
     self.consStates = consStates
     self.consIndices = range(len(consStates))
+    
+    self.goalConsStates = goalConsStates
     
     # derive different definition of MR
     self.constrainHuman = constrainHuman
@@ -34,7 +37,8 @@ class ConsQueryAgent():
   def findConstrainedOptPi(self, activeCons):
     mdp = copy.copy(self.mdp)
 
-    mdp['constraints'] = self.constructConstraints(activeCons, mdp)
+    mdp['zeroConstraints'] = self.constructConstraints(activeCons, mdp)\
+                           + [(s, a) for s in self.goalConsStates for a in mdp['A']]
     opt, x = lpDual(**mdp)
 
     return x
@@ -325,18 +329,16 @@ class ConsQueryAgent():
     """
     Construct set of constraint equations by the specification in cons
     """
-    constraints = {}
+    constraints = []
     for con in cons:
       consType, consIdx = con
       if consType == VAR:
-        constraints.update({(s, a): 0 for a in mdp['A']
-                                      for s in self.consStates[consIdx]})
+        constraints += [(s, a) for a in mdp['A'] for s in self.consStates[consIdx]]
       elif consType == NONREVERSED:
-        constraints.update({(s, a): 0 for a in mdp['A']
-                                      for s in self.statesWithDifferentFeats(consIdx, mdp)
-                                      if mdp['terminal'](s)})
+        constraints += [(s, a) for a in mdp['A'] for s in self.statesWithDifferentFeats(consIdx, mdp)
+                        if mdp['terminal'](s)]
       else: raise Exception('unknown constraint type')
-
+    
     return constraints
 
   def computeValue(self, x):

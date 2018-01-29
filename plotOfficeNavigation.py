@@ -20,10 +20,10 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 
 
 # shared for all functions
-trials = 300
+trials = 1000
 excluded = set()
 
-kRange = range(6)
+kRange = range(11)
 nRange = [10]
 
 #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']

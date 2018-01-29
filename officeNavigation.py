@@ -44,10 +44,10 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   width = size
   height = size
   
-  #robot = (0, random.randint(0, height - 1))
-  #switch = (width - 1, random.randint(0, height - 1))
   robot = (0, 0)
   switch = (width - 1, height - 1)
+  
+  horizon = width + height - 2
 
   getBoundedRandLoc = lambda: (random.randint(1, width - 2), random.randint(1, height - 1))
 
@@ -72,16 +72,17 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   dIndexStart = lIndex + 1
   dSize = len(doors)
   sIndex = dIndexStart + dSize
-  # note: time is needed when there are reversible features
+  # time is needed when there are reversible features or a goal constraint
   #tIndex = sIndex + 1
   
   dIndex = range(dIndexStart, dIndexStart + dSize)
   
-  # location, box1, box2, door1, door2, carpet, switch
   allLocations = [(x, y) for x in range(width) for y in range(height)]
+  # cross product of possible values of all features
+  # location, door1, door2, carpets, switch, time
   sSets = [allLocations] +\
           [[CLOSED, OPEN] for _ in doors] +\
-          [[0, 1]]
+          [[0, 1]] #+ [range(horizon)]
   
   directionalActs = [(1, 0), (0, 1), (1, 1)]
   aSets = directionalActs + [TURNOFFSWITCH]
@@ -129,15 +130,22 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
     if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
   
+  """
+  # time elapses
+  def timeOp(s, a):
+    return s[tIndex] + 1
+  """
+
   tFunc = [navigate] +\
           [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
-          [switchOp]
+          [switchOp]# + [timeOp]
 
   s0List = [robot] +\
            [CLOSED for _ in doors] +\
-           [ON]
+           [ON, 0]
   s0 = tuple(s0List)
   
+  #terminal = lambda s: s[tIndex] == horizon
   terminal = lambda s: s[lIndex] == switch
 
   def oldReward(s, a):
@@ -182,11 +190,15 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   gamma = 1
   
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
+  print mdp['S']
 
   # states that should not be visited
   # let's not make carpets features but constraints directly
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
-  agent = ConsQueryAgent(mdp, consStates, constrainHuman)
+  
+  #goalConsStates = filter(lambda s: s[sIndex] == ON and s[tIndex] >= horizon, mdp['S'])
+
+  agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
 
   domainFileName = 'domain_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl'
   if os.path.exists(domainFileName):
