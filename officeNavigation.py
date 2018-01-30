@@ -136,7 +136,7 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
 
   s0List = [robot] +\
            [CLOSED for _ in doors] +\
-           [ON, 0]
+           [ON]
   s0 = tuple(s0List)
   
   terminal = lambda s: s[lIndex] == switch
@@ -183,7 +183,6 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   gamma = 1
   
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
-  print mdp['S']
 
   # states that should not be visited
   # let's not make carpets features but constraints directly
