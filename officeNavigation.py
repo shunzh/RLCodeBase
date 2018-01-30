@@ -49,7 +49,7 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   
   horizon = width + height
 
-  getBoundedRandLoc = lambda: (random.randint(1, width - 2), random.randint(1, height - 1))
+  getBoundedRandLoc = lambda: (random.randint(0, width - 2), random.randint(1, height - 1))
 
   """
   # make sure carpets and robots are not covered by carpets
@@ -73,7 +73,7 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   dSize = len(doors)
   sIndex = dIndexStart + dSize
   # time is needed when there are reversible features or a goal constraint
-  tIndex = sIndex + 1
+  #tIndex = sIndex + 1
   
   dIndex = range(dIndexStart, dIndexStart + dSize)
   
@@ -82,10 +82,10 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   # location, door1, door2, carpets, switch, time
   sSets = [allLocations] +\
           [[CLOSED, OPEN] for _ in doors] +\
-          [[0, 1]] + [range(horizon)]
+          [[0, 1]]
   
   directionalActs = [(1, 0), (0, 1), (1, 1)]
-  aSets = directionalActs #+ [TURNOFFSWITCH]
+  aSets = directionalActs + [TURNOFFSWITCH]
  
   # check what the world is like
   for y in range(height):
@@ -104,9 +104,6 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   def navigate(s, a):
     loc = s[lIndex]
     if a in directionalActs:
-      if loc[0] == width - 1 and loc[1] < height - 1: a = (0, 1)
-      if loc[0] < width - 1 and loc[1] == height - 1: a = (1, 0)
-
       sp = (loc[0] + a[0], loc[1] + a[1])
       # not blocked by borders, closed doors or walls
       if (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
@@ -130,25 +127,19 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   def switchOp(s, a):
     loc = s[lIndex]
     switchState = s[sIndex]
-    #if loc == switch and a == 'turnOffSwitch': switchState = OFF 
-    if loc == switch and a == (1, 1): switchState = OFF 
+    if loc == switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
   
-  # time elapses
-  def timeOp(s, a):
-    return s[tIndex] + 1
-
   tFunc = [navigate] +\
           [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
-          [switchOp] + [timeOp]
+          [switchOp]
 
   s0List = [robot] +\
            [CLOSED for _ in doors] +\
            [ON, 0]
   s0 = tuple(s0List)
   
-  terminal = lambda s: s[tIndex] == horizon
-  #terminal = lambda s: s[lIndex] == switch
+  terminal = lambda s: s[lIndex] == switch
 
   def oldReward(s, a):
     if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
@@ -198,9 +189,9 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   # let's not make carpets features but constraints directly
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
   
-  goalConsStates = filter(lambda s: s[sIndex] == ON and s[tIndex] >= horizon, mdp['S'])
+  #goalConsStates = filter(lambda s: s[sIndex] == ON and s[tIndex] >= horizon, mdp['S'])
 
-  agent = ConsQueryAgent(mdp, consStates, goalConsStates, constrainHuman=constrainHuman)
+  agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
 
   domainFileName = 'domain_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl'
   if os.path.exists(domainFileName):
