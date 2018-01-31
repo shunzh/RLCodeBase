@@ -34,12 +34,17 @@ class ConsQueryAgent():
 
     self.allCons = [(VAR, _) for _ in self.consIndices]
   
-  def findConstrainedOptPi(self, activeCons):
+  def findConstrainedOptPi(self, activeCons, method='lp'):
     mdp = copy.copy(self.mdp)
 
     mdp['zeroConstraints'] = self.constructConstraints(activeCons, mdp)\
                            + [(s, a) for s in self.goalConsStates for a in mdp['A']]
-    opt, x = lpDual(**mdp)
+    if method == 'lp':
+      opt, x = lpDual(**mdp)
+    elif method == 'mcts':
+      x = MCTS(**mdp)
+    else:
+      raise Exception('unknown method')
 
     return x
 
