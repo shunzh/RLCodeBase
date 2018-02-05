@@ -28,6 +28,9 @@ SAMPLE_TIMES = 20
 # keep configuration options for output
 opts = ''
 
+#METHOD = 'lp'
+METHOD = 'mcts'
+
 # define the range of weights be between [-WEIGHT_MAX_VALUE, WEIGHT_MAX_VALUE]
 WEIGHT_MAX_VALUE = 1
 DIMENSION = 3

@@ -92,9 +92,16 @@ def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma=1):
   ret['r'] = rFunc
 
   # t(s, a, s') = \prod t_i(s, a, s_i)
-  #FIXME assume deterministic transitions for now to make the life easier!
   transit = lambda state, action: tuple([t(state, action) for t in tFunc])
-  transFunc = lambda state, action, sp: 1 if sp == transit(state, action) else 0
+  
+  # overriding this function depending on if sp is passed in
+  #FIXME assume deterministic transitions for now to make the life easier!
+  def transFunc(state, action, sp=None):
+    if sp == None:
+      return transit(state, action)
+    else:
+      return 1 if sp == transit(state, action) else 0
+
   ret['T'] = transFunc 
   ret['s0'] = s0
   ret['terminal'] = terminal

@@ -78,6 +78,7 @@ def maximumRegretK():
       relPhiNum[n, r] = len(relFeats)
   
   # plot distribution over # of relevant features
+  print relPhiNum
   hist(relPhiNum.values(), 'brute', '', '$|\Phi_{rel}|$', 'Frequency', 'numRelPhi')
  
   for n in nRange:

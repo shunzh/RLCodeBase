@@ -4,6 +4,7 @@ from util import powerset
 import copy
 import numpy
 import itertools
+import config
 
 VAR = 0
 # not considering reversible features in this branch
@@ -34,14 +35,14 @@ class ConsQueryAgent():
 
     self.allCons = [(VAR, _) for _ in self.consIndices]
   
-  def findConstrainedOptPi(self, activeCons, method='lp'):
+  def findConstrainedOptPi(self, activeCons):
     mdp = copy.copy(self.mdp)
 
     mdp['zeroConstraints'] = self.constructConstraints(activeCons, mdp)\
                            + [(s, a) for s in self.goalConsStates for a in mdp['A']]
-    if method == 'lp':
+    if config.METHOD == 'lp':
       opt, x = lpDual(**mdp)
-    elif method == 'mcts':
+    elif config.METHOD == 'mcts':
       x = MCTS(**mdp)
     else:
       raise Exception('unknown method')
