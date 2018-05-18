@@ -5,6 +5,10 @@ import matplotlib
 import pylab
 from matplotlib.ticker import FormatStrFormatter
 
+# for ijcai submission
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+
 markers = {'reallyBrute': 'bo--', 'brute': 'bo-',\
            'alg1': 'gs-',
            'chain': 'rd-', 'naiveChain': 'rd--',\
@@ -20,31 +24,35 @@ legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
 
 
 # shared for all functions
-trials = 1000
+trials = 1500
 excluded = set()
 
-kRange = range(11)
+# the directory where the experiment results are stored
+dataDir = 'experiments/12.12/'
+
+kRange = lambda method: range(1,4) if method == 'brute' else range(1,11)
 nRange = [10]
 
+# for brute, only k = 0 .. 3 are available
 #methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
 methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
 def excludeFailedExperiments():
   for r in range(trials):
     for n in nRange:
-      domainFileName = 'domain_' + str(n) + '_' + str(r) + '.pkl'
+      domainFileName = dataDir + 'domain_' + str(n) + '_' + str(r) + '.pkl'
       ret = pickle.load(open(domainFileName, 'rb'))
       if ret == 'INITIALIZED':
         excluded.add(r)
   
   for n in nRange:
     for mr_type in ['mrk']:
-      for k in kRange:
-        for method in methods:
+      for method in methods:
+        for k in kRange(method):
           for r in range(trials):
             if r not in excluded:
               try:
-                ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+                ret = pickle.load(open(dataDir + method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
               except IOError:
                 print 'not reading', method, k, n, r
                 excluded.add(r)
@@ -73,7 +81,7 @@ def maximumRegretK():
   for n in nRange:
     for r in range(trials):
       if r in excluded: continue
-      domainFileName = 'domain_' + str(n) + '_' + str(r) + '.pkl'
+      domainFileName = dataDir + 'domain_' + str(n) + '_' + str(r) + '.pkl'
       (relFeats, domPis, domPiTime) = pickle.load(open(domainFileName, 'rb'))
       relPhiNum[n, r] = len(relFeats)
   
@@ -84,10 +92,12 @@ def maximumRegretK():
   for n in nRange:
     print n
     for mr_type in ['mrk']:
-      mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
+      #mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
+      #FIXME call it MR no matter if it's MR or MR_k
+      mr_label = '$MR$'
       title = "$|\Phi_?| = " + str(n) + "$"
-      for k in kRange:
-        for method in methods:
+      for method in methods:
+        for k in kRange(method):
           mr[method, k, n, mr_type] = []
           time[method, k, n, mr_type] = []
           q[method, k, n, mr_type] = []
@@ -95,7 +105,7 @@ def maximumRegretK():
           for r in range(trials):
             if r not in excluded:
               try:
-                ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+                ret = pickle.load(open(dataDir + method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
                 mr[method, k, n, mr_type].append(ret[mr_type])
                 time[method, k, n, mr_type].append(ret['time'])
                 q[method, k, n, mr_type].append(ret['q'])
@@ -103,7 +113,8 @@ def maximumRegretK():
               except IOError:
                 print 'not reading', method, k, n, r
 
-        for method in methods:
+      for method in methods:
+        for k in kRange(method):
           nmr[method, k, n, mr_type] = []
           dmr[method, k, n, mr_type] = []
           for r in range(validTrials):
@@ -116,13 +127,16 @@ def maximumRegretK():
           hist(dmr[method, k, n, mr_type], method, legends[method] + ", k = " + str(k), "$MR(\Phi_q) - MR(\Phi_q^{MMR})$", "Frequency",
                        "mrkFreq_" + method + "_" + str(n) + "_" + str(k))
         
+      """
       print 'measured by mr/mrk'
       plot(kRange, lambda method: [mean(mr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(mr[method, _, n, mr_type]) for _ in kRange],
            methods, title, "k", mr_label, "mr_" + str(n) + "_" + mr_type)
 
+      """
       print 'measured by normalized mr/mrk'
-      plot(kRange, lambda method: [mean(nmr[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(nmr[method, _, n, mr_type]) for _ in kRange],
+      plot(kRange, lambda method: [mean(nmr[method, _, n, mr_type]) for _ in kRange(method)], lambda method: [standardErr(nmr[method, _, n, mr_type]) for _ in kRange(method)],
            methods, title, "k", "Normalized " + mr_label, "nmr_" + str(n) + "_" + mr_type)
+      """
 
       # COMPARING WITH ALG1 for now
       print 'ratio of finding mmr-q'
@@ -132,13 +146,12 @@ def maximumRegretK():
       print 'measured by expected regret'
       plot(kRange, lambda method: [mean(regret[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(regret[method, _, n, mr_type]) for _ in kRange],
            methods, title, "k", "Expected Regret", "regret_" + str(n) + "_" + mr_type)
-
       """
+
       # FIXME may require plotting brute force as well
       print 'time'
-      plot(kRange, lambda method: [mean(time[method, _, n, mr_type]) for _ in kRange], lambda method: [standardErr(time[method, _, n, mr_type]) for _ in kRange],
+      plot(kRange, lambda method: [mean(time[method, _, n, mr_type]) for _ in kRange(method)], lambda method: [standardErr(time[method, _, n, mr_type]) for _ in kRange(method)],
            methods, title, "k", "Computation Time (sec.)", "t_" + str(n) + "_" + mr_type)
-      """
   
   assert all(_ >= 0 for _ in regret.values())
   """
@@ -157,6 +170,7 @@ def maximumRegretCVSRelPhi():
   mr = {}
   nmr = {} # normalized mr
   time = {}
+  kRange = range(1,11) # same for all figures
 
   validTrials = trials - len(excluded)
 
@@ -164,7 +178,7 @@ def maximumRegretCVSRelPhi():
   for n in nRange:
     for r in range(trials):
       if r in excluded: continue
-      domainFileName = 'domain_' + str(n) + '_' + str(r) + '.pkl'
+      domainFileName = dataDir + 'domain_' + str(n) + '_' + str(r) + '.pkl'
       (relFeats, domPis, domPiTime) = pickle.load(open(domainFileName, 'rb'))
       relPhiNum[n, r] = len(relFeats)
   
@@ -178,7 +192,9 @@ def maximumRegretCVSRelPhi():
     print k
 
     for mr_type in ['mrk']:
-      mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
+      #mr_label = '$MR$' if mr_type == 'mr' else '$MR_k$'
+      #FIXME call it MR no matter if it's MR or MR_k
+      mr_label = '$MR$'
       title = "$k = " + str(k) + "$"
       print mr_type
 
@@ -195,7 +211,7 @@ def maximumRegretCVSRelPhi():
           for r in range(trials):
             if r in excluded: continue
             #FIXME weird to read the data file multiple times, but we are representing in a different way. should be fine.
-            ret = pickle.load(open(method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
+            ret = pickle.load(open(dataDir + method + '_' + mr_type + '_' + str(k) + '_' + str(n) + '_' + str(r) + '.pkl', 'rb'))
             mr[method, k, relPhiNum[n, r] / gran].append(ret[mr_type])
             time[method, k, relPhiNum[n, r] / gran].append(ret['time'])
             
@@ -210,9 +226,11 @@ def maximumRegretCVSRelPhi():
             if normalizedmr != None:
               nmr[method, k, bin].append(normalizedmr)
 
+      """
       print 'measured by mr/mrk'
       plot([_ * gran for _ in bins], lambda method: [mean(mr[method, k, _]) for _ in bins], lambda method: [standardErr(mr[method, k, _]) for _ in bins],
            methods, title, "|$\Phi_{rel}$|", mr_label, "mrc_" + str(k) + "_" + mr_type)
+      """
 
       print 'measured by normalized mr/mrk'
       plot([_ * gran for _ in bins], lambda method: [mean(nmr[method, k, _]) for _ in bins], lambda method: [standardErr(nmr[method, k, _]) for _ in bins],
@@ -220,6 +238,7 @@ def maximumRegretCVSRelPhi():
 
       #scatter(xScatter, yScatter, methods, title, "|$\Phi_{rel}$|", "Maximum Regret (" + mr_label + ")", "mrc_" + str(k) + "_" + mr_type)
 
+      """
       print 'time'
       plot([_ * gran for _ in bins], lambda method: [mean(time[method, k, _]) for _ in bins], lambda method: [standardErr(time[method, k, _]) for _ in bins],
            methods, title, "|$\Phi_{rel}$|", "Computation Time (sec.)", "tc_" + str(k) + "_" + mr_type)
@@ -227,6 +246,7 @@ def maximumRegretCVSRelPhi():
       print 'ratio of finding mmr-q'
       plot([_ * gran for _ in bins], lambda method: [100.0 * sum(mr[method, k, bin][_] == mr['alg1', k, bin][_] for _ in range(len(mr['alg1', k, bin]))) / (len(mr['alg1', k, bin])) if len(mr['alg1', k, bin]) > 0 else nan for bin in bins], lambda _: [0.0] * len(bins),
            methods, title, "|$\Phi_{rel}$|", "% of Finding a MMR Query", "ratioc_" + str(k) + "_" + mr_type)
+      """
 
 
 def printTex(y, yci, t, tci, methods, legends):
@@ -241,18 +261,22 @@ def plot(x, y, yci, methods, title, xlabel, ylabel, filename):
   ax = pylab.gca()
   for method in methods:
     print method, y(method), yci(method)
-    lines = ax.errorbar(x, y(method), yci(method), fmt=markers[method], label=legends[method], mfc='none', markersize=15, capsize=5)
+    lines = ax.errorbar(x(method), y(method), yci(method), fmt=markers[method], label=legends[method], mfc='none', markersize=15, capsize=5)
+  
+  # easiest way to plot brute force
+  method = 'brute'
+  lines = ax.errorbar(range(1,4), [0,] * 3, [0,] * 3, fmt=markers[method], label=legends[method], mfc='none', markersize=15, capsize=5)
 
-  #ax.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
+  ax.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
 
   pylab.title(title)
   pylab.xlabel(xlabel)
   pylab.ylabel(ylabel)
   #pylab.ylim([0, 0.2])
-  pylab.gcf().subplots_adjust(bottom=0.15, left=0.2)
+  pylab.gcf().subplots_adjust(bottom=0.2, left=0.2)
   fig.savefig(filename + ".pdf", dpi=300, format="pdf")
   
-  figLegend = pylab.figure(figsize = (4.5, 3))
+  figLegend = pylab.figure(figsize = (6, 3.7))
   pylab.figlegend(*ax.get_legend_handles_labels(), loc = 'upper left')
   figLegend.savefig("legend.pdf", dpi=300, format="pdf")
   
@@ -278,11 +302,11 @@ def standardErr(data):
   return std(data) / sqrt(len(data))
 
 if __name__ == '__main__':
-  font = {'size': 20}
+  font = {'size': 28}
   matplotlib.rc('font', **font)
   
-  excludeFailedExperiments()
+  #excludeFailedExperiments()
   
   maximumRegretK()
 
-  maximumRegretCVSRelPhi()
+  #maximumRegretCVSRelPhi()
