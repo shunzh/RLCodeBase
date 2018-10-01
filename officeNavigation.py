@@ -26,79 +26,83 @@ CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
 EXIT = 'exit'
 
-def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
+class Spec():
   """
-  The office navigation domain specified in the report using a factored representation.
-  There are state factors indicating whether some carpets are dirty.
-     _________
+  A object that get a dictionary and convert them into attributes
+  """
+  def __init__(self, adict):
+    self.__dict__.update(adict)
+
+def sampleWrold():
+  """
   2 | |     |S|
   1 |  D_C_D  |
   0 |R___C____|
      0 1 2 3 4
-     
-  Also, consider randomize the room for experiments.
-
-  FIXME hacking this function too much.
   """
-  # specify the size of the domain, which are the robot's possible locations
+  pass
+
+def squareWorld(size, numOfCarpets):
+  """
+  Squared world with width = height = size.
+  The robot and the swtich are at opposite corners.
+  No walls or doors.
+  """
   width = size
   height = size
   
   robot = (0, 0)
   switch = (width - 1, height - 1)
   
-  horizon = width + height
+  walls = []
+  doors = []
 
   getBoundedRandLoc = lambda: (random.randint(0, width - 2), random.randint(1, height - 1))
-
-  """
-  # make sure carpets and robots are not covered by carpets
-  def getBoundedRandLoc():
-    while True:
-      loc = (random.randint(0, width - 1), random.randint(0, height - 1))
-
-      if loc == robot: continue
-      else: return loc
-  """
-
-  #walls = [(width / 2, _) for _ in range(0, height) if _ != 0 and _ != height / 2]
-  walls = []
-
-  doors = []#[(width / 2, height / 2)]
-
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
+ 
+  # create a Spec object so that the varibales here are properties
+  return Spec({(var, eval(var)) for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'carpets']})
+
+def classicOfficNav(spec, k, constrainHuman, dry, rnd):
+  """
+  The office navigation domain specified in the report using a factored representation.
+  There are state factors indicating whether some carpets are dirty.
+    
+  """
+  # don't want to use locals.update.. otherwise would be hard to debug
+  horizon = spec.width + spec.height
 
   lIndex = 0
   dIndexStart = lIndex + 1
-  dSize = len(doors)
+  dSize = len(spec['doors'])
   sIndex = dIndexStart + dSize
   # time is needed when there are reversible features or a goal constraint
-  #tIndex = sIndex + 1
+  tIndex = sIndex + 1
   
   dIndex = range(dIndexStart, dIndexStart + dSize)
   
-  allLocations = [(x, y) for x in range(width) for y in range(height)]
+  allLocations = [(x, y) for x in range(spec.width) for y in range(spec.height)]
   # cross product of possible values of all features
   # location, door1, door2, carpets, switch, time
   sSets = [allLocations] +\
-          [[CLOSED, OPEN] for _ in doors] +\
+          [[CLOSED, OPEN] for _ in spec.doors] +\
           [[0, 1]]
   
   directionalActs = [(1, 0), (0, 1), (1, 1)]
   aSets = directionalActs + [TURNOFFSWITCH]
  
   # check what the world is like
-  for y in range(height):
-    for x in range(width):
-      if (x, y) in walls: print '[ X]',
-      elif carpets.count((x, y)) == 1: print '[%2d]' % carpets.index((x, y)),
-      elif carpets.count((x, y)) > 1: print '[%2d*' % carpets.index((x, y)),
-      elif (x, y) == switch: print '[ S]',
-      elif (x, y) == robot: print '[ R]',
+  for y in range(spec.height):
+    for x in range(spec.width):
+      if (x, y) in spec.walls: print '[ X]',
+      elif spec.carpets.count((x, y)) == 1: print '[%2d]' % spec.carpets.index((x, y)),
+      elif spec.carpets.count((x, y)) > 1: print '[%2d*' % spec.carpets.index((x, y)),
+      elif (x, y) == spec.switch: print '[ S]',
+      elif (x, y) == spec.robot: print '[ R]',
       else: print '[  ]',
     print
   
-  for _ in range(len(carpets)): print _, carpets[_]
+  for _ in range(len(spec.carpets)): print _, spec.carpets[_]
 
   # factored transition function
   def navigate(s, a):
@@ -106,9 +110,9 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
     if a in directionalActs:
       sp = (loc[0] + a[0], loc[1] + a[1])
       # not blocked by borders, closed doors or walls
-      if (sp[0] >= 0 and sp[0] < width and sp[1] >= 0 and sp[1] < height) and\
-         not any(s[idx] == CLOSED and sp == doors[idx - dIndexStart] for idx in dIndex) and\
-         not sp in walls:
+      if (sp[0] >= 0 and sp[0] < spec.width and sp[1] >= 0 and sp[1] < spec.height) and\
+         not any(s[idx] == CLOSED and sp == spec.doors[idx - dIndexStart] for idx in dIndex) and\
+         not sp in spec.walls:
         return sp
     return loc
   
@@ -127,32 +131,33 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   def switchOp(s, a):
     loc = s[lIndex]
     switchState = s[sIndex]
-    if loc == switch and a == 'turnOffSwitch': switchState = OFF 
+    if loc == spec.switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
   
   tFunc = [navigate] +\
-          [doorOpGen(dIndexStart + i, doors[i]) for i in range(dSize)] +\
+          [doorOpGen(dIndexStart + i, spec.doors[i]) for i in range(dSize)] +\
           [switchOp]
 
-  s0List = [robot] +\
-           [CLOSED for _ in doors] +\
+  s0List = [spec.robot] +\
+           [CLOSED for _ in spec.doors] +\
            [ON]
   s0 = tuple(s0List)
   
-  terminal = lambda s: s[lIndex] == switch
+  terminal = lambda s: s[lIndex] == spec.switch
 
   def oldReward(s, a):
-    if s[lIndex] == switch and s[sIndex] == ON and a == TURNOFFSWITCH:
-      return 10
+    if s[lIndex] == spec.switch and s[sIndex] == ON and a == TURNOFFSWITCH:
+      return 1
     else:
       # create some random rewards in the domain to break ties
       return 0
-
+ 
+  # a list of possible reward functions
   carpetRewardDict = [-random.random() for _ in range(numOfCarpets)]
   def reward(s, a):
     if s[sIndex] == ON:
-      if s[lIndex] in carpets:
-        carpetId = carpets.index(s[lIndex])
+      if s[lIndex] in spec.carpets:
+        carpetId = spec.carpets.index(s[lIndex])
         return carpetRewardDict[carpetId]
       else:
         return -1
@@ -161,7 +166,7 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
   
   def gradientReward(s, a):
     if s[sIndex] == ON:
-      if s[lIndex] in carpets:
+      if s[lIndex] in spec.carpets:
         return 0
       else:
         x, y = s[lIndex]
@@ -169,10 +174,11 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
     else:
       return 0
     
-  locationRewardDict = {(x, y): -random.random() for x in range(width) for y in range(height)}
+  # the reward is 0 when the robot is on a carpet, and a pre-specified random reward otherwise.
+  locationRewardDict = {(x, y): -random.random() for x in range(spec.width) for y in range(spec.height)}
   def locationReward(s, a):
     if s[sIndex] == ON:
-      if s[lIndex] in carpets:
+      if s[lIndex] in spec.carpets:
         return 0
       else:
         return locationRewardDict[s[lIndex]]
@@ -181,12 +187,12 @@ def classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd):
  
   rFunc = locationReward
   gamma = 1
-  
+
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
 
   # states that should not be visited
   # let's not make carpets features but constraints directly
-  consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in carpets]
+  consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in spec.carpets]
   
   #goalConsStates = filter(lambda s: s[sIndex] == ON and s[tIndex] >= horizon, mdp['S'])
 

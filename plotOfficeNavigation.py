@@ -19,12 +19,12 @@ colorMap = {'brute': 'b', 'alg1': 'g', 'chain': 'r', 'naiveChain': 'r', 'relevan
 
 legends = {'reallyBrute': 'Brute Force', 'brute': 'Brute Force (rel. feat.)',\
            'alg1': 'MMRQ-k',
-           'chain': 'CoA', 'naiveChain': 'Naive CoA',\
+           'chain': 'Greedy', 'naiveChain': 'Naive CoA',\
            'relevantRandom': 'Random (rel. feat.)', 'random': 'Random', 'nq': 'No Query'}
 
 
 # shared for all functions
-trials = 1500
+trials = 100
 excluded = set()
 
 # the directory where the experiment results are stored
@@ -34,8 +34,8 @@ kRange = lambda method: range(1,4) if method == 'brute' else range(1,11)
 nRange = [10]
 
 # for brute, only k = 0 .. 3 are available
-#methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
-methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
+methods = ['brute', 'alg1', 'chain', 'relevantRandom', 'random', 'nq']
+#methods = ['alg1', 'chain', 'relevantRandom', 'random', 'nq']
 
 def excludeFailedExperiments():
   for r in range(trials):
@@ -264,8 +264,10 @@ def plot(x, y, yci, methods, title, xlabel, ylabel, filename):
     lines = ax.errorbar(x(method), y(method), yci(method), fmt=markers[method], label=legends[method], mfc='none', markersize=15, capsize=5)
   
   # easiest way to plot brute force
+  """
   method = 'brute'
   lines = ax.errorbar(range(1,4), [0,] * 3, [0,] * 3, fmt=markers[method], label=legends[method], mfc='none', markersize=15, capsize=5)
+  """
 
   ax.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
 
@@ -276,7 +278,7 @@ def plot(x, y, yci, methods, title, xlabel, ylabel, filename):
   pylab.gcf().subplots_adjust(bottom=0.2, left=0.2)
   fig.savefig(filename + ".pdf", dpi=300, format="pdf")
   
-  figLegend = pylab.figure(figsize = (6, 3.7))
+  figLegend = pylab.figure(figsize = (6, 4))
   pylab.figlegend(*ax.get_legend_handles_labels(), loc = 'upper left')
   figLegend.savefig("legend.pdf", dpi=300, format="pdf")
   
