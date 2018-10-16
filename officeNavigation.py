@@ -35,6 +35,7 @@ class Spec():
 
 def sampleWrold():
   """
+     _________
   2 | |     |S|
   1 |  D_C_D  |
   0 |R___C____|
@@ -59,24 +60,48 @@ def squareWorld(size, numOfCarpets):
 
   getBoundedRandLoc = lambda: (random.randint(0, width - 2), random.randint(1, height - 1))
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
+  boxes = []
  
   # create a Spec object so that the varibales here are properties
-  return Spec({(var, eval(var)) for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'carpets']})
+  return Spec({(var, eval(var)) for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets']})
+
+def sokobanWorld():
+  """
+     ___________________
+  2 |  X       X X      |
+  1 |  X       X X      |
+  0 |R_B_______B_______S|
+     0 1 2 3 4 5 6 7 8 9
+  """
+  width = 10
+  height = 3
+  
+  robot = (0, 0)
+  switch = (width - 1, 0)
+  
+  walls = [(1, 1), (1, 2), (5, 1), (5, 2), (6, 1), (6, 2)]
+  doors = []
+  
+  boxes = [(1, 0), (5, 0)]
+  carpets = [] # no non-reversible features
+  
+  return Spec({(var, eval(var)) for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets']})
+  
 
 def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
-    
   """
   # don't want to use locals.update.. otherwise would be hard to debug
   horizon = spec.width + spec.height
 
-  lIndex = 0
+  lIndex = 0 # robot's location
   dIndexStart = lIndex + 1
-  dSize = len(spec['doors'])
+  dSize = len(spec.doors)
   sIndex = dIndexStart + dSize
-  # time is needed when there are reversible features or a goal constraint
+  bIndex = None
+  # time is needed when there are horizon-dependent constraints
   tIndex = sIndex + 1
   
   dIndex = range(dIndexStart, dIndexStart + dSize)
@@ -104,14 +129,32 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   
   for _ in range(len(spec.carpets)): print _, spec.carpets[_]
 
+  def boxMovable(idx, a):
+    """
+    return True if the box represented by s[idx] can be moved with a applied
+    False otherwise
+    """
+    assert a in directionalActs
+
+    box = s[idx]
+    newBox = (box[0] + a[0], box[1] + a[1])
+    if newBox[0] >= 0 and newBox[0] < spec.width and newBox[1] >= 0 and newBox[1] < spec.height\
+       and not newBox in spec.walls:
+      return True
+    else:
+      return False
+ 
   # factored transition function
   def navigate(s, a):
     loc = s[lIndex]
     if a in directionalActs:
       sp = (loc[0] + a[0], loc[1] + a[1])
-      # not blocked by borders, closed doors or walls
+      # not blocked by borders, closed doors
+      # not pushing towards a non-movable box
+      # not blocked by walls
       if (sp[0] >= 0 and sp[0] < spec.width and sp[1] >= 0 and sp[1] < spec.height) and\
          not any(s[idx] == CLOSED and sp == spec.doors[idx - dIndexStart] for idx in dIndex) and\
+         not any(sp == s[idx] and not boxMovable(idx, a) for idx in bIndex) and\
          not sp in spec.walls:
         return sp
     return loc
@@ -128,11 +171,25 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       return doorState
     return doorOp
   
+  def boxOpGen(idx):
+    def boxOp(s, a):
+      loc = s[lIndex]
+      box = s[idx]
+      if a in directionalActs and navigate(s, a) == box:
+        if boxMovable(idx, a):
+          newBox = (box[0] + a[0], box[1] + a[1])
+          return newBox
+      # otherwise the box state is unchanged
+      return box
+
   def switchOp(s, a):
     loc = s[lIndex]
     switchState = s[sIndex]
     if loc == spec.switch and a == 'turnOffSwitch': switchState = OFF 
     return switchState
+  
+  def timeElapse(s, a):
+    return s[tIndex] + 1
   
   tFunc = [navigate] +\
           [doorOpGen(dIndexStart + i, spec.doors[i]) for i in range(dSize)] +\
@@ -143,8 +200,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
            [ON]
   s0 = tuple(s0List)
   
-  terminal = lambda s: s[lIndex] == spec.switch
+  #terminal = lambda s: s[lIndex] == spec.switch
+  terminal = lambda s: s[tIndex] == horizon
 
+  # a list of possible reward functions
   def oldReward(s, a):
     if s[lIndex] == spec.switch and s[sIndex] == ON and a == TURNOFFSWITCH:
       return 1
@@ -152,7 +211,6 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       # create some random rewards in the domain to break ties
       return 0
  
-  # a list of possible reward functions
   carpetRewardDict = [-random.random() for _ in range(numOfCarpets)]
   def reward(s, a):
     if s[sIndex] == ON:
@@ -192,12 +250,18 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
 
   # states that should not be visited
   # let's not make carpets features but constraints directly
+
+  # the robot cannot reach states that are c
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in spec.carpets]
+  
+  goalConstraints = []
   
   #goalConsStates = filter(lambda s: s[sIndex] == ON and s[tIndex] >= horizon, mdp['S'])
 
-  agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
+  agent = ConsQueryAgent(mdp, consStates, goalConstraints=goalConstraints, constrainHuman=constrainHuman)
 
+  # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
+  # if so we do not need to compute them again.
   domainFileName = 'domain_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl'
   if os.path.exists(domainFileName):
     data = pickle.load(open(domainFileName, 'rb'))

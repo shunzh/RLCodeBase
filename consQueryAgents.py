@@ -33,7 +33,7 @@ class ConsQueryAgent():
     # derive different definition of MR
     self.constrainHuman = constrainHuman
 
-    self.allCons = [(VAR, _) for _ in self.consIndices]
+    self.allCons = [(VAR, _) for _ in self.consIndices] + [(NONREVERSED, _) for _ in self.goalConsStates]
   
   def findConstrainedOptPi(self, activeCons):
     mdp = copy.copy(self.mdp)
@@ -58,6 +58,7 @@ class ConsQueryAgent():
   def findRelevantFeaturesAndDomPis(self):
     """
     Incrementally add dominating policies to a set
+    DomPolicies algorithm in the IJCAI paper
     """
     beta = [] # rules to keep
     dominatingPolicies = {}
@@ -135,7 +136,9 @@ class ConsQueryAgent():
     """
     Finding a minimax k-element constraint query.
     
-    Use pruning if pruning=True, otherwise brute force.
+    The pruning rule depends on two heuristics: sufficient features (scopeHeu) and query dominance (filterHeu).
+    Set each to be true to enable the filtering aspect.
+    (We only compared enabling both, which is MMRQ-k, with some baseliens. We didn't analyze the effect of enabling only one of them.)
     """
     if len(relFeats) < k:
       # we have a chance to ask about all of them!
