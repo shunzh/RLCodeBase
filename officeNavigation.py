@@ -9,6 +9,7 @@ import getopt
 import sys
 import os.path
 
+# some consts
 OPEN = 1
 CLOSED = 0
 
@@ -79,7 +80,7 @@ def sokobanWorld():
   robot = (0, 0)
   switch = (width - 1, 0)
   
-  walls = [(1, 1), (1, 2), (5, 1), (5, 2), (6, 1), (6, 2)]
+  walls = [(x, y) for x in [1, 5, 6] for y in [1, 2]]
   doors = []
   
   boxes = [(1, 0), (5, 0)]
@@ -88,31 +89,35 @@ def sokobanWorld():
   return Spec({(var, eval(var)) for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets']})
   
 
-def classicOfficNav(spec, k, constrainHuman, dry, rnd):
+def classicOfficNav(spec, k, constrainHuman, dry, rnd, horizon):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
-  """
-  # don't want to use locals.update.. otherwise would be hard to debug
-  horizon = spec.width + spec.height
 
-  lIndex = 0 # robot's location
+  don't want to use locals.update.. otherwise would be hard to debug
+  """
+  # robot's location
+  lIndex = 0
+  
+  # door indices
   dIndexStart = lIndex + 1
   dSize = len(spec.doors)
-  sIndex = dIndexStart + dSize
-  bIndex = None
+
+  # box indices
+  bIndexStart = dIndexStart + dSize
+  bSize = len(spec.boxes)
+
+  # switch index
+  sIndex = bIndexStart + bSize
+
+  # time index
   # time is needed when there are horizon-dependent constraints
   tIndex = sIndex + 1
   
   dIndex = range(dIndexStart, dIndexStart + dSize)
+  bIndex = range(bIndexStart, bIndexStart + bSize)
   
-  allLocations = [(x, y) for x in range(spec.width) for y in range(spec.height)]
-  # cross product of possible values of all features
-  # location, door1, door2, carpets, switch, time
-  sSets = [allLocations] +\
-          [[CLOSED, OPEN] for _ in spec.doors] +\
-          [[0, 1]]
-  
+ 
   directionalActs = [(1, 0), (0, 1), (1, 1)]
   aSets = directionalActs + [TURNOFFSWITCH]
  
@@ -137,9 +142,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     assert a in directionalActs
 
     box = s[idx]
-    newBox = (box[0] + a[0], box[1] + a[1])
-    if newBox[0] >= 0 and newBox[0] < spec.width and newBox[1] >= 0 and newBox[1] < spec.height\
-       and not newBox in spec.walls:
+    boxP = (box[0] + a[0], box[1] + a[1]) # box prime, the next location without considering constraints
+    # box is not moved across the border and not into walls
+    if boxP[0] >= 0 and boxP[0] < spec.width and boxP[1] >= 0 and boxP[1] < spec.height\
+       and not boxP in spec.walls:
       return True
     else:
       return False
@@ -191,19 +197,33 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   def timeElapse(s, a):
     return s[tIndex] + 1
   
+  
+  # all physically possible locations
+  allLocations = [(x, y) for x in range(spec.width) for y in range(spec.height) if (x, y) not in spec.walls]
+  # cross product of possible values of all features
+  # location, door1, door2, carpets, switch, time
+  sSets = [allLocations] +\
+          [[CLOSED, OPEN] for _ in spec.doors] +\
+          [allLocations for _ in len(spec.boxes)] +\
+          [[OFF, ON]]
+ 
+  # the transition function is also factored, each item is a function defined on S x A -> S_i
   tFunc = [navigate] +\
-          [doorOpGen(dIndexStart + i, spec.doors[i]) for i in range(dSize)] +\
-          [switchOp]
+          [doorOpGen(i, spec.doors[i - dIndexStart]) for i in range(dIndex)] +\
+          [boxOpGen(i) for i in range(bIndex)] +\
+          [switchOp, timeElapse]
 
   s0List = [spec.robot] +\
            [CLOSED for _ in spec.doors] +\
-           [ON]
+           [ON, 0]
   s0 = tuple(s0List)
   
   #terminal = lambda s: s[lIndex] == spec.switch
   terminal = lambda s: s[tIndex] == horizon
 
   # a list of possible reward functions
+  # using locationReward in the IJCAI paper, where the difference between our algorithm and baselines are maximized
+  # because there are different costs of locations where carpets are not covered, so it is crucial to decide which states should avoid blah blah
   def oldReward(s, a):
     if s[lIndex] == spec.switch and s[sIndex] == ON and a == TURNOFFSWITCH:
       return 1
@@ -243,13 +263,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     else:
       return 0
  
-  rFunc = locationReward
+  rFunc = oldReward
   gamma = 1
 
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
-
-  # states that should not be visited
-  # let's not make carpets features but constraints directly
 
   # the robot cannot reach states that are c
   consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in spec.carpets]
@@ -383,4 +400,5 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  classicOfficNav(k, size, numOfCarpets, constrainHuman, dry, rnd)
+  #classicOfficNav(squareWorld(size, numOfCarpets), k, constrainHuman, dry, rnd)
+  classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
