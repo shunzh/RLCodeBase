@@ -6,15 +6,12 @@ import numpy
 import itertools
 import config
 
-VAR = 0
-# not considering reversible features in this branch
-NONREVERSED = 1
 
 class ConsQueryAgent():
   """
   Find queries in constraint-uncertain mdps.
   """
-  def __init__(self, mdp, consStates, goalConsStates=[], constrainHuman=False):
+  def __init__(self, mdp, consStates, constrainHuman=False):
     """
     can't think of a class it should inherit..
 
@@ -28,12 +25,10 @@ class ConsQueryAgent():
     self.consStates = consStates
     self.consIndices = range(len(consStates))
     
-    self.goalConsStates = goalConsStates
-    
     # derive different definition of MR
     self.constrainHuman = constrainHuman
 
-    self.allCons = [(VAR, _) for _ in self.consIndices] + [(NONREVERSED, _) for _ in self.goalConsStates]
+    self.allCons = self.consIndices
   
   def findConstrainedOptPi(self, activeCons):
     mdp = copy.copy(self.mdp)
@@ -247,8 +242,6 @@ class ConsQueryAgent():
       # no more than k constraints, should not design exp in this way though
       q = self.consIndices
     
-    q = [(VAR, _) for _ in q]
-    
     return q
   
   def findRegret(self, q, violableCons):
@@ -338,17 +331,7 @@ class ConsQueryAgent():
     """
     Construct set of constraint equations by the specification in cons
     """
-    constraints = []
-    for con in cons:
-      consType, consIdx = con
-      if consType == VAR:
-        constraints += [(s, a) for a in mdp['A'] for s in self.consStates[consIdx]]
-      elif consType == NONREVERSED:
-        constraints += [(s, a) for a in mdp['A'] for s in self.statesWithDifferentFeats(consIdx, mdp)
-                        if mdp['terminal'](s)]
-      else: raise Exception('unknown constraint type')
-    
-    return constraints
+    return [[(s, a) for a in mdp['A'] for s in self.consStates[con]] for con in cons]
 
   def computeValue(self, x):
     return computeValue(x, self.mdp['r'], self.mdp['S'], self.mdp['A'])
@@ -367,7 +350,7 @@ class ConsQueryAgent():
         if any(x[s, a] > 0 for a in self.mdp['A']) and s in self.consStates[idx]:
           var.add(idx)
     
-    return set([(VAR, idx) for idx in var])
+    return set(var)
     
   def statesWithDifferentFeats(self, idx, mdp):
     return filter(lambda s: s[idx] != mdp['s0'][idx], mdp['S'])

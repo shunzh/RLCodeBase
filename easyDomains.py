@@ -112,6 +112,7 @@ def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma=1):
   # construct the set of reachable states
   ret['S'] = []
   buffer = [s0]
+  # stop when no new states are found by one-step transitions
   while len(buffer) > 0:
     # add the last batch to S
     ret['S'] += buffer

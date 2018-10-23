@@ -62,9 +62,13 @@ def squareWorld(size, numOfCarpets):
   getBoundedRandLoc = lambda: (random.randint(0, width - 2), random.randint(1, height - 1))
   carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
   boxes = []
+  
+  horizon = width + height
  
-  # create a Spec object so that the varibales here are properties
-  return Spec({(var, eval(var)) for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets']})
+  dict = {}
+  for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
+    dict[var] = eval(var)
+  return Spec(dict)
 
 def sokobanWorld():
   """
@@ -86,10 +90,15 @@ def sokobanWorld():
   boxes = [(1, 0), (5, 0)]
   carpets = [] # no non-reversible features
   
-  return Spec({(var, eval(var)) for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets']})
+  horizon = 22
+  
+  dict = {}
+  for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
+    dict[var] = eval(var)
+  return Spec(dict)
   
 
-def classicOfficNav(spec, k, constrainHuman, dry, rnd, horizon):
+def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
@@ -118,7 +127,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, horizon):
   bIndex = range(bIndexStart, bIndexStart + bSize)
   
  
-  directionalActs = [(1, 0), (0, 1), (1, 1)]
+  directionalActs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
   aSets = directionalActs + [TURNOFFSWITCH]
  
   # check what the world is like
@@ -187,6 +196,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, horizon):
           return newBox
       # otherwise the box state is unchanged
       return box
+    return boxOp
 
   def switchOp(s, a):
     loc = s[lIndex]
@@ -204,22 +214,23 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, horizon):
   # location, door1, door2, carpets, switch, time
   sSets = [allLocations] +\
           [[CLOSED, OPEN] for _ in spec.doors] +\
-          [allLocations for _ in len(spec.boxes)] +\
+          [allLocations for _ in spec.boxes] +\
           [[OFF, ON]]
  
   # the transition function is also factored, each item is a function defined on S x A -> S_i
   tFunc = [navigate] +\
-          [doorOpGen(i, spec.doors[i - dIndexStart]) for i in range(dIndex)] +\
-          [boxOpGen(i) for i in range(bIndex)] +\
+          [doorOpGen(i, spec.doors[i - dIndexStart]) for i in dIndex] +\
+          [boxOpGen(i) for i in bIndex] +\
           [switchOp, timeElapse]
 
   s0List = [spec.robot] +\
            [CLOSED for _ in spec.doors] +\
+           spec.boxes +\
            [ON, 0]
   s0 = tuple(s0List)
   
   #terminal = lambda s: s[lIndex] == spec.switch
-  terminal = lambda s: s[tIndex] == horizon
+  terminal = lambda s: s[tIndex] == spec.horizon
 
   # a list of possible reward functions
   # using locationReward in the IJCAI paper, where the difference between our algorithm and baselines are maximized
@@ -268,14 +279,24 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, horizon):
 
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
 
-  # the robot cannot reach states that are c
-  consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in spec.carpets]
-  
-  goalConstraints = []
-  
-  #goalConsStates = filter(lambda s: s[sIndex] == ON and s[tIndex] >= horizon, mdp['S'])
+  """
+  consStates is [[states that violate the i-th constraint] for i in all constraints]
+  Note that implementation here does not distinguish free and need-to-be-reverted features
+  since we implement them both as constraints in linear programming anyway.
 
-  agent = ConsQueryAgent(mdp, consStates, goalConstraints=goalConstraints, constrainHuman=constrainHuman)
+  Free features:
+    require changing such features (e.g. making a carpet from clean to dirty) to be forbidden to visit
+  Need-to-be-reverted features:
+    first require time horizon to be added to the state representation
+    then states where the features are not inverted are forbidden.
+  """
+  # carpet constraints:
+  #consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in spec.carpets]
+  
+  # box constraints: by default, regard them as need-to-be-reverted features
+  consStates = [[s for s in mdp['S'] if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndex]
+  
+  agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
 
   # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
   # if so we do not need to compute them again.
@@ -366,7 +387,7 @@ def saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
 if __name__ == '__main__':
   # default values
   method = None
-  k = 2
+  k = 1
   constrainHuman = False
   dry = False # do not safe to files if dry run
 
@@ -387,6 +408,7 @@ if __name__ == '__main__':
     elif opt == '-c':
       constrainHuman = True
     elif opt == '-d':
+      # if dry run, do not save to file
       dry = True
     elif opt == '-r':
       rnd = int(arg)
