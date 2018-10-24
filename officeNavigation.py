@@ -143,9 +143,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   
   for _ in range(len(spec.carpets)): print _, spec.carpets[_]
 
-  def boxMovable(idx, a):
+  def boxMovable(idx, s, a):
     """
-    return True if the box represented by s[idx] can be moved with a applied
+    return True if the box represented by s[idx] can be moved with a applied in state s
     False otherwise
     """
     assert a in directionalActs
@@ -169,7 +169,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       # not blocked by walls
       if (sp[0] >= 0 and sp[0] < spec.width and sp[1] >= 0 and sp[1] < spec.height) and\
          not any(s[idx] == CLOSED and sp == spec.doors[idx - dIndexStart] for idx in dIndex) and\
-         not any(sp == s[idx] and not boxMovable(idx, a) for idx in bIndex) and\
+         not any(sp == s[idx] and not boxMovable(idx, s, a) for idx in bIndex) and\
          not sp in spec.walls:
         return sp
     return loc
@@ -191,7 +191,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       loc = s[lIndex]
       box = s[idx]
       if a in directionalActs and navigate(s, a) == box:
-        if boxMovable(idx, a):
+        if boxMovable(idx, s, a):
           newBox = (box[0] + a[0], box[1] + a[1])
           return newBox
       # otherwise the box state is unchanged

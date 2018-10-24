@@ -33,8 +33,8 @@ class ConsQueryAgent():
   def findConstrainedOptPi(self, activeCons):
     mdp = copy.copy(self.mdp)
 
-    mdp['zeroConstraints'] = self.constructConstraints(activeCons, mdp)\
-                           + [(s, a) for s in self.goalConsStates for a in mdp['A']]
+    mdp['zeroConstraints'] = self.constructConstraints(activeCons, mdp)
+                           
     if config.METHOD == 'lp':
       opt, x = lpDual(**mdp)
     elif config.METHOD == 'mcts':
