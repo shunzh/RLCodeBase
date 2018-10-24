@@ -369,14 +369,6 @@ class ConsQueryAgent():
               break
     return ret
 
-def findOccupiedStates(x):
-  states = set()
-  for sa, occ in x.items():
-    if occ > 0:
-      s, a = sa
-      states.add(s)
-  
-  return states
 
 def printOccSA(x):
   for sa, occ in x.items():

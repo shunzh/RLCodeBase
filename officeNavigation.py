@@ -72,6 +72,7 @@ def squareWorld(size, numOfCarpets):
 
 def toySokobanWorld():
   """
+  A very small domain that can be solved quickly. For sanity check.
      _________
   1 |  X      |
   0 |R_B_____S|
@@ -98,6 +99,7 @@ def toySokobanWorld():
 
 def sokobanWorld():
   """
+  A domain as a motivating example in the reports.
      ___________________
   2 |  X       X X      |
   1 |  X       X X      |
@@ -122,7 +124,27 @@ def sokobanWorld():
   for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
     dict[var] = eval(var)
   return Spec(dict)
+
+def parameterizedSokobanWorld(size, numOfBoxes):
+  """
+  """
+  width = height = size
   
+  robot = (0, 0)
+  switch = (width - 1, height - 1)
+  
+  walls = []
+  doors = []
+  
+  boxes = [random.choice([(x, y) for x in range(width) for y in range(height) if x != 0 or y != 0]) for _ in range(numOfBoxes)]
+  carpets = [] # no non-reversible features
+  
+  horizon = size * 2
+  
+  dict = {}
+  for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
+    dict[var] = eval(var)
+  return Spec(dict)
 
 def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   """
@@ -179,9 +201,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
 
     box = s[idx]
     boxP = (box[0] + a[0], box[1] + a[1]) # box prime, the next location without considering constraints
-    # box is not moved across the border and not into walls
+    # box is not moved across the border and not into walls or other boxes
     if boxP[0] >= 0 and boxP[0] < spec.width and boxP[1] >= 0 and boxP[1] < spec.height\
-       and not boxP in spec.walls:
+       and not boxP in spec.walls\
+       and not boxP in spec.boxes:
       return True
     else:
       return False
@@ -302,7 +325,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       return 0
  
   rFunc = oldReward
-  gamma = 1
+  gamma = 0.99
 
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
 
@@ -422,8 +445,11 @@ if __name__ == '__main__':
   constrainHuman = False
   dry = False # do not safe to files if dry run
 
-  numOfCarpets = 10
-  size = 6
+  numOfCarpets = 0
+  numOfBoxes = 4
+  size = 4
+
+  rnd = 0 # set a dummy random seed if no -r argument
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:d')
@@ -455,4 +481,5 @@ if __name__ == '__main__':
 
   #classicOfficNav(squareWorld(size, numOfCarpets), k, constrainHuman, dry, rnd)
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
-  classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
+  #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
+  classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)
