@@ -82,6 +82,8 @@ class ConsQueryAgent():
         continue
 
       x = self.findConstrainedOptPi(activeCons)
+      printOccSA(x)
+      print self.computeValue(x)
 
       dominatingPolicies[activeCons] = x
 
@@ -329,9 +331,9 @@ class ConsQueryAgent():
 
   def constructConstraints(self, cons, mdp):
     """
-    Construct set of constraint equations by the specification in cons
+    The set of state, action pairs that should not be visited when cons are active constraints.
     """
-    return [[(s, a) for a in mdp['A'] for s in self.consStates[con]] for con in cons]
+    return [(s, a) for a in mdp['A'] for con in cons for s in self.consStates[con]]
 
   def computeValue(self, x):
     return computeValue(x, self.mdp['r'], self.mdp['S'], self.mdp['A'])

@@ -70,6 +70,32 @@ def squareWorld(size, numOfCarpets):
     dict[var] = eval(var)
   return Spec(dict)
 
+def toySokobanWorld():
+  """
+     _________
+  1 |  X      |
+  0 |R_B_____S|
+     0 1 2 3 4
+  """
+  width = 5
+  height = 2
+  
+  robot = (0, 0)
+  switch = (width - 1, 0)
+  
+  walls = [(1, 1)]
+  doors = []
+  
+  boxes = [(1, 0)]
+  carpets = [] # no non-reversible features
+  
+  horizon = 10
+  
+  dict = {}
+  for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
+    dict[var] = eval(var)
+  return Spec(dict)
+
 def sokobanWorld():
   """
      ___________________
@@ -136,6 +162,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       if (x, y) in spec.walls: print '[ X]',
       elif spec.carpets.count((x, y)) == 1: print '[%2d]' % spec.carpets.index((x, y)),
       elif spec.carpets.count((x, y)) > 1: print '[%2d*' % spec.carpets.index((x, y)),
+      elif (x, y) in spec.boxes: print '[ B]',
       elif (x, y) == spec.switch: print '[ S]',
       elif (x, y) == spec.robot: print '[ R]',
       else: print '[  ]',
@@ -310,7 +337,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     else:
       (relFeats, domPis, domPiTime) = data
   else:
-    pickle.dump('INITIALIZED', open(domainFileName, 'wb'))
+    # don't save anything if we are dryrun
+    if not dry:
+      pickle.dump('INITIALIZED', open(domainFileName, 'wb'))
 
     # find dom pi (which may be used to find queries and will be used for evaluation)
     start = time.time()
@@ -319,7 +348,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     domPiTime = end - start
 
     print "num of rel feats", len(relFeats)
-    pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
+    
+    if not dry:
+      pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
 
   methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
 
@@ -387,7 +418,7 @@ def saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
 if __name__ == '__main__':
   # default values
   method = None
-  k = 1
+  k = 0
   constrainHuman = False
   dry = False # do not safe to files if dry run
 
@@ -423,4 +454,5 @@ if __name__ == '__main__':
       raise Exception('unknown argument')
 
   #classicOfficNav(squareWorld(size, numOfCarpets), k, constrainHuman, dry, rnd)
-  classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
+  #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
+  classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
