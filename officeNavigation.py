@@ -25,7 +25,8 @@ TERMINATED = 1
 OPENDOOR = 'openDoor'
 CLOSEDOOR = 'closeDoor'
 TURNOFFSWITCH = 'turnOffSwitch'
-EXIT = 'exit'
+
+TERMINATE = 'terminate'
 
 class Spec():
   """
@@ -118,7 +119,7 @@ def sokobanWorld():
   boxes = [(1, 0), (5, 0)]
   carpets = [] # no non-reversible features
   
-  horizon = 22
+  horizon = 20
   
   dict = {}
   for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
@@ -171,8 +172,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   # time is needed when there are horizon-dependent constraints
   tIndex = sIndex + 1
   
-  dIndex = range(dIndexStart, dIndexStart + dSize)
-  bIndex = range(bIndexStart, bIndexStart + bSize)
+  dIndices = range(dIndexStart, dIndexStart + dSize)
+  bIndices = range(bIndexStart, bIndexStart + bSize)
   
  
   directionalActs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
@@ -218,8 +219,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       # not pushing towards a non-movable box
       # not blocked by walls
       if (sp[0] >= 0 and sp[0] < spec.width and sp[1] >= 0 and sp[1] < spec.height) and\
-         not any(s[idx] == CLOSED and sp == spec.doors[idx - dIndexStart] for idx in dIndex) and\
-         not any(sp == s[idx] and not boxMovable(idx, s, a) for idx in bIndex) and\
+         not any(s[idx] == CLOSED and sp == spec.doors[idx - dIndexStart] for idx in dIndices) and\
+         not any(sp == s[idx] and not boxMovable(idx, s, a) for idx in bIndices) and\
          not sp in spec.walls:
         return sp
     return loc
@@ -235,7 +236,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
           # otherwise the door state is unchanged
       return doorState
     return doorOp
-  
+ 
   def boxOpGen(idx):
     def boxOp(s, a):
       loc = s[lIndex]
@@ -269,8 +270,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
  
   # the transition function is also factored, each item is a function defined on S x A -> S_i
   tFunc = [navigate] +\
-          [doorOpGen(i, spec.doors[i - dIndexStart]) for i in dIndex] +\
-          [boxOpGen(i) for i in bIndex] +\
+          [doorOpGen(i, spec.doors[i - dIndexStart]) for i in dIndices] +\
+          [boxOpGen(i) for i in bIndices] +\
           [switchOp, timeElapse]
 
   s0List = [spec.robot] +\
@@ -323,8 +324,21 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
         return locationRewardDict[s[lIndex]]
     else:
       return 0
+  
+  # reward based on whether the constraints (goalCons) are satisfied
+  # reward = 1 if the robot takes a termination action and the current state satisfies the constraints.
+  def goalConstrainedReward(goalCons):
+    def reward(s, a):
+      if a == TERMINATE and goalCons(s):
+        return 1
+      else:
+        return 0
+    
+    return reward
  
-  rFunc = oldReward
+  #rFunc = oldReward
+  # only give reward of 1 if the switch is turned off and the boxes are in their initial locations
+  rFunc = goalConstrainedReward(lambda s: s[sIndex] == OFF and all(s[bIdx] == s0[bIdx] for bIdx in bIndices))
   gamma = 0.99
 
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
@@ -344,7 +358,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   #consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in spec.carpets]
   
   # box constraints: by default, regard them as need-to-be-reverted features
-  consStates = [[s for s in mdp['S'] if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndex]
+  consStates = [[s for s in mdp['S'] if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndices]
   
   agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
 
@@ -480,6 +494,6 @@ if __name__ == '__main__':
       raise Exception('unknown argument')
 
   #classicOfficNav(squareWorld(size, numOfCarpets), k, constrainHuman, dry, rnd)
-  #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
+  classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
-  classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)
+  #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)
