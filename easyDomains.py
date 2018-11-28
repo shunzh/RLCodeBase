@@ -81,7 +81,7 @@ def getChainDomain(length):
   
   return ret
 
-def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma=1):
+def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma=1, terminal=lambda s: False):
   ret = {}
 
   #ret['S'] = [s for s in itertools.product(*sSets)]
@@ -126,3 +126,52 @@ def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma=1):
     buffer = newBuffer
 
   return ret
+
+
+def randMDP(numStates, numActions, rewardSparsity):
+  """
+  return an MDP with specified num of states and num of actions, with deterministic transitions to randomly-selected states
+  
+  """
+  sSet = range(numStates)
+  aSet = range(numActions)
+  
+  rDict = {}
+  tDict = {}
+  for s in sSet:
+    for a in aSet:
+      # the reward is 1 w.p. rewardSparsity
+      rDict[s, a] = (random.random() < rewardSparsity)
+      # the transition state is randomly chosen 
+      tDict[s, a] = random.choice(sSet)
+  
+  R = lambda s, a: rDict[s, a]
+  T = lambda s, a: tDict[s, a]
+  
+  # doesn't harm to assume sSet[0] is the initial state
+  s0 = 0
+  
+  gamma = .9
+  
+  terminal = lambda s: False
+  
+  # return the mdp in a tuple
+  return {'S': sSet, 'A': aSet, 'T': T, 'r': R, 's0': s0, 'gamma': gamma, 'terminal': terminal}
+
+def addActionsToMDP(mdp, numAdditionalActions):
+  """
+  add actions to all states by the specified number
+  transitions are deterministic, reached states are uniformly randomly chosen
+  """
+  sSet = mdp['S']
+  aSet = range(len(mdp['A']) + numAdditionalActions)
+  
+  tDict = {}
+  for s in sSet:
+    for a in aSet:
+      if a in mdp['A']: tDict[s, a] = mdp['T'](s, a)
+      else: tDict[s, a] = random.choice(sSet)
+
+  T = lambda s, a: tDict[s, a]
+
+  return {'S': sSet, 'A': aSet, 'T': T, 'r': mdp['R'], 's0': mdp['s0'], 'gamma': mdp['gamma']}
