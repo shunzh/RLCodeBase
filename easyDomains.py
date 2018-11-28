@@ -174,4 +174,4 @@ def addActionsToMDP(mdp, numAdditionalActions):
 
   T = lambda s, a: tDict[s, a]
 
-  return {'S': sSet, 'A': aSet, 'T': T, 'r': mdp['R'], 's0': mdp['s0'], 'gamma': mdp['gamma']}
+  return {'S': sSet, 'A': aSet, 'T': T, 'r': mdp['R'], 's0': mdp['s0'], 'gamma': mdp['gamma'], 'terminal': mdp['terminal']}
