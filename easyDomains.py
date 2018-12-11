@@ -103,7 +103,7 @@ def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma=1, terminal=lambda s: F
       return 1 if sp == transit(state, action) else 0
 
   ret['T'] = transFunc 
-  ret['s0'] = s0
+  ret['alpha'] = lambda s: s == s0 # assuming there is only one starting state
   ret['terminal'] = terminal
   ret['gamma'] = gamma
 
@@ -128,50 +128,33 @@ def getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma=1, terminal=lambda s: F
   return ret
 
 
-def randMDP(numStates, numActions, rewardSparsity):
+def randMDP(states, actions, rewardSparsity):
   """
   return an MDP with specified num of states and num of actions, with deterministic transitions to randomly-selected states
   
   """
-  sSet = range(numStates)
-  aSet = range(numActions)
-  
   rDict = {}
   tDict = {}
-  for s in sSet:
-    for a in aSet:
-      # the reward is 1 w.p. rewardSparsity
-      rDict[s, a] = (random.random() < rewardSparsity)
+  for s in states:
+    # the reward is 1 w.p. rewardSparsity and 0 otherwise
+    rDict[s] = random.random() < rewardSparsity
+
+    for a in actions:
       # the transition state is randomly chosen 
-      tDict[s, a] = random.choice(sSet)
+      tDict[s, a] = random.choice(states)
   
-  R = lambda s, a: rDict[s, a]
-  T = lambda s, a: tDict[s, a]
+  # let rewards defined on states, that is, r(s, a) = r(s, a') for all s, a, a'
+  R = lambda s, a: rDict[s]
+  # for now, consider deterministic transition functions
+  T = lambda s, a, sp: tDict[s, a] == sp
   
-  # doesn't harm to assume sSet[0] is the initial state
-  s0 = 0
+  # uniform initial state distribution (assumption 2 in report 12.5)
+  alpha = lambda s: 1.0 / len(states)
   
   gamma = .9
   
   terminal = lambda s: False
   
   # return the mdp in a tuple
-  return {'S': sSet, 'A': aSet, 'T': T, 'r': R, 's0': s0, 'gamma': gamma, 'terminal': terminal}
+  return {'S': states, 'A': actions, 'T': T, 'r': R, 'alpha': alpha, 'gamma': gamma, 'terminal': terminal}
 
-def addActionsToMDP(mdp, numAdditionalActions):
-  """
-  add actions to all states by the specified number
-  transitions are deterministic, reached states are uniformly randomly chosen
-  """
-  sSet = mdp['S']
-  aSet = range(len(mdp['A']) + numAdditionalActions)
-  
-  tDict = {}
-  for s in sSet:
-    for a in aSet:
-      if a in mdp['A']: tDict[s, a] = mdp['T'](s, a)
-      else: tDict[s, a] = random.choice(sSet)
-
-  T = lambda s, a: tDict[s, a]
-
-  return {'S': sSet, 'A': aSet, 'T': T, 'r': mdp['R'], 's0': mdp['s0'], 'gamma': mdp['gamma'], 'terminal': mdp['terminal']}
