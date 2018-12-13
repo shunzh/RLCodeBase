@@ -55,6 +55,10 @@ def findUndominatedReward(mdpH, mdpR, newPi, humanPi, localDifferentPis, domPis)
 
   # the reward function has the same values for same states, but need to convert back to the S x A space
   rFunc = lambda s, a: m[r][Sr.index(s)]
+
+  print newPi
+  print obj, m[z], m[r]
+
   return obj, rFunc
 
 def findDomPis(mdpH, mdpR, delta):
@@ -122,9 +126,7 @@ def findDomPis(mdpH, mdpR, delta):
     objValue, r = findUndominatedReward(mdpH, mdpR, newPi, averageHumanOccupancy, localDifferentPis, domPis)
     
     if objValue > 0:
-      #domRewards.append(r)
-      print objValue
-      printReward(S, robotA, r)
+      domRewards.append(r)
     
     # add dominating policies
 
