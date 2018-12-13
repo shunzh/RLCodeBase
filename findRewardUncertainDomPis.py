@@ -122,12 +122,16 @@ def findDomPis(mdpH, mdpR, delta):
     objValue, r = findUndominatedReward(mdpH, mdpR, newPi, averageHumanOccupancy, localDifferentPis, domPis)
     
     if objValue > 0:
-      domRewards.append(r)
+      #domRewards.append(r)
+      print objValue
+      printReward(S, robotA, r)
     
     # add dominating policies
-  
-  return domRewards
 
+def printReward(S, A, r):
+  for s in S:
+    print s, [r(s, a) for a in A]
+  
 def adjustOccupancy(mdp, pi, occ, s, a=None):
   """
   DUMMY?
@@ -149,24 +153,34 @@ def adjustOccupancy(mdp, pi, occ, s, a=None):
 
     [adjustOccupancy(mdp, pi, sp, mdp['gamma'] * occ) for sp in mdp['S'] if mdp['T'](s, a, sp) > 0]
 
-def experiment():
-  states = range(5)
+def toyMDP():
+  mdp = {}
 
-  robotActions = range(2)
-  humanActions = range(1)
+  mdp['S'] = range(3)
+  mdp['A'] = range(2)
+  T = {(0, 0): 1, (0, 1): 2, (1, 0): 1, (1, 1): 1, (2, 0): 2, (2, 1): 2}
+  mdp['T'] = lambda s, a, sp: T[s, a] == sp # deterministic transitions
+  mdp['r'] = lambda s, a: s == 1 # only state 1 has positive reward
+  mdp['gamma'] = .5
+  mdp['terminal'] = lambda _: False
+  mdp['s0'] = 0
   
-  delta = [(s, a) for s in states for a in robotActions if a not in humanActions]
+  return mdp
 
-  rewardSparsity = .2
-
+def experiment():
   # the human's mdp
-  mdpR = easyDomains.randMDP(states, robotActions, rewardSparsity)
+  #rewardSparsity = .2
+  #mdpR = easyDomains.randMDP(states, robotActions, rewardSparsity)
+  
+  mdpR = toyMDP()
 
   mdpH = copy.deepcopy(mdpR)
   # restrict the human's actions space
-  mdpH['A'] = humanActions
+  mdpH['A'] = range(1)
   
-  print findDomPis(mdpH, mdpR, delta)
+  delta = [(s, a) for s in mdpR['S'] for a in mdpR['A'] if a not in mdpH['A']]
+
+  findDomPis(mdpH, mdpR, delta)
   
 
 if __name__ == '__main__':
