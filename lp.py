@@ -36,15 +36,13 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(S, A, r, T, alpha, terminal, gamma=1, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1):
+def lpDual(S, A, r, T, s0, terminal, gamma=1, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1):
   """
   Solve the dual problem of lp, maybe with some constraints
   Same arguments
   
   Note that this is a lower level function that does not consider feature extraction.
   r should be a reward function, not a reward parameter.
-  
-  alpha is the initial state distribution 
   """
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
@@ -52,14 +50,13 @@ def lpDual(S, A, r, T, alpha, terminal, gamma=1, zeroConstraints=[], positiveCon
   # useful constants
   Sr = range(len(S))
   Ar = range(len(A))
-  
+
   x = m.new((len(S), len(A)), lb=0, name='x')
 
   # make sure x is a valid occupancy
   for sp in Sr:
     # x (x(s) - \gamma * T) = \sigma
-    # DEBUG changed s0 to a more general intial state distribution, alpha.
-    m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == alpha(S[sp]))
+    m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == (S[sp] == s0))
   
   # == constraints
   if len(zeroConstraints) > 0:

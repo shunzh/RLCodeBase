@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import itertools
+import copy
 
 def convert(cmp, rewardSet, psi):
   """
@@ -21,6 +22,57 @@ def convert(cmp, rewardSet, psi):
   ret['psi'] = psi
   return ret
 
+def occupancyAdd(mdp, pi, piP, scalar):
+  """
+  pi := pi + piP * scalar
+  """
+  S = mdp['S']
+  A = mdp['A']
+
+  for s in S:
+    for a in A:
+      if (s, a) in piP.keys():
+        # otherwise there is nothing to add here
+        if (s, a) in pi.keys():
+          pi[s, a] += piP[s, a] * scalar
+        else:
+          pi[s, a] = piP[s, a] * scalar
+
+def policyToOccupancyFromAllS0(mdp, piOcc):
+  """
+  DUMMY?
+
+  given the policy pi[s, a], compute the occupancy measure
+  basically return inv(I - \gamma P)
+  """
+  # make sure all states have zero occupancy (alpha should take care of this)
+  # otherwise not invertible
+  S = mdp['S']
+  A = mdp['A']
+  T = mdp['T']
+  gamma = mdp['gamma']
+
+  N = len(S)
+  
+  pi = {}
+  sToSpProb = {}
+  
+  # convert occupancy to policy
+  for s in S:
+    for a in A:
+      pi[s, a] = piOcc[s, a] / sum(piOcc[s, ap] for ap in A)
+
+  for s in S:
+    for sp in S:
+      sToSpProb[s, sp] = sum(pi[s, a] * T(s, a, sp) for a in A)
+  
+  P = np.matrix([[sToSpProb[s, sp] for sp in S] for s in S])
+
+  occ = np.linalg.inv(np.eye(N) - mdp['gamma'] * P)
+  
+  return {s: {sp: occ[S.index(s)][S.index(sp)] for sp in S} for s in S}
+ 
+  
 def rewardConstruct(rocks):
   return lambda s, a: 1 if s in rocks else 0
 
@@ -148,9 +200,7 @@ def randMDP(states, actions, rewardSparsity):
   # for now, consider deterministic transition functions
   T = lambda s, a, sp: tDict[s, a] == sp
   
-  # assume initial state distribution is uniform
-  # Assumption 2 in report 12.5 assumed alpha(s) > 0 for all s
-  alpha = lambda s: 1.0 / len(states)
+  s0 = states[0]
   
   gamma = .9
   
@@ -158,4 +208,4 @@ def randMDP(states, actions, rewardSparsity):
   terminal = lambda s: False
   
   # return the mdp in a tuple
-  return {'S': states, 'A': actions, 'T': T, 'r': R, 'alpha': alpha, 'gamma': gamma, 'terminal': terminal}
+  return {'S': states, 'A': actions, 'T': T, 'r': R, 's0': s0, 'gamma': gamma, 'terminal': terminal}
