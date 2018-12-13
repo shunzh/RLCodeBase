@@ -148,13 +148,14 @@ def randMDP(states, actions, rewardSparsity):
   # for now, consider deterministic transition functions
   T = lambda s, a, sp: tDict[s, a] == sp
   
-  # uniform initial state distribution (assumption 2 in report 12.5)
+  # assume initial state distribution is uniform
+  # Assumption 2 in report 12.5 assumed alpha(s) > 0 for all s
   alpha = lambda s: 1.0 / len(states)
   
   gamma = .9
   
+  # for now assume no terminal states
   terminal = lambda s: False
   
   # return the mdp in a tuple
   return {'S': states, 'A': actions, 'T': T, 'r': R, 'alpha': alpha, 'gamma': gamma, 'terminal': terminal}
-

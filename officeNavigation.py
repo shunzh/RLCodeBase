@@ -280,6 +280,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
            [ON, 0]
   s0 = tuple(s0List)
   
+  # FIXME check this, terminal when at the switch?
   #terminal = lambda s: s[lIndex] == spec.switch
   terminal = lambda s: s[tIndex] == spec.horizon
 
