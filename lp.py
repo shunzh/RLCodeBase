@@ -49,6 +49,7 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   T = mdp.T
   r = mdp.r
   gamma = mdp.gamma
+  s0 = mdp.s0
 
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)

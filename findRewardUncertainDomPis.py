@@ -26,10 +26,8 @@ def findUndominatedReward(mdpH, mdpR, newPi, humanPi, localDifferentPis, domPis)
   S = mdpH.S
   robotA = mdpR.A
   humanA = mdpH.A
-  T = mdpH.T
-  gamma = mdpH.gamma
 
-  # useful constants
+  # index of states and actions
   Sr = range(len(S))
   robotAr = range(len(robotA))
   humanAr = range(len(humanA))
@@ -44,20 +42,20 @@ def findUndominatedReward(mdpH, mdpR, newPi, humanPi, localDifferentPis, domPis)
   for s in S:
     for a in humanA:
       humanAlterPi = localDifferentPis[s, a]
-      m.constrain(sum((humanPi[S[s], humanA[a]] - humanAlterPi[S[s], humanA[a]]) * r[s] for s in Sr for a in humanAr) >= 0)
+      m.constrain(sum((humanPi[S[sp], humanA[ap]] - humanAlterPi[S[sp], humanA[ap]]) * r[sp] for sp in Sr for ap in humanAr) >= 0)
     
-  try:
-    # maxi_r { V^{newPi}_r - \max_{domPi \in domPis} V^{domPi}_r }
-    obj = m.maximize(sum([newPi[S[s], robotA[a]] * r[s] for s in Sr for a in robotAr]) - z)
-  except CPlexException as err:
-    print 'Exception', err
-    return None, {}
+  # maxi_r { V^{newPi}_r - \max_{domPi \in domPis} V^{domPi}_r }
+  m.maximize(sum(newPi[S[s], robotA[a]] * r[s] for s in Sr for a in robotAr) - z)
+  
+  obj = sum([newPi[S[s], robotA[a]] * m[r][s] for s in Sr for a in robotAr]) - m[z]
 
   # the reward function has the same values for same states, but need to convert back to the S x A space
   rFunc = lambda s, a: m[r][Sr.index(s)]
 
-  print newPi
-  print obj, m[z], m[r]
+  print 'obj', obj
+  print 'newPi', newPi
+  print 'z', m[z], 'r', m[r]
+  raw_input()
 
   return obj, rFunc
 
@@ -70,7 +68,6 @@ def findDomPis(mdpH, mdpR, delta):
   """
   # compute the set of state, action pairs that have different transitions under mdpH and mdpH
   S = mdpH.S
-  humanA = mdpH.A
   robotA = mdpR.A
   T = mdpR.T # note that the human and the robot have the same transition probabilities. The robot just has more actions
   gamma = mdpH.gamma
@@ -81,7 +78,7 @@ def findDomPis(mdpH, mdpR, delta):
   mdpLocal = copy.deepcopy(mdpH)
   for s in S:
     mdpLocal.s0 = s
-    objValue, pi = lp.lpDual(**mdpLocal)
+    objValue, pi = lp.lpDual(mdpLocal)
     
     for (deltaS, deltaA) in delta:
       # the human is unbale to take this action
@@ -111,24 +108,37 @@ def findDomPis(mdpH, mdpR, delta):
           
       localDifferentPis[diffS, diffA] = pi
 
-  print averageHumanOccupancy
+  print 'average human', averageHumanOccupancy
   domPis = [averageHumanOccupancy]
-  oldDomPis = []
+  domPiAdded = True
  
   domRewards = [] # the optimal policies under which are dominating policies
   # repeat until domPis converges
 
-  #while len(domPis) > len(oldDomPis):
-  for (s, a) in delta:
-    # change the action in state s from \pi^*_\H(s) to a
-    newPi = localDifferentPis[s, a]
+  while domPiAdded:
+    domPiAdded = False
+    for (s, a) in delta:
+      # change the action in state s from \pi^*_\H(s) to a
+      newPi = localDifferentPis[s, a]
 
-    objValue, r = findUndominatedReward(mdpH, mdpR, newPi, averageHumanOccupancy, localDifferentPis, domPis)
+      print s, a
+      objValue, r = findUndominatedReward(mdpH, mdpR, newPi, averageHumanOccupancy, localDifferentPis, domPis)
+      
+      if objValue > 0:
+        domRewards.append(r)
+      
+        # find the corresponding optimal policy and add to the set of dominating policies
+        mdpR.r = r
+        # TODO needs use the same alpha
+        _, newDompi = lp.lpDual(mdpR)
+
+        domPis.append(newDompi)
+        
+        domPiAdded = True
     
-    if objValue > 0:
-      domRewards.append(r)
-    
-    # add dominating policies
+    print domPis
+  
+  return domPis
 
 def printReward(S, A, r):
   for s in S:
@@ -157,7 +167,7 @@ def adjustOccupancy(mdp, pi, occ, s, a=None):
 
 def toyMDP():
   """
-  
+  Starting from state 0, the robot has two actions to reach state 1 and 2, respectively, and then stay there.
   """
   mdp = easyDomains.SimpleMDP()
 
@@ -185,7 +195,9 @@ def experiment():
   mdpR = toyMDP()
 
   mdpH = copy.deepcopy(mdpR)
+
   # restrict the human's actions space
+  # the human can only reach state 1. state 2 is unreachable from state 0.
   mdpH.A = range(1)
   
   delta = [(s, a) for s in mdpR.S for a in mdpR.A if a not in mdpH.A]
