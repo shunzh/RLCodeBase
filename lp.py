@@ -36,7 +36,7 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(S, A, r, T, s0, terminal, gamma=1, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1):
+def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1):
   """
   Solve the dual problem of lp, maybe with some constraints
   Same arguments
@@ -44,6 +44,12 @@ def lpDual(S, A, r, T, s0, terminal, gamma=1, zeroConstraints=[], positiveConstr
   Note that this is a lower level function that does not consider feature extraction.
   r should be a reward function, not a reward parameter.
   """
+  S = mdp.S
+  A = mdp.A
+  T = mdp.T
+  r = mdp.r
+  gamma = mdp.gamma
+
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
 

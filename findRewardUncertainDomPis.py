@@ -23,11 +23,11 @@ def findUndominatedReward(mdpH, mdpR, newPi, humanPi, localDifferentPis, domPis)
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
   
-  S = mdpH['S']
-  robotA = mdpR['A']
-  humanA = mdpH['A']
-  T = mdpH['T']
-  gamma = mdpH['gamma']
+  S = mdpH.S
+  robotA = mdpR.A
+  humanA = mdpH.A
+  T = mdpH.T
+  gamma = mdpH.gamma
 
   # useful constants
   Sr = range(len(S))
@@ -69,18 +69,18 @@ def findDomPis(mdpH, mdpR, delta):
   delta: the actions that the robot can take and the human cannot.
   """
   # compute the set of state, action pairs that have different transitions under mdpH and mdpH
-  S = mdpH['S']
-  humanA = mdpH['A']
-  robotA = mdpR['A']
-  T = mdpR['T'] # note that the human and the robot have the same transition probabilities. The robot just has more actions
-  gamma = mdpH['gamma']
+  S = mdpH.S
+  humanA = mdpH.A
+  robotA = mdpR.A
+  T = mdpR.T # note that the human and the robot have the same transition probabilities. The robot just has more actions
+  gamma = mdpH.gamma
  
   # find the occupancy of policy humanPi from any state
   occupancies = {}
   
   mdpLocal = copy.deepcopy(mdpH)
   for s in S:
-    mdpLocal['s0'] = s
+    mdpLocal.s0 = s
     objValue, pi = lp.lpDual(**mdpLocal)
     
     for (deltaS, deltaA) in delta:
@@ -145,27 +145,35 @@ def adjustOccupancy(mdp, pi, occ, s, a=None):
   if mdp['terminal'](s) or abs(occ) < 0.001: return
 
   if a == None:
-    for ap in mdp['A']:
+    for ap in mdp.A:
       if pi[s, ap] > 0:
         pi[s, ap] += occ * pi[s, ap] 
 
-        [adjustOccupancy(mdp, pi, sp, mdp['gamma'] * occ) for sp in mdp['S'] if mdp['T'](s, a, sp) > 0]
+        [adjustOccupancy(mdp, pi, sp, mdp.gamma * occ) for sp in mdp.S if mdp.T(s, a, sp) > 0]
   else:
     pi[(s, a)] += occ
 
-    [adjustOccupancy(mdp, pi, sp, mdp['gamma'] * occ) for sp in mdp['S'] if mdp['T'](s, a, sp) > 0]
+    [adjustOccupancy(mdp, pi, sp, mdp.gamma * occ) for sp in mdp.S if mdp.T(s, a, sp) > 0]
 
 def toyMDP():
-  mdp = {}
+  """
+  
+  """
+  mdp = easyDomains.SimpleMDP()
 
-  mdp['S'] = range(3)
-  mdp['A'] = range(2)
-  T = {(0, 0): 1, (0, 1): 2, (1, 0): 1, (1, 1): 1, (2, 0): 2, (2, 1): 2}
-  mdp['T'] = lambda s, a, sp: T[s, a] == sp # deterministic transitions
-  mdp['r'] = lambda s, a: s == 1 # only state 1 has positive reward
-  mdp['gamma'] = .5
-  mdp['terminal'] = lambda _: False
-  mdp['s0'] = 0
+  mdp.S = range(3)
+  mdp.A = range(2)
+
+  tDict = {(0, 0): 1, (0, 1): 2, (1, 0): 1, (1, 1): 1, (2, 0): 2, (2, 1): 2}
+  mdp.T = lambda s, a, sp: tDict[s, a] == sp # deterministic transitions
+
+  mdp.r = lambda s, a: s == 1 # only state 1 has positive reward
+
+  mdp.gamma = .5
+
+  mdp.terminal = lambda _: False
+
+  mdp.s0 = 0
   
   return mdp
 
@@ -178,9 +186,9 @@ def experiment():
 
   mdpH = copy.deepcopy(mdpR)
   # restrict the human's actions space
-  mdpH['A'] = range(1)
+  mdpH.A = range(1)
   
-  delta = [(s, a) for s in mdpR['S'] for a in mdpR['A'] if a not in mdpH['A']]
+  delta = [(s, a) for s in mdpR.S for a in mdpR.A if a not in mdpH.A]
 
   findDomPis(mdpH, mdpR, delta)
   
