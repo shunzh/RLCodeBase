@@ -4,7 +4,6 @@ import easyDomains
 import copy
 import lp
 import config
-import util
 from easyDomains import occupancyAdd
 
 try:
@@ -77,11 +76,11 @@ def findDomPis(mdpH, mdpR, delta):
   
   mdpLocal = copy.deepcopy(mdpH)
   for s in S:
-    mdpLocal.s0 = s
+    mdpLocal.resetInitialState(s)
     objValue, pi = lp.lpDual(mdpLocal)
     
     for (deltaS, deltaA) in delta:
-      # the human is unbale to take this action
+      # the human is unbale to take this action, make sure here
       assert (deltaS, deltaA) not in pi.keys()
       pi[deltaS, deltaA] = 0
     occupancies[s] = pi
@@ -91,7 +90,7 @@ def findDomPis(mdpH, mdpR, delta):
     # passing mdpR because we need all actions
     occupancyAdd(mdpR, averageHumanOccupancy, occupancies[s0], 1.0 / len(S))
 
-  # find the policie that are different from $\pi^*_\H$ only in one state
+  # find the policies that are different from $\pi^*_\H$ only in one state
   localDifferentPis = {}
   for diffS in S:
     for diffA in robotA:
@@ -124,12 +123,11 @@ def findDomPis(mdpH, mdpR, delta):
       print s, a
       objValue, r = findUndominatedReward(mdpH, mdpR, newPi, averageHumanOccupancy, localDifferentPis, domPis)
       
-      if objValue > 0:
+      if objValue > 0.0001: # resolve numerical issues
         domRewards.append(r)
       
         # find the corresponding optimal policy and add to the set of dominating policies
         mdpR.r = r
-        # TODO needs use the same alpha
         _, newDompi = lp.lpDual(mdpR)
 
         domPis.append(newDompi)
@@ -183,7 +181,7 @@ def toyMDP():
 
   mdp.terminal = lambda _: False
 
-  mdp.s0 = 0
+  mdp.alpha = lambda s: 1.0 / len(mdp.S)
   
   return mdp
 

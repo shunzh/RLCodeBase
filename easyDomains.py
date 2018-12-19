@@ -4,7 +4,7 @@ import itertools
 import copy
 
 class SimpleMDP:
-  def __init__(self, S=[], A=[], T=None, r=None, s0=None, terminal=lambda _: False, gamma=1, psi=[1]):
+  def __init__(self, S=[], A=[], T=None, r=None, alpha=None, terminal=lambda _: False, gamma=1, psi=[1]):
     """
     Most methods do component assignment separately, so setting dummy default values.
     """
@@ -12,10 +12,13 @@ class SimpleMDP:
     self.A = A
     self.T = T
     self.r = r
-    self.s0 = s0
+    self.alpha = alpha
     self.terminal = terminal
     self.gamma = gamma
     self.psi = psi
+  
+  def resetInitialState(self, initS):
+    self.alpha = lambda s: s == initS
 
 def convert(cmp, rewardSet, psi):
   """
@@ -32,7 +35,7 @@ def convert(cmp, rewardSet, psi):
     else: return 0
   ret.T = transition
   ret.r = rewardSet
-  ret.s0 = cmp.state
+  ret.alpha = lambda s: s == cmp.state
   ret.psi = psi
 
   # FIXME should simple MDP support psi??
@@ -116,7 +119,8 @@ def getRockDomain(size, numRocks, rewardCandNum, fixedRocks = False, randSeed = 
       rocks = np.random.permutation(ret['S'])[:numRocks]
       ret.R.append(rewardConstruct(rocks))
 
-  ret.s0 = (0, size / 2)
+  s0 = (0, size / 2)
+  ret.alpha = lambda s: s == s0
   ret.psi = [1.0 / rewardCandNum] * rewardCandNum
 
   return ret
@@ -136,7 +140,8 @@ def getChainDomain(length):
 
   ret.T = lambda s, a, sp: 1 if transit(s, a) == sp else 0
   ret.R = [lambda s, a: 1 if s == length - 1 and a == 1 else 0]
-  ret.s0 = length / 2
+  s0 = length / 2
+  ret.alpha = lambda s: s == s0
   ret.psi = [1]
   
   return ret
@@ -208,7 +213,7 @@ def randMDP(states, actions, rewardSparsity):
   # for now, consider deterministic transition functions
   T = lambda s, a, sp: tDict[s, a] == sp
   
-  s0 = states[0]
+  alpha = lambda s: 1.0 / len(states)
   
   gamma = .9
   
@@ -216,4 +221,4 @@ def randMDP(states, actions, rewardSparsity):
   terminal = lambda s: False
   
   # return the mdp in a tuple
-  return SimpleMDP(states, actions, T, R, s0, terminal, gamma)
+  return SimpleMDP(states, actions, T, R, alpha, terminal, gamma)

@@ -49,8 +49,8 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   T = mdp.T
   r = mdp.r
   gamma = mdp.gamma
-  s0 = mdp.s0
-
+  alpha = mdp.alpha
+  
   m = CPlexModel()
   if not config.VERBOSE: m.setVerbosity(0)
 
@@ -63,7 +63,7 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   # make sure x is a valid occupancy
   for sp in Sr:
     # x (x(s) - \gamma * T) = \sigma
-    m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == (S[sp] == s0))
+    m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == alpha(S[sp]))
   
   # == constraints
   if len(zeroConstraints) > 0:
