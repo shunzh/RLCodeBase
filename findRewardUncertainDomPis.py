@@ -40,12 +40,10 @@ def findUndominatedReward(mdpH, mdpR, newPi, humanPi, localDifferentPis, domPis)
   # make sure r is consistent with humanPi
   for s in S:
     for a in humanA:
-      humanAlterPi = localDifferentPis[s, a]
-      m.constrain(sum((humanPi[S[sp], humanA[ap]] - humanAlterPi[S[sp], humanA[ap]]) * r[sp] for sp in Sr for ap in humanAr) >= 0)
+      m.constrain(sum((humanPi[S[sp], humanA[ap]] - localDifferentPis[s, a][S[sp], humanA[ap]]) * r[sp] for sp in Sr for ap in humanAr) >= 0)
     
   # maxi_r { V^{newPi}_r - \max_{domPi \in domPis} V^{domPi}_r }
-  obj = m.maximize(sum(newPi[S[s], robotA[a]] * r[s] for s in Sr for a in robotAr) - z)
-  print 'cplex obj', obj
+  m.maximize(sum(newPi[S[s], robotA[a]] * r[s] for s in Sr for a in robotAr) - z)
   
   obj = sum([newPi[S[s], robotA[a]] * m[r][s] for s in Sr for a in robotAr]) - m[z]
 
@@ -81,7 +79,7 @@ def findDomPis(mdpH, mdpR, delta):
     objValue, pi = lp.lpDual(mdpLocal)
     
     for (deltaS, deltaA) in delta:
-      # the human is unbale to take this action, make sure here
+      # the human is unable to take this action, make sure here
       assert (deltaS, deltaA) not in pi.keys()
       pi[deltaS, deltaA] = 0
     occupancies[s] = pi
@@ -192,19 +190,15 @@ def toyMDP():
   return mdp
 
 def toyMDPDummyAction():
-  """
-  Starting from state 0, both the human and the robot can reach state 1 and state 2.
-  The human wants to reach state 1. The root has an extra action which can reach state 2,
-  which is dummy since the human alreay shows that state 1 is better than state 2.
-  """
   mdp = easyDomains.SimpleMDP()
 
-  mdp.S = range(3)
+  mdp.S = range(4)
   mdp.A = range(3)
 
-  tDict = {(0, 0): 1, (0, 1): 1, (0, 2): 2,\
+  tDict = {(0, 0): 1, (0, 1): 2, (0, 2): 3,\
            (1, 0): 1, (1, 1): 1, (1, 2): 1,\
-           (2, 0): 2, (2, 1): 2, (2, 2): 2}
+           (2, 0): 2, (2, 1): 2, (2, 2): 2,\
+           (3, 0): 3, (3, 1): 3, (3, 2): 3}
   mdp.T = lambda s, a, sp: tDict[s, a] == sp # deterministic transitions
 
   mdp.r = lambda s, a: s == 1 # only state 1 has positive reward
