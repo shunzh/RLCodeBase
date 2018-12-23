@@ -44,7 +44,8 @@ def findUndominatedReward(mdpH, mdpR, newPi, humanPi, localDifferentPis, domPis)
       m.constrain(sum((humanPi[S[sp], humanA[ap]] - humanAlterPi[S[sp], humanA[ap]]) * r[sp] for sp in Sr for ap in humanAr) >= 0)
     
   # maxi_r { V^{newPi}_r - \max_{domPi \in domPis} V^{domPi}_r }
-  m.maximize(sum(newPi[S[s], robotA[a]] * r[s] for s in Sr for a in robotAr) - z)
+  obj = m.maximize(sum(newPi[S[s], robotA[a]] * r[s] for s in Sr for a in robotAr) - z)
+  print 'cplex obj', obj
   
   obj = sum([newPi[S[s], robotA[a]] * m[r][s] for s in Sr for a in robotAr]) - m[z]
 
@@ -166,13 +167,44 @@ def adjustOccupancy(mdp, pi, occ, s, a=None):
 def toyMDP():
   """
   Starting from state 0, the robot has two actions to reach state 1 and 2, respectively, and then stay there.
+  The human can only reach state 1 from state 0.
+  
+  This is to show that the robot should check whether reaching state 2 can possibly improve the policy.
   """
   mdp = easyDomains.SimpleMDP()
 
   mdp.S = range(3)
   mdp.A = range(2)
 
-  tDict = {(0, 0): 1, (0, 1): 2, (1, 0): 1, (1, 1): 1, (2, 0): 2, (2, 1): 2}
+  tDict = {(0, 0): 1, (0, 1): 2,\
+           (1, 0): 1, (1, 1): 1,\
+           (2, 0): 2, (2, 1): 2}
+  mdp.T = lambda s, a, sp: tDict[s, a] == sp # deterministic transitions
+
+  mdp.r = lambda s, a: s == 1 # only state 1 has positive reward
+
+  mdp.gamma = .5
+
+  mdp.terminal = lambda _: False
+
+  mdp.alpha = lambda s: 1.0 / len(mdp.S)
+  
+  return mdp
+
+def toyMDPDummyAction():
+  """
+  Starting from state 0, both the human and the robot can reach state 1 and state 2.
+  The human wants to reach state 1. The root has an extra action which can reach state 2,
+  which is dummy since the human alreay shows that state 1 is better than state 2.
+  """
+  mdp = easyDomains.SimpleMDP()
+
+  mdp.S = range(3)
+  mdp.A = range(3)
+
+  tDict = {(0, 0): 1, (0, 1): 1, (0, 2): 2,\
+           (1, 0): 1, (1, 1): 1, (1, 2): 1,\
+           (2, 0): 2, (2, 1): 2, (2, 2): 2}
   mdp.T = lambda s, a, sp: tDict[s, a] == sp # deterministic transitions
 
   mdp.r = lambda s, a: s == 1 # only state 1 has positive reward
@@ -190,13 +222,12 @@ def experiment():
   #rewardSparsity = .2
   #mdpR = easyDomains.randMDP(states, robotActions, rewardSparsity)
   
-  mdpR = toyMDP()
+  #mdpR = toyMDP()
+  mdpR = toyMDPDummyAction()
 
   mdpH = copy.deepcopy(mdpR)
-
   # restrict the human's actions space
-  # the human can only reach state 1. state 2 is unreachable from state 0.
-  mdpH.A = range(1)
+  mdpH.A = mdpR.A[:-1]
   
   delta = [(s, a) for s in mdpR.S for a in mdpR.A if a not in mdpH.A]
 

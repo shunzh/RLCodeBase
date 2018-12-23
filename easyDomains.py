@@ -18,6 +18,9 @@ class SimpleMDP:
     self.psi = psi
   
   def resetInitialState(self, initS):
+    """
+    reset the initial state distribution to be deterministically starting from initS
+    """
     self.alpha = lambda s: s == initS
 
 def convert(cmp, rewardSet, psi):
