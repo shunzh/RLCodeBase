@@ -31,7 +31,7 @@ def findUndominatedReward(mdpH, mdpR, newPi, humanPi, localDifferentPis, domPis)
   robotAr = range(len(robotA))
   humanAr = range(len(humanA))
   
-  r = m.new(len(S), lb=-1, ub=1, name='r')
+  r = m.new(len(S), lb=0, ub=1, name='r')
   z = m.new(name='z') # when the optimal value is attained, z = \max_{domPi \in domPis} V^{domPi}_r
 
   for domPi in domPis:
@@ -40,20 +40,23 @@ def findUndominatedReward(mdpH, mdpR, newPi, humanPi, localDifferentPis, domPis)
   # make sure r is consistent with humanPi
   for s in S:
     for a in humanA:
-      m.constrain(sum((humanPi[S[sp], humanA[ap]] - localDifferentPis[s, a][S[sp], humanA[ap]]) * r[sp] for sp in Sr for ap in humanAr) >= 0)
+      # humanPi is better than a locally different policy which takes action a in state a
+      m.constrain(sum(sum((humanPi[S[sp], humanA[ap]] - localDifferentPis[s, a][S[sp], humanA[ap]]) for ap in humanAr)\
+                      * r[sp] for sp in Sr) >= 0)
     
   # maxi_r { V^{newPi}_r - \max_{domPi \in domPis} V^{domPi}_r }
-  m.maximize(sum(newPi[S[s], robotA[a]] * r[s] for s in Sr for a in robotAr) - z)
+  cplexObj = m.maximize(sum(newPi[S[s], robotA[a]] * r[s] for s in Sr for a in robotAr) - z)
   
   obj = sum([newPi[S[s], robotA[a]] * m[r][s] for s in Sr for a in robotAr]) - m[z]
 
   # the reward function has the same values for same states, but need to convert back to the S x A space
   rFunc = lambda s, a: m[r][Sr.index(s)]
 
+  print 'cplexobj', cplexObj
   print 'obj', obj
-  print 'newPi', newPi
+  print 'newPi'
+  printPi(newPi)
   print 'z', m[z], 'r', m[r]
-  raw_input()
 
   return obj, rFunc
 
@@ -61,7 +64,9 @@ def findDomPis(mdpH, mdpR, delta):
   """
   Implementation of algorithm 1 in report 12.5
   
-  mdpH, mdpR: both agents' mdps. now we assume that they are only different in the action space: the robot's action set is a superset of the human's.
+  mdpH, mdpR: both agents' mdps. now we assume that they are only different in the action space:
+  the robot's action set is a superset of the human's.
+
   delta: the actions that the robot can take and the human cannot.
   """
   # compute the set of state, action pairs that have different transitions under mdpH and mdpH
@@ -106,7 +111,8 @@ def findDomPis(mdpH, mdpR, delta):
           
       localDifferentPis[diffS, diffA] = pi
 
-  print 'average human', averageHumanOccupancy
+  print 'average human'
+  printPi(averageHumanOccupancy)
   domPis = [averageHumanOccupancy]
   domPiAdded = True
  
@@ -130,10 +136,12 @@ def findDomPis(mdpH, mdpR, delta):
         _, newDompi = lp.lpDual(mdpR)
 
         domPis.append(newDompi)
+        print 'dompi added'
+        printPi(newDompi)
         
         domPiAdded = True
-    
-    print domPis
+
+      raw_input()
   
   return domPis
 
@@ -141,27 +149,6 @@ def printReward(S, A, r):
   for s in S:
     print s, [r(s, a) for a in A]
   
-def adjustOccupancy(mdp, pi, occ, s, a=None):
-  """
-  DUMMY?
-
-  add occ to s, a, recursively, and stop when reaching the terminal state or the occupancy is too small
-  if a == None, then a := pi(s)
-  """
-  # recursion stop criterion
-  if mdp['terminal'](s) or abs(occ) < 0.001: return
-
-  if a == None:
-    for ap in mdp.A:
-      if pi[s, ap] > 0:
-        pi[s, ap] += occ * pi[s, ap] 
-
-        [adjustOccupancy(mdp, pi, sp, mdp.gamma * occ) for sp in mdp.S if mdp.T(s, a, sp) > 0]
-  else:
-    pi[(s, a)] += occ
-
-    [adjustOccupancy(mdp, pi, sp, mdp.gamma * occ) for sp in mdp.S if mdp.T(s, a, sp) > 0]
-
 def toyMDP():
   """
   Starting from state 0, the robot has two actions to reach state 1 and 2, respectively, and then stay there.
@@ -185,7 +172,7 @@ def toyMDP():
 
   mdp.terminal = lambda _: False
 
-  mdp.alpha = lambda s: 1.0 / len(mdp.S)
+  mdp.alpha = lambda _: 1.0 / len(mdp.S)
   
   return mdp
 
@@ -207,9 +194,17 @@ def toyMDPDummyAction():
 
   mdp.terminal = lambda _: False
 
-  mdp.alpha = lambda s: 1.0 / len(mdp.S)
+  mdp.alpha = lambda _: 1.0 / len(mdp.S)
   
   return mdp
+
+def printPi(pi):
+  """
+  print non-zero-occupancy states in ascending order
+  """
+  l = filter(lambda _: _[1] > 0, pi.items())
+  l.sort(key=lambda _: _[0])
+  print l
 
 def experiment():
   # the human's mdp
