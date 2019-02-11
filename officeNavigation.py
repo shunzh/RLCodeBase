@@ -32,8 +32,19 @@ class Spec():
   """
   A object that get a dictionary and convert them into attributes
   """
-  def __init__(self, adict):
-    self.__dict__.update(adict)
+  def __init__(self, **args):
+    self.width = args['width']
+    self.height = args['height']
+    
+    self.robot = args['robot']
+    self.switch = args['switch']
+    
+    self.walls = args['walls']
+    self.doors = args['doors']
+    self.boxex = args['boxes']
+    self.carpets = args['carpets']
+    
+    self.horizon = args['horizon']
 
 def sampleWrold():
   """
@@ -66,10 +77,7 @@ def squareWorld(size, numOfCarpets):
   
   horizon = width + height
  
-  dict = {}
-  for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
-    dict[var] = eval(var)
-  return Spec(dict)
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
 
 def toySokobanWorld():
   """
@@ -93,10 +101,7 @@ def toySokobanWorld():
   
   horizon = 10
   
-  dict = {}
-  for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
-    dict[var] = eval(var)
-  return Spec(dict)
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
 
 def sokobanWorld():
   """
@@ -121,10 +126,7 @@ def sokobanWorld():
   
   horizon = 20
   
-  dict = {}
-  for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
-    dict[var] = eval(var)
-  return Spec(dict)
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
 
 def parameterizedSokobanWorld(size, numOfBoxes):
   """
@@ -142,10 +144,7 @@ def parameterizedSokobanWorld(size, numOfBoxes):
   
   horizon = size * 2
   
-  dict = {}
-  for var in ['width', 'height', 'robot', 'switch', 'walls', 'doors', 'boxes', 'carpets', 'horizon']:
-    dict[var] = eval(var)
-  return Spec(dict)
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
 
 def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   """
@@ -363,83 +362,87 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   
   agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
 
-  # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
-  # if so we do not need to compute them again.
-  domainFileName = 'domain_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl'
-  if os.path.exists(domainFileName):
-    data = pickle.load(open(domainFileName, 'rb'))
-    if data == 'INITIALIZED':
-      # failure in computing dom pi. do not try again.
-      print "ABORT"
-      return
-    else:
-      (relFeats, domPis, domPiTime) = data
+  if not agent.initialSafePolicyExists():
+    # if there are no initial safe policies, the agent needs to query to find safe policies
+    iiss = agent.findIISs()
   else:
-    # don't save anything if we are dryrun
-    if not dry:
-      pickle.dump('INITIALIZED', open(domainFileName, 'wb'))
-
-    # find dom pi (which may be used to find queries and will be used for evaluation)
-    start = time.time()
-    relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
-    end = time.time()
-    domPiTime = end - start
-
-    print "num of rel feats", len(relFeats)
-    
-    if not dry:
-      pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
-
-  methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
-
-  # decide the true changeable features for expected regrets
-  numpy.random.seed(2 * (1 + rnd)) # avoid weird coupling, e.g., the ones that are queried are exactly the true changeable ones
-  violableIndices = numpy.random.choice(range(len(agent.allCons)), k, replace=False)
-  violableCons = [agent.allCons[_] for _ in violableIndices]
-
-  for method in methods:
-    start = time.time()
-    if method == 'brute':
-      q = agent.findMinimaxRegretConstraintQBruteForce(k, relFeats, domPis)
-    elif method == 'reallyBrute':
-      # really brute still need domPis to find out MR...
-      q = agent.findMinimaxRegretConstraintQBruteForce(k, agent.allCons, domPis)
-    elif method == 'alg1':
-      q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis)
-    elif method == 'alg1NoFilter':
-      q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, filterHeu=False)
-    elif method == 'alg1NoScope':
-      q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, scopeHeu=False)
-    elif method == 'naiveChain':
-      q = agent.findChainedAdvConstraintQ(k, relFeats, domPis, informed=False)
-    elif method == 'chain':
-      q = agent.findChainedAdvConstraintQ(k, relFeats, domPis, informed=True)
-    elif method == 'relevantRandom':
-      q = agent.findRelevantRandomConstraintQ(k, relFeats)
-    elif method == 'random':
-      q = agent.findRandomConstraintQ(k)
-    elif method == 'nq':
-      q = []
-    elif method == 'domPiBruteForce':
-      # HACKING compute how long is needed to find a dominating policies by enumeration
-      agent.findRelevantFeaturesBruteForce()
-      q = []
+    # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
+    # if so we do not need to compute them again.
+    domainFileName = 'domain_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl'
+    if os.path.exists(domainFileName):
+      data = pickle.load(open(domainFileName, 'rb'))
+      if data == 'INITIALIZED':
+        # failure in computing dom pi. do not try again.
+        print "ABORT"
+        return
+      else:
+        (relFeats, domPis, domPiTime) = data
     else:
-      raise Exception('unknown method', method)
-    end = time.time()
+      # don't save anything if we are dryrun
+      if not dry:
+        pickle.dump('INITIALIZED', open(domainFileName, 'wb'))
 
-    runTime = end - start + (0 if method in ['random', 'nq'] else domPiTime)
+      # find dom pi (which may be used to find queries and will be used for evaluation)
+      start = time.time()
+      relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+      end = time.time()
+      domPiTime = end - start
 
-    print method, q
+      print "num of rel feats", len(relFeats)
+      
+      if not dry:
+        pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
 
-    mrk, advPi = agent.findMRAdvPi(q, relFeats, domPis, k, consHuman=True)
+    methods = ['alg1', 'chain', 'naiveChain', 'relevantRandom', 'random', 'nq']
 
-    regret = agent.findRegret(q, violableCons)
+    # decide the true changeable features for expected regrets
+    numpy.random.seed(2 * (1 + rnd)) # avoid weird coupling, e.g., the ones that are queried are exactly the true changeable ones
+    violableIndices = numpy.random.choice(range(len(agent.allCons)), k, replace=False)
+    violableCons = [agent.allCons[_] for _ in violableIndices]
 
-    print mrk, regret, runTime
-    
-    if not dry:
-      saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
+    for method in methods:
+      start = time.time()
+      if method == 'brute':
+        q = agent.findMinimaxRegretConstraintQBruteForce(k, relFeats, domPis)
+      elif method == 'reallyBrute':
+        # really brute still need domPis to find out MR...
+        q = agent.findMinimaxRegretConstraintQBruteForce(k, agent.allCons, domPis)
+      elif method == 'alg1':
+        q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis)
+      elif method == 'alg1NoFilter':
+        q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, filterHeu=False)
+      elif method == 'alg1NoScope':
+        q = agent.findMinimaxRegretConstraintQ(k, relFeats, domPis, scopeHeu=False)
+      elif method == 'naiveChain':
+        q = agent.findChainedAdvConstraintQ(k, relFeats, domPis, informed=False)
+      elif method == 'chain':
+        q = agent.findChainedAdvConstraintQ(k, relFeats, domPis, informed=True)
+      elif method == 'relevantRandom':
+        q = agent.findRelevantRandomConstraintQ(k, relFeats)
+      elif method == 'random':
+        q = agent.findRandomConstraintQ(k)
+      elif method == 'nq':
+        q = []
+      elif method == 'domPiBruteForce':
+        # HACKING compute how long is needed to find a dominating policies by enumeration
+        agent.findRelevantFeaturesBruteForce()
+        q = []
+      else:
+        raise Exception('unknown method', method)
+      end = time.time()
+
+      runTime = end - start + (0 if method in ['random', 'nq'] else domPiTime)
+
+      print method, q
+
+      mrk, advPi = agent.findMRAdvPi(q, relFeats, domPis, k, consHuman=True)
+
+      regret = agent.findRegret(q, violableCons)
+
+      print mrk, regret, runTime
+      
+      if not dry:
+        saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
 
 def saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret):
   ret = {}
@@ -494,7 +497,7 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  #classicOfficNav(squareWorld(size, numOfCarpets), k, constrainHuman, dry, rnd)
-  classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
+  classicOfficNav(squareWorld(size, numOfCarpets), k, constrainHuman, dry, rnd)
+  #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)

@@ -5,6 +5,7 @@ import copy
 import numpy
 import itertools
 import config
+from UCT import MCTS
 
 
 class ConsQueryAgent():
@@ -30,6 +31,29 @@ class ConsQueryAgent():
 
     self.allCons = self.consIndices
   
+  def initialSafePolicyExists(self):
+    """
+    Run the LP solver with all constraints and see if the LP problem is feasible.
+    """
+    mdp = copy.copy(self.mdp)
+    mdp['zeroConstraints'] = self.constructConstraints(self.allCons, mdp)
+                           
+    if config.METHOD == 'lp':
+      opt, x = lpDual(**mdp)
+      # if no solution exists, the lp solver returns a None value
+      # if None is returned, this function returns true.
+      return opt == None
+    elif config.METHOD == 'mcts':
+      #TODO
+      raise Exception('unimplemented method')
+    else:
+      raise Exception('unknown method')
+
+  def findIISs(self, exhaustive=True):
+    """
+    Find all IISs.
+    """
+
   def findConstrainedOptPi(self, activeCons):
     mdp = copy.copy(self.mdp)
 
@@ -44,6 +68,7 @@ class ConsQueryAgent():
 
     return x
 
+  #FIXME what is this for?? just to check the computation time?
   def findRelevantFeaturesBruteForce(self):
     allConsPowerset = set(powerset(self.allCons))
 
@@ -319,6 +344,7 @@ class ConsQueryAgent():
       regret = humanValue - robotValue
       
       assert robotPi != None
+      # ignore numerical issues
       assert regret >= -0.00001, 'human %f, robot %f' % (humanValue, robotValue)
 
       if regret > maxRegret or (regret == maxRegret and advPi == None):

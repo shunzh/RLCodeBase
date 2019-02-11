@@ -1,5 +1,5 @@
 try:
-  from pycpx import CPlexModel, CPlexException
+  from pycpx import CPlexModel, CPlexException, CPlexNoSolution
 except ImportError:
   print "can't import CPlexModel"
 import easyDomains
@@ -77,9 +77,13 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   try:
     obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
   except CPlexException as err:
-    print 'Exception', err
-    # we return obj value as None and occ measure as {}. this should be handled correctly
-    return None, {}
+    if type(err) == CPlexNoSolution:
+      # We use value of None to represent no solution case.
+      # this should be handled correctly
+      return None, {}
+    else:
+      print 'Exception', err
+      raise
 
   return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 
