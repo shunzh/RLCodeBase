@@ -36,7 +36,7 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1):
+def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1, iissMethod=None):
   """
   Solve the dual problem of lp, maybe with some constraints
   Same arguments
@@ -78,9 +78,14 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
     obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
   except CPlexException as err:
     if type(err) == CPlexNoSolution:
-      # We use value of None to represent no solution case.
-      # this should be handled correctly
-      return None, {}
+      if iissMethod == None:
+        # just return None without finding IISs
+        return None, {}
+      elif iissMethod == 'exhaustive':
+        # find all IISs in this case
+        print dir(m)
+      else:
+        raise Exception('Dont know how to handle the no solution case.')
     else:
       print 'Exception', err
       raise

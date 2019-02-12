@@ -30,31 +30,45 @@ TERMINATE = 'terminate'
 
 class Spec():
   """
-  A object that get a dictionary and convert them into attributes
+  A object that describes the specifications of an MDP
   """
-  def __init__(self, **args):
-    self.width = args['width']
-    self.height = args['height']
+  def __init__(self, width, height, robot, switch, walls, doors, boxes, carpets, horizon):
+    self.width = width
+    self.height = height
     
-    self.robot = args['robot']
-    self.switch = args['switch']
+    self.robot = robot
+    self.switch = switch
     
-    self.walls = args['walls']
-    self.doors = args['doors']
-    self.boxex = args['boxes']
-    self.carpets = args['carpets']
+    self.walls = walls
+    self.doors = doors
+    self.boxes = boxes
+    self.carpets = carpets
     
-    self.horizon = args['horizon']
+    self.horizon = horizon
 
-def sampleWrold():
+def toyWrold():
   """
-     _________
-  2 | |     |S|
-  1 |  D_C_D  |
-  0 |R___C____|
-     0 1 2 3 4
+     _____
+  2 |  C S|
+  1 |  C  |
+  0 |R_C__|
+     0 1 2
   """
-  pass
+  width = 3
+  height = 3
+  
+  robot = (0, 0)
+  switch = (width - 1, height - 1)
+  
+  walls = []
+  doors = []
+
+  carpets = [(1, 0), (2, 0), (3, 0)]
+  boxes = []
+  
+  horizon = width + height
+ 
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
 
 def squareWorld(size, numOfCarpets):
   """
@@ -150,9 +164,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   """
   The office navigation domain specified in the report using a factored representation.
   There are state factors indicating whether some carpets are dirty.
-
-  don't want to use locals.update.. otherwise would be hard to debug
   """
+  # need to flatten the state representation to a vector.
+  # (robot's location, doors, boxes, switch, time)
+  
   # robot's location
   lIndex = 0
   
@@ -174,8 +189,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   dIndices = range(dIndexStart, dIndexStart + dSize)
   bIndices = range(bIndexStart, bIndexStart + bSize)
   
- 
-  directionalActs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+  #directionalActs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+  directionalActs = [(1, 0), (0, 1)]
   aSets = directionalActs + [TURNOFFSWITCH]
  
   # check what the world is like
@@ -271,17 +286,16 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   tFunc = [navigate] +\
           [doorOpGen(i, spec.doors[i - dIndexStart]) for i in dIndices] +\
           [boxOpGen(i) for i in bIndices] +\
-          [switchOp, timeElapse]
+          [switchOp]
 
   s0List = [spec.robot] +\
            [CLOSED for _ in spec.doors] +\
            spec.boxes +\
-           [ON, 0]
+           [ON]
   s0 = tuple(s0List)
   
-  # FIXME check this, terminal when at the switch?
-  #terminal = lambda s: s[lIndex] == spec.switch
-  terminal = lambda s: s[tIndex] == spec.horizon
+  terminal = lambda s: s[lIndex] == spec.switch
+  #terminal = lambda s: s[tIndex] == spec.horizon
 
   # a list of possible reward functions
   # using locationReward in the IJCAI paper, where the difference between our algorithm and baselines are maximized
@@ -341,7 +355,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   rFunc = goalConstrainedReward(lambda s: s[sIndex] == OFF and all(s[bIdx] == s0[bIdx] for bIdx in bIndices))
   gamma = 0.99
 
-  mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, terminal, gamma)
+  mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma, terminal)
 
   """
   consStates is [[states that violate the i-th constraint] for i in all constraints]
@@ -358,7 +372,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   #consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in spec.carpets]
   
   # box constraints: by default, regard them as need-to-be-reverted features
-  consStates = [[s for s in mdp['S'] if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndices]
+  consStates = [[s for s in mdp.S if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndices]
   
   agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
 
@@ -497,7 +511,8 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  classicOfficNav(squareWorld(size, numOfCarpets), k, constrainHuman, dry, rnd)
+  classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd)
+  #classicOfficNav(squareWorld(size, numOfCarpets), k, constrainHuman, dry, rnd)
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)

@@ -49,10 +49,15 @@ class ConsQueryAgent():
     else:
       raise Exception('unknown method')
 
-  def findIISs(self, exhaustive=True):
+  def findIISs(self):
     """
     Find all IISs.
     """
+    mdp = copy.copy(self.mdp)
+    mdp['zeroConstraints'] = self.constructConstraints(self.allCons, mdp)
+    mdp['iissMethod'] = 'exhaustive'
+ 
+    lpDual(**mdp)
 
   def findConstrainedOptPi(self, activeCons):
     mdp = copy.copy(self.mdp)
@@ -359,10 +364,10 @@ class ConsQueryAgent():
     """
     The set of state, action pairs that should not be visited when cons are active constraints.
     """
-    return [(s, a) for a in mdp['A'] for con in cons for s in self.consStates[con]]
+    return [(s, a) for a in mdp.A for con in cons for s in self.consStates[con]]
 
   def computeValue(self, x):
-    return computeValue(x, self.mdp['r'], self.mdp['S'], self.mdp['A'])
+    return computeValue(x, self.mdp.r, self.mdp.S, self.mdp.A)
 
   def piSatisfiesCons(self, x, cons):
     violatedCons = self.findViolatedConstraints(x)
