@@ -63,6 +63,7 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   
   # initialize a Gurobi model
   m = Model()
+  m.setParam('OutputFlag', False)
 
   # useful constants
   Sr = range(len(S))
@@ -70,7 +71,7 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
 
   x = m.addVars(len(S), len(A), lb=0, name='x')
 
-  # make sure x is a valid occupancy
+  # flow conservation constraints
   for sp in Sr:
     # x (x(s) - \gamma * T) = \sigma
     m.addConstr(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == alpha(S[sp]))
@@ -89,10 +90,12 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   m.optimize()
   
   if m.status == GRB.Status.OPTIMAL: 
-    return {'feasible': True, 'obj': m.objVal, 'pi': {(S[s], A[a]): x[s, a] for s in Sr for a in Ar}}
-  elif m.status == GRB.Status.INFEASIBLE:
-    # if infeasible, find IISs
-    return {'feasible': False, 'iiss': m.computeIIS()}
+    # return feasible being true and the obj value, opt pi
+    # .X attribute is to retrieve the value of the variable
+    return {'feasible': True, 'obj': m.objVal, 'pi': {(S[s], A[a]): x[s, a].X for s in Sr for a in Ar}}
+  elif m.status == GRB.Status.INF_OR_UNBD:
+    # simply return infeasible
+    return {'feasible': False}
   else:
     raise Exception('error status: %d' % m.status)
 
@@ -305,7 +308,9 @@ def computeObj(q, psi, S, A, R):
 
 def computeValue(pi, r, S, A):
   sum = 0
-  if pi == {}: return sum
+
+  if pi == {}:
+    return sum
   else:
     for s in S:
       for a in A:

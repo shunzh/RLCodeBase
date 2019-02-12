@@ -380,12 +380,13 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   
   agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
 
-  initialSol = agent.findInitialSafePolicy()
-  
-  if not initialSol['feasible']:
+  if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     # if there are no initial safe policies, the agent needs to query to find safe policies
-    print initialSol['iiss']
+    print 'iiss'
+    print agent.findAllIISs()
+    
+    # query using a maximum coverage based on iiss found.
   else:
     print 'initial policy exists'
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.

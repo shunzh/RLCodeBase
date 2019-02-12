@@ -6,6 +6,7 @@ import numpy
 import itertools
 import config
 from UCT import MCTS
+from itertools import combinations
 
 
 class ConsQueryAgent():
@@ -31,11 +32,11 @@ class ConsQueryAgent():
 
     self.allCons = self.consIndices
   
-  def findInitialSafePolicy(self):
+  def initialSafePolicyExists(self):
     """
     Run the LP solver with all constraints and see if the LP problem is feasible.
     """
-    return self.findConstrainedOptPi(self.allCons)
+    return self.findConstrainedOptPi(self.allCons)['feasible']
 
   def findConstrainedOptPi(self, activeCons):
     mdp = self.mdp
@@ -48,13 +49,42 @@ class ConsQueryAgent():
       return MCTS(**mdp)
     else:
       raise Exception('unknown method')
+  
+  def findAllIISs(self):
+    """
+    a brute force way to find all iiss and return their indicies
+    can be O(2^|unknown features|)
+    """
+    allConsPowerset = powerset(self.allCons)
+    feasible = {}
+    iiss = []
+    
+    for cons in allConsPowerset:
+      # if any subset is already infeasible, no need to check this set. it's definitely infeasible and not an iis
+      if len(cons) > 0 and any(not feasible[subset] for subset in combinations(cons, len(cons) - 1)):
+        continue
+
+      # find if the lp is feasible by posing cons
+      sol = self.findConstrainedOptPi(cons)
+      feasible[cons] = sol['feasible']
+      
+      # must be feasible without unknown feature constraint (only with flow conservation constraints)
+      # otherwise implementation error in mdp
+      if len(cons) == 0: assert sol['feasible']
+      
+      # if it is infeasible and all its subsets are feasible (only need to check the subsets with one less element)
+      # then it's an iis
+      if not feasible[cons] and all(feasible[subset] for subset in combinations(cons, len(cons) - 1)):
+        iiss.append(cons)
+
+    return iiss
 
   #FIXME what is this for?? just to check the computation time?
   def findRelevantFeaturesBruteForce(self):
     allConsPowerset = set(powerset(self.allCons))
 
     for subsetsToConsider in allConsPowerset:
-      x = self.findConstrainedOptPi(subsetsToConsider)
+      self.findConstrainedOptPi(subsetsToConsider)
 
   def findRelevantFeaturesAndDomPis(self):
     """
@@ -87,7 +117,10 @@ class ConsQueryAgent():
       if skipThisCons:
         continue
 
-      x = self.findConstrainedOptPi(activeCons)
+      sol = self.findConstrainedOptPi(activeCons)
+      assert sol['feasible']
+      
+      x = sol['pi']
       printOccSA(x)
       print self.computeValue(x)
 
@@ -258,10 +291,10 @@ class ConsQueryAgent():
     """
     consRobotCanViolate = set(q).intersection(violableCons)
     rInvarCons = set(self.allCons).difference(consRobotCanViolate)
-    robotPi = self.findConstrainedOptPi(rInvarCons)
+    robotPi = self.findConstrainedOptPi(rInvarCons)['pi']
     
     hInvarCons = set(self.allCons).difference(violableCons)
-    humanPi = self.findConstrainedOptPi(hInvarCons)
+    humanPi = self.findConstrainedOptPi(hInvarCons)['pi']
     
     hValue = self.computeValue(humanPi)
     rValue = self.computeValue(robotPi)
