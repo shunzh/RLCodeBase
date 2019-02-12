@@ -63,7 +63,7 @@ def toyWrold():
   walls = []
   doors = []
 
-  carpets = [(1, 0), (2, 0), (3, 0)]
+  carpets = [(1, 0), (1, 1), (1, 2)]
   boxes = []
   
   horizon = width + height
@@ -205,6 +205,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       else: print '[  ]',
     print
   
+  print 'carpets'
   for _ in range(len(spec.carpets)): print _, spec.carpets[_]
 
   def boxMovable(idx, s, a):
@@ -350,10 +351,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     
     return reward
  
-  #rFunc = oldReward
+  rFunc = oldReward
   # only give reward of 1 if the switch is turned off and the boxes are in their initial locations
-  rFunc = goalConstrainedReward(lambda s: s[sIndex] == OFF and all(s[bIdx] == s0[bIdx] for bIdx in bIndices))
-  gamma = 0.99
+  #rFunc = goalConstrainedReward(lambda s: s[sIndex] == OFF and all(s[bIdx] == s0[bIdx] for bIdx in bIndices))
+  gamma = 1
 
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma, terminal)
 
@@ -369,17 +370,21 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     then states where the features are not inverted are forbidden.
   """
   # carpet constraints:
-  #consStates = [[s for s in mdp['S'] if s[lIndex] == _] for _ in spec.carpets]
+  carpetCons = [[s for s in mdp.S if s[lIndex] == _] for _ in spec.carpets]
   
   # box constraints: by default, regard them as need-to-be-reverted features
-  consStates = [[s for s in mdp.S if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndices]
+  boxCons = [[s for s in mdp.S if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndices]
+  
+  consStates = carpetCons + boxCons
   
   agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
 
   if not agent.initialSafePolicyExists():
+    print 'initial policy does not exist'
     # if there are no initial safe policies, the agent needs to query to find safe policies
     iiss = agent.findIISs()
   else:
+    print 'initial policy exists'
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
     # if so we do not need to compute them again.
     domainFileName = 'domain_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl'
@@ -411,6 +416,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
 
     # decide the true changeable features for expected regrets
     numpy.random.seed(2 * (1 + rnd)) # avoid weird coupling, e.g., the ones that are queried are exactly the true changeable ones
+    if len(agent.allCons) < k:
+      raise Exception('k is larger than the number of unknown features so no need to select queries. abort.')
     violableIndices = numpy.random.choice(range(len(agent.allCons)), k, replace=False)
     violableCons = [agent.allCons[_] for _ in violableIndices]
 
@@ -473,9 +480,9 @@ def saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
 if __name__ == '__main__':
   # default values
   method = None
-  k = 0
+  k = 1
   constrainHuman = False
-  dry = False # do not safe to files if dry run
+  dry = True # do not safe to files if dry run
 
   numOfCarpets = 0
   numOfBoxes = 4
@@ -496,9 +503,9 @@ if __name__ == '__main__':
       numOfCarpets = int(arg)
     elif opt == '-c':
       constrainHuman = True
-    elif opt == '-d':
-      # if dry run, do not save to file
-      dry = True
+    elif opt == '-f':
+      # disable dry run if output to file
+      dry = False
     elif opt == '-r':
       rnd = int(arg)
 

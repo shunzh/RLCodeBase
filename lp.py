@@ -76,7 +76,11 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   # obj
   try:
     obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
+    
+    return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
   except CPlexException as err:
+    print 'exception', err
+
     if type(err) == CPlexNoSolution:
       if iissMethod == None:
         # just return None without finding IISs
@@ -89,8 +93,6 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
     else:
       print 'Exception', err
       raise
-
-  return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
 
 def decomposePiLP(S, A, T, s0, terminal, rawX, x, gamma=1):
   """

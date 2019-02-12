@@ -35,14 +35,14 @@ class ConsQueryAgent():
     """
     Run the LP solver with all constraints and see if the LP problem is feasible.
     """
-    mdp = copy.copy(self.mdp)
-    mdp['zeroConstraints'] = self.constructConstraints(self.allCons, mdp)
+    mdp = self.mdp
+    zeroConstraints = self.constructConstraints(self.allCons, mdp)
                            
     if config.METHOD == 'lp':
-      opt, x = lpDual(**mdp)
+      opt, x = lpDual(mdp, zeroConstraints=zeroConstraints)
       # if no solution exists, the lp solver returns a None value
       # if None is returned, this function returns true.
-      return opt == None
+      return opt != None
     elif config.METHOD == 'mcts':
       #TODO
       raise Exception('unimplemented method')
@@ -53,19 +53,18 @@ class ConsQueryAgent():
     """
     Find all IISs.
     """
-    mdp = copy.copy(self.mdp)
-    mdp['zeroConstraints'] = self.constructConstraints(self.allCons, mdp)
-    mdp['iissMethod'] = 'exhaustive'
+    mdp = self.mdp
+    zeroConstraints = self.constructConstraints(self.allCons, mdp)
  
-    lpDual(**mdp)
+    lpDual(mdp, zeroConstraints=zeroConstraints, iissMethod='exhaustive')
 
   def findConstrainedOptPi(self, activeCons):
-    mdp = copy.copy(self.mdp)
+    mdp = self.mdp
 
-    mdp['zeroConstraints'] = self.constructConstraints(activeCons, mdp)
+    zeroConstraints = self.constructConstraints(activeCons, mdp)
                            
     if config.METHOD == 'lp':
-      opt, x = lpDual(**mdp)
+      opt, x = lpDual(mdp, zeroConstraints=zeroConstraints)
     elif config.METHOD == 'mcts':
       x = MCTS(**mdp)
     else:
@@ -380,15 +379,16 @@ class ConsQueryAgent():
     for idx in self.consIndices:
       # states violated by idx
       for s, a in x.keys():
-        if any(x[s, a] > 0 for a in self.mdp['A']) and s in self.consStates[idx]:
+        if any(x[s, a] > 0 for a in self.mdp.A) and s in self.consStates[idx]:
           var.add(idx)
     
     return set(var)
     
   def statesWithDifferentFeats(self, idx, mdp):
-    return filter(lambda s: s[idx] != mdp['s0'][idx], mdp['S'])
+    return filter(lambda s: s[idx] != mdp.s0[idx], mdp.S)
 
   # FIXME remove or not? only used by depreciated methods
+  """
   def statesTransitToDifferentFeatures(self, idx, value):
     ret = []
     for s in self.mdp['S']:
@@ -399,6 +399,7 @@ class ConsQueryAgent():
               ret.append((s, a))
               break
     return ret
+  """
 
 
 def printOccSA(x):
