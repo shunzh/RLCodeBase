@@ -1,4 +1,5 @@
 from lp import lpDual, computeValue
+import setcover
 import pprint
 from util import powerset
 import copy
@@ -80,13 +81,16 @@ class ConsQueryAgent():
 
     return iiss
   
-  def findGreedyQueryForFeasibility(self, iiss, freeCons, lockedCons):
+  def findGreedyQueryForFeasibility(self, iiss, knownLockedCons, knownFreeCons):
     """
     iiss: the set of IISs
     freeCons: the constraints known to be removable
     lockedCons: the constraints that are unknown to be remov
     """
-    pass
+    unknownCons = set(self.consIndices) - set(knownFreeCons) - set(knownLockedCons)
+
+    # find the maximum frequency constraint
+    return setcover.findHighestFrequencyElement(unknownCons, knownFreeCons, iiss)
 
   #FIXME what is this for?? just to check the computation time?
   def findRelevantFeaturesBruteForce(self):
