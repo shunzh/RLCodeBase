@@ -48,23 +48,22 @@ class Spec():
 
 def toyWrold():
   """
-     _____
-  2 |  C S|
-  1 |  C  |
-  0 |R_C__|
-     0 1 2
+     _______
+  2 |  C C S|
+  1 |  W W  |
+  0 |R_C____|
+     0 1 2 3
   """
-  width = 3
+  width = 4
   height = 3
   
   robot = (0, 0)
   switch = (width - 1, height - 1)
   
-  walls = []
+  walls = [(1, 1), (2, 1)]
   doors = []
 
-  #carpets = [(1, 0), (1, 1)]
-  carpets = [(1, 0), (1, 1), (1, 2)]
+  carpets = [(1, 0), (1, 2), (2, 2)]
   boxes = []
   
   horizon = width + height
@@ -239,6 +238,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
          not any(sp == s[idx] and not boxMovable(idx, s, a) for idx in bIndices) and\
          not sp in spec.walls:
         return sp
+    # otherwise the agent is blocked and return the unchanged location
     return loc
   
   def doorOpGen(idx, door):
@@ -383,8 +383,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     # if there are no initial safe policies, the agent needs to query to find safe policies
-    print 'iiss'
-    print agent.findAllIISs()
+    iiss = agent.findAllIISs()
+    print 'iiss', iiss
     
     # query using a maximum coverage based on iiss found.
   else:

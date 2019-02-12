@@ -62,6 +62,7 @@ class ConsQueryAgent():
     for cons in allConsPowerset:
       # if any subset is already infeasible, no need to check this set. it's definitely infeasible and not an iis
       if len(cons) > 0 and any(not feasible[subset] for subset in combinations(cons, len(cons) - 1)):
+        feasible[cons] = False
         continue
 
       # find if the lp is feasible by posing cons
@@ -78,6 +79,14 @@ class ConsQueryAgent():
         iiss.append(cons)
 
     return iiss
+  
+  def findGreedyQueryForFeasibility(self, iiss, freeCons, lockedCons):
+    """
+    iiss: the set of IISs
+    freeCons: the constraints known to be removable
+    lockedCons: the constraints that are unknown to be remov
+    """
+    pass
 
   #FIXME what is this for?? just to check the computation time?
   def findRelevantFeaturesBruteForce(self):
