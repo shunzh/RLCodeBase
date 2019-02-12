@@ -63,6 +63,7 @@ def toyWrold():
   walls = []
   doors = []
 
+  #carpets = [(1, 0), (1, 1)]
   carpets = [(1, 0), (1, 1), (1, 2)]
   boxes = []
   
@@ -379,10 +380,12 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   
   agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
 
-  if not agent.initialSafePolicyExists():
+  initialSol = agent.findInitialSafePolicy()
+  
+  if not initialSol['feasible']:
     print 'initial policy does not exist'
     # if there are no initial safe policies, the agent needs to query to find safe policies
-    iiss = agent.findIISs()
+    print initialSol['iiss']
   else:
     print 'initial policy exists'
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.

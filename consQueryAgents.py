@@ -31,32 +31,11 @@ class ConsQueryAgent():
 
     self.allCons = self.consIndices
   
-  def initialSafePolicyExists(self):
+  def findInitialSafePolicy(self):
     """
     Run the LP solver with all constraints and see if the LP problem is feasible.
     """
-    mdp = self.mdp
-    zeroConstraints = self.constructConstraints(self.allCons, mdp)
-                           
-    if config.METHOD == 'lp':
-      opt, x = lpDual(mdp, zeroConstraints=zeroConstraints)
-      # if no solution exists, the lp solver returns a None value
-      # if None is returned, this function returns true.
-      return opt != None
-    elif config.METHOD == 'mcts':
-      #TODO
-      raise Exception('unimplemented method')
-    else:
-      raise Exception('unknown method')
-
-  def findIISs(self):
-    """
-    Find all IISs.
-    """
-    mdp = self.mdp
-    zeroConstraints = self.constructConstraints(self.allCons, mdp)
- 
-    lpDual(mdp, zeroConstraints=zeroConstraints, iissMethod='exhaustive')
+    return self.findConstrainedOptPi(self.allCons)
 
   def findConstrainedOptPi(self, activeCons):
     mdp = self.mdp
@@ -64,13 +43,11 @@ class ConsQueryAgent():
     zeroConstraints = self.constructConstraints(activeCons, mdp)
                            
     if config.METHOD == 'lp':
-      opt, x = lpDual(mdp, zeroConstraints=zeroConstraints)
+      return lpDual(mdp, zeroConstraints=zeroConstraints)
     elif config.METHOD == 'mcts':
-      x = MCTS(**mdp)
+      return MCTS(**mdp)
     else:
       raise Exception('unknown method')
-
-    return x
 
   #FIXME what is this for?? just to check the computation time?
   def findRelevantFeaturesBruteForce(self):

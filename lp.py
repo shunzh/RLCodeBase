@@ -1,7 +1,17 @@
 try:
+  from gurobipy import *
+except ImportError:
+  print "can't import gurobipy"
+
+# FIXME rewrite in gurobi
+# don't want to import two optimization modules. some functions may have the same names
+"""
+try:
   from pycpx import CPlexModel, CPlexException, CPlexNoSolution
 except ImportError:
   print "can't import CPlexModel"
+"""
+
 import easyDomains
 import config
 import util
@@ -51,48 +61,40 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   gamma = mdp.gamma
   alpha = mdp.alpha
   
-  m = CPlexModel()
-  if not config.VERBOSE: m.setVerbosity(0)
+  # initialize a Gurobi model
+  m = Model()
 
   # useful constants
   Sr = range(len(S))
   Ar = range(len(A))
 
-  x = m.new((len(S), len(A)), lb=0, name='x')
+  x = m.addVars(len(S), len(A), lb=0, name='x')
 
   # make sure x is a valid occupancy
   for sp in Sr:
     # x (x(s) - \gamma * T) = \sigma
-    m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == alpha(S[sp]))
+    m.addConstr(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == alpha(S[sp]))
   
   # == constraints
   if len(zeroConstraints) > 0:
-    m.constrain(sum(x[S.index(s), A.index(a)] for s, a in zeroConstraints) == 0)
+    m.addConstr(sum(x[S.index(s), A.index(a)] for s, a in zeroConstraints) == 0)
 
   # >= constraints
   if len(positiveConstraints) > 0:
-    m.constrain(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= positiveConstraints)
+    m.addConstr(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= positiveConstraints)
     
   # obj
-  try:
-    obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
-    
-    return obj, {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}
-  except CPlexException as err:
-    print 'exception', err
+  m.setObjective(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]), GRB.MAXIMIZE)
 
-    if type(err) == CPlexNoSolution:
-      if iissMethod == None:
-        # just return None without finding IISs
-        return None, {}
-      elif iissMethod == 'exhaustive':
-        # find all IISs in this case
-        print dir(m)
-      else:
-        raise Exception('Dont know how to handle the no solution case.')
-    else:
-      print 'Exception', err
-      raise
+  m.optimize()
+  
+  if m.status == GRB.Status.OPTIMAL: 
+    return {'feasible': True, 'obj': m.objVal, 'pi': {(S[s], A[a]): x[s, a] for s in Sr for a in Ar}}
+  elif m.status == GRB.Status.INFEASIBLE:
+    # if infeasible, find IISs
+    return {'feasible': False, 'iiss': m.computeIIS()}
+  else:
+    raise Exception('error status: %d' % m.status)
 
 def decomposePiLP(S, A, T, s0, terminal, rawX, x, gamma=1):
   """
