@@ -83,10 +83,14 @@ class ConsQueryAgent():
   
   def findGreedyQueryForFeasibility(self, iiss, knownLockedCons, knownFreeCons):
     """
+    return the next feature to query by greedily cover the most number of sets
+    return None if no more features are needed or nothing left to query about
+    
     iiss: the set of IISs
-    freeCons: the constraints known to be removable
-    lockedCons: the constraints that are unknown to be remov
+    knownLockedCons: priorly-known or queried and known to be locked/unchangeable
+    knownFreeCons: priorly-known or queried and known to be free/changeable
     """
+    # make sure the constraints that are already queried are not going to be queried again
     unknownCons = set(self.consIndices) - set(knownFreeCons) - set(knownLockedCons)
 
     # find the maximum frequency constraint

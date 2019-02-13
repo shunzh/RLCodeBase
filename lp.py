@@ -57,7 +57,7 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   S = mdp.S
   A = mdp.A
   T = mdp.T
-  r = mdp.qr
+  r = mdp.r
   gamma = mdp.gamma
   alpha = mdp.alpha
   

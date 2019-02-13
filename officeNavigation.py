@@ -63,7 +63,7 @@ def toyWrold():
   walls = [(1, 1), (2, 1)]
   doors = []
 
-  carpets = [(1, 0), (1, 2), (2, 2)]
+  carpets = [(2, 2), (1, 0), (1, 2)]
   boxes = []
   
   horizon = width + height
@@ -386,7 +386,33 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     iiss = agent.findAllIISs()
     print 'iiss', iiss
     
+    # true free features, hand-selected or randomly generated
+    trueFreeFeatures = [0, 2]
+
     # query using a maximum coverage based on iiss found.
+
+    # keep the features the robot queried about for evaluation
+    queries = []
+    knownLockedCons = []
+    knownFreeCons = []
+
+    # it should not query more than the number of total features anyway..
+    # but in case of bugs, this should not be a dead loop
+    while len(queries) < len(consStates) + 1:
+      query = agent.findGreedyQueryForFeasibility(iiss, knownLockedCons, knownFreeCons)
+      print query
+      
+      if query == None:
+        # the agent stops querying
+        break
+      elif query in trueFreeFeatures:
+        knownFreeCons.append(query)
+      else:
+        knownLockedCons.append(query)
+        
+      queries.append(query)
+    
+    print queries
   else:
     print 'initial policy exists'
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
