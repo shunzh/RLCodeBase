@@ -14,7 +14,7 @@ class ConsQueryAgent():
   """
   Find queries in constraint-uncertain mdps.
   """
-  def __init__(self, mdp, consStates, constrainHuman=False):
+  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
     """
     can't think of a class it should inherit..
 
@@ -27,6 +27,8 @@ class ConsQueryAgent():
     # indices of constraints
     self.consStates = consStates
     self.consIndices = range(len(consStates))
+    
+    self.consProbs = consProbs
     
     # derive different definition of MR
     self.constrainHuman = constrainHuman
@@ -93,8 +95,8 @@ class ConsQueryAgent():
     # make sure the constraints that are already queried are not going to be queried again
     unknownCons = set(self.consIndices) - set(knownFreeCons) - set(knownLockedCons)
 
-    # find the maximum frequency constraint
-    return setcover.findHighestFrequencyElement(unknownCons, knownFreeCons, iiss)
+    # find the maximum frequency constraint weighted by the probability
+    return setcover.findHighestFrequencyElement(unknownCons, knownFreeCons, iiss, weight=lambda _: self.consProbs[_])
 
   #FIXME what is this for?? just to check the computation time?
   def findRelevantFeaturesBruteForce(self):

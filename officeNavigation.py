@@ -63,7 +63,7 @@ def toyWrold():
   walls = [(1, 1), (2, 1)]
   doors = []
 
-  carpets = [(2, 2), (1, 0), (1, 2)]
+  carpets = [(1, 0), (1, 2), (2, 2)]
   boxes = []
   
   horizon = width + height
@@ -378,7 +378,16 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   
   consStates = carpetCons + boxCons
   
-  agent = ConsQueryAgent(mdp, consStates, constrainHuman=constrainHuman)
+  # changeabilities of features. None means not provided
+  # our IJCAI paper does not assume changeabilities of features are used. Only used for finding initial safe policies
+  #consProbs = None
+  consProbs = [.5, .5, .5]
+  #consProbs = [.1, .9, .9]
+
+  # true free features, hand-selected or randomly generated
+  trueFreeFeatures = [1, 2]
+  
+  agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
 
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
@@ -386,8 +395,6 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     iiss = agent.findAllIISs()
     print 'iiss', iiss
     
-    # true free features, hand-selected or randomly generated
-    trueFreeFeatures = [0, 2]
 
     # query using a maximum coverage based on iiss found.
 

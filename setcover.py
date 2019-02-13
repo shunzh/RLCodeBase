@@ -16,7 +16,7 @@ def findHighestFrequencyElement(newElements, addedElements, sets, weight=lambda 
   appearenceFreq = {}
   
   for e in newElements:
-    appearenceFreq[e] = sum(e * weight(e) in s for s in unCoveredSets)
+    appearenceFreq[e] = weight(e) * sum(e in s for s in unCoveredSets)
   
   # return the index of the element that has the most appearances
   return max(appearenceFreq.iteritems(), key=lambda _: _[1])[0]
