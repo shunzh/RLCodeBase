@@ -8,10 +8,8 @@ def findHighestFrequencyElement(newElements, addedElements, sets, weight=lambda 
   """
   # see what sets are uncovered by addedElements
   unCoveredSets = filter(lambda s: not any(e in s for e in addedElements), sets)
-  
-  # return None if no new elements to add 
-  # or need to be added (when all sets are covered)
-  if len(newElements) == 0 or len(unCoveredSets) == 0: return None
+  # if they are all covered, we are done
+  if len(unCoveredSets) == 0: return None
 
   appearenceFreq = {}
   

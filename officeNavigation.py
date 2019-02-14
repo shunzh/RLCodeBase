@@ -86,10 +86,14 @@ def squareWorld(size, numOfCarpets, avoidBorder=True):
   doors = []
 
   if avoidBorder:
-    getRandLoc = lambda: (random.randint(0, width - 2), random.randint(1, height - 1))
+    admissibleLocs = [(x, y) for x in range(width - 1) for y in range(1, height)]
   else:
-    getRandLoc = lambda: (random.randint(0, width - 1), random.randint(0, height - 1))
-  carpets = [getRandLoc() for _ in range(numOfCarpets)]
+    admissibleLocs = [(x, y) for x in range(width) for y in range(height)]
+
+  assert len(admissibleLocs) >= numOfCarpets
+  carpetIndices = numpy.random.choice(range(len(admissibleLocs)), numOfCarpets, replace=False)
+  carpets = [admissibleLocs[carpetIndex] for carpetIndex in carpetIndices]
+
   boxes = []
   
   horizon = width + height
@@ -389,11 +393,13 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   consProbs = [random.random() for _ in range(numOfCons)]
   print 'consProbs', consProbs
 
-  # true free features, hand-selected or randomly generated
-  trueFreeFeatures = filter(lambda idx: random.random() < consProbs[idx], range(numOfCons))
-  print 'true free features', trueFreeFeatures
-  
   agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
+  relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
+
+  # true free features, hand-selected or randomly generated
+  #trueFreeFeatures = filter(lambda idx: random.random() < consProbs[idx], range(numOfCons))
+  trueFreeFeatures = agent.findViolatedConstraints(random.choice(domPis))
+  print 'true free features', trueFreeFeatures
 
   if not agent.initialSafePolicyExists():
     #print 'initial policy does not exist'
@@ -405,8 +411,6 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       if method == 'submodular':
         iiss = agent.findAllIISs()
         print 'iiss', iiss
-      elif method == 'domPis':
-        relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
       # keep the features the robot queried about for evaluation
       queries = []

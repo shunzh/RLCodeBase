@@ -99,10 +99,14 @@ class ConsQueryAgent():
     unknownCons = set(self.consIndices) - set(knownFreeCons) - set(knownLockedCons)
     
     # if the known locked features occupy one iis, then not feasible
-    if any(len(set(iis) - set(knownLockedCons)) == 0 for iis in iiss): return None
+    if any(len(set(iis) - set(knownLockedCons)) == 0 for iis in iiss):
+      print 'no safe policies exist'
+      return None
 
     # find the maximum frequency constraint weighted by the probability
-    return setcover.findHighestFrequencyElement(unknownCons, knownFreeCons, iiss, weight=lambda _: self.consProbs[_])
+    q = setcover.findHighestFrequencyElement(unknownCons, knownFreeCons, iiss, weight=lambda _: self.consProbs[_])
+    if q == None: print 'safe policies found'
+    return q
 
   def findDomPiQueryForFeasibility(self, domPis, knownLockedCons, knownFreeCons):
     """
@@ -123,19 +127,26 @@ class ConsQueryAgent():
       elif i in knownFreeCons: updatedConsProbs[i] = 1
       
     # find the policy that has the largest probability to be feasible
+    
+    piProb = lambda pi: reduce(lambda x, y: x * y,\
+                               map(lambda _: updatedConsProbs[_], self.findViolatedConstraints(pi)),\
+                               1)
 
-    maxProbPi = max(domPis, key=lambda pi: reduce(lambda x, y: x * y,\
-                                                  map(lambda _: updatedConsProbs[_], self.findViolatedConstraints(pi)),\
-                                                  1))
-    
+    maxProbPi = max(domPis, key=piProb)
+
     maxProbPiRelFeats = self.findViolatedConstraints(maxProbPi)
-    
-    if len(set(maxProbPiRelFeats).intersection(unknownCons)) == 0:
-      # no unknown feature left in the most probable policy. nothing more to query
+
+    if piProb(maxProbPi) == 0:
+      print 'no safe policies exist'
       return None
-    else:
-      featsToConsider = unknownCons.intersection(maxProbPiRelFeats)
-      return max(featsToConsider, key=lambda _: self.consProbs[_])
+    elif piProb(maxProbPi) == 1:
+      # no unknown feature left in the most probable policy. nothing more to query
+      print 'safe policies found'
+      return None
+    
+    featsToConsider = unknownCons.intersection(maxProbPiRelFeats)
+    assert len(featsToConsider) > 0
+    return max(featsToConsider, key=lambda _: self.consProbs[_])
 
   def findRandomQueryForFeaiblity(self, domPis, knownLockedCons, knownFreeCons):
     """
