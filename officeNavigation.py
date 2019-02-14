@@ -70,7 +70,7 @@ def toyWrold():
  
   return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
 
-def squareWorld(size, numOfCarpets):
+def squareWorld(size, numOfCarpets, avoidBorder=True):
   """
   Squared world with width = height = size.
   The robot and the swtich are at opposite corners.
@@ -85,8 +85,11 @@ def squareWorld(size, numOfCarpets):
   walls = []
   doors = []
 
-  getBoundedRandLoc = lambda: (random.randint(0, width - 2), random.randint(1, height - 1))
-  carpets = [getBoundedRandLoc() for _ in range(numOfCarpets)]
+  if avoidBorder:
+    getRandLoc = lambda: (random.randint(0, width - 2), random.randint(1, height - 1))
+  else:
+    getRandLoc = lambda: (random.randint(0, width - 1), random.randint(0, height - 1))
+  carpets = [getRandLoc() for _ in range(numOfCarpets)]
   boxes = []
   
   horizon = width + height
@@ -377,25 +380,26 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   boxCons = [[s for s in mdp.S if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndices]
   
   consStates = carpetCons + boxCons
+  numOfCons = len(consStates)
   
   # changeabilities of features. None means not provided
   # our IJCAI paper does not assume changeabilities of features are used. Only used for finding initial safe policies
   #consProbs = None
-  #consProbs = [.5, .5, .5]
   #consProbs = [.1, .9, .9]
-  consProbs = [random.random() for _ in spec.carpets + spec.boxes]
+  consProbs = [random.random() for _ in range(numOfCons)]
   print 'consProbs', consProbs
 
   # true free features, hand-selected or randomly generated
-  trueFreeFeatures = [0]
+  trueFreeFeatures = filter(lambda idx: random.random() < consProbs[idx], range(numOfCons))
+  print 'true free features', trueFreeFeatures
   
   agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
 
   if not agent.initialSafePolicyExists():
-    print 'initial policy does not exist'
+    #print 'initial policy does not exist'
     
-    #methods = ['submodular', 'domPis', 'random']
-    methods = ['domPis']
+    methods = ['submodular', 'domPis']
+    #methods = ['domPis']
     for method in methods:
       # if there are no initial safe policies, the agent needs to query to find safe policies
       if method == 'submodular':
@@ -416,13 +420,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
           query = agent.findGreedyQueryForFeasibility(iiss, knownLockedCons, knownFreeCons)
         elif method == 'domPis':
           query = agent.findDomPiQueryForFeasibility(domPis, knownLockedCons, knownFreeCons)
-        elif method == 'random':
-          query = agent.findRandomConstraintQ(1)
         else:
           raise Exception('unknown method', method)
 
-        print query
-        
         if query == None:
           # the agent stops querying
           break
@@ -432,8 +432,13 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
           knownLockedCons.append(query)
           
         queries.append(query)
-      
+        
       print 'queries', queries
+
+      # write to file
+      f = open(method + '.out',"a")
+      f.write(str(len(queries)) + '\n')
+      f.close()
   else:
     print 'initial policy exists'
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
@@ -535,8 +540,8 @@ if __name__ == '__main__':
   constrainHuman = False
   dry = True # do not safe to files if dry run
 
-  numOfCarpets = 0
-  numOfBoxes = 4
+  numOfCarpets = 10
+  numOfBoxes = 0
   size = 4
 
   rnd = 0 # set a dummy random seed if no -r argument
@@ -569,8 +574,8 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd)
-  #classicOfficNav(squareWorld(size, numOfCarpets), k, constrainHuman, dry, rnd)
+  #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd)
+  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)

@@ -97,6 +97,9 @@ class ConsQueryAgent():
     """
     # make sure the constraints that are already queried are not going to be queried again
     unknownCons = set(self.consIndices) - set(knownFreeCons) - set(knownLockedCons)
+    
+    # if the known locked features occupy one iis, then not feasible
+    if any(len(set(iis) - set(knownLockedCons)) == 0 for iis in iiss): return None
 
     # find the maximum frequency constraint weighted by the probability
     return setcover.findHighestFrequencyElement(unknownCons, knownFreeCons, iiss, weight=lambda _: self.consProbs[_])
@@ -107,6 +110,10 @@ class ConsQueryAgent():
     Then query about the most probable unknown feature in the relevant features of the policy
     """
     unknownCons = set(self.consIndices) - set(knownFreeCons) - set(knownLockedCons)
+    
+    # the case with no feasible solutions
+    if all(len(set(self.findViolatedConstraints(pi)).intersection(knownLockedCons)) > 0 for pi in domPis):
+      return None
 
     # find the most probable policy
     # update the cons prob to make it easier
@@ -129,6 +136,12 @@ class ConsQueryAgent():
     else:
       featsToConsider = unknownCons.intersection(maxProbPiRelFeats)
       return max(featsToConsider, key=lambda _: self.consProbs[_])
+
+  def findRandomQueryForFeaiblity(self, domPis, knownLockedCons, knownFreeCons):
+    """
+    TODO
+    """
+    pass
 
   """
   Methods for safe policy improvement
@@ -160,7 +173,6 @@ class ConsQueryAgent():
 
       # find the subset with the smallest size
       activeCons = min(subsetsToConsider, key=lambda _: len(_))
-      print 'activeCons', activeCons
       subsetsConsidered.append(activeCons)
 
       skipThisCons = False
@@ -175,20 +187,21 @@ class ConsQueryAgent():
       sol = self.findConstrainedOptPi(activeCons)
       if sol['feasible']:
         x = sol['pi']
-        printOccSA(x)
-        print self.computeValue(x)
+        if config.VERBOSE:
+          printOccSA(x)
+          print self.computeValue(x)
 
         dominatingPolicies[activeCons] = x
 
         # check violated constraints
         violatedCons = self.findViolatedConstraints(x)
 
-        print 'x violates', violatedCons
+        if config.VERBOSE: print 'x violates', violatedCons
       else:
         # infeasible
         violatedCons = ()
         
-        print 'infeasible'
+        if config.VERBOSE: print 'infeasible'
 
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
       beta.append((set(activeCons), set(violatedCons)))
@@ -201,7 +214,7 @@ class ConsQueryAgent():
     for pi in dominatingPolicies.values():
       if pi not in domPis: domPis.append(pi)
       
-    print 'rel cons', allCons, 'num of domPis', len(domPis)
+    if config.VERBOSE: print 'rel cons', allCons, 'num of domPis', len(domPis)
     return allCons, domPis
 
   def findMinimaxRegretConstraintQBruteForce(self, k, relFeats, domPis):
