@@ -53,6 +53,9 @@ class ConsQueryAgent():
     else:
       raise Exception('unknown method')
   
+  """
+  Methods for finding initial safe policies
+  """
   def findAllIISs(self):
     """
     a brute force way to find all iiss and return their indicies
@@ -98,6 +101,38 @@ class ConsQueryAgent():
     # find the maximum frequency constraint weighted by the probability
     return setcover.findHighestFrequencyElement(unknownCons, knownFreeCons, iiss, weight=lambda _: self.consProbs[_])
 
+  def findDomPiQueryForFeasibility(self, domPis, knownLockedCons, knownFreeCons):
+    """
+    This uses dominating policies. It first find the domPi that has the largest probability being free.
+    Then query about the most probable unknown feature in the relevant features of the policy
+    """
+    unknownCons = set(self.consIndices) - set(knownFreeCons) - set(knownLockedCons)
+
+    # find the most probable policy
+    # update the cons prob to make it easier
+    updatedConsProbs = copy.copy(self.consProbs)
+    for i in self.consIndices:
+      if i in knownLockedCons: updatedConsProbs[i] = 0
+      elif i in knownFreeCons: updatedConsProbs[i] = 1
+      
+    # find the policy that has the largest probability to be feasible
+
+    maxProbPi = max(domPis, key=lambda pi: reduce(lambda x, y: x * y,\
+                                                  map(lambda _: updatedConsProbs[_], self.findViolatedConstraints(pi)),\
+                                                  1))
+    
+    maxProbPiRelFeats = self.findViolatedConstraints(maxProbPi)
+    
+    if len(set(maxProbPiRelFeats).intersection(unknownCons)) == 0:
+      # no unknown feature left in the most probable policy. nothing more to query
+      return None
+    else:
+      featsToConsider = unknownCons.intersection(maxProbPiRelFeats)
+      return max(featsToConsider, key=lambda _: self.consProbs[_])
+
+  """
+  Methods for safe policy improvement
+  """
   #FIXME what is this for?? just to check the computation time?
   def findRelevantFeaturesBruteForce(self):
     allConsPowerset = set(powerset(self.allCons))
@@ -125,6 +160,7 @@ class ConsQueryAgent():
 
       # find the subset with the smallest size
       activeCons = min(subsetsToConsider, key=lambda _: len(_))
+      print 'activeCons', activeCons
       subsetsConsidered.append(activeCons)
 
       skipThisCons = False
@@ -137,21 +173,22 @@ class ConsQueryAgent():
         continue
 
       sol = self.findConstrainedOptPi(activeCons)
-      assert sol['feasible']
-      
-      x = sol['pi']
-      printOccSA(x)
-      print self.computeValue(x)
+      if sol['feasible']:
+        x = sol['pi']
+        printOccSA(x)
+        print self.computeValue(x)
 
-      dominatingPolicies[activeCons] = x
+        dominatingPolicies[activeCons] = x
 
-      # check violated constraints
-      if x == {}:
-        violatedCons = ()
-      else:
+        # check violated constraints
         violatedCons = self.findViolatedConstraints(x)
 
-      print 'x violates', violatedCons
+        print 'x violates', violatedCons
+      else:
+        # infeasible
+        violatedCons = ()
+        
+        print 'infeasible'
 
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
       beta.append((set(activeCons), set(violatedCons)))
@@ -159,7 +196,7 @@ class ConsQueryAgent():
       allCons.update(violatedCons)
 
       allConsPowerset = set(powerset(allCons))
-    
+      
     domPis = []
     for pi in dominatingPolicies.values():
       if pi not in domPis: domPis.append(pi)

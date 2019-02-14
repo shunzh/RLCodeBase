@@ -381,45 +381,59 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   # changeabilities of features. None means not provided
   # our IJCAI paper does not assume changeabilities of features are used. Only used for finding initial safe policies
   #consProbs = None
-  consProbs = [.5, .5, .5]
+  #consProbs = [.5, .5, .5]
   #consProbs = [.1, .9, .9]
+  consProbs = [random.random() for _ in spec.carpets + spec.boxes]
+  print 'consProbs', consProbs
 
   # true free features, hand-selected or randomly generated
-  trueFreeFeatures = [1, 2]
+  trueFreeFeatures = [0]
   
   agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
 
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
-    # if there are no initial safe policies, the agent needs to query to find safe policies
-    iiss = agent.findAllIISs()
-    print 'iiss', iiss
     
+    #methods = ['submodular', 'domPis', 'random']
+    methods = ['domPis']
+    for method in methods:
+      # if there are no initial safe policies, the agent needs to query to find safe policies
+      if method == 'submodular':
+        iiss = agent.findAllIISs()
+        print 'iiss', iiss
+      elif method == 'domPis':
+        relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
-    # query using a maximum coverage based on iiss found.
+      # keep the features the robot queried about for evaluation
+      queries = []
+      knownLockedCons = []
+      knownFreeCons = []
 
-    # keep the features the robot queried about for evaluation
-    queries = []
-    knownLockedCons = []
-    knownFreeCons = []
+      # it should not query more than the number of total features anyway..
+      # but in case of bugs, this should not be a dead loop
+      while len(queries) < len(consStates) + 1:
+        if method == 'submodular':
+          query = agent.findGreedyQueryForFeasibility(iiss, knownLockedCons, knownFreeCons)
+        elif method == 'domPis':
+          query = agent.findDomPiQueryForFeasibility(domPis, knownLockedCons, knownFreeCons)
+        elif method == 'random':
+          query = agent.findRandomConstraintQ(1)
+        else:
+          raise Exception('unknown method', method)
 
-    # it should not query more than the number of total features anyway..
-    # but in case of bugs, this should not be a dead loop
-    while len(queries) < len(consStates) + 1:
-      query = agent.findGreedyQueryForFeasibility(iiss, knownLockedCons, knownFreeCons)
-      print query
-      
-      if query == None:
-        # the agent stops querying
-        break
-      elif query in trueFreeFeatures:
-        knownFreeCons.append(query)
-      else:
-        knownLockedCons.append(query)
+        print query
         
-      queries.append(query)
-    
-    print queries
+        if query == None:
+          # the agent stops querying
+          break
+        elif query in trueFreeFeatures:
+          knownFreeCons.append(query)
+        else:
+          knownLockedCons.append(query)
+          
+        queries.append(query)
+      
+      print 'queries', queries
   else:
     print 'initial policy exists'
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
