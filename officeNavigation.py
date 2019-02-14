@@ -47,25 +47,33 @@ class Spec():
     self.horizon = horizon
 
 def toyWrold():
-  """
-     _______
-  2 |  C C S|
-  1 |  W W  |
-  0 |R_C____|
-     0 1 2 3
-  """
-  width = 4
-  height = 3
-  
-  robot = (0, 0)
-  switch = (width - 1, height - 1)
-  
-  walls = [(1, 1), (2, 1)]
-  doors = []
+  map = [['R', 'C', 'C', ' '],
+         [' ', 'W', 'W', ' '],
+         [' ', 'C', ' ', 'S']]
 
-  carpets = [(1, 0), (1, 2), (2, 2)]
-  boxes = []
+  width = len(map[0])
+  height = len(map)
   
+  walls = []
+  doors = []
+  carpets = []
+  boxes = []
+
+  for i in range(height):
+    for j in range(width):
+      if map[i][j] == 'R':
+        robot = (j, i)
+      elif map[i][j] == 'S':
+        switch = (j, i)
+      elif map[i][j] == 'W':
+        walls.append((j, i))
+      elif map[i][j] == 'D':
+        doors.append((j, i))
+      elif map[i][j] == 'C':
+        carpets.append((j, i))
+      elif map[i][j] == 'B':
+        boxes.append((j, i))
+ 
   horizon = width + height
  
   return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
@@ -402,7 +410,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   print 'true free features', trueFreeFeatures
 
   if not agent.initialSafePolicyExists():
-    #print 'initial policy does not exist'
+    print 'initial policy does not exist'
     
     methods = ['submodular', 'domPis']
     #methods = ['domPis']
@@ -544,9 +552,9 @@ if __name__ == '__main__':
   constrainHuman = False
   dry = True # do not safe to files if dry run
 
-  numOfCarpets = 10
+  numOfCarpets = 5
   numOfBoxes = 0
-  size = 4
+  size = 3
 
   rnd = 0 # set a dummy random seed if no -r argument
 
@@ -578,8 +586,8 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd)
-  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
+  classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd)
+  #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)

@@ -184,6 +184,7 @@ class ConsQueryAgent():
 
       # find the subset with the smallest size
       activeCons = min(subsetsToConsider, key=lambda _: len(_))
+      if config.VERBOSE: print 'activeCons', activeCons
       subsetsConsidered.append(activeCons)
 
       skipThisCons = False
