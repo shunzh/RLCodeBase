@@ -1,5 +1,6 @@
 import easyDomains
-from consQueryAgents import ConsQueryAgent
+from consQueryAgents import ConsQueryAgent, GreedyConstructForSafetyAgent,\
+  DomPiForSafetyAgent
 import time
 import random
 import numpy
@@ -47,9 +48,9 @@ class Spec():
     self.horizon = horizon
 
 def toyWrold():
-  map = [['R', 'C', 'C', ' '],
-         [' ', 'W', 'W', ' '],
-         [' ', 'C', ' ', 'S']]
+  map = [['R', ' ', 'C'],
+         [' ', 'C', 'C'],
+         [' ', 'C', 'S']]
 
   width = len(map[0])
   height = len(map)
@@ -397,51 +398,47 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   # changeabilities of features. None means not provided
   # our IJCAI paper does not assume changeabilities of features are used. Only used for finding initial safe policies
   #consProbs = None
-  #consProbs = [.1, .9, .9]
   consProbs = [random.random() for _ in range(numOfCons)]
   print 'consProbs', consProbs
 
   agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
   relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
-  # true free features, hand-selected or randomly generated
+  # true free features, randomly generated
   #trueFreeFeatures = filter(lambda idx: random.random() < consProbs[idx], range(numOfCons))
+  # if require existence of safe policies after querying: setting relevant features of a dominating policy to be free features
   trueFreeFeatures = agent.findViolatedConstraints(random.choice(domPis))
+  # or hand designed
+  #trueFreeFeatures = [3]
   print 'true free features', trueFreeFeatures
 
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     
-    methods = ['submodular', 'domPis']
-    #methods = ['domPis']
-    for method in methods:
-      # if there are no initial safe policies, the agent needs to query to find safe policies
-      if method == 'submodular':
-        iiss = agent.findAllIISs()
-        print 'iiss', iiss
+    agents = [Agent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)\
+              for Agent in [GreedyConstructForSafetyAgent, DomPiForSafetyAgent]]
 
+    for agent in agents:
       # keep the features the robot queried about for evaluation
       queries = []
+
       knownLockedCons = []
       knownFreeCons = []
 
       # it should not query more than the number of total features anyway..
       # but in case of bugs, this should not be a dead loop
       while len(queries) < len(consStates) + 1:
-        if method == 'submodular':
-          query = agent.findGreedyQueryForFeasibility(iiss, knownLockedCons, knownFreeCons)
-        elif method == 'domPis':
-          query = agent.findDomPiQueryForFeasibility(domPis, knownLockedCons, knownFreeCons)
-        else:
-          raise Exception('unknown method', method)
+        query = agent.findQuery(knownLockedCons, knownFreeCons)
 
         if query == None:
           # the agent stops querying
           break
         elif query in trueFreeFeatures:
           knownFreeCons.append(query)
+          agent.updateFeats(newFreeFeat=query)
         else:
           knownLockedCons.append(query)
+          agent.updateFeats(newLockedFeat=query)
           
         queries.append(query)
         
@@ -586,8 +583,8 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
-  classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd)
-  #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
+  #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd)
+  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)
