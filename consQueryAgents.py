@@ -34,6 +34,10 @@ class ConsQueryAgent():
     self.constrainHuman = constrainHuman
 
     self.allCons = self.consIndices
+    
+    # used for iterative queries
+    self.knownLockedCons = []
+    self.knownFreeCons = []
   
   def initialSafePolicyExists(self):
     """
@@ -55,7 +59,8 @@ class ConsQueryAgent():
 
   def updateFeats(self, newFreeCon=None, newLockedCon=None):
     # function as an interface. does nothing by default
-    pass
+    self.knownFreeCons.append(newFreeCon)
+    self.knownLockedCons.append(newLockedCon)
 
   """
   Methods for safe policy improvement
@@ -398,6 +403,12 @@ class ConsQueryAgent():
 
 
 class GreedyConstructForSafetyAgent(ConsQueryAgent):
+  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
+    ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
+    
+    # find all IISs without knowing any locked or free cons
+    self.computeIISs([], [])
+
   def computeIISs(self, knownLockedCons, knownFreeCons):
     """
     a brute force way to find all iiss and return their indicies
@@ -432,10 +443,12 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
     self.iiss = iiss
   
   def updateFeats(self, newFreeCon=None, newLockedCon=None):
+    ConsQueryAgent.updateFeats(self, newFreeCon, newLockedCon)
+
     if newFreeCon != None: self.iiss = setcover.coverFeat(newFreeCon, self.iiss)
     if newLockedCon != None: self.iiss = setcover.removeFeat(newLockedCon, self.iiss)
 
-  def findQuery(self, knownLockedCons, knownFreeCons):
+  def findQuery(self):
     """
     return the next feature to query by greedily cover the most number of sets
     return None if no more features are needed or nothing left to query about
@@ -450,36 +463,42 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
     print 'iiss', iiss
 
     # make sure the constraints that are already queried are not going to be queried again
-    unknownCons = set(self.consIndices) - set(knownFreeCons) - set(knownLockedCons)
+    unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
     
     # if the known locked features occupy one iis, then not feasible
     if len(iiss) == 0:
       return None
 
     # find the maximum frequency constraint weighted by the probability
-    q = setcover.findHighestFrequencyElement(unknownCons, iiss, weight=lambda _: self.consProbs[_])
-    if q == None: print 'safe policies found'
+    q = setcover.findElementThatRemovesMostSets(unknownCons, iiss, self.consProbs)
     return q
 
 
 class DomPiForSafetyAgent(ConsQueryAgent):
-  def findQuery(self, domPis, knownLockedCons, knownFreeCons):
+  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
+    ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
+
+    # need domPis for query
+    relFeats, domPis = self.findRelevantFeaturesAndDomPis()
+    self.domPis = domPis
+    
+  def findQuery(self):
     """
     This uses dominating policies. It first find the domPi that has the largest probability being free.
     Then query about the most probable unknown feature in the relevant features of the policy
     """
-    unknownCons = set(self.consIndices) - set(knownFreeCons) - set(knownLockedCons)
+    unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
     
     # the case with no feasible solutions
-    if all(len(set(self.findViolatedConstraints(pi)).intersection(knownLockedCons)) > 0 for pi in domPis):
+    if all(len(set(self.findViolatedConstraints(pi)).intersection(self.knownLockedCons)) > 0 for pi in self.domPis):
       return None
 
     # find the most probable policy
     # update the cons prob to make it easier
     updatedConsProbs = copy.copy(self.consProbs)
     for i in self.consIndices:
-      if i in knownLockedCons: updatedConsProbs[i] = 0
-      elif i in knownFreeCons: updatedConsProbs[i] = 1
+      if i in self.knownLockedCons: updatedConsProbs[i] = 0
+      elif i in self.knownFreeCons: updatedConsProbs[i] = 1
       
     # find the policy that has the largest probability to be feasible
     
@@ -487,7 +506,7 @@ class DomPiForSafetyAgent(ConsQueryAgent):
                                map(lambda _: updatedConsProbs[_], self.findViolatedConstraints(pi)),\
                                1)
 
-    maxProbPi = max(domPis, key=piProb)
+    maxProbPi = max(self.domPis, key=piProb)
 
     maxProbPiRelFeats = self.findViolatedConstraints(maxProbPi)
 

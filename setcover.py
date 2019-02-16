@@ -16,6 +16,20 @@ def findHighestFrequencyElement(feats, sets, weight=lambda _: 1):
   # return the index of the element that has the most appearances
   return max(appearenceFreq.iteritems(), key=lambda _: _[1])[0]
   
+def findElementThatRemovesMostSets(feats, sets, admissibleProbs):
+  """
+  We focus on how many sets can be removed: either by covered or by removing an element.
+  """
+  # either no more sets to cover, or any iis becomes empty
+  if len(sets) == 0 or any(len(s) == 0 for s in sets): return None
+
+  expectNumRemainingSets = {}
+
+  for e in feats:
+    expectNumRemainingSets[e] = admissibleProbs[e] * len(coverFeat(e, sets)) + (1 - admissibleProbs[e]) * len(removeFeat(e, sets))
+    
+  return min(expectNumRemainingSets.iteritems(), key=lambda _: _[1])[0]
+
 def coverFeat(feat, sets):
   """
   Find the new set of sets if feat is covered.

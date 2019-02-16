@@ -405,9 +405,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
   # true free features, randomly generated
-  #trueFreeFeatures = filter(lambda idx: random.random() < consProbs[idx], range(numOfCons))
+  trueFreeFeatures = filter(lambda idx: random.random() < consProbs[idx], range(numOfCons))
   # if require existence of safe policies after querying: setting relevant features of a dominating policy to be free features
-  trueFreeFeatures = agent.findViolatedConstraints(random.choice(domPis))
+  #trueFreeFeatures = agent.findViolatedConstraints(random.choice(domPis))
   # or hand designed
   #trueFreeFeatures = [3]
   print 'true free features', trueFreeFeatures
@@ -422,30 +422,25 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
       # keep the features the robot queried about for evaluation
       queries = []
 
-      knownLockedCons = []
-      knownFreeCons = []
-
       # it should not query more than the number of total features anyway..
       # but in case of bugs, this should not be a dead loop
       while len(queries) < len(consStates) + 1:
-        query = agent.findQuery(knownLockedCons, knownFreeCons)
+        query = agent.findQuery()
 
         if query == None:
           # the agent stops querying
           break
         elif query in trueFreeFeatures:
-          knownFreeCons.append(query)
-          agent.updateFeats(newFreeFeat=query)
+          agent.updateFeats(newFreeCon=query)
         else:
-          knownLockedCons.append(query)
-          agent.updateFeats(newLockedFeat=query)
+          agent.updateFeats(newLockedCon=query)
           
         queries.append(query)
         
       print 'queries', queries
 
       # write to file
-      f = open(method + '.out',"a")
+      f = open(agent.__class__.__name__ + '.out',"a")
       f.write(str(len(queries)) + '\n')
       f.close()
   else:
@@ -549,9 +544,9 @@ if __name__ == '__main__':
   constrainHuman = False
   dry = True # do not safe to files if dry run
 
-  numOfCarpets = 5
+  numOfCarpets = 10
   numOfBoxes = 0
-  size = 3
+  size = 5
 
   rnd = 0 # set a dummy random seed if no -r argument
 
