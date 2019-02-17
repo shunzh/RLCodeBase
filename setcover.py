@@ -16,6 +16,27 @@ def findHighestFrequencyElement(feats, sets, weight=lambda _: 1):
   # return the index of the element that has the most appearances
   return max(appearenceFreq.iteritems(), key=lambda _: _[1])[0]
   
+def coverFeat(feat, sets):
+  """
+  Find the new set of sets if feat is covered.
+  We only need to remove the sets that contain feat.
+  """
+  return filter(lambda s: feat not in s, sets)
+
+def removeFeat(feat, sets):
+  """
+  
+  Find the new set of sets if feat is removed.
+  We remove feat, and remove sets that are reducible (which are supersets of any other set).
+  """
+  newSets = map(lambda s: set(s) - {feat}, sets)
+  newSets = filter(lambda s: not any(otherSet.issubset(s) for otherSet in newSets if otherSet != s), newSets)
+  return map(lambda s: tuple(s), newSets)
+
+
+"""
+DEPRECATED look at the dual form of the set, not in this way..
+"""
 def findElementThatRemovesMostSets(feats, sets, admissibleProbs):
   """
   We focus on how many sets can be removed: either by covered or by removing an element.
@@ -29,19 +50,3 @@ def findElementThatRemovesMostSets(feats, sets, admissibleProbs):
     expectNumRemainingSets[e] = admissibleProbs[e] * len(coverFeat(e, sets)) + (1 - admissibleProbs[e]) * len(removeFeat(e, sets))
     
   return min(expectNumRemainingSets.iteritems(), key=lambda _: _[1])[0]
-
-def coverFeat(feat, sets):
-  """
-  Find the new set of sets if feat is covered.
-  We only need to remove the sets that contain feat.
-  """
-  return filter(lambda s: feat not in s, sets)
-
-def removeFeat(feat, sets):
-  """
-  Find the new set of sets if feat is removed.
-  We remove feat, and remove sets that are reducible (which are supersets of any other set).
-  """
-  newSets = map(lambda s: set(s) - {feat}, sets)
-  newSets = filter(lambda s: not any(otherSet.issubset(s) for otherSet in newSets if otherSet != s), newSets)
-  return map(lambda s: tuple(s), newSets)

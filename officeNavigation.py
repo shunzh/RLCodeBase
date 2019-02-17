@@ -1,6 +1,6 @@
 import easyDomains
 from consQueryAgents import ConsQueryAgent, GreedyConstructForSafetyAgent,\
-  DomPiForSafetyAgent
+  DomPiHeuForSafetyAgent
 import time
 import random
 import numpy
@@ -399,14 +399,14 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   # our IJCAI paper does not assume changeabilities of features are used. Only used for finding initial safe policies
   #consProbs = None
   consProbs = [random.random() for _ in range(numOfCons)]
-  print 'consProbs', consProbs
+  print 'consProbs', {i: consProbs[i] for i in range(len(consProbs))}
 
   agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
-  relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
 
   # true free features, randomly generated
   trueFreeFeatures = filter(lambda idx: random.random() < consProbs[idx], range(numOfCons))
   # if require existence of safe policies after querying: setting relevant features of a dominating policy to be free features
+  #relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
   #trueFreeFeatures = agent.findViolatedConstraints(random.choice(domPis))
   # or hand designed
   #trueFreeFeatures = [3]
@@ -416,7 +416,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     print 'initial policy does not exist'
     
     agents = [Agent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)\
-              for Agent in [GreedyConstructForSafetyAgent, DomPiForSafetyAgent]]
+              for Agent in [GreedyConstructForSafetyAgent, DomPiHeuForSafetyAgent]]
 
     for agent in agents:
       # keep the features the robot queried about for evaluation

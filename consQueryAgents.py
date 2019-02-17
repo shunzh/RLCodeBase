@@ -1,6 +1,4 @@
 from lp import lpDual, computeValue
-import setcover
-import pprint
 from util import powerset
 import copy
 import numpy
@@ -8,6 +6,7 @@ import itertools
 import config
 from UCT import MCTS
 from itertools import combinations
+from setcover import coverFeat, removeFeat
 
 
 class ConsQueryAgent():
@@ -407,74 +406,107 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
     ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
     
     # find all IISs without knowing any locked or free cons
-    self.computeIISs([], [])
+    self.computeIISs()
+    self.computePolicyRelFeats()
 
-  def computeIISs(self, knownLockedCons, knownFreeCons):
+  def computeIISs(self):
     """
+    Computer IISs.
+    If all IIS contain at least one free feature, then safe policies exist.
+
     a brute force way to find all iiss and return their indicies
     can be O(2^|unknown features|)
     """
-    unknownConsPowerset = powerset(set(self.allCons) - set(knownLockedCons) - set(knownFreeCons))
+    unknownConsPowerset = powerset(self.allCons)
     feasible = {}
     iiss = []
     
-    for unknownCons in unknownConsPowerset:
-      # active cons
-      cons = list(unknownCons) + list(knownLockedCons)
-
+    for cons in unknownConsPowerset:
       # if any subset is already infeasible, no need to check this set. it's definitely infeasible and not an iis
-      if len(unknownCons) > 0 and any(not feasible[subset] for subset in combinations(unknownCons, len(unknownCons) - 1)):
-        feasible[unknownCons] = False
+      if len(cons) > 0 and any(not feasible[subset] for subset in combinations(cons, len(cons) - 1)):
+        feasible[cons] = False
         continue
 
       # find if the lp is feasible by posing cons
       sol = self.findConstrainedOptPi(cons)
-      feasible[unknownCons] = sol['feasible']
+      feasible[cons] = sol['feasible']
       
-      if len(unknownCons) == 0 and not feasible[unknownCons]:
+      if len(cons) == 0 and not feasible[cons]:
         # no iiss in this case. problem infeasible
         return []
       
       # if it is infeasible and all its subsets are feasible (only need to check the subsets with one less element)
       # then it's an iis
-      if not feasible[unknownCons] and all(feasible[subset] for subset in combinations(unknownCons, len(unknownCons) - 1)):
-        iiss.append(unknownCons)
+      if not feasible[cons] and all(feasible[subset] for subset in combinations(cons, len(cons) - 1)):
+        iiss.append(cons)
 
     self.iiss = iiss
   
+  def computePolicyRelFeats(self):
+    """
+    Compute relevant features of dominating policies.
+    If the relevant features of any dominating policy are all free, then safe policies exist.
+    Put in another way, if all dom pis has at least one locked relevant feature, then safe policies do not exist.
+    
+    This can be O(2^|relevant features|), depending on the implementation of findDomPis
+    """
+    relFeats, domPis = self.findRelevantFeaturesAndDomPis()
+    piRelFeats = []
+    
+    for domPi in domPis:
+      piRelFeats.append(tuple(self.findViolatedConstraints(domPi)))
+    
+    # just to remove supersets
+    piRelFeats = removeFeat(None, piRelFeats)
+
+    self.piRelFeats = piRelFeats
+
   def updateFeats(self, newFreeCon=None, newLockedCon=None):
+    # this just add to the list of known free and locked features
     ConsQueryAgent.updateFeats(self, newFreeCon, newLockedCon)
 
-    if newFreeCon != None: self.iiss = setcover.coverFeat(newFreeCon, self.iiss)
-    if newLockedCon != None: self.iiss = setcover.removeFeat(newLockedCon, self.iiss)
+    if newFreeCon != None:
+      self.iiss = coverFeat(newFreeCon, self.iiss)
+      self.piRelFeats = removeFeat(newFreeCon, self.piRelFeats)
+    if newLockedCon != None:
+      self.iiss = removeFeat(newLockedCon, self.iiss)
+      self.piRelFeats = coverFeat(newLockedCon, self.piRelFeats)
 
   def findQuery(self):
     """
     return the next feature to query by greedily cover the most number of sets
     return None if no more features are needed or nothing left to query about
-    
-    iiss: the set of IISs
-    knownLockedCons: priorly-known or queried and known to be locked/unchangeable
-    knownFreeCons: priorly-known or queried and known to be free/changeable
     """
     assert hasattr(self, 'iiss')
+    assert hasattr(self, 'piRelFeats')
+    
     iiss = self.iiss
+    piRelFeats = self.piRelFeats
 
     print 'iiss', iiss
+    print 'piRelFeats', piRelFeats
 
     # make sure the constraints that are already queried are not going to be queried again
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
     
     # if the known locked features occupy one iis, then not feasible
-    if len(iiss) == 0:
+    if len(iiss) == 0 or len(piRelFeats) == 0:
       return None
 
     # find the maximum frequency constraint weighted by the probability
-    q = setcover.findElementThatRemovesMostSets(unknownCons, iiss, self.consProbs)
-    return q
+    expNumRemaingSets = {}
+    for con in unknownCons:
+      expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) +\
+                               (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats))
+      
+    return min(expNumRemaingSets.iteritems(), key=lambda _: _[1])[0]
 
 
-class DomPiForSafetyAgent(ConsQueryAgent):
+class DomPiHeuForSafetyAgent(ConsQueryAgent):
+  """
+  This uses dominating policies. It first finds the dominating policy that has the largest probability being free.
+  Then query about the most probable unknown feature in the relevant features of the policy.
+  """
   def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
     ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
 
@@ -483,10 +515,6 @@ class DomPiForSafetyAgent(ConsQueryAgent):
     self.domPis = domPis
     
   def findQuery(self):
-    """
-    This uses dominating policies. It first find the domPi that has the largest probability being free.
-    Then query about the most probable unknown feature in the relevant features of the policy
-    """
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
     
     # the case with no feasible solutions
@@ -521,6 +549,34 @@ class DomPiForSafetyAgent(ConsQueryAgent):
     featsToConsider = unknownCons.intersection(maxProbPiRelFeats)
     assert len(featsToConsider) > 0
     return max(featsToConsider, key=lambda _: self.consProbs[_])
+
+
+class DomPiObjForSafetyAgent(ConsQueryAgent):
+  """
+  TODO
+  Finding the feature incrementally to increase the probability of finding a safe policy.
+  """
+  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
+    ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
+
+    # need domPis for query
+    relFeats, domPis = self.findRelevantFeaturesAndDomPis()
+    self.domPis = domPis
+ 
+  def probOfExistanceOfSafePolicies(self, lockedCons, freeCons):
+    """
+    Compute the probability of existence of at least one safe policies.
+    This considers the changeabilities of all unknown features.
+    """
+    unknownCons = set(self.consIndices) - set(lockedCons) - set(freeCons)
+
+    updatedConsProbs = copy.copy(self.consProbs)
+    for i in self.consIndices:
+      if i in lockedCons: updatedConsProbs[i] = 0
+      elif i in freeCons: updatedConsProbs[i] = 1
+ 
+  def findQuery(self):
+    pass
 
 
 def printOccSA(x):
