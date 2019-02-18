@@ -553,8 +553,7 @@ class DomPiHeuForSafetyAgent(ConsQueryAgent):
 
 class DomPiObjForSafetyAgent(ConsQueryAgent):
   """
-  TODO
-  Finding the feature incrementally to increase the probability of finding a safe policy.
+  Find the feature that increase/decrease the probability of finding a safe policy the most.
   """
   def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
     ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
@@ -567,8 +566,14 @@ class DomPiObjForSafetyAgent(ConsQueryAgent):
     """
     Compute the probability of existence of at least one safe policies.
     This considers the changeabilities of all unknown features.
+    
+    lockedCons, freeCons: The set of locked and free features.
+      They might be different from the ones confirmed by querying.
+      These are hypothetical ones just to compute the corresponding prob. 
     """
     unknownCons = set(self.consIndices) - set(lockedCons) - set(freeCons)
+    # \EE[policy exists]
+    expect = 0
 
     updatedConsProbs = copy.copy(self.consProbs)
     for i in self.consIndices:
@@ -576,7 +581,18 @@ class DomPiObjForSafetyAgent(ConsQueryAgent):
       elif i in freeCons: updatedConsProbs[i] = 1
  
   def findQuery(self):
-    pass
+    unknownCons = set(self.consIndices) - set(self.lockedCons) - set(self.freeCons)
+    
+    termProbs = {}
+    for con in unknownCons:
+      # the prob that safe policies exsit when con is free
+      probExistWhenFree = self.probOfExistanceOfSafePolicies(self.lockedCons, list(self.freeCons) + [con])
+      # the prob that no safe policies exsit when con is locked
+      probNonexsitWhenLocked = 1 - self.probOfExistanceOfSafePolicies(self.lockedCons + [con], list(self.freeCons))
+      
+      termProbs[con] = self.consProbs[con] * probExistWhenFree + (1 - self.consProbs[con]) * probNonexsitWhenLocked
+
+    return max(termProbs.iteritems(), key=lambda _: _[1])[0]
 
 
 def printOccSA(x):
