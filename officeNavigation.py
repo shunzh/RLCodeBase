@@ -1,6 +1,6 @@
 import easyDomains
 from consQueryAgents import ConsQueryAgent, GreedyConstructForSafetyAgent,\
-  DomPiHeuForSafetyAgent
+  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent
 import time
 import random
 import numpy
@@ -416,9 +416,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     print 'initial policy does not exist'
     
     agents = [Agent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)\
-              for Agent in [GreedyConstructForSafetyAgent, DomPiHeuForSafetyAgent]]
+              for Agent in [GreedyConstructForSafetyAgent, MaxProbSafePolicyExistAgent, DomPiHeuForSafetyAgent]]
 
     for agent in agents:
+      print agent.__class__.__name__
       # keep the features the robot queried about for evaluation
       queries = []
 

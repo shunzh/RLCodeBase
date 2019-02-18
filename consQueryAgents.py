@@ -59,8 +59,10 @@ class ConsQueryAgent():
 
   def updateFeats(self, newFreeCon=None, newLockedCon=None):
     # function as an interface. does nothing by default
-    self.knownFreeCons.append(newFreeCon)
-    self.knownLockedCons.append(newLockedCon)
+    if newFreeCon != None:
+      self.knownFreeCons.append(newFreeCon)
+    if newLockedCon != None:
+      self.knownLockedCons.append(newLockedCon)
 
   """
   Methods for safe policy improvement
@@ -556,7 +558,7 @@ class DomPiHeuForSafetyAgent(ConsQueryAgent):
     return max(featsToConsider, key=lambda _: self.consProbs[_])
 
 
-class DomPiObjForSafetyAgent(ConsQueryAgent):
+class MaxProbSafePolicyExistAgent(ConsQueryAgent):
   """
   Find the feature that, after querying, the expected probability of finding a safe poicy / no safe policies exist is maximized.
   """
@@ -575,6 +577,7 @@ class DomPiObjForSafetyAgent(ConsQueryAgent):
       They might be different from the ones confirmed by querying.
       These are hypothetical ones just to compute the corresponding prob. 
     """
+    assert hasattr(self, 'piRelFeats')
     unknownCons = set(self.consIndices) - set(lockedCons) - set(freeCons)
     # \EE[policy exists]
     expect = 0
@@ -582,28 +585,39 @@ class DomPiObjForSafetyAgent(ConsQueryAgent):
     allSubsetsOfUnknownCons = powerset(unknownCons)
     
     for freeSubset in allSubsetsOfUnknownCons:
-      prob = reduce(mul, map(lambda _: self.consProbs[_], freeSubset)) *\
-             reduce(mul, map(lambda _: (1 - self.consProbs[_]), unknownCons - freeSubset)) 
+      prob = reduce(mul, map(lambda _: self.consProbs[_], freeSubset), 1) *\
+             reduce(mul, map(lambda _: 1 - self.consProbs[_], unknownCons - set(freeSubset)), 1) 
       
-      # add to expect if safe policies exsit
-      safePolicyExsit = any(lambda relFeats: len(set(relFeats) - set(freeCons) - freeSubset) == 0, self.piRelFeats)
+      # an indicator represents if safe policies exist
+      safePolicyExsit = any(len(set(relFeats) - set(freeCons) - set(freeSubset)) == 0 for relFeats in self.piRelFeats)
       
-      expect = safePolicyExsit * prob
+      #print self.knownFreeCons + list(freeSubset), prob, safePolicyExsit
+      
+      expect += safePolicyExsit * prob
     
     return expect
  
   def findQuery(self):
-    unknownCons = set(self.consIndices) - set(self.lockedCons) - set(self.freeCons)
+    unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
+    
+    probExistBeforeQuery = self.probOfExistanceOfSafePolicies(self.knownLockedCons, self.knownFreeCons)
+    # deal with numerical issues here
+    #print 'prob exist', probExistBeforeQuery
+    if probExistBeforeQuery >= .999999999 or probExistBeforeQuery <= .000000001: return None
     
     # the probability that either 
     termProbs = {}
     for con in unknownCons:
       # the prob that safe policies exist when con is free
-      probExistWhenFree = self.probOfExistanceOfSafePolicies(self.lockedCons, list(self.freeCons) + [con])
+      probExistWhenFree = self.probOfExistanceOfSafePolicies(self.knownLockedCons, self.knownFreeCons + [con])
       # the prob that no safe policies exist when con is locked
-      probNonexsitWhenLocked = 1 - self.probOfExistanceOfSafePolicies(self.lockedCons + [con], list(self.freeCons))
+      probNonexsitWhenLocked = 1 - self.probOfExistanceOfSafePolicies(self.knownLockedCons + [con], self.knownFreeCons)
       
+      print con, probExistWhenFree, probNonexsitWhenLocked
       termProbs[con] = self.consProbs[con] * probExistWhenFree + (1 - self.consProbs[con]) * probNonexsitWhenLocked
+
+    # there should be unqueried features
+    assert len(termProbs) > 0
 
     return max(termProbs.iteritems(), key=lambda _: _[1])[0]
 
