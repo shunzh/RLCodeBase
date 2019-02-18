@@ -29,10 +29,10 @@ def removeFeat(feat, sets):
   Find the new set of sets if feat is removed.
   We remove feat, and remove sets that are reducible (which are supersets of any other set).
   """
-  newSets = map(lambda s: set(s) - {feat}, sets)
-  newSets = filter(lambda s: not any(otherSet.issubset(s) for otherSet in newSets if otherSet != s), newSets)
+  newSets = map(lambda s: tuple(set(s) - {feat}), sets)
+  newSets = list(set(newSets)) # kill duplicates
+  newSets = filter(lambda s: not any(set(otherSet).issubset(s) for otherSet in newSets if otherSet != s), newSets)
   return map(lambda s: tuple(s), newSets)
-
 
 """
 DEPRECATED look at the dual form of the set, not in this way..

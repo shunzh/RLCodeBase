@@ -396,10 +396,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   numOfCons = len(consStates)
   
   # changeabilities of features. None means not provided
-  # our IJCAI paper does not assume changeabilities of features are used. Only used for finding initial safe policies
+  # our IJCAI paper does not assume changeabilities of features are used. only used for finding initial safe policies
   #consProbs = None
   consProbs = [random.random() for _ in range(numOfCons)]
-  print 'consProbs', {i: consProbs[i] for i in range(len(consProbs))}
+  print 'consProbs', zip(range(numOfCons), consProbs)
 
   agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
 

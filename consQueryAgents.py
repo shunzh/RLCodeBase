@@ -7,6 +7,7 @@ import config
 from UCT import MCTS
 from itertools import combinations
 from setcover import coverFeat, removeFeat
+from operator import mul
 
 
 class ConsQueryAgent():
@@ -382,7 +383,26 @@ class ConsQueryAgent():
           var.add(idx)
     
     return set(var)
+
+  def computePolicyRelFeats(self):
+    """
+    Compute relevant features of dominating policies.
+    If the relevant features of any dominating policy are all free, then safe policies exist.
+    Put in another way, if all dom pis has at least one locked relevant feature, then safe policies do not exist.
     
+    This can be O(2^|relevant features|), depending on the implementation of findDomPis
+    """
+    relFeats, domPis = self.findRelevantFeaturesAndDomPis()
+    piRelFeats = []
+    
+    for domPi in domPis:
+      piRelFeats.append(tuple(self.findViolatedConstraints(domPi)))
+    
+    # just to remove supersets
+    piRelFeats = removeFeat(None, piRelFeats)
+
+    self.piRelFeats = piRelFeats
+
   def statesWithDifferentFeats(self, idx, mdp):
     return filter(lambda s: s[idx] != mdp.s0[idx], mdp.S)
 
@@ -442,24 +462,6 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
 
     self.iiss = iiss
   
-  def computePolicyRelFeats(self):
-    """
-    Compute relevant features of dominating policies.
-    If the relevant features of any dominating policy are all free, then safe policies exist.
-    Put in another way, if all dom pis has at least one locked relevant feature, then safe policies do not exist.
-    
-    This can be O(2^|relevant features|), depending on the implementation of findDomPis
-    """
-    relFeats, domPis = self.findRelevantFeaturesAndDomPis()
-    piRelFeats = []
-    
-    for domPi in domPis:
-      piRelFeats.append(tuple(self.findViolatedConstraints(domPi)))
-    
-    # just to remove supersets
-    piRelFeats = removeFeat(None, piRelFeats)
-
-    self.piRelFeats = piRelFeats
 
   def updateFeats(self, newFreeCon=None, newLockedCon=None):
     # this just add to the list of known free and locked features
@@ -477,6 +479,7 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
     return the next feature to query by greedily cover the most number of sets
     return None if no more features are needed or nothing left to query about
     """
+    # should have run methods that compute iiss and piRelFeats
     assert hasattr(self, 'iiss')
     assert hasattr(self, 'piRelFeats')
     
@@ -496,6 +499,9 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
     # find the maximum frequency constraint weighted by the probability
     expNumRemaingSets = {}
     for con in unknownCons:
+      # query selection criterion
+      # now measured by **the number of sets to cover**. need justification
+      # ratio of sets to cover is empirically worse
       expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) +\
                                (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats))
       
@@ -510,15 +516,13 @@ class DomPiHeuForSafetyAgent(ConsQueryAgent):
   def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
     ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
 
-    # need domPis for query
-    relFeats, domPis = self.findRelevantFeaturesAndDomPis()
-    self.domPis = domPis
+    self.computePolicyRelFeats()
     
   def findQuery(self):
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
     
     # the case with no feasible solutions
-    if all(len(set(self.findViolatedConstraints(pi)).intersection(self.knownLockedCons)) > 0 for pi in self.domPis):
+    if all(len(set(relFeats).intersection(self.knownLockedCons)) > 0 for relFeats in self.piRelFeats):
       return None
 
     # find the most probable policy
@@ -530,37 +534,37 @@ class DomPiHeuForSafetyAgent(ConsQueryAgent):
       
     # find the policy that has the largest probability to be feasible
     
-    piProb = lambda pi: reduce(lambda x, y: x * y,\
-                               map(lambda _: updatedConsProbs[_], self.findViolatedConstraints(pi)),\
-                               1)
+    feasibleProb = lambda relFeats: reduce(mul,\
+                                           map(lambda _: updatedConsProbs[_], relFeats),\
+                                           1)
 
-    maxProbPi = max(self.domPis, key=piProb)
+    maxProbPiRelFeats = max(self.piRelFeats, key=feasibleProb)
+    maxProb = feasibleProb(maxProbPiRelFeats)
 
-    maxProbPiRelFeats = self.findViolatedConstraints(maxProbPi)
-
-    if piProb(maxProbPi) == 0:
+    if maxProb == 0:
       print 'no safe policies exist'
       return None
-    elif piProb(maxProbPi) == 1:
+    elif maxProb == 1:
       # no unknown feature left in the most probable policy. nothing more to query
       print 'safe policies found'
       return None
     
+    # now query about unknown features in the most probable policy's relevant features
     featsToConsider = unknownCons.intersection(maxProbPiRelFeats)
+    # the probability is less than 1. so there must be unknown features to consider
     assert len(featsToConsider) > 0
     return max(featsToConsider, key=lambda _: self.consProbs[_])
 
 
 class DomPiObjForSafetyAgent(ConsQueryAgent):
   """
-  Find the feature that increase/decrease the probability of finding a safe policy the most.
+  Find the feature that, after querying, the expected probability of finding a safe poicy / no safe policies exist is maximized.
   """
   def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
     ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
 
     # need domPis for query
-    relFeats, domPis = self.findRelevantFeaturesAndDomPis()
-    self.domPis = domPis
+    self.computePolicyRelFeats()
  
   def probOfExistanceOfSafePolicies(self, lockedCons, freeCons):
     """
@@ -574,20 +578,29 @@ class DomPiObjForSafetyAgent(ConsQueryAgent):
     unknownCons = set(self.consIndices) - set(lockedCons) - set(freeCons)
     # \EE[policy exists]
     expect = 0
-
-    updatedConsProbs = copy.copy(self.consProbs)
-    for i in self.consIndices:
-      if i in lockedCons: updatedConsProbs[i] = 0
-      elif i in freeCons: updatedConsProbs[i] = 1
+    
+    allSubsetsOfUnknownCons = powerset(unknownCons)
+    
+    for freeSubset in allSubsetsOfUnknownCons:
+      prob = reduce(mul, map(lambda _: self.consProbs[_], freeSubset)) *\
+             reduce(mul, map(lambda _: (1 - self.consProbs[_]), unknownCons - freeSubset)) 
+      
+      # add to expect if safe policies exsit
+      safePolicyExsit = any(lambda relFeats: len(set(relFeats) - set(freeCons) - freeSubset) == 0, self.piRelFeats)
+      
+      expect = safePolicyExsit * prob
+    
+    return expect
  
   def findQuery(self):
     unknownCons = set(self.consIndices) - set(self.lockedCons) - set(self.freeCons)
     
+    # the probability that either 
     termProbs = {}
     for con in unknownCons:
-      # the prob that safe policies exsit when con is free
+      # the prob that safe policies exist when con is free
       probExistWhenFree = self.probOfExistanceOfSafePolicies(self.lockedCons, list(self.freeCons) + [con])
-      # the prob that no safe policies exsit when con is locked
+      # the prob that no safe policies exist when con is locked
       probNonexsitWhenLocked = 1 - self.probOfExistanceOfSafePolicies(self.lockedCons + [con], list(self.freeCons))
       
       termProbs[con] = self.consProbs[con] * probExistWhenFree + (1 - self.consProbs[con]) * probNonexsitWhenLocked
