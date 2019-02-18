@@ -1,6 +1,6 @@
 import easyDomains
 from consQueryAgents import ConsQueryAgent, GreedyConstructForSafetyAgent,\
-  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent
+  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, RandomQueryForSafetyAgent
 import time
 import random
 import numpy
@@ -48,9 +48,19 @@ class Spec():
     self.horizon = horizon
 
 def toyWrold():
-  map = [['R', ' ', 'C'],
-         [' ', 'C', 'C'],
-         [' ', 'C', 'S']]
+  # just make plotting easier
+  R = 'R'
+  _ = '_'
+  W = 'W'
+  C = 'C'
+  S = 'S'
+  D = 'D'
+  B = 'B'
+
+  # layout of the domain
+  map = [[R, C, C, _],
+         [_, W, W, _],
+         [_, C, C, S]]
 
   width = len(map[0])
   height = len(map)
@@ -62,17 +72,17 @@ def toyWrold():
 
   for i in range(height):
     for j in range(width):
-      if map[i][j] == 'R':
+      if map[i][j] == R:
         robot = (j, i)
-      elif map[i][j] == 'S':
+      elif map[i][j] == S:
         switch = (j, i)
-      elif map[i][j] == 'W':
+      elif map[i][j] == W:
         walls.append((j, i))
-      elif map[i][j] == 'D':
+      elif map[i][j] == D:
         doors.append((j, i))
-      elif map[i][j] == 'C':
+      elif map[i][j] == C:
         carpets.append((j, i))
-      elif map[i][j] == 'B':
+      elif map[i][j] == B:
         boxes.append((j, i))
  
   horizon = width + height
@@ -397,7 +407,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   
   # changeabilities of features. None means not provided
   # our IJCAI paper does not assume changeabilities of features are used. only used for finding initial safe policies
-  #consProbs = None
+  #consProbs = [.9, .1, .8, .2]
   consProbs = [random.random() for _ in range(numOfCons)]
   print 'consProbs', zip(range(numOfCons), consProbs)
 
@@ -409,14 +419,17 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   #relFeats, domPis = agent.findRelevantFeaturesAndDomPis()
   #trueFreeFeatures = agent.findViolatedConstraints(random.choice(domPis))
   # or hand designed
-  #trueFreeFeatures = [3]
   print 'true free features', trueFreeFeatures
 
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     
     agents = [Agent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)\
-              for Agent in [GreedyConstructForSafetyAgent, MaxProbSafePolicyExistAgent, DomPiHeuForSafetyAgent]]
+              for Agent in [GreedyConstructForSafetyAgent]
+                            #MaxProbSafePolicyExistAgent,\
+                            #DomPiHeuForSafetyAgent,\
+                            #RandomQueryForSafetyAgent]
+             ]
 
     for agent in agents:
       print agent.__class__.__name__

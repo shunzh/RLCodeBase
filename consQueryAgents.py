@@ -503,9 +503,13 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
     for con in unknownCons:
       # query selection criterion
       # now measured by **the number of sets to cover**. need justification
-      # ratio of sets to cover is empirically worse
+      """
       expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) +\
                                (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats))
+      """
+      # ratio of sets to cover is empirically worse
+      expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) / len(self.iiss) +\
+                               (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats)) / len(self.piRelFeats)
       
     return min(expNumRemaingSets.iteritems(), key=lambda _: _[1])[0]
 
@@ -620,6 +624,16 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
     assert len(termProbs) > 0
 
     return max(termProbs.iteritems(), key=lambda _: _[1])[0]
+
+
+class RandomQueryForSafetyAgent(ConsQueryAgent):
+  """
+  Return the unknown feature that has the largest (or smallest) probability of being changeable.
+  """
+  def findQuery(self):
+    unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
+    
+    return max(unknownCons, key=lambda con: max([self.consProbs[con], 1 - self.consProbs[con]]))
 
 
 def printOccSA(x):
