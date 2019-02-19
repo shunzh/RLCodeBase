@@ -503,13 +503,13 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
     for con in unknownCons:
       # query selection criterion
       # measured by **the number of sets to cover**
-      """
       expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) +\
                                (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats))
       """
       # measured by **ratio of sets to cover**. so far empirically the best
       expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) / len(self.iiss) +\
                                (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats)) / len(self.piRelFeats)
+      """
       
     return min(expNumRemaingSets.iteritems(), key=lambda _: _[1])[0]
 

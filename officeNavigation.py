@@ -58,9 +58,9 @@ def toyWrold():
   B = 'B'
 
   # layout of the domain
-  map = [[R, C, C, _],
-         [_, W, W, _],
-         [_, C, C, S]]
+  map = [[R, C, _, C, _],
+         [_, W, _, W, _],
+         [_, W, _, C, S]]
 
   width = len(map[0])
   height = len(map)
@@ -186,10 +186,15 @@ def parameterizedSokobanWorld(size, numOfBoxes):
   
   return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
 
-def classicOfficNav(spec, k, constrainHuman, dry, rnd):
+def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
   """
-  The office navigation domain specified in the report using a factored representation.
-  There are state factors indicating whether some carpets are dirty.
+  spec: specification of the factored mdp
+  k: number of queries (in batch querying setting
+  constrainHuman: a flag controls MR vs MR_k
+  dry: no output to file if True
+  rnd: random seed
+  consProbs: only for Bayesian setting. ["prob that ith unknown feature is free" for i in range(self.numOfCons)]
+    If None (by default), set randomly
   """
   # need to flatten the state representation to a vector.
   # (robot's location, doors, boxes, switch, time)
@@ -405,10 +410,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
   consStates = carpetCons + boxCons
   numOfCons = len(consStates)
   
-  # changeabilities of features. None means not provided
-  # our IJCAI paper does not assume changeabilities of features are used. only used for finding initial safe policies
-  #consProbs = [.9, .1, .8, .2]
-  consProbs = [random.random() for _ in range(numOfCons)]
+  if consProbs == None:
+    consProbs = [random.random() for _ in range(numOfCons)]
   print 'consProbs', zip(range(numOfCons), consProbs)
 
   agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
@@ -558,9 +561,9 @@ if __name__ == '__main__':
   constrainHuman = False
   dry = True # do not safe to files if dry run
 
-  numOfCarpets = 10
+  numOfCarpets = 5
   numOfBoxes = 0
-  size = 5
+  size = 3
 
   rnd = 0 # set a dummy random seed if no -r argument
 
@@ -593,10 +596,12 @@ if __name__ == '__main__':
       raise Exception('unknown argument')
 
   # test a hand-designed domain
-  #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd)
+  #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd, consProbs=[.9, .9, .9])
 
   # avoid border to make sure safe policies exist
-  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
+  #consProbs = [.1,] * numOfCarpets
+  consProbs = None
+  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProbs=consProbs)
   
   # good for testing irreversible features
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
