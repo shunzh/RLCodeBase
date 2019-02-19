@@ -592,8 +592,13 @@ if __name__ == '__main__':
     else:
       raise Exception('unknown argument')
 
+  # test a hand-designed domain
   #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd)
+
+  # avoid border to make sure safe policies exist
   classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
+  
+  # good for testing irreversible features
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)

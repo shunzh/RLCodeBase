@@ -502,12 +502,12 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
     expNumRemaingSets = {}
     for con in unknownCons:
       # query selection criterion
-      # now measured by **the number of sets to cover**. need justification
+      # measured by **the number of sets to cover**
       """
       expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) +\
                                (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats))
       """
-      # ratio of sets to cover is empirically worse
+      # measured by **ratio of sets to cover**. so far empirically the best
       expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) / len(self.iiss) +\
                                (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats)) / len(self.piRelFeats)
       
