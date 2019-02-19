@@ -425,10 +425,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd):
     print 'initial policy does not exist'
     
     agents = [Agent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)\
-              for Agent in [GreedyConstructForSafetyAgent]
-                            #MaxProbSafePolicyExistAgent,\
-                            #DomPiHeuForSafetyAgent,\
-                            #RandomQueryForSafetyAgent]
+              for Agent in [GreedyConstructForSafetyAgent,\
+                            MaxProbSafePolicyExistAgent,\
+                            DomPiHeuForSafetyAgent,\
+                            RandomQueryForSafetyAgent]
              ]
 
     for agent in agents:
