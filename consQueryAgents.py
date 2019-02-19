@@ -617,7 +617,7 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
       # the prob that no safe policies exist when con is locked
       probNonexsitWhenLocked = 1 - self.probOfExistanceOfSafePolicies(self.knownLockedCons + [con], self.knownFreeCons)
       
-      print con, probExistWhenFree, probNonexsitWhenLocked
+      #print con, probExistWhenFree, probNonexsitWhenLocked
       termProbs[con] = self.consProbs[con] * probExistWhenFree + (1 - self.consProbs[con]) * probNonexsitWhenLocked
 
     # there should be unqueried features
@@ -633,7 +633,9 @@ class RandomQueryForSafetyAgent(ConsQueryAgent):
   def findQuery(self):
     unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
     
-    return max(unknownCons, key=lambda con: max([self.consProbs[con], 1 - self.consProbs[con]]))
+    # FIXME 
+    if len(unknownCons) == 0: return None
+    else: return max(unknownCons, key=lambda con: max([self.consProbs[con], 1 - self.consProbs[con]]))
 
 
 def printOccSA(x):
