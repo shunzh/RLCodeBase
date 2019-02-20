@@ -1,6 +1,7 @@
 import easyDomains
-from consQueryAgents import ConsQueryAgent, GreedyConstructForSafetyAgent,\
-  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, RandomQueryForSafetyAgent
+from consQueryAgents import ConsQueryAgent,\
+  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, RandomQueryForSafetyAgent,\
+  GreedyForSafetyAgent
 import time
 import random
 import numpy
@@ -427,15 +428,20 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     
-    agents = [Agent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)\
-              for Agent in [GreedyConstructForSafetyAgent,\
-                            MaxProbSafePolicyExistAgent,\
-                            DomPiHeuForSafetyAgent,\
-                            RandomQueryForSafetyAgent]
-             ]
+    methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly']
 
-    for agent in agents:
-      print agent.__class__.__name__
+    for method in methods:
+      print method
+      
+      if method == 'iisAndRelpi':
+        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman, useIIS=True, useRelPi=True)
+      elif method == 'iisOnly':
+        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman, useIIS=True, useRelPi=False)
+      elif method == 'relpiOnly':
+        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman, useIIS=False, useRelPi=True)
+      else:
+        raise Exception('unknown method', method)
+
       # keep the features the robot queried about for evaluation
       queries = []
 
@@ -561,9 +567,9 @@ if __name__ == '__main__':
   constrainHuman = False
   dry = True # do not safe to files if dry run
 
-  numOfCarpets = 5
+  numOfCarpets = 10
   numOfBoxes = 0
-  size = 3
+  size = 5
 
   rnd = 0 # set a dummy random seed if no -r argument
 
@@ -600,8 +606,7 @@ if __name__ == '__main__':
 
   # avoid border to make sure safe policies exist
   #consProbs = [.1,] * numOfCarpets
-  consProbs = None
-  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProbs=consProbs)
+  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
   
   # good for testing irreversible features
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)

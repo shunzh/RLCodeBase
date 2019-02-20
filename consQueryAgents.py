@@ -6,7 +6,7 @@ import itertools
 import config
 from UCT import MCTS
 from itertools import combinations
-from setcover import coverFeat, removeFeat
+from setcover import coverFeat, removeFeat, leastNumElemSets, elementExists
 from operator import mul
 
 
@@ -386,6 +386,9 @@ class ConsQueryAgent():
     
     return set(var)
 
+  """
+  Methods for finding sets useful for safe policies.
+  """
   def computePolicyRelFeats(self):
     """
     Compute relevant features of dominating policies.
@@ -404,32 +407,6 @@ class ConsQueryAgent():
     piRelFeats = removeFeat(None, piRelFeats)
 
     self.piRelFeats = piRelFeats
-
-  def statesWithDifferentFeats(self, idx, mdp):
-    return filter(lambda s: s[idx] != mdp.s0[idx], mdp.S)
-
-  # FIXME remove or not? only used by depreciated methods
-  """
-  def statesTransitToDifferentFeatures(self, idx, value):
-    ret = []
-    for s in self.mdp['S']:
-      if s[idx] == value:
-        for a in self.mdp['A']:
-          for sp in self.mdp['S']:
-            if self.mdp['T'](s, a, sp) > 0 and sp[idx] != value:
-              ret.append((s, a))
-              break
-    return ret
-  """
-
-
-class GreedyConstructForSafetyAgent(ConsQueryAgent):
-  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
-    ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
-    
-    # find all IISs without knowing any locked or free cons
-    self.computeIISs()
-    self.computePolicyRelFeats()
 
   def computeIISs(self):
     """
@@ -463,7 +440,37 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
         iiss.append(cons)
 
     self.iiss = iiss
-  
+
+  def statesWithDifferentFeats(self, idx, mdp):
+    return filter(lambda s: s[idx] != mdp.s0[idx], mdp.S)
+
+  # FIXME remove or not? only used by depreciated methods
+  """
+  def statesTransitToDifferentFeatures(self, idx, value):
+    ret = []
+    for s in self.mdp['S']:
+      if s[idx] == value:
+        for a in self.mdp['A']:
+          for sp in self.mdp['S']:
+            if self.mdp['T'](s, a, sp) > 0 and sp[idx] != value:
+              ret.append((s, a))
+              break
+    return ret
+  """
+
+
+class GreedyForSafetyAgent(ConsQueryAgent):
+  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False, useIIS=True, useRelPi=True):
+    ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
+    
+    # find all IISs without knowing any locked or free cons
+    # FIXME
+    self.computeIISs()
+    self.computePolicyRelFeats()
+      
+    self.useIIS = useIIS
+    self.useRelPi = useRelPi
+
 
   def updateFeats(self, newFreeCon=None, newLockedCon=None):
     # this just add to the list of known free and locked features
@@ -485,33 +492,40 @@ class GreedyConstructForSafetyAgent(ConsQueryAgent):
     assert hasattr(self, 'iiss')
     assert hasattr(self, 'piRelFeats')
     
-    iiss = self.iiss
-    piRelFeats = self.piRelFeats
-
-    print 'iiss', iiss
-    print 'piRelFeats', piRelFeats
+    print 'iiss', self.iiss
+    print 'piRelFeats', self.piRelFeats
 
     # make sure the constraints that are already queried are not going to be queried again
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
     
     # if the known locked features occupy one iis, then not feasible
-    if len(iiss) == 0 or len(piRelFeats) == 0:
+    if len(self.iiss) == 0 or len(self.piRelFeats) == 0:
       return None
 
     # find the maximum frequency constraint weighted by the probability
     expNumRemaingSets = {}
     for con in unknownCons:
-      # query selection criterion
-      # measured by **the number of sets to cover**
-      expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) +\
-                               (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats))
-      """
-      # measured by **ratio of sets to cover**. so far empirically the best
-      expNumRemaingSets[con] = self.consProbs[con] * len(coverFeat(con, self.iiss)) / len(self.iiss) +\
-                               (1 - self.consProbs[con]) * len(coverFeat(con, self.piRelFeats)) / len(self.piRelFeats)
-      """
+      if elementExists(con, self.iiss):
+        numWhenFree = 0
+        if self.useIIS:
+          numWhenFree = len(coverFeat(con, self.iiss))
+        else:
+          assert self.useRelPi # we'll need rel pi in this case
+          numWhenFree = len(leastNumElemSets(con, self.piRelFeats))
+        
+        numWhenLocked = 0
+        if self.useRelPi:
+          numWhenLocked = len(coverFeat(con, self.piRelFeats))
+        else:
+          assert self.useIIS # we'll need iis in this case
+          numWhenLocked = len(leastNumElemSets(con, self.iiss))
+
+        expNumRemaingSets[con] = self.consProbs[con] * numWhenFree + (1 - self.consProbs[con]) * numWhenLocked
       
     return min(expNumRemaingSets.iteritems(), key=lambda _: _[1])[0]
+  
+  def heuristic(self, con):
+    raise Exception('need to be defiend')
 
 
 class DomPiHeuForSafetyAgent(ConsQueryAgent):

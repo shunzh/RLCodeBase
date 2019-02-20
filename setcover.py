@@ -25,7 +25,6 @@ def coverFeat(feat, sets):
 
 def removeFeat(feat, sets):
   """
-  
   Find the new set of sets if feat is removed.
   We remove feat, and remove sets that are reducible (which are supersets of any other set).
   """
@@ -33,6 +32,17 @@ def removeFeat(feat, sets):
   newSets = list(set(newSets)) # kill duplicates
   newSets = filter(lambda s: not any(set(otherSet).issubset(s) for otherSet in newSets if otherSet != s), newSets)
   return map(lambda s: tuple(s), newSets)
+
+def leastNumElemSets(feat, sets):
+  """
+  Find the smallest set that contains feat and return the size when feat is removed.
+  """
+  setsContainFeat = filter(lambda s: feat in s, sets)
+  minSizedSet = min(setsContainFeat, key=lambda s: len(s))
+  return set(minSizedSet) - {feat}
+
+def elementExists(feat, sets):
+  return any(feat in s for s in sets)
 
 """
 DEPRECATED look at the dual form of the set, not in this way..
