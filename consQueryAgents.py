@@ -6,7 +6,8 @@ import itertools
 import config
 from UCT import MCTS
 from itertools import combinations
-from setcover import coverFeat, removeFeat, leastNumElemSets, elementExists
+from setcover import coverFeat, removeFeat, leastNumElemSets, elementExists,\
+  oshimai
 from operator import mul
 
 
@@ -463,61 +464,64 @@ class GreedyForSafetyAgent(ConsQueryAgent):
   def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False, useIIS=True, useRelPi=True):
     ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
     
-    # find all IISs without knowing any locked or free cons
-    # FIXME
-    self.computeIISs()
-    self.computePolicyRelFeats()
-      
     self.useIIS = useIIS
     self.useRelPi = useRelPi
 
+    # find all IISs without knowing any locked or free cons
+    if self.useIIS:
+      self.computeIISs()
+    if self.useRelPi:
+      self.computePolicyRelFeats()
 
   def updateFeats(self, newFreeCon=None, newLockedCon=None):
     # this just add to the list of known free and locked features
     ConsQueryAgent.updateFeats(self, newFreeCon, newLockedCon)
 
     if newFreeCon != None:
-      self.iiss = coverFeat(newFreeCon, self.iiss)
-      self.piRelFeats = removeFeat(newFreeCon, self.piRelFeats)
+      if self.useIIS:
+        self.iiss = coverFeat(newFreeCon, self.iiss)
+      if self.useRelPi:
+        self.piRelFeats = removeFeat(newFreeCon, self.piRelFeats)
     if newLockedCon != None:
-      self.iiss = removeFeat(newLockedCon, self.iiss)
-      self.piRelFeats = coverFeat(newLockedCon, self.piRelFeats)
+      if self.useIIS:
+        self.iiss = removeFeat(newLockedCon, self.iiss)
+      if self.useRelPi:
+        self.piRelFeats = coverFeat(newLockedCon, self.piRelFeats)
 
   def findQuery(self):
     """
     return the next feature to query by greedily cover the most number of sets
     return None if no more features are needed or nothing left to query about
     """
+    assert self.useIIS or self.useRelPi
+
     # should have run methods that compute iiss and piRelFeats
-    assert hasattr(self, 'iiss')
-    assert hasattr(self, 'piRelFeats')
-    
-    print 'iiss', self.iiss
-    print 'piRelFeats', self.piRelFeats
+    if self.useIIS:
+      print 'iiss', self.iiss
+      if oshimai(self.iiss): return None
+    if self.useRelPi:
+      print 'piRelFeats', self.piRelFeats
+      if oshimai(self.piRelFeats): return None
 
     # make sure the constraints that are already queried are not going to be queried again
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
-    
-    # if the known locked features occupy one iis, then not feasible
-    if len(self.iiss) == 0 or len(self.piRelFeats) == 0:
-      return None
 
     # find the maximum frequency constraint weighted by the probability
     expNumRemaingSets = {}
     for con in unknownCons:
-      if elementExists(con, self.iiss):
+      if (self.useIIS and elementExists(con, self.iiss)) or (self.useRelPi and elementExists(con, self.piRelFeats)):
         numWhenFree = 0
+        # prefer using iis
         if self.useIIS:
           numWhenFree = len(coverFeat(con, self.iiss))
         else:
-          assert self.useRelPi # we'll need rel pi in this case
           numWhenFree = len(leastNumElemSets(con, self.piRelFeats))
         
         numWhenLocked = 0
+        # prefer using rel pis
         if self.useRelPi:
           numWhenLocked = len(coverFeat(con, self.piRelFeats))
         else:
-          assert self.useIIS # we'll need iis in this case
           numWhenLocked = len(leastNumElemSets(con, self.iiss))
 
         expNumRemaingSets[con] = self.consProbs[con] * numWhenFree + (1 - self.consProbs[con]) * numWhenLocked
@@ -525,7 +529,7 @@ class GreedyForSafetyAgent(ConsQueryAgent):
     return min(expNumRemaingSets.iteritems(), key=lambda _: _[1])[0]
   
   def heuristic(self, con):
-    raise Exception('need to be defiend')
+    raise Exception('need to be defined')
 
 
 class DomPiHeuForSafetyAgent(ConsQueryAgent):
@@ -541,10 +545,6 @@ class DomPiHeuForSafetyAgent(ConsQueryAgent):
   def findQuery(self):
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
     
-    # the case with no feasible solutions
-    if all(len(set(relFeats).intersection(self.knownLockedCons)) > 0 for relFeats in self.piRelFeats):
-      return None
-
     # find the most probable policy
     # update the cons prob to make it easier
     updatedConsProbs = copy.copy(self.consProbs)
@@ -644,12 +644,22 @@ class RandomQueryForSafetyAgent(ConsQueryAgent):
   """
   Return the unknown feature that has the largest (or smallest) probability of being changeable.
   """
+  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
+    ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
+
+    # need domPis for query
+    self.computePolicyRelFeats()
+ 
   def findQuery(self):
     unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
     
-    # FIXME 
-    if len(unknownCons) == 0: return None
-    else: return max(unknownCons, key=lambda con: max([self.consProbs[con], 1 - self.consProbs[con]]))
+    safePolicyExsit = any(len(set(relFeats) - set(self.knownFreeCons) - set(self.knownLockedCons)) == 0 for relFeats in self.piRelFeats)
+    noSafePolicyExist = all(len(set(relFeats).intersection(self.knownLockedCons)) > 0 for relFeats in self.piRelFeats)
+    
+    if safePolicyExsit or noSafePolicyExist:
+      return None
+    else:
+      return max(unknownCons, key=lambda con: max([self.consProbs[con], 1 - self.consProbs[con]]))
 
 
 def printOccSA(x):

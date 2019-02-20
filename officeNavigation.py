@@ -1,7 +1,6 @@
 import easyDomains
-from consQueryAgents import ConsQueryAgent,\
-  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, RandomQueryForSafetyAgent,\
-  GreedyForSafetyAgent
+from consQueryAgents import ConsQueryAgent, GreedyForSafetyAgent,\
+  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, RandomQueryForSafetyAgent
 import time
 import random
 import numpy
@@ -428,17 +427,23 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     
-    methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly']
+    methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
 
     for method in methods:
       print method
       
       if method == 'iisAndRelpi':
-        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman, useIIS=True, useRelPi=True)
+        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=True)
       elif method == 'iisOnly':
-        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman, useIIS=True, useRelPi=False)
+        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=False)
       elif method == 'relpiOnly':
-        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman, useIIS=False, useRelPi=True)
+        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=False, useRelPi=True)
+      elif method == 'maxProb':
+        agent = MaxProbSafePolicyExistAgent(mdp, consStates, consProbs=consProbs)
+      elif method == 'piHeu':
+        agent = DomPiHeuForSafetyAgent(mdp, consStates, consProbs=consProbs)
+      elif method == 'random':
+        agent = RandomQueryForSafetyAgent(mdp, consStates, consProbs=consProbs)
       else:
         raise Exception('unknown method', method)
 
@@ -462,10 +467,11 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
         
       print 'queries', queries
 
-      # write to file
-      f = open(agent.__class__.__name__ + '.out',"a")
-      f.write(str(len(queries)) + '\n')
-      f.close()
+      if not dry:
+        # write to file
+        f = open(method + '.out',"a")
+        f.write(str(len(queries)) + '\n')
+        f.close()
   else:
     print 'initial policy exists'
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
@@ -565,7 +571,7 @@ if __name__ == '__main__':
   method = None
   k = 1
   constrainHuman = False
-  dry = True # do not safe to files if dry run
+  dry = False # do not safe to files if dry run
 
   numOfCarpets = 10
   numOfBoxes = 0
@@ -586,9 +592,9 @@ if __name__ == '__main__':
       numOfCarpets = int(arg)
     elif opt == '-c':
       constrainHuman = True
-    elif opt == '-f':
+    elif opt == '-d':
       # disable dry run if output to file
-      dry = False
+      dry = True
     elif opt == '-r':
       rnd = int(arg)
 
