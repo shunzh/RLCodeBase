@@ -1,6 +1,6 @@
 import easyDomains
 from consQueryAgents import ConsQueryAgent, GreedyForSafetyAgent,\
-  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, RandomQueryForSafetyAgent,\
+  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, DescendProbQueryForSafetyAgent,\
   OptQueryForSafetyAgent
 import time
 import random
@@ -445,7 +445,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
       elif method == 'piHeu':
         agent = DomPiHeuForSafetyAgent(mdp, consStates, consProbs=consProbs)
       elif method == 'random':
-        agent = RandomQueryForSafetyAgent(mdp, consStates, consProbs=consProbs)
+        agent = DescendProbQueryForSafetyAgent(mdp, consStates, consProbs=consProbs)
       elif method == 'opt':
         agent = OptQueryForSafetyAgent(mdp, consStates, consProbs=consProbs)
       else:
@@ -615,7 +615,6 @@ if __name__ == '__main__':
   #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd, consProbs=[.9, .9, .9])
 
   # avoid border to make sure safe policies exist
-  #consProbs = [.1,] * numOfCarpets
   classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
   
   # good for testing irreversible features

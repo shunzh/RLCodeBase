@@ -650,7 +650,7 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
     return max(termProbs.iteritems(), key=lambda _: _[1])[0]
 
 
-class RandomQueryForSafetyAgent(ConsQueryAgent):
+class DescendProbQueryForSafetyAgent(ConsQueryAgent):
   """
   Return the unknown feature that has the largest (or smallest) probability of being changeable.
   """
