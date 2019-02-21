@@ -429,7 +429,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
     print 'initial policy does not exist'
     
     methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
-    #methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random', 'opt']
+    #methods = ['opt']
 
     for method in methods:
       print method

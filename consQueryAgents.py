@@ -528,14 +528,14 @@ class GreedyForSafetyAgent(ConsQueryAgent):
         if self.useIIS:
           numWhenFree = len(coverFeat(con, self.iiss))
         else:
-          numWhenFree = len(leastNumElemSets(con, self.piRelFeats))
+          numWhenFree = len(removeFeat(con, self.piRelFeats))
         
         numWhenLocked = 0
         # prefer using rel pis
         if self.useRelPi:
           numWhenLocked = len(coverFeat(con, self.piRelFeats))
         else:
-          numWhenLocked = len(leastNumElemSets(con, self.iiss))
+          numWhenLocked = len(removeFeat(con, self.iiss))
 
         expNumRemaingSets[con] = self.consProbs[con] * numWhenFree + (1 - self.consProbs[con]) * numWhenLocked
       
@@ -620,8 +620,6 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
       
       # an indicator represents if safe policies exist
       safePolicyExist = self.safePolicyExist(freeCons=list(freeCons) + list(freeSubset))
-      
-      #print self.knownFreeCons + list(freeSubset), prob, safePolicyExist
       
       expect += safePolicyExist * prob
     
