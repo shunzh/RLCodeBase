@@ -1,6 +1,7 @@
 import easyDomains
 from consQueryAgents import ConsQueryAgent, GreedyForSafetyAgent,\
-  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, RandomQueryForSafetyAgent
+  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, RandomQueryForSafetyAgent,\
+  OptQueryForSafetyAgent
 import time
 import random
 import numpy
@@ -428,6 +429,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
     print 'initial policy does not exist'
     
     methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+    #methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random', 'opt']
 
     for method in methods:
       print method
@@ -444,6 +446,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
         agent = DomPiHeuForSafetyAgent(mdp, consStates, consProbs=consProbs)
       elif method == 'random':
         agent = RandomQueryForSafetyAgent(mdp, consStates, consProbs=consProbs)
+      elif method == 'opt':
+        agent = OptQueryForSafetyAgent(mdp, consStates, consProbs=consProbs)
       else:
         raise Exception('unknown method', method)
 

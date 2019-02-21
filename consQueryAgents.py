@@ -44,7 +44,8 @@ class ConsQueryAgent():
     """
     Run the LP solver with all constraints and see if the LP problem is feasible.
     """
-    return self.findConstrainedOptPi(self.allCons)['feasible']
+    self.computePolicyRelFeats()
+    return self.safePolicyExist()
 
   def findConstrainedOptPi(self, activeCons):
     mdp = self.mdp
@@ -390,6 +391,18 @@ class ConsQueryAgent():
   """
   Methods for finding sets useful for safe policies.
   """
+  def safePolicyExist(self, freeCons=None):
+    # some dom pi's relevant features are all free
+    if freeCons == None:
+      freeCons = self.knownFreeCons
+    return any(len(set(relFeats) - set(freeCons)) == 0 for relFeats in self.piRelFeats)
+  
+  def safePolicyNotExist(self, lockedCons=None):
+    # there are some locked features in all dom pis
+    if lockedCons == None:
+      lockedCons = self.knownLockedCons
+    return all(len(set(relFeats).intersection(lockedCons)) > 0 for relFeats in self.piRelFeats)
+ 
   def computePolicyRelFeats(self):
     """
     Compute relevant features of dominating policies.
@@ -595,7 +608,6 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
       They might be different from the ones confirmed by querying.
       These are hypothetical ones just to compute the corresponding prob. 
     """
-    assert hasattr(self, 'piRelFeats')
     unknownCons = set(self.consIndices) - set(lockedCons) - set(freeCons)
     # \EE[policy exists]
     expect = 0
@@ -607,11 +619,11 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
              reduce(mul, map(lambda _: 1 - self.consProbs[_], unknownCons - set(freeSubset)), 1) 
       
       # an indicator represents if safe policies exist
-      safePolicyExsit = any(len(set(relFeats) - set(freeCons) - set(freeSubset)) == 0 for relFeats in self.piRelFeats)
+      safePolicyExist = self.safePolicyExist(freeCons=list(freeCons) + list(freeSubset))
       
-      #print self.knownFreeCons + list(freeSubset), prob, safePolicyExsit
+      #print self.knownFreeCons + list(freeSubset), prob, safePolicyExist
       
-      expect += safePolicyExsit * prob
+      expect += safePolicyExist * prob
     
     return expect
  
@@ -653,14 +665,61 @@ class RandomQueryForSafetyAgent(ConsQueryAgent):
   def findQuery(self):
     unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
     
-    safePolicyExsit = any(len(set(relFeats) - set(self.knownFreeCons) - set(self.knownLockedCons)) == 0 for relFeats in self.piRelFeats)
-    noSafePolicyExist = all(len(set(relFeats).intersection(self.knownLockedCons)) > 0 for relFeats in self.piRelFeats)
-    
-    if safePolicyExsit or noSafePolicyExist:
+    if self.safePolicyExist() or self.safePolicyNotExist():
       return None
     else:
-      return max(unknownCons, key=lambda con: max([self.consProbs[con], 1 - self.consProbs[con]]))
+      return max(unknownCons, key=lambda con: self.consProbs[con])
 
+
+class OptQueryForSafetyAgent(ConsQueryAgent):
+  """
+  Find the opt query by dynamic programming. Its O(2^|\Phi|).
+  """
+  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
+    ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
+
+    # need domPis for query
+    self.computePolicyRelFeats()
+    
+    # compute the table:
+    # numQFeasible(\Phi'_F, \Phi'_L) is the expected minimum number of features need to be queried to find a safe policy 
+    # numQInfeasible(\Phi'_F, \Phi'_L) is the expected minimum number of features need to be queried to determine no safe policies exist
+    self.optQ = {}
+    self.optNumCons = {}
+    
+  def getMinNumQueries(self, lockedCons, freeCons):
+    """
+    Recursively using memoization: this should be more efficient that filling the table bottom-up.
+    most partitions are actually not used.
+    
+    returns (optimal con to query, min num of cons)
+    """
+    lockedCons = set(lockedCons)
+    freeCons = set(freeCons)
+
+    # memoization
+    if (lockedCons, freeCons) in self.optQ.keys():
+      return (self.optQ[frozenset(lockedCons), frozenset(freeCons)], self.optNumCons[frozenset(lockedCons), frozenset(freeCons)])
+    
+    if self.safePolicyExist(freeCons) or self.safePolicyNotExist(lockedCons):
+      # we are done this case
+      return (None, 0)
+
+    unknownCons = set(self.consIndices) - set(lockedCons) - set(freeCons)
+    minNums = [(con,\
+                self.consProbs[con] * self.getMinNumQueries(lockedCons, freeCons.union({con}))[1] +\
+                (1 - self.consProbs[con]) * self.getMinNumQueries(lockedCons.union({con}), freeCons)[1] +\
+                1) # count con in
+               for con in unknownCons]
+    minConNum = min(minNums, key=lambda _: _[1])
+    
+    self.optQ[frozenset(lockedCons), frozenset(freeCons)] = minConNum[0]
+    self.optNumCons[frozenset(lockedCons), frozenset(freeCons)] = minConNum[1]
+    return minConNum
+    
+  def findQuery(self):
+    return self.getMinNumQueries(self.knownLockedCons, self.knownFreeCons)[0]
+ 
 
 def printOccSA(x):
   for sa, occ in x.items():
