@@ -44,8 +44,7 @@ class ConsQueryAgent():
     """
     Run the LP solver with all constraints and see if the LP problem is feasible.
     """
-    self.computePolicyRelFeats()
-    return self.safePolicyExist()
+    return self.findConstrainedOptPi(self.allCons)['feasible']
 
   def findConstrainedOptPi(self, activeCons):
     mdp = self.mdp
@@ -395,13 +394,25 @@ class ConsQueryAgent():
     # some dom pi's relevant features are all free
     if freeCons == None:
       freeCons = self.knownFreeCons
-    return any(len(set(relFeats) - set(freeCons)) == 0 for relFeats in self.piRelFeats)
+
+    if hasattr(self, 'piRelFeats'):
+      # if we have rel featus, simply check whether we covered all rel feats of any dom pi
+      return any(len(set(relFeats) - set(freeCons)) == 0 for relFeats in self.piRelFeats)
+    else:
+      # for some simple heuristics, it's not fair to ask them to precompute dompis (need to run a lot of LP)
+      # so we try to solve the lp problem once here
+      # see whether the lp is feasible if we assume all other features are locked
+      return self.findConstrainedOptPi(set(self.allCons) - set(freeCons))['feasible']
   
   def safePolicyNotExist(self, lockedCons=None):
     # there are some locked features in all dom pis
     if lockedCons == None:
       lockedCons = self.knownLockedCons
-    return all(len(set(relFeats).intersection(lockedCons)) > 0 for relFeats in self.piRelFeats)
+    if hasattr(self, 'piRelFeats'):
+      return all(len(set(relFeats).intersection(lockedCons)) > 0 for relFeats in self.piRelFeats)
+    else:
+      # by only imposing these constraints, see whether the lp problem is infeasible
+      return not self.findConstrainedOptPi(lockedCons)['feasible']
  
   def computePolicyRelFeats(self):
     """
@@ -421,6 +432,7 @@ class ConsQueryAgent():
     piRelFeats = killSupersets(piRelFeats)
 
     self.piRelFeats = piRelFeats
+    self.relFeats = relFeats # the union of rel feats of all dom pis
 
   def computeIISs(self):
     """
@@ -669,12 +681,6 @@ class DescendProbQueryForSafetyAgent(ConsQueryAgent):
   """
   Return the unknown feature that has the largest (or smallest) probability of being changeable.
   """
-  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False):
-    ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
-
-    # need domPis for query
-    self.computePolicyRelFeats()
- 
   def findQuery(self):
     unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
     
@@ -708,7 +714,7 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
     """
     self.optQs = {}
 
-    consPowerset = powerset(self.allCons)
+    consPowerset = powerset(self.relFeats)
     
     # if hit the boundary, our function should return 0 since safe policies found / no safe policies exist
     lockedPhiBound = lambda lockedCons: any(set(lockedCons).issuperset(iis) for iis in self.iiss)
@@ -721,11 +727,11 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
     # admissibleIndices are the ones within the boundary, which need querying to decide existence of safe policies
     admissibleIndices = []
     for freeCons in consPowerset:
-      lockedPowerset = powerset(set(self.allCons) - set(freeCons))
+      lockedPowerset = powerset(set(self.relFeats) - set(freeCons))
       for lockedCons in lockedPowerset:
         if lockedPhiBound(lockedCons) or freePhiBound(freeCons):
           self.optQs[indexize(lockedCons, freeCons)] = (None, 0) 
-          print (lockedCons, freeCons), 'beyond boundary'
+          if config.VERBOSE: print (lockedCons, freeCons), 'beyond boundary'
         else:
           admissibleIndices.append((set(lockedCons), set(freeCons)))
 
@@ -734,10 +740,10 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
     updateOccured = True
     while updateOccured:
       updateOccured = False
-      print len(admissibleIndices), 'left to evaluate'
+      if config.VERBOSE: print len(admissibleIndices), 'left to evaluate'
       for (lockedCons, freeCons) in admissibleIndices:
         # only compute the value if all its necessary neighbors are already computed
-        unknownCons = set(self.consIndices) - lockedCons - freeCons
+        unknownCons = set(self.relFeats) - lockedCons - freeCons
         
         allNeighborValuesExist = all((lockedCons, freeCons.union({con})) in self.optQs.keys()
                                      and (lockedCons.union({con}), freeCons) in self.optQs.keys()\
@@ -755,14 +761,18 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
           self.optQs[indexize(lockedCons, freeCons)] = min(minNums, key=lambda _: _[1])
           
           # no need to consider this elem in the future
-          print (lockedCons, freeCons), 'evaluated'
+          if config.VERBOSE: print (lockedCons, freeCons), 'evaluated'
           admissibleIndices.remove((lockedCons, freeCons))
     
     # shouldn't be any unevaluated entries in self.optQs
     assert len(admissibleIndices) == 0
     
   def findQuery(self):
-    return self.optQs[frozenset(self.knownLockedCons), frozenset(self.knownFreeCons)][0]
+    # we only care about the categories of rel feats
+    relLockedCons = set(self.knownLockedCons).intersection(self.relFeats)
+    relFreeCons = set(self.knownFreeCons).intersection(self.relFeats)
+
+    return self.optQs[frozenset(relLockedCons), frozenset(relFreeCons)][0]
  
 
 def printOccSA(x):
