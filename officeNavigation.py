@@ -443,6 +443,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
       
       if method == 'iisAndRelpi':
         agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=True)
+        # record this to get an idea how difficult these tasks are
+        # (iisAndRelpi compute both sets anyway, so record here)
+        iiss = agent.iiss
+        relFeats = agent.piRelFeats
       elif method == 'iisOnly':
         agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=False)
       elif method == 'relpiOnly':
@@ -481,7 +485,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
     print 'times', times
     if not dry:
       # write to file
-      pickle.dump({'q': queries, 't': times}, open(str(rnd) + '.pkl', 'wb'))
+      pickle.dump({'q': queries, 't': times, 'iiss': iiss, 'relFeats': relFeats},\
+                  open(str(rnd) + '.pkl', 'wb'))
   else:
     print 'initial policy exists'
     #HACK not caring about improving safe policies for now

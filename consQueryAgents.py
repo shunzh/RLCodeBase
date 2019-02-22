@@ -654,10 +654,10 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
       # the prob that safe policies exist when con is free
       probExistWhenFree = self.probOfExistanceOfSafePolicies(self.knownLockedCons, self.knownFreeCons + [con])
       # the prob that no safe policies exist when con is locked
-      probNonexsitWhenLocked = 1 - self.probOfExistanceOfSafePolicies(self.knownLockedCons + [con], self.knownFreeCons)
+      #probNonexsitWhenLocked = 1 - self.probOfExistanceOfSafePolicies(self.knownLockedCons + [con], self.knownFreeCons)
       
-      #print con, probExistWhenFree, probNonexsitWhenLocked
-      termProbs[con] = self.consProbs[con] * probExistWhenFree + (1 - self.consProbs[con]) * probNonexsitWhenLocked
+      #termProbs[con] = self.consProbs[con] * probExistWhenFree + (1 - self.consProbs[con]) * probNonexsitWhenLocked
+      termProbs[con] = self.consProbs[con] * probExistWhenFree
 
     # there should be unqueried features
     assert len(termProbs) > 0
