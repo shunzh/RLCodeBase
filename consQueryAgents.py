@@ -693,45 +693,76 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
 
     # need domPis for query
     self.computePolicyRelFeats()
+    self.computeIISs()
     
-    # compute the table:
-    # numQFeasible(\Phi'_F, \Phi'_L) is the expected minimum number of features need to be queried to find a safe policy 
-    # numQInfeasible(\Phi'_F, \Phi'_L) is the expected minimum number of features need to be queried to determine no safe policies exist
-    self.optQ = {}
-    self.optNumCons = {}
+    self.computeOptQueries()
     
-  def getMinNumQueries(self, lockedCons, freeCons):
+  def computeOptQueries(self):
     """
-    Recursively using memoization: this should be more efficient that filling the table bottom-up.
-    most partitions are actually not used.
-    
-    returns (optimal con to query, min num of cons)
+    f(\phi_l, \phi_f) = 
+      0, if safePolicyExist(\phi_f) or self.safePolicyNotExist(\phi_l)
+      min_\phi p_f(\phi) f(\phi_l, \phi_f + {\phi}) + (1 - p_f(\phi)) f(\phi_l + {\phi}, \phi_f), o.w.
+      
+    Boundaries condition:
+      \phi_l is not a superset of any iis, \phi_f is not a superset of rel feats of any dom pi, otherwise 0 for sure
     """
-    lockedCons = set(lockedCons)
-    freeCons = set(freeCons)
+    self.optQs = {}
 
-    # memoization
-    if (lockedCons, freeCons) in self.optQ.keys():
-      return (self.optQ[frozenset(lockedCons), frozenset(freeCons)], self.optNumCons[frozenset(lockedCons), frozenset(freeCons)])
+    consPowerset = powerset(self.allCons)
     
-    if self.safePolicyExist(freeCons) or self.safePolicyNotExist(lockedCons):
-      # we are done this case
-      return (None, 0)
+    # if hit the boundary, our function should return 0 since safe policies found / no safe policies exist
+    lockedPhiBound = lambda lockedCons: any(set(lockedCons).issuperset(iis) for iis in self.iiss)
+    freePhiBound = lambda freeCons: any(set(freeCons).issuperset(relFeats) for relFeats in self.piRelFeats)
+    
+    # need froze the sets to use them as indices
+    indexize = lambda lockedCons, freeCons: (frozenset(lockedCons), frozenset(freeCons))
 
-    unknownCons = set(self.consIndices) - set(lockedCons) - set(freeCons)
-    minNums = [(con,\
-                self.consProbs[con] * self.getMinNumQueries(lockedCons, freeCons.union({con}))[1] +\
-                (1 - self.consProbs[con]) * self.getMinNumQueries(lockedCons.union({con}), freeCons)[1] +\
-                1) # count con in
-               for con in unknownCons]
-    minConNum = min(minNums, key=lambda _: _[1])
+    # set free, locked partitions at and beyond the boundary with 0
+    # admissibleIndices are the ones within the boundary, which need querying to decide existence of safe policies
+    admissibleIndices = []
+    for freeCons in consPowerset:
+      lockedPowerset = powerset(set(self.allCons) - set(freeCons))
+      for lockedCons in lockedPowerset:
+        if lockedPhiBound(lockedCons) or freePhiBound(freeCons):
+          self.optQs[indexize(lockedCons, freeCons)] = (None, 0) 
+          print (lockedCons, freeCons), 'beyond boundary'
+        else:
+          admissibleIndices.append((set(lockedCons), set(freeCons)))
+
+    # keep fill out the values of optQs within boundary
+    # whenever filled out 
+    updateOccured = True
+    while updateOccured:
+      updateOccured = False
+      print len(admissibleIndices), 'left to evaluate'
+      for (lockedCons, freeCons) in admissibleIndices:
+        # only compute the value if all its necessary neighbors are already computed
+        unknownCons = set(self.consIndices) - lockedCons - freeCons
+        
+        allNeighborValuesExist = all((lockedCons, freeCons.union({con})) in self.optQs.keys()
+                                     and (lockedCons.union({con}), freeCons) in self.optQs.keys()\
+                                     for con in unknownCons)
+        
+        if allNeighborValuesExist:
+          updateOccured = True
+          # tuples, (feature to query, obj value after querying)
+          minNums = [(con,\
+                    self.consProbs[con] * self.optQs[indexize(lockedCons, freeCons.union({con}))][1] +\
+                    (1 - self.consProbs[con]) * self.optQs[indexize(lockedCons.union({con}), freeCons)][1] +\
+                    1) # count con in
+                   for con in unknownCons]
+          # pick the tuple that has the minimum obj value after querying
+          self.optQs[indexize(lockedCons, freeCons)] = min(minNums, key=lambda _: _[1])
+          
+          # no need to consider this elem in the future
+          print (lockedCons, freeCons), 'evaluated'
+          admissibleIndices.remove((lockedCons, freeCons))
     
-    self.optQ[frozenset(lockedCons), frozenset(freeCons)] = minConNum[0]
-    self.optNumCons[frozenset(lockedCons), frozenset(freeCons)] = minConNum[1]
-    return minConNum
+    # shouldn't be any unevaluated entries in self.optQs
+    assert len(admissibleIndices) == 0
     
   def findQuery(self):
-    return self.getMinNumQueries(self.knownLockedCons, self.knownFreeCons)[0]
+    return self.optQs[frozenset(self.knownLockedCons), frozenset(self.knownFreeCons)][0]
  
 
 def printOccSA(x):

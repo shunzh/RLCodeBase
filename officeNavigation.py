@@ -429,9 +429,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
     print 'initial policy does not exist'
     
     methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+    #methods = ['opt']
     queries = {}
     times = {}
-    #methods = ['opt']
 
     for method in methods:
       print method
@@ -485,11 +485,13 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
     if not dry:
       # write to file
       pickle.dump({'q': queries, 't': times, 'iiss': iiss, 'relFeats': relFeats},\
-                  open(str(rnd) + '.pkl', 'wb'))
+                  open(str(spec.width) + '_' + str(spec.height) + '_' + str(len(spec.carpets)) + '_' + str(rnd) + '.pkl', 'wb'))
   else:
     print 'initial policy exists'
+
     #HACK not caring about improving safe policies for now
     return 
+
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
     # if so we do not need to compute them again.
     domainFileName = 'domain_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl'
