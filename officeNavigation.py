@@ -428,8 +428,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     
-    #methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
-    methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+    methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
     queries = {}
     times = {}
     #methods = ['opt']
