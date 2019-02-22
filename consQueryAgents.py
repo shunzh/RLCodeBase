@@ -7,7 +7,7 @@ import config
 from UCT import MCTS
 from itertools import combinations
 from setcover import coverFeat, removeFeat, leastNumElemSets, elementExists,\
-  oshimai
+  oshimai, killSupersets
 from operator import mul
 
 
@@ -418,13 +418,32 @@ class ConsQueryAgent():
       piRelFeats.append(tuple(self.findViolatedConstraints(domPi)))
     
     # just to remove supersets
-    piRelFeats = removeFeat(None, piRelFeats)
+    piRelFeats = killSupersets(piRelFeats)
 
     self.piRelFeats = piRelFeats
 
   def computeIISs(self):
     """
-    Computer IISs.
+    Compute IISs by looking at relevant features of dominating policies.
+
+    eg. (1 and 2) or (3 and 4) --> (1 or 3) and (1 or 4) and (2 or 3) and (2 or 4) 
+    """
+    # we first need relevant features
+    if not hasattr(self, 'piRelFeats'):
+      self.computePolicyRelFeats()
+      
+    iiss = [set()]
+    for relFeats in self.piRelFeats:
+      iiss = [set(iis).union({relFeat}) for iis in iiss for relFeat in relFeats]
+      # kill duplicates in each set
+      iiss = killSupersets(iiss)
+    
+    self.iiss = iiss
+
+  def computeIISsBruteForce(self):
+    """
+    DEPRECATED not an efficient way to compute IISs. 
+
     If all IIS contain at least one free feature, then safe policies exist.
 
     a brute force way to find all iiss and return their indicies
@@ -506,8 +525,6 @@ class GreedyForSafetyAgent(ConsQueryAgent):
     return the next feature to query by greedily cover the most number of sets
     return None if no more features are needed or nothing left to query about
     """
-    assert self.useIIS or self.useRelPi
-
     # should have run methods that compute iiss and piRelFeats
     if self.useIIS:
       print 'iiss', self.iiss
@@ -522,22 +539,20 @@ class GreedyForSafetyAgent(ConsQueryAgent):
     # find the maximum frequency constraint weighted by the probability
     expNumRemaingSets = {}
     for con in unknownCons:
-      if (self.useIIS and elementExists(con, self.iiss)) or (self.useRelPi and elementExists(con, self.piRelFeats)):
-        numWhenFree = 0
-        # prefer using iis
-        if self.useIIS:
-          numWhenFree = len(coverFeat(con, self.iiss))
-        else:
-          numWhenFree = len(removeFeat(con, self.piRelFeats))
-        
-        numWhenLocked = 0
-        # prefer using rel pis
-        if self.useRelPi:
-          numWhenLocked = len(coverFeat(con, self.piRelFeats))
-        else:
-          numWhenLocked = len(removeFeat(con, self.iiss))
+      # prefer using iis
+      if self.useIIS and self.useRelPi:
+        numWhenFree = len(coverFeat(con, self.iiss))
+        numWhenLocked = len(coverFeat(con, self.piRelFeats))
+      elif self.useIIS:
+        numWhenFree = len(coverFeat(con, self.iiss))
+        numWhenLocked = len(leastNumElemSets(con, self.iiss))
+      elif self.useRelPi:
+        numWhenFree = len(leastNumElemSets(con, self.piRelFeats))
+        numWhenLocked = len(coverFeat(con, self.piRelFeats))
+      else:
+        raise Exception('need useIIS or useRelPi')
 
-        expNumRemaingSets[con] = self.consProbs[con] * numWhenFree + (1 - self.consProbs[con]) * numWhenLocked
+      expNumRemaingSets[con] = self.consProbs[con] * numWhenFree + (1 - self.consProbs[con]) * numWhenLocked
       
     return min(expNumRemaingSets.iteritems(), key=lambda _: _[1])[0]
   

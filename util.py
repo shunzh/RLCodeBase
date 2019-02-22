@@ -12,6 +12,10 @@ import heapq, random
 # for load mat file and squeeze
 import pickle
 import numpy as np
+from numpy import std, sqrt
+
+def standardErr(data):
+  return std(data) / sqrt(len(data))
 
 def powerset(iterable):
   from itertools import combinations

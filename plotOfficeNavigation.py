@@ -1,5 +1,6 @@
 import pickle
-from numpy import mean, std, sqrt, nan
+from numpy import mean
+from util import standardErr
 import numpy
 import matplotlib
 import pylab
@@ -299,9 +300,6 @@ def hist(x, method, title, xlabel, ylabel, filename):
   fig.savefig(filename + ".pdf", dpi=300, format="pdf")
   
   pylab.close()
-
-def standardErr(data):
-  return std(data) / sqrt(len(data))
 
 if __name__ == '__main__':
   font = {'size': 28}

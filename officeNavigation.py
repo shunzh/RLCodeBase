@@ -428,11 +428,18 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     
+    #methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
     methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+    queries = {}
+    times = {}
     #methods = ['opt']
 
     for method in methods:
       print method
+      queries[method] = []
+      times[method] = []
+      
+      start = time.time()
       
       if method == 'iisAndRelpi':
         agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=True)
@@ -451,12 +458,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
       else:
         raise Exception('unknown method', method)
 
-      # keep the features the robot queried about for evaluation
-      queries = []
-
       # it should not query more than the number of total features anyway..
       # but in case of bugs, this should not be a dead loop
-      while len(queries) < len(consStates) + 1:
+      while len(queries[method]) < len(consStates) + 1:
         query = agent.findQuery()
 
         if query == None:
@@ -467,17 +471,21 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
         else:
           agent.updateFeats(newLockedCon=query)
           
-        queries.append(query)
+        queries[method].append(query)
+      
+      end = time.time()
         
-      print 'queries', queries
+      times[method].append(end - start)
 
-      if not dry:
-        # write to file
-        f = open(method + '.out',"a")
-        f.write(str(len(queries)) + '\n')
-        f.close()
+    print 'queries', queries
+    print 'times', times
+    if not dry:
+      # write to file
+      pickle.dump({'q': queries, 't': times}, open(str(rnd) + '.pkl', 'wb'))
   else:
     print 'initial policy exists'
+    #HACK not caring about improving safe policies for now
+    return 
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
     # if so we do not need to compute them again.
     domainFileName = 'domain_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl'
@@ -545,6 +553,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
         raise Exception('unknown method', method)
       end = time.time()
 
+      # note that we compute domPiTime in the begining to avoid recompute it for every alg
+      # some alg actually does not need dom pis
       runTime = end - start + (0 if method in ['random', 'nq'] else domPiTime)
 
       print method, q
@@ -556,9 +566,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
       print mrk, regret, runTime
       
       if not dry:
-        saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
+        saveToFileForSafePiImprove(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
 
-def saveToFile(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret):
+def saveToFileForSafePiImprove(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret):
   ret = {}
   ret['mrk'] = mrk
   ret['regret'] = regret
