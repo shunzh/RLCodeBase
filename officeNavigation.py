@@ -412,7 +412,11 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
   numOfCons = len(consStates)
   
   if consProbs == None:
-    consProbs = [random.random() for _ in range(numOfCons)]
+    lowB = 0; upB = 1
+  elif type(consProbs) is list:
+    lowB = consProbs[0]; upB = consProbs[1]
+  assert lowB >= 0 and upB <= 1
+  consProbs = [lowB + (upB - lowB) * random.random() for _ in range(numOfCons)]
   print 'consProbs', zip(range(numOfCons), consProbs)
 
   agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
@@ -428,8 +432,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     
-    methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
-    #methods = ['opt']
+    #methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+    methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
     queries = {}
     times = {}
 
@@ -440,7 +444,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
       
       start = time.time()
       
-      if method == 'iisAndRelpi':
+      if method == 'opt':
+        agent = OptQueryForSafetyAgent(mdp, consStates, consProbs=consProbs)
+      elif method == 'iisAndRelpi':
         agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=True)
         # record this to get an idea how difficult these tasks are
         # (iisAndRelpi compute both sets anyway, so record here)
@@ -456,8 +462,6 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
         agent = DomPiHeuForSafetyAgent(mdp, consStates, consProbs=consProbs)
       elif method == 'random':
         agent = DescendProbQueryForSafetyAgent(mdp, consStates, consProbs=consProbs)
-      elif method == 'opt':
-        agent = OptQueryForSafetyAgent(mdp, consStates, consProbs=consProbs)
       else:
         raise Exception('unknown method', method)
 
@@ -593,9 +597,9 @@ if __name__ == '__main__':
   constrainHuman = False
   dry = False # do not safe to files if dry run
 
-  numOfCarpets = 10
+  numOfCarpets = 6
   numOfBoxes = 0
-  size = 5
+  size = 3
 
   rnd = 0 # set a dummy random seed if no -r argument
 
@@ -631,7 +635,9 @@ if __name__ == '__main__':
   #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd, consProbs=[.9, .9, .9])
 
   # avoid border to make sure safe policies exist
-  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
+  #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
+  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProbs=[1.0, 1.0])
+  #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProbs=[0.0, 0.0])
   
   # good for testing irreversible features
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)

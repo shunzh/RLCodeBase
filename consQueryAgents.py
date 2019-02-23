@@ -526,6 +526,7 @@ class GreedyForSafetyAgent(ConsQueryAgent):
         self.iiss = coverFeat(newFreeCon, self.iiss)
       if self.useRelPi:
         self.piRelFeats = removeFeat(newFreeCon, self.piRelFeats)
+
     if newLockedCon != None:
       if self.useIIS:
         self.iiss = removeFeat(newLockedCon, self.iiss)
@@ -555,13 +556,14 @@ class GreedyForSafetyAgent(ConsQueryAgent):
       if self.useIIS and self.useRelPi:
         numWhenFree = len(coverFeat(con, self.iiss))
         numWhenLocked = len(coverFeat(con, self.piRelFeats))
-      elif self.useIIS:
+      elif self.useIIS and not self.useRelPi:
         numWhenFree = len(coverFeat(con, self.iiss))
         numWhenLocked = len(leastNumElemSets(con, self.iiss))
-      elif self.useRelPi:
+      elif self.useRelPi and not self.useIIS:
         numWhenFree = len(leastNumElemSets(con, self.piRelFeats))
         numWhenLocked = len(coverFeat(con, self.piRelFeats))
       else:
+        # not useRelPi and not useIIS, can't be the case
         raise Exception('need useIIS or useRelPi')
 
       expNumRemaingSets[con] = self.consProbs[con] * numWhenFree + (1 - self.consProbs[con]) * numWhenLocked
