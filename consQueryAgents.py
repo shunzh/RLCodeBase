@@ -505,11 +505,13 @@ class ConsQueryAgent():
 
 
 class GreedyForSafetyAgent(ConsQueryAgent):
-  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False, useIIS=True, useRelPi=True):
+  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False, useIIS=True, useRelPi=True, useSetCover=True):
     ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
     
     self.useIIS = useIIS
     self.useRelPi = useRelPi
+    # use set cover rather than min cardinality when possible
+    self.useSetCover = useSetCover
 
     # find all IISs without knowing any locked or free cons
     if self.useIIS:
@@ -553,18 +555,21 @@ class GreedyForSafetyAgent(ConsQueryAgent):
     expNumRemaingSets = {}
     for con in unknownCons:
       # prefer using iis
-      if self.useIIS and self.useRelPi:
+      if self.useIIS and self.useRelPi and self.useSetCover:
         numWhenFree = len(coverFeat(con, self.iiss))
         numWhenLocked = len(coverFeat(con, self.piRelFeats))
-      elif self.useIIS and not self.useRelPi:
+      elif self.useIIS and self.useRelPi and (not self.useSetCover):
+        numWhenFree = len(leastNumElemSets(con, self.piRelFeats))
+        numWhenLocked = len(leastNumElemSets(con, self.iiss))
+      elif self.useIIS and (not self.useRelPi) and self.useSetCover:
         numWhenFree = len(coverFeat(con, self.iiss))
         numWhenLocked = len(leastNumElemSets(con, self.iiss))
-      elif self.useRelPi and not self.useIIS:
+      elif (not self.useIIS) and self.useRelPi and self.useSetCover:
         numWhenFree = len(leastNumElemSets(con, self.piRelFeats))
         numWhenLocked = len(coverFeat(con, self.piRelFeats))
       else:
         # not useRelPi and not useIIS, can't be the case
-        raise Exception('need useIIS or useRelPi')
+        raise Exception('no idea what to do in this case')
 
       expNumRemaingSets[con] = self.consProbs[con] * numWhenFree + (1 - self.consProbs[con]) * numWhenLocked
       

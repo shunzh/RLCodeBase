@@ -5,8 +5,8 @@ import util
 
 rndSeeds = 1000
 
-width = height = 3
-carpets = 6
+width = height = 5
+carpets = 10
 
 lensOfQ = {}
 times = {}

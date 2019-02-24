@@ -88,7 +88,7 @@ def toyWrold():
  
   horizon = width + height
  
-  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
 def squareWorld(size, numOfCarpets, avoidBorder=True):
   """
@@ -118,7 +118,7 @@ def squareWorld(size, numOfCarpets, avoidBorder=True):
   
   horizon = width + height
  
-  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
 def toySokobanWorld():
   """
@@ -142,7 +142,7 @@ def toySokobanWorld():
   
   horizon = 10
   
-  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
 def sokobanWorld():
   """
@@ -167,7 +167,7 @@ def sokobanWorld():
   
   horizon = 20
   
-  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
 def parameterizedSokobanWorld(size, numOfBoxes):
   """
@@ -185,16 +185,16 @@ def parameterizedSokobanWorld(size, numOfBoxes):
   
   horizon = size * 2
   
-  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon);
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
-def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
+def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
   """
   spec: specification of the factored mdp
   k: number of queries (in batch querying setting
   constrainHuman: a flag controls MR vs MR_k
   dry: no output to file if True
   rnd: random seed
-  consProbs: only for Bayesian setting. ["prob that ith unknown feature is free" for i in range(self.numOfCons)]
+  consProb: only for Bayesian setting. ["prob that ith unknown feature is free" for i in range(self.numOfCons)]
     If None (by default), set randomly
   """
   # need to flatten the state representation to a vector.
@@ -411,12 +411,16 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
   consStates = carpetCons + boxCons
   numOfCons = len(consStates)
   
-  if consProbs == None:
-    lowB = 0; upB = 1
-  elif type(consProbs) is list:
-    lowB = consProbs[0]; upB = consProbs[1]
-  assert lowB >= 0 and upB <= 1
-  consProbs = [lowB + (upB - lowB) * random.random() for _ in range(numOfCons)]
+  if consProb == None:
+    # pf is generated uniformly randomly
+    consProbs = [random.random() for _ in range(numOfCons)]
+  elif type(consProb) is float or type(consProb) is int:
+    # pf is consProb for all features
+    consProbs = [consProb for _ in range(numOfCons)]
+  elif type(consProb) is list and len(consProb) == 2:
+    # pf is randomly generated within a range (consProb[0] to consProb[1])
+    consProbs = [consProb[0] + consProb[1] * random.random() for _ in range(numOfCons)]
+
   print 'consProbs', zip(range(numOfCons), consProbs)
 
   agent = ConsQueryAgent(mdp, consStates, consProbs=consProbs, constrainHuman=constrainHuman)
@@ -452,6 +456,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
         # (iisAndRelpi compute both sets anyway, so record here)
         iiss = agent.iiss
         relFeats = agent.piRelFeats
+      elif method == 'iisAndRelpiNSC':
+        # it shouldn't have better performance if we use cardinality on both sets without using set cover
+        # just for sanity check
+        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=True, useSetCover=False)
       elif method == 'iisOnly':
         agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=False)
       elif method == 'relpiOnly':
@@ -489,7 +497,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProbs=None):
     if not dry:
       # write to file
       pickle.dump({'q': queries, 't': times, 'iiss': iiss, 'relFeats': relFeats},\
-                  open(str(spec.width) + '_' + str(spec.height) + '_' + str(len(spec.carpets)) + '_' + str(rnd) + '.pkl', 'wb'))
+                  open(str(spec.width) + '_' + str(spec.height) + '_' + str(len(spec.carpets)) + '_' + str(consProb) + '_' + str(rnd) + '.pkl', 'wb'))
   else:
     print 'initial policy exists'
 
@@ -595,16 +603,18 @@ if __name__ == '__main__':
   method = None
   k = 1
   constrainHuman = False
-  dry = False # do not safe to files if dry run
+  dry = False # do not save to files if dry run
 
-  numOfCarpets = 6
+  numOfCarpets = 10
   numOfBoxes = 0
-  size = 3
+  size = 5
 
   rnd = 0 # set a dummy random seed if no -r argument
 
+  pf = .5 # the prob. that a feature is free
+
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:d')
+    opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:dp:')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
@@ -619,6 +629,9 @@ if __name__ == '__main__':
     elif opt == '-d':
       # disable dry run if output to file
       dry = True
+    elif opt == '-p':
+      # proportion of free features
+      pf = float(arg)
     elif opt == '-r':
       rnd = int(arg)
 
@@ -636,8 +649,9 @@ if __name__ == '__main__':
 
   # avoid border to make sure safe policies exist
   #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
-  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProbs=[1.0, 1.0])
-  #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProbs=[0.0, 0.0])
+
+  # add changeability probability
+  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProb=pf)
   
   # good for testing irreversible features
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
