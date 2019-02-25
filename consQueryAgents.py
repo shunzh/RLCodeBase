@@ -640,6 +640,8 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
     allSubsetsOfUnknownCons = powerset(unknownCons)
     
     for freeSubset in allSubsetsOfUnknownCons:
+      # assume now freeSubset is free and uknownCons \ freeSubset is locked
+      # compute the prob. that this happens (given lockedCons and freeCons)
       prob = reduce(mul, map(lambda _: self.consProbs[_], freeSubset), 1) *\
              reduce(mul, map(lambda _: 1 - self.consProbs[_], unknownCons - set(freeSubset)), 1) 
       
@@ -660,10 +662,7 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
     for con in unknownCons:
       # the prob that safe policies exist when con is free
       probExistWhenFree = self.probOfExistanceOfSafePolicies(self.knownLockedCons, self.knownFreeCons + [con])
-      # the prob that no safe policies exist when con is locked
-      #probNonexsitWhenLocked = 1 - self.probOfExistanceOfSafePolicies(self.knownLockedCons + [con], self.knownFreeCons)
       
-      #termProbs[con] = self.consProbs[con] * probExistWhenFree + (1 - self.consProbs[con]) * probNonexsitWhenLocked
       termProbs[con] = self.consProbs[con] * probExistWhenFree
 
     # there should be unqueried features

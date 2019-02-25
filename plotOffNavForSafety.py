@@ -6,7 +6,7 @@ from numpy import mean
 import util
 from util import standardErr
 
-rndSeeds = 500
+rndSeeds = 1000
 
 width = height = 5
 carpets = 10
@@ -21,7 +21,7 @@ domPiSizes = util.Counter()
 minDomPiSizes = util.Counter()
 
 #proportionRange = [0.01] + [0.1 * proportionInt for proportionInt in range(10)] + [0.99]
-proportionRange = [0.05, 0.3, 0.5, 0.7, 0.95]
+proportionRange = [0.1, 0.3, 0.5, 0.7, 0.9]
 
 # will check what methods are run from data
 methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
@@ -52,16 +52,20 @@ def plot(x, y, yci, methods, xlabel, ylabel, filename):
 validInstances = []
 
 for rnd in range(rndSeeds):
+  # set to true if this instance is valid (no safe init policy)
+  valid = False
+
   for proportion in proportionRange:
     try:
       filename = str(width) + '_' + str(height) + '_' + str(carpets) + '_' + str(proportion) + '_' +  str(rnd) + '.pkl'
       data = pickle.load(open(filename, 'rb'))
+
+      if not valid:
+        valid = True
+        validInstances.append(rnd)
     except IOError:
       print filename, 'not exist'
       continue
-
-    # keep track of the random seeds that no initial safe policies exist
-    validInstances.append((proportion, rnd))
 
     # number of features queried
     for method in methods:
@@ -69,7 +73,6 @@ for rnd in range(rndSeeds):
       times[method, proportion].append(data['t'][method])
     
     """
-    # record the following
     # length of iiss
     addFreq(len(data['iiss']), iisSizes)
     # length of the minimum size iis
@@ -92,14 +95,20 @@ print 'miniiss', minIISSizes
 
 print 'domPis', domPiSizes
 print 'minRelfeats', minDomPiSizes
-
-# interesting in the case where variations alg 1 finds different queries
-print 'vs iisOnly', filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ['iisAndRelpi'], lensOfQ['iisOnly']))
-print 'vs relpiOnly', filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ['iisAndRelpi'], lensOfQ['relpiOnly']))
 """
+
+# show cases where method1 and method2 are different with proportion. for further debugging methods
+diffInstances = lambda proportion, method1, method2:\
+                (proportion, method1, method2,\
+                 filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ[method1, proportion], lensOfQ[method2, proportion])))
+
+for proportion in proportionRange: 
+  print diffInstances(proportion, 'iisAndRelpi', 'iisOnly')
+  print diffInstances(proportion, 'iisAndRelpi', 'relpiOnly')
+  print diffInstances(proportion, 'iisAndRelpi', 'maxProb')
 
 x = proportionRange
 y = lambda method: [mean(lensOfQ[method, proportion]) for proportion in proportionRange]
 yci = lambda method: [standardErr(lensOfQ[method, proportion]) for proportion in proportionRange]
 
-plot(x, y, yci, methods, '$p_f$', '# of Queried Features', 'lensOfQ')
+plot(x, y, yci, methods, 'Mean of $p_f$', '# of Queried Features', 'lensOfQ')

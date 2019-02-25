@@ -1,6 +1,6 @@
-for i in `seq 0 499`
+for i in `seq 0 999`
 do
-  for p in 0.05 0.3 0.5 0.7 0.95
+  for p in 0 0.3 0.5 0.7 1
   do
     python officeNavigation.py -p $p -r $i
   done

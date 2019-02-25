@@ -1,7 +1,0 @@
-{
-    "python.pythonPath": "/home/shun/anaconda2/bin/python",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "editor.fontSize": 15,
-    "editor.tabSize": 2
-}

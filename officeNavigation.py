@@ -415,11 +415,15 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
     # pf is generated uniformly randomly
     lb = 0; ub = 1
   elif type(consProb) is float or type(consProb) is int:
-    # within .1 of consProb
-    lb = consProb - .05; ub = consProb + .05
+    # within .1 of consProb, but within 0 and 1 of course
+    lb = max(0, consProb - .1); ub = min(1, consProb + .1)
   elif type(consProb) is list and len(consProb) == 2:
     # pf is randomly generated within a range (consProb[0] to consProb[1])
     lb = consProb[0]; ub = consProb[1]
+  else:
+    raise Exception('fail to process consProb')
+
+  assert lb >= 0 and ub <= 1, (lb, ub)
   consProbs = [lb + (ub - lb) * random.random() for _ in range(numOfCons)]
 
   print 'consProbs', zip(range(numOfCons), consProbs)

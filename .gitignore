@@ -62,7 +62,9 @@ eval_*
 *.dat
 *.pkl
 
-# condor
 *.out
 *.tar.gz
 *.pdf
+
+# vscode
+.vscode
