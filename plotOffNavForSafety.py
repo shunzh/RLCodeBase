@@ -1,6 +1,7 @@
 import pickle
 from numpy import mean
 from util import standardErr
+import pylab
 import util
 
 rndSeeds = 1000
@@ -29,30 +30,35 @@ def addFreq(elem, counter):
 validInstances = []
 
 for rnd in range(rndSeeds):
-  try:
-    filename = str(width) + '_' + str(height) + '_' + str(carpets) + '_' +  str(rnd) + '.pkl'
-    data = pickle.load(open(filename, 'rb'))
-  except IOError:
-    print rnd, 'not exist'
-    continue
+  for proportionInt in range(11):
+    proportion = 0.1 * proportionInt
 
-  # keep track of the random seeds that no initial safe policies exist
-  validInstances.append(rnd)
+    try:
+      filename = str(width) + '_' + str(height) + '_' + str(carpets) + '_' + str(round(proportion, 1)) + '_' +  str(rnd) + '.pkl'
+      data = pickle.load(open(filename, 'rb'))
+    except IOError:
+      print proportion, rnd, 'not exist'
+      continue
 
-  # number of features queried
-  for method in methods:
-    lensOfQ[method].append(len(data['q'][method]))
-    times[method].append(data['t'][method])
-  
-  # record the following
-  # length of iiss
-  addFreq(len(data['iiss']), iisSizes)
-  # length of the minimum size iis
-  addFreq(min(map(lambda s: len(s), data['iiss'])), minIISSizes)
-  # length of dom pis
-  addFreq(len(data['relFeats']), domPiSizes)
-  # length of the dom pi that contains the least number of rel feats
-  addFreq(min(map(lambda s: len(s), data['relFeats'])), minDomPiSizes)
+    # keep track of the random seeds that no initial safe policies exist
+    validInstances.append((proportion, rnd))
+
+    # number of features queried
+    for method in methods:
+      lensOfQ[method, proportion].append(len(data['q'][method]))
+      times[method, proportion].append(data['t'][method])
+    
+    """
+    # record the following
+    # length of iiss
+    addFreq(len(data['iiss']), iisSizes)
+    # length of the minimum size iis
+    addFreq(min(map(lambda s: len(s), data['iiss'])), minIISSizes)
+    # length of dom pis
+    addFreq(len(data['relFeats']), domPiSizes)
+    # length of the dom pi that contains the least number of rel feats
+    addFreq(min(map(lambda s: len(s), data['relFeats'])), minDomPiSizes)
+    """
 
 outputFormat = lambda d: '$' + str(round(mean(d), 4)) + ' \pm ' + str(round(standardErr(d), 4)) + '$'
 
