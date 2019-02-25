@@ -4,7 +4,7 @@ from util import standardErr
 import pylab
 import util
 
-rndSeeds = 1000
+rndSeeds = 500
 
 width = height = 5
 carpets = 10
@@ -21,8 +21,11 @@ minDomPiSizes = util.Counter()
 # will check what methods are run from data
 methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
 for method in methods:
-  lensOfQ[method] = []
-  times[method] = []
+  for proportionInt in range(11):
+    proportion = 0.1 * proportionInt
+
+    lensOfQ[method, proportion] = []
+    times[method, proportion] = []
 
 def addFreq(elem, counter):
   counter[elem] += 1
@@ -37,7 +40,7 @@ for rnd in range(rndSeeds):
       filename = str(width) + '_' + str(height) + '_' + str(carpets) + '_' + str(round(proportion, 1)) + '_' +  str(rnd) + '.pkl'
       data = pickle.load(open(filename, 'rb'))
     except IOError:
-      print proportion, rnd, 'not exist'
+      print filename, 'not exist'
       continue
 
     # keep track of the random seeds that no initial safe policies exist
@@ -66,6 +69,7 @@ print 'valid instances', len(validInstances)
 
 assert len(validInstances) > 0
 
+"""
 print 'iiss', iisSizes
 print 'miniiss', minIISSizes
 
@@ -75,11 +79,14 @@ print 'minRelfeats', minDomPiSizes
 # interesting in the case where variations alg 1 finds different queries
 print 'vs iisOnly', filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ['iisAndRelpi'], lensOfQ['iisOnly']))
 print 'vs relpiOnly', filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ['iisAndRelpi'], lensOfQ['relpiOnly']))
+"""
 
 print 'len'
 for method in methods:
-  print method, outputFormat(lensOfQ[method])
+  for proportionInt in range(11):
+    print method, outputFormat(lensOfQ[method, 0.1 * proportionInt])
 
 print 'time'
 for method in methods:
-  print method, outputFormat(times[method])
+  for proportionInt in range(11):
+    print method, outputFormat(times[method, 0.1 * proportionInt])
