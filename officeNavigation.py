@@ -413,13 +413,14 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
   
   if consProb == None:
     # pf is generated uniformly randomly
-    consProbs = [random.random() for _ in range(numOfCons)]
+    lb = 0; ub = 1
   elif type(consProb) is float or type(consProb) is int:
-    # pf is consProb for all features
-    consProbs = [consProb for _ in range(numOfCons)]
+    # within .1 of consProb
+    lb = consProb - .05; ub = consProb + .05
   elif type(consProb) is list and len(consProb) == 2:
     # pf is randomly generated within a range (consProb[0] to consProb[1])
-    consProbs = [consProb[0] + consProb[1] * random.random() for _ in range(numOfCons)]
+    lb = consProb[0]; ub = consProb[1]
+  consProbs = [lb + (ub - lb) * random.random() for _ in range(numOfCons)]
 
   print 'consProbs', zip(range(numOfCons), consProbs)
 

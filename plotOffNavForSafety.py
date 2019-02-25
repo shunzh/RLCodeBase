@@ -20,12 +20,13 @@ minIISSizes = util.Counter()
 domPiSizes = util.Counter()
 minDomPiSizes = util.Counter()
 
+#proportionRange = [0.01] + [0.1 * proportionInt for proportionInt in range(10)] + [0.99]
+proportionRange = [0.05, 0.3, 0.5, 0.7, 0.95]
+
 # will check what methods are run from data
 methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
 for method in methods:
-  for proportionInt in range(11):
-    proportion = 0.1 * proportionInt
-
+  for proportion in proportionRange:
     lensOfQ[method, proportion] = []
     times[method, proportion] = []
 
@@ -51,11 +52,9 @@ def plot(x, y, yci, methods, xlabel, ylabel, filename):
 validInstances = []
 
 for rnd in range(rndSeeds):
-  for proportionInt in range(11):
-    proportion = 0.1 * proportionInt
-
+  for proportion in proportionRange:
     try:
-      filename = str(width) + '_' + str(height) + '_' + str(carpets) + '_' + str(round(proportion, 1)) + '_' +  str(rnd) + '.pkl'
+      filename = str(width) + '_' + str(height) + '_' + str(carpets) + '_' + str(proportion) + '_' +  str(rnd) + '.pkl'
       data = pickle.load(open(filename, 'rb'))
     except IOError:
       print filename, 'not exist'
@@ -97,20 +96,10 @@ print 'minRelfeats', minDomPiSizes
 # interesting in the case where variations alg 1 finds different queries
 print 'vs iisOnly', filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ['iisAndRelpi'], lensOfQ['iisOnly']))
 print 'vs relpiOnly', filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ['iisAndRelpi'], lensOfQ['relpiOnly']))
-
-print 'len'
-for method in methods:
-  for proportionInt in range(11):
-    print method, outputFormat(lensOfQ[method, 0.1 * proportionInt])
-
-print 'time'
-for method in methods:
-  for proportionInt in range(11):
-    print method, outputFormat(times[method, 0.1 * proportionInt])
 """
 
-x = [0.1 * proportionInt for proportionInt in range(11)]
-y = lambda method: [mean(lensOfQ[method, 0.1 * proportionInt]) for proportionInt in range(11)]
-yci = lambda method: [standardErr(lensOfQ[method, 0.1 * proportionInt]) for proportionInt in range(11)]
+x = proportionRange
+y = lambda method: [mean(lensOfQ[method, proportion]) for proportion in proportionRange]
+yci = lambda method: [standardErr(lensOfQ[method, proportion]) for proportion in proportionRange]
 
 plot(x, y, yci, methods, '$p_f$', '# of Queried Features', 'lensOfQ')

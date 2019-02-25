@@ -541,12 +541,10 @@ class GreedyForSafetyAgent(ConsQueryAgent):
     return None if no more features are needed or nothing left to query about
     """
     # should have run methods that compute iiss and piRelFeats
-    if self.useIIS:
-      print 'iiss', self.iiss
-      if oshimai(self.iiss): return None
-    if self.useRelPi:
-      print 'piRelFeats', self.piRelFeats
-      if oshimai(self.piRelFeats): return None
+    if self.safePolicyExist() or self.safePolicyNotExist():
+      # just a sanity check. assertion fails means iiss / relPis implemented incorrectly
+      assert (self.useIIS and oshimai(self.iiss)) or (self.useRelPi and oshimai(self.piRelFeats))
+      return None
 
     # make sure the constraints that are already queried are not going to be queried again
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
@@ -590,8 +588,10 @@ class DomPiHeuForSafetyAgent(ConsQueryAgent):
     self.computePolicyRelFeats()
     
   def findQuery(self):
+    if self.safePolicyExist() or self.safePolicyNotExist(): return None
+
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
-    
+
     # find the most probable policy
     # update the cons prob to make it easier
     updatedConsProbs = copy.copy(self.consProbs)
@@ -606,16 +606,7 @@ class DomPiHeuForSafetyAgent(ConsQueryAgent):
                                            1)
 
     maxProbPiRelFeats = max(self.piRelFeats, key=feasibleProb)
-    maxProb = feasibleProb(maxProbPiRelFeats)
 
-    if maxProb == 0:
-      print 'no safe policies exist'
-      return None
-    elif maxProb == 1:
-      # no unknown feature left in the most probable policy. nothing more to query
-      print 'safe policies found'
-      return None
-    
     # now query about unknown features in the most probable policy's relevant features
     featsToConsider = unknownCons.intersection(maxProbPiRelFeats)
     # the probability is less than 1. so there must be unknown features to consider
@@ -660,12 +651,9 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
     return expect
  
   def findQuery(self):
+    if self.safePolicyExist() or self.safePolicyNotExist(): return None
+
     unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
-    
-    probExistBeforeQuery = self.probOfExistanceOfSafePolicies(self.knownLockedCons, self.knownFreeCons)
-    # deal with numerical issues here
-    #print 'prob exist', probExistBeforeQuery
-    if probExistBeforeQuery >= .999999999 or probExistBeforeQuery <= .000000001: return None
     
     # the probability that either 
     termProbs = {}
@@ -689,12 +677,10 @@ class DescendProbQueryForSafetyAgent(ConsQueryAgent):
   Return the unknown feature that has the largest (or smallest) probability of being changeable.
   """
   def findQuery(self):
-    unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
+    if self.safePolicyExist() or self.safePolicyNotExist(): return None
     
-    if self.safePolicyExist() or self.safePolicyNotExist():
-      return None
-    else:
-      return max(unknownCons, key=lambda con: self.consProbs[con])
+    unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
+    return max(unknownCons, key=lambda con: self.consProbs[con])
 
 
 class OptQueryForSafetyAgent(ConsQueryAgent):
