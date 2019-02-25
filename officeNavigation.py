@@ -445,6 +445,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
     methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
     queries = {}
     times = {}
+    # keep track of agents' answers on whether problems are solvable
+    answer = None
 
     for method in methods:
       print method
@@ -461,10 +463,6 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
         # (iisAndRelpi compute both sets anyway, so record here)
         iiss = agent.iiss
         relFeats = agent.piRelFeats
-      elif method == 'iisAndRelpiNSC':
-        # it shouldn't have better performance if we use cardinality on both sets without using set cover
-        # just for sanity check
-        agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=True, useSetCover=False)
       elif method == 'iisOnly':
         agent = GreedyForSafetyAgent(mdp, consStates, consProbs=consProbs, useIIS=True, useRelPi=False)
       elif method == 'relpiOnly':
@@ -483,8 +481,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
       while len(queries[method]) < len(consStates) + 1:
         query = agent.findQuery()
 
-        if query == None:
+        if query == 'exist' or query == 'notExist':
           # the agent stops querying
+          thisAnswer = query
           break
         elif query in trueFreeFeatures:
           agent.updateFeats(newFreeCon=query)
@@ -492,6 +491,12 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
           agent.updateFeats(newLockedCon=query)
           
         queries[method].append(query)
+
+      if answer == None:
+        answer = thisAnswer
+      else:
+        # make sure all the agents give the same answer. otherwise imp error
+        assert answer == thisAnswer
       
       end = time.time()
         
@@ -501,7 +506,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
     print 'times', times
     if not dry:
       # write to file
-      pickle.dump({'q': queries, 't': times, 'iiss': iiss, 'relFeats': relFeats},\
+      pickle.dump({'q': queries, 't': times, 'iiss': iiss, 'relFeats': relFeats, 'solvable': answer == 'exist'},\
                   open(str(spec.width) + '_' + str(spec.height) + '_' + str(len(spec.carpets)) + '_' + str(consProb) + '_' + str(rnd) + '.pkl', 'wb'))
   else:
     print 'initial policy exists'
@@ -616,7 +621,7 @@ if __name__ == '__main__':
 
   rnd = 0 # set a dummy random seed if no -r argument
 
-  pf = .5 # the prob. that a feature is free
+  pf = None # the prob. that a feature is free
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:dp:')

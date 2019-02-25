@@ -414,6 +414,14 @@ class ConsQueryAgent():
       # by only imposing these constraints, see whether the lp problem is infeasible
       return not self.findConstrainedOptPi(lockedCons)['feasible']
  
+  def checkSafePolicyExists(self):
+    """
+    None if can't claim, otherwise return exists or notExist
+    """
+    if self.safePolicyExist(): return 'exist'
+    elif self.safePolicyNotExist(): return 'notExist'
+    else: return None
+
   def computePolicyRelFeats(self):
     """
     Compute relevant features of dominating policies.
@@ -505,13 +513,11 @@ class ConsQueryAgent():
 
 
 class GreedyForSafetyAgent(ConsQueryAgent):
-  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False, useIIS=True, useRelPi=True, useSetCover=True):
+  def __init__(self, mdp, consStates, consProbs=None, constrainHuman=False, useIIS=True, useRelPi=True):
     ConsQueryAgent.__init__(self, mdp, consStates, consProbs, constrainHuman)
     
     self.useIIS = useIIS
     self.useRelPi = useRelPi
-    # use set cover rather than min cardinality when possible
-    self.useSetCover = useSetCover
 
     # find all IISs without knowing any locked or free cons
     if self.useIIS:
@@ -540,11 +546,8 @@ class GreedyForSafetyAgent(ConsQueryAgent):
     return the next feature to query by greedily cover the most number of sets
     return None if no more features are needed or nothing left to query about
     """
-    # should have run methods that compute iiss and piRelFeats
-    if self.safePolicyExist() or self.safePolicyNotExist():
-      # just a sanity check. assertion fails means iiss / relPis implemented incorrectly
-      assert (self.useIIS and oshimai(self.iiss)) or (self.useRelPi and oshimai(self.piRelFeats))
-      return None
+    answerFound = self.checkSafePolicyExists()
+    if answerFound != None: return answerFound
 
     # make sure the constraints that are already queried are not going to be queried again
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
@@ -553,16 +556,13 @@ class GreedyForSafetyAgent(ConsQueryAgent):
     expNumRemaingSets = {}
     for con in unknownCons:
       # prefer using iis
-      if self.useIIS and self.useRelPi and self.useSetCover:
+      if self.useIIS and self.useRelPi:
         numWhenFree = len(coverFeat(con, self.iiss))
         numWhenLocked = len(coverFeat(con, self.piRelFeats))
-      elif self.useIIS and self.useRelPi and (not self.useSetCover):
-        numWhenFree = len(leastNumElemSets(con, self.piRelFeats))
-        numWhenLocked = len(leastNumElemSets(con, self.iiss))
-      elif self.useIIS and (not self.useRelPi) and self.useSetCover:
+      elif self.useIIS and (not self.useRelPi):
         numWhenFree = len(coverFeat(con, self.iiss))
         numWhenLocked = len(leastNumElemSets(con, self.iiss))
-      elif (not self.useIIS) and self.useRelPi and self.useSetCover:
+      elif (not self.useIIS) and self.useRelPi:
         numWhenFree = len(leastNumElemSets(con, self.piRelFeats))
         numWhenLocked = len(coverFeat(con, self.piRelFeats))
       else:
@@ -588,7 +588,8 @@ class DomPiHeuForSafetyAgent(ConsQueryAgent):
     self.computePolicyRelFeats()
     
   def findQuery(self):
-    if self.safePolicyExist() or self.safePolicyNotExist(): return None
+    answerFound = self.checkSafePolicyExists()
+    if answerFound != None: return answerFound
 
     unknownCons = set(self.consIndices) - set(self.knownFreeCons) - set(self.knownLockedCons)
 
@@ -653,7 +654,8 @@ class MaxProbSafePolicyExistAgent(ConsQueryAgent):
     return expect
  
   def findQuery(self):
-    if self.safePolicyExist() or self.safePolicyNotExist(): return None
+    answerFound = self.checkSafePolicyExists()
+    if answerFound != None: return answerFound
 
     unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
     
@@ -676,7 +678,8 @@ class DescendProbQueryForSafetyAgent(ConsQueryAgent):
   Return the unknown feature that has the largest (or smallest) probability of being changeable.
   """
   def findQuery(self):
-    if self.safePolicyExist() or self.safePolicyNotExist(): return None
+    answerFound = self.checkSafePolicyExists()
+    if answerFound != None: return answerFound
     
     unknownCons = set(self.consIndices) - set(self.knownLockedCons) - set(self.knownFreeCons)
     return max(unknownCons, key=lambda con: self.consProbs[con])
@@ -721,9 +724,12 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
     for freeCons in consPowerset:
       lockedPowerset = powerset(set(self.relFeats) - set(freeCons))
       for lockedCons in lockedPowerset:
-        if lockedPhiBound(lockedCons) or freePhiBound(freeCons):
-          self.optQs[indexize(lockedCons, freeCons)] = (None, 0) 
-          if config.VERBOSE: print (lockedCons, freeCons), 'beyond boundary'
+        if lockedPhiBound(lockedCons):
+          self.optQs[indexize(lockedCons, freeCons)] = ('notExist', 0) 
+          if config.VERBOSE: print (lockedCons, freeCons), 'beyond locked boundary'
+        elif freePhiBound(freeCons):
+          self.optQs[indexize(lockedCons, freeCons)] = ('exist', 0) 
+          if config.VERBOSE: print (lockedCons, freeCons), 'beyond free boundary'
         else:
           admissibleIndices.append((set(lockedCons), set(freeCons)))
 
