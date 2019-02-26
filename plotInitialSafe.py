@@ -15,9 +15,15 @@ width = height = 5
 lensOfQ = {}
 times = {}
 
+#proportionRange = [0.01] + [0.1 * proportionInt for proportionInt in range(10)] + [0.99]
+#pfRange = [0, 0.2, 0.4, 0.6, 0.8]; pfStep = 0.2
+#pfRange = [0, 0.35, 0.7]; pfStep = 0.3
+pfRange = [0, 0.25, 0.5]; pfStep = 0.5
+carpetNums = [8, 9, 10, 11, 12]
+
 # will check what methods are run from data
-methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
-#methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu']
+#methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu']
 
 markers = {'iisAndRelpi': 'bo-', 'iisOnly': 'bs--', 'relpiOnly': 'bd-.', 'maxProb': 'g^-', 'piHeu': 'm+-', 'random': 'c*-'}
 names = {'iisAndRelpi': 'SetCover', 'iisOnly': 'SetCover (IIS)', 'relpiOnly': 'SetCover (rel. feat.)', 'maxProb': 'Greed. Prob.',\
@@ -52,15 +58,13 @@ def plotNumVsProprotion():
   """
   Plot the the number of queried features vs the proportion of free features
   """
-  #proportionRange = [0.01] + [0.1 * proportionInt for proportionInt in range(10)] + [0.99]
-  proportionRange = [0.1, 0.3, 0.5, 0.7, 0.9]
   # fixed carpet num for this exp
   carpets = 10
 
   for method in methods:
-    for proportion in proportionRange:
-      lensOfQ[method, proportion] = []
-      times[method, proportion] = []
+    for pf in pfRange:
+      lensOfQ[method, pf] = []
+      times[method, pf] = []
 
   validInstances = []
 
@@ -68,9 +72,13 @@ def plotNumVsProprotion():
     # set to true if this instance is valid (no safe init policy)
     rndProcessed = False
 
-    for proportion in proportionRange:
+    for pf in pfRange:
       try:
-        filename = str(width) + '_' + str(height) + '_' + str(carpets) + '_' + str(proportion) + '_' +  str(rnd) + '.pkl'
+        pfUb = pf + pfStep
+        # kill decimal for ints
+        if pfUb % 1 == 0: pfUb = int(pfUb)
+
+        filename = str(width) + '_' + str(height) + '_' + str(carpets) + '_' + str(pf) + '_' + str(pfUb) + '_' + str(rnd) + '.pkl'
         data = pickle.load(open(filename, 'rb'))
       except IOError:
         print filename, 'not exist'
@@ -78,8 +86,8 @@ def plotNumVsProprotion():
 
       # number of features queried
       for method in methods:
-        lensOfQ[method, proportion].append(len(data['q'][method]))
-        times[method, proportion].append(data['t'][method])
+        lensOfQ[method, pf].append(len(data['q'][method]))
+        times[method, pf].append(data['t'][method])
       
       if not rndProcessed:
         rndProcessed = True
@@ -93,29 +101,27 @@ def plotNumVsProprotion():
   assert len(validInstances) > 0
 
   # show cases where method1 and method2 are different with proportion. for further debugging methods
-  diffInstances = lambda proportion, method1, method2:\
-                  (proportion, method1, method2,\
-                  filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ[method1, proportion], lensOfQ[method2, proportion])))
+  diffInstances = lambda pf, method1, method2:\
+                  (pf, method1, method2,\
+                  filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ[method1, pf], lensOfQ[method2, pf])))
 
-  for proportion in proportionRange: 
-    print diffInstances(proportion, 'iisAndRelpi', 'iisOnly')
-    print diffInstances(proportion, 'iisAndRelpi', 'relpiOnly')
-    print diffInstances(proportion, 'iisAndRelpi', 'maxProb')
+  for pf in pfRange: 
+    print diffInstances(pf, 'iisAndRelpi', 'iisOnly')
+    print diffInstances(pf, 'iisAndRelpi', 'relpiOnly')
+    print diffInstances(pf, 'iisAndRelpi', 'maxProb')
 
   # plot figure
-  x = proportionRange
-  y = lambda method: [mean(vectorDiff(lensOfQ[method, proportion], lensOfQ['iisAndRelpi', proportion])) for proportion in proportionRange]
-  yci = lambda method: [standardErr(vectorDiff(lensOfQ[method, proportion], lensOfQ['iisAndRelpi', proportion])) for proportion in proportionRange]
+  x = pfRange
+  y = lambda method: [mean(vectorDiff(lensOfQ[method, pf], lensOfQ['iisAndRelpi', pf])) for pf in pfRange]
+  yci = lambda method: [standardErr(vectorDiff(lensOfQ[method, pf], lensOfQ['iisAndRelpi', pf])) for pf in pfRange]
 
-  plot(x, y, yci, methods, 'Mean of $p_f$', '# of Queried Features', 'lensOfQPf')
+  plot(x, y, yci, methods, 'Mean of $p_f$', '# of Queried Features (SetCover as baseline)', 'lensOfQPf')
 
 
 def plotNumVsCarpets():
   """
   plot the num of queried features / computation time vs. num of carpets
   """
-  carpetNums = [8, 9, 10, 11, 12]
-
   for method in methods:
     for carpetNum in carpetNums:
       lensOfQ[method, carpetNum] = []
@@ -143,8 +149,8 @@ def plotNumVsCarpets():
   for rnd in range(rndSeeds):
     for carpetNum in carpetNums:
       try:
-        # None as proportion means uniformly random between in 0 and 1
-        filename = str(width) + '_' + str(height) + '_' + str(carpetNum) + '_' + 'None' + '_' +  str(rnd) + '.pkl'
+        # pf in 0 and 1
+        filename = str(width) + '_' + str(height) + '_' + str(carpetNum) + '_0_1_' +  str(rnd) + '.pkl'
         data = pickle.load(open(filename, 'rb'))
       except IOError:
         print filename, 'not exist'
@@ -187,4 +193,4 @@ font = {'size': 13}
 matplotlib.rc('font', **font)
 
 plotNumVsProprotion()
-plotNumVsCarpets()
+#plotNumVsCarpets()

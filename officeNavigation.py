@@ -187,7 +187,7 @@ def parameterizedSokobanWorld(size, numOfBoxes):
   
   return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
-def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
+def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None, pfStep=0.2):
   """
   spec: specification of the factored mdp
   k: number of queries (in batch querying setting
@@ -416,7 +416,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
     lb = 0; ub = 1
   elif type(consProb) is float or type(consProb) is int:
     # within .1 of consProb, but within 0 and 1 of course
-    lb = max(0, consProb - .1); ub = min(1, consProb + .1)
+    lb = consProb; ub = min(1, consProb + pfStep)
   elif type(consProb) is list and len(consProb) == 2:
     # pf is randomly generated within a range (consProb[0] to consProb[1])
     lb = consProb[0]; ub = consProb[1]
@@ -507,7 +507,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None):
     if not dry:
       # write to file
       pickle.dump({'q': queries, 't': times, 'iiss': iiss, 'relFeats': relFeats, 'solvable': answer == 'exist'},\
-                  open(str(spec.width) + '_' + str(spec.height) + '_' + str(len(spec.carpets)) + '_' + str(consProb) + '_' + str(rnd) + '.pkl', 'wb'))
+                  open(str(spec.width) + '_' + str(spec.height) + '_' + str(len(spec.carpets)) + '_' +\
+                       str(lb) + '_' + str(ub) + '_' + str(rnd) + '.pkl', 'wb'))
   else:
     print 'initial policy exists'
 
@@ -608,6 +609,12 @@ def saveToFileForSafePiImprove(method, k, numOfCarpets, constrainHuman, q, mrk, 
   # not distinguishing mr and mrk in filenames, so use a subdirectory
   pickle.dump(ret, open(method + '_' + postfix + '_' + str(k) + '_' + str(numOfCarpets) + '_' + str(rnd) + '.pkl', 'wb'))
 
+def setRandomSeed(rnd):
+  print 'random seed', rnd
+  random.seed(rnd)
+  numpy.random.seed(rnd)
+  scipy.random.seed(rnd)
+
 if __name__ == '__main__':
   # default values
   method = None
@@ -644,15 +651,25 @@ if __name__ == '__main__':
       pf = float(arg)
     elif opt == '-r':
       rnd = int(arg)
-
-      random.seed(rnd)
-      # not necessarily using the following packages, but just to be sure
-      numpy.random.seed(rnd)
-      scipy.random.seed(rnd)
-      
-      print 'random seed', rnd
+      setRandomSeed(rnd)
     else:
       raise Exception('unknown argument')
+
+  # batch experiments
+
+  #pfRange = [0, 0.2, 0.4, 0.6, 0.8]; pfStep = 0.2
+  #pfRange = [0, 0.35, 0.7]; pfStep = 0.3
+  pfRange = [0, 0.25, 0.5]; pfStep = 0.5
+  for rnd in range(1000):
+    for numOfCarpets in [10]:
+      for pf in pfRange:
+        # reset random seed in each iteration
+        setRandomSeed(rnd)
+
+        print 'pf =', pf
+        classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProb=pf, pfStep=pfStep)
+
+  # single experiments
 
   # test a hand-designed domain
   #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd, consProbs=[.9, .9, .9])
@@ -661,7 +678,7 @@ if __name__ == '__main__':
   #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
 
   # add changeability probability
-  classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProb=pf)
+  #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
   
   # good for testing irreversible features
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
