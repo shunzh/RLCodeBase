@@ -1,12 +1,14 @@
 import pickle
 
+import matplotlib
 import pylab
+from matplotlib.ticker import FormatStrFormatter
 from numpy import mean
 
 import util
 from util import standardErr
 
-rndSeeds = 500
+rndSeeds = 1000
 
 width = height = 5
 
@@ -14,7 +16,8 @@ lensOfQ = {}
 times = {}
 
 # will check what methods are run from data
-methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu']
+methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+#methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu']
 
 markers = {'iisAndRelpi': 'bo-', 'iisOnly': 'bs--', 'relpiOnly': 'bd-.', 'maxProb': 'g^-', 'piHeu': 'm+-', 'random': 'c*-'}
 names = {'iisAndRelpi': 'SetCover', 'iisOnly': 'SetCover (IIS)', 'relpiOnly': 'SetCover (rel. feat.)', 'maxProb': 'Greed. Prob.',\
@@ -37,6 +40,8 @@ def plot(x, y, yci, methods, xlabel, ylabel, filename):
   pylab.xlabel(xlabel)
   pylab.ylabel(ylabel)
   pylab.legend()
+
+  ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 
   fig.savefig(filename + ".pdf", dpi=300, format="pdf")
   
@@ -117,10 +122,23 @@ def plotNumVsCarpets():
       times[method, carpetNum] = []
 
   iisSizes = {}
+  iisSizesVec = {}
+
   domPiSizes = {}
+  domPiSizesVec = {}
+
+  solveableIns = {}
+  validInstances = {}
   for carpetNum in carpetNums:
     iisSizes[carpetNum] = util.Counter()
+    iisSizesVec[carpetNum] = []
+
     domPiSizes[carpetNum] = util.Counter()
+    domPiSizesVec[carpetNum] = []
+
+    solveableIns[carpetNum] = util.Counter()
+
+    validInstances[carpetNum] = []
 
   for rnd in range(rndSeeds):
     for carpetNum in carpetNums:
@@ -137,11 +155,21 @@ def plotNumVsCarpets():
         lensOfQ[method, carpetNum].append(len(data['q'][method]))
         times[method, carpetNum].append(data['t'][method])
 
-        addFreq(len(data['iiss']), iisSizes[carpetNum])
-        addFreq(len(data['relFeats']), domPiSizes[carpetNum])
+      validInstances[carpetNum].append(rnd)
 
-  print 'iiss', iisSizes
-  print 'relFeats', domPiSizes
+      addFreq(len(data['iiss']), iisSizes[carpetNum])
+      iisSizesVec[carpetNum].append(len(data['iiss']))
+
+      addFreq(len(data['relFeats']), domPiSizes[carpetNum])
+      domPiSizesVec[carpetNum].append(len(data['relFeats']))
+
+      addFreq(data['solvable'], solveableIns[carpetNum])
+
+  print 'iiss', [round(mean(iisSizesVec[carpetNum]), 2) for carpetNum in carpetNums]
+  print 'relFeats', [round(mean(domPiSizesVec[carpetNum]), 2) for carpetNum in carpetNums]
+
+  print 'solvable', solveableIns
+  print 'validins', {carpetNum: len(validInstances[carpetNum]) for carpetNum in carpetNums}
 
   print '# of queries'
   x = carpetNums
@@ -155,6 +183,8 @@ def plotNumVsCarpets():
   yci = lambda method: [standardErr(times[method, carpetNum]) for carpetNum in carpetNums]
   plot(x, y, yci, methods, 'Computation Time (sec.)', '# of Queried Features', 'timesCarpets')
 
+font = {'size': 13}
+matplotlib.rc('font', **font)
 
 plotNumVsProprotion()
 plotNumVsCarpets()
