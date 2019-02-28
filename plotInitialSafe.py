@@ -16,9 +16,6 @@ lensOfQ = {}
 times = {}
 
 #proportionRange = [0.01] + [0.1 * proportionInt for proportionInt in range(10)] + [0.99]
-#pfRange = [0, 0.2, 0.4, 0.6, 0.8]; pfStep = 0.2
-#pfRange = [0, 0.35, 0.7]; pfStep = 0.3
-pfRange = [0, 0.25, 0.5]; pfStep = 0.5
 carpetNums = [8, 9, 10, 11, 12]
 
 # will check what methods are run from data
@@ -34,8 +31,13 @@ def addFreq(elem, counter): counter[elem] += 1
 # output the diffierence of two vectors
 vectorDiff = lambda v1, v2: map(lambda e1, e2: e1 - e2, v1, v2)
 
+# for output as latex table
+outputFormat = lambda d: '$' + str(round(mean(d), 4)) + ' \pm ' + str(round(standardErr(d), 4)) + '$'
 
 def plot(x, y, yci, methods, xlabel, ylabel, filename):
+  """
+  general script for plotting using pylab
+  """
   fig = pylab.figure()
 
   ax = pylab.gca()
@@ -94,9 +96,6 @@ def plotNumVsProprotion():
 
         validInstances.append(rnd)
     
-  # for output as latex table
-  outputFormat = lambda d: '$' + str(round(mean(d), 4)) + ' \pm ' + str(round(standardErr(d), 4)) + '$'
-
   print 'valid instances', len(validInstances)
   assert len(validInstances) > 0
 
@@ -115,7 +114,7 @@ def plotNumVsProprotion():
   y = lambda method: [mean(vectorDiff(lensOfQ[method, pf], lensOfQ['iisAndRelpi', pf])) for pf in pfRange]
   yci = lambda method: [standardErr(vectorDiff(lensOfQ[method, pf], lensOfQ['iisAndRelpi', pf])) for pf in pfRange]
 
-  plot(x, y, yci, methods, 'Mean of $p_f$', '# of Queried Features (SetCover as baseline)', 'lensOfQPf')
+  plot(x, y, yci, methods, '$p_f$', '# of Queried Features (SetCover as baseline)', 'lensOfQPf' + str(int(pfStep * 10)))
 
 
 def plotNumVsCarpets():
@@ -149,8 +148,8 @@ def plotNumVsCarpets():
   for rnd in range(rndSeeds):
     for carpetNum in carpetNums:
       try:
-        # pf in 0 and 1
-        filename = str(width) + '_' + str(height) + '_' + str(carpetNum) + '_0_1_' +  str(rnd) + '.pkl'
+        # FIXME previous runs output None in filenames. should fix it.
+        filename = str(width) + '_' + str(height) + '_' + str(carpetNum) + '_None_' +  str(rnd) + '.pkl'
         data = pickle.load(open(filename, 'rb'))
       except IOError:
         print filename, 'not exist'
@@ -174,8 +173,8 @@ def plotNumVsCarpets():
   print 'iiss', [round(mean(iisSizesVec[carpetNum]), 2) for carpetNum in carpetNums]
   print 'relFeats', [round(mean(domPiSizesVec[carpetNum]), 2) for carpetNum in carpetNums]
 
-  print 'solvable', solveableIns
-  print 'validins', {carpetNum: len(validInstances[carpetNum]) for carpetNum in carpetNums}
+  print 'validins', [len(validInstances[carpetNum]) for carpetNum in carpetNums]
+  print 'solvable', [round(1.0 * solveableIns[carpetNum][True] / len(validInstances[carpetNum]), 2) for carpetNum in carpetNums]
 
   print '# of queries'
   x = carpetNums
@@ -187,10 +186,18 @@ def plotNumVsCarpets():
   x = carpetNums
   y = lambda method: [mean(times[method, carpetNum]) for carpetNum in carpetNums]
   yci = lambda method: [standardErr(times[method, carpetNum]) for carpetNum in carpetNums]
-  plot(x, y, yci, methods, 'Computation Time (sec.)', '# of Queried Features', 'timesCarpets')
+  plot(x, y, yci, methods, '# of Carpets', 'Computation Time (sec.)', 'timesCarpets')
 
 font = {'size': 13}
 matplotlib.rc('font', **font)
 
-plotNumVsProprotion()
-#plotNumVsCarpets()
+#pfRange = [0, 0.2, 0.4, 0.6, 0.8]; pfStep = 0.2
+#plotNumVsProprotion()
+
+#pfRange = [0, 0.35, 0.7]; pfStep = 0.3
+#plotNumVsProprotion()
+
+#pfRange = [0, 0.25, 0.5]; pfStep = 0.5
+#plotNumVsProprotion()
+
+plotNumVsCarpets()

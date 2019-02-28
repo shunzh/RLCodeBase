@@ -659,9 +659,14 @@ if __name__ == '__main__':
 
   #pfRange = [0, 0.2, 0.4, 0.6, 0.8]; pfStep = 0.2
   #pfRange = [0, 0.35, 0.7]; pfStep = 0.3
-  pfRange = [0, 0.25, 0.5]; pfStep = 0.5
+  #pfRange = [0, 0.25, 0.5]; pfStep = 0.5
+  pfRange = [0]; pfStep = 1
+
+  #carpets = [10]
+  carpetNums = [8, 9, 10, 11, 12]
+
   for rnd in range(1000):
-    for numOfCarpets in [10]:
+    for numOfCarpets in carpetNums:
       for pf in pfRange:
         # reset random seed in each iteration
         setRandomSeed(rnd)

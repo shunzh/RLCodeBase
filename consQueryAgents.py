@@ -430,6 +430,9 @@ class ConsQueryAgent():
     
     This can be O(2^|relevant features|), depending on the implementation of findDomPis
     """
+    # check whether this is already computed
+    if hasattr(self, 'piRelFeats'): return
+
     relFeats, domPis = self.findRelevantFeaturesAndDomPis()
     piRelFeats = []
     
@@ -520,10 +523,10 @@ class GreedyForSafetyAgent(ConsQueryAgent):
     self.useRelPi = useRelPi
 
     # find all IISs without knowing any locked or free cons
-    if self.useIIS:
-      self.computeIISs()
     if self.useRelPi:
       self.computePolicyRelFeats()
+    if self.useIIS:
+      self.computeIISs()
 
   def updateFeats(self, newFreeCon=None, newLockedCon=None):
     # this just add to the list of known free and locked features
