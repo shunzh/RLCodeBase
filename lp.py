@@ -28,7 +28,7 @@ def lp(S, A, r, T, s0):
     s0: init state
   """
   m = CPlexModel()
-  if not config.VERBOSE: m.setVerbosity(0)
+  if not config.VERBOSE or config.DEBUG: m.setVerbosity(0)
 
   # useful constants
   Sr = range(len(S))

@@ -66,5 +66,5 @@ eval_*
 *.tar.gz
 *.pdf
 
-# vscode
-.vscode
+# pycharm
+.idea/

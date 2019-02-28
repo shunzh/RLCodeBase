@@ -56,7 +56,7 @@ def plot(x, y, yci, methods, xlabel, ylabel, filename):
   pylab.close()
 
 
-def plotNumVsProprotion():
+def plotNumVsProprotion(pfRange, pfStep):
   """
   Plot the the number of queried features vs the proportion of free features
   """
@@ -148,8 +148,7 @@ def plotNumVsCarpets():
   for rnd in range(rndSeeds):
     for carpetNum in carpetNums:
       try:
-        # FIXME previous runs output None in filenames. should fix it.
-        filename = str(width) + '_' + str(height) + '_' + str(carpetNum) + '_None_' +  str(rnd) + '.pkl'
+        filename = str(width) + '_' + str(height) + '_' + str(carpetNum) + '_0_1_' +  str(rnd) + '.pkl'
         data = pickle.load(open(filename, 'rb'))
       except IOError:
         print filename, 'not exist'
@@ -191,13 +190,11 @@ def plotNumVsCarpets():
 font = {'size': 13}
 matplotlib.rc('font', **font)
 
-#pfRange = [0, 0.2, 0.4, 0.6, 0.8]; pfStep = 0.2
-#plotNumVsProprotion()
+pfCandidates = [(0.2, [0, 0.2, 0.4, 0.6, 0.8]),\
+#                (0.3, [0, 0.35, 0.7]),\
+                (0.5, [0, 0.25, 0.5])]
 
-#pfRange = [0, 0.35, 0.7]; pfStep = 0.3
-#plotNumVsProprotion()
-
-#pfRange = [0, 0.25, 0.5]; pfStep = 0.5
-#plotNumVsProprotion()
+for (pfStep, pfRange) in pfCandidates:
+  plotNumVsProprotion(pfRange, pfStep)
 
 plotNumVsCarpets()

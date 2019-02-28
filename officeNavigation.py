@@ -30,6 +30,8 @@ TURNOFFSWITCH = 'turnOffSwitch'
 
 TERMINATE = 'terminate'
 
+from consQueryAgents import EXIST, NOTEXIST
+
 class Spec():
   """
   A object that describes the specifications of an MDP
@@ -441,10 +443,13 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None, pfStep=0.2
   if not agent.initialSafePolicyExists():
     print 'initial policy does not exist'
     
-    #methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
-    methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+    methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+    #methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
     queries = {}
     times = {}
+    # these are assigned when ouralg is run
+    iiss = None
+    relFeats = None
     # keep track of agents' answers on whether problems are solvable
     answer = None
 
@@ -481,7 +486,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None, pfStep=0.2
       while len(queries[method]) < len(consStates) + 1:
         query = agent.findQuery()
 
-        if query == 'exist' or query == 'notExist':
+        if query == EXIST or query == NOTEXIST:
           # the agent stops querying
           thisAnswer = query
           break
@@ -496,14 +501,20 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None, pfStep=0.2
         answer = thisAnswer
       else:
         # make sure all the agents give the same answer. otherwise imp error
-        assert answer == thisAnswer
-      
+        assert answer == thisAnswer, {'other methods say': answer, method + ' says': thisAnswer}
+
       end = time.time()
         
       times[method].append(end - start)
 
+    # if opt is used, the query it finds must have the minimum length
+    if 'opt' in queries.keys():
+      assert all(len(queries['opt']) <= len(queries[method]) for method in methods), 'The optimal query is not optimal!'
+
     print 'queries', queries
     print 'times', times
+    print 'safe policy', answer
+
     if not dry:
       # write to file
       pickle.dump({'q': queries, 't': times, 'iiss': iiss, 'relFeats': relFeats, 'solvable': answer == 'exist'},\
@@ -656,8 +667,7 @@ if __name__ == '__main__':
       raise Exception('unknown argument')
 
   # batch experiments
-
-  #pfRange = [0, 0.2, 0.4, 0.6, 0.8]; pfStep = 0.2
+  #pfRange = ; pfStep = 0.2
   #pfRange = [0, 0.35, 0.7]; pfStep = 0.3
   #pfRange = [0, 0.25, 0.5]; pfStep = 0.5
   pfRange = [0]; pfStep = 1
@@ -679,7 +689,6 @@ if __name__ == '__main__':
   # test a hand-designed domain
   #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd, consProbs=[.9, .9, .9])
 
-  # avoid border to make sure safe policies exist
   #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
 
   # add changeability probability

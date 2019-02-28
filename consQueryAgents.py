@@ -10,6 +10,8 @@ from setcover import coverFeat, removeFeat, leastNumElemSets, elementExists,\
   oshimai, killSupersets
 from operator import mul
 
+EXIST = 'exist'
+NOTEXIST = 'notexist'
 
 class ConsQueryAgent():
   """
@@ -95,7 +97,7 @@ class ConsQueryAgent():
 
       # find the subset with the smallest size
       activeCons = min(subsetsToConsider, key=lambda _: len(_))
-      if config.VERBOSE: print 'activeCons', activeCons
+      if config.DEBUG: print 'activeCons', activeCons
       subsetsConsidered.append(activeCons)
 
       skipThisCons = False
@@ -110,7 +112,7 @@ class ConsQueryAgent():
       sol = self.findConstrainedOptPi(activeCons)
       if sol['feasible']:
         x = sol['pi']
-        if config.VERBOSE:
+        if config.DEBUG:
           printOccSA(x)
           print self.computeValue(x)
 
@@ -119,12 +121,12 @@ class ConsQueryAgent():
         # check violated constraints
         violatedCons = self.findViolatedConstraints(x)
 
-        if config.VERBOSE: print 'x violates', violatedCons
+        if config.DEBUG: print 'x violates', violatedCons
       else:
         # infeasible
         violatedCons = ()
         
-        if config.VERBOSE: print 'infeasible'
+        if config.DEBUG: print 'infeasible'
 
       # beta records that we would not enforce activeCons and relax occupiedFeats in the future
       beta.append((set(activeCons), set(violatedCons)))
@@ -137,7 +139,7 @@ class ConsQueryAgent():
     for pi in dominatingPolicies.values():
       if pi not in domPis: domPis.append(pi)
       
-    if config.VERBOSE: print 'rel cons', allCons, 'num of domPis', len(domPis)
+    if config.DEBUG: print 'rel cons', allCons, 'num of domPis', len(domPis)
     return allCons, domPis
 
   def findMinimaxRegretConstraintQBruteForce(self, k, relFeats, domPis):
@@ -418,8 +420,8 @@ class ConsQueryAgent():
     """
     None if can't claim, otherwise return exists or notExist
     """
-    if self.safePolicyExist(): return 'exist'
-    elif self.safePolicyNotExist(): return 'notExist'
+    if self.safePolicyExist(): return EXIST
+    elif self.safePolicyNotExist(): return NOTEXIST
     else: return None
 
   def computePolicyRelFeats(self):
@@ -697,10 +699,28 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
 
     # need domPis for query
     self.computePolicyRelFeats()
-    self.computeIISs()
     
+    self.optQs = {}
+    # the set of cons imposing which we have a safe policy
+    self.freeBoundary = []
+    # the set of cons imposing which we don't have a safe policy for sure
+    self.lockedBoundary = []
+
     self.computeOptQueries()
     
+  def getQueryAndValue(self, locked, free):
+    if any(set(locked).issuperset(lockedB) for lockedB in self.lockedBoundary):
+      return (NOTEXIST, 0)
+    elif any(set(free).issuperset(freeB) for freeB in self.freeBoundary):
+      return (EXIST, 0)
+    elif not (frozenset(locked), frozenset(free)) in self.optQs:
+      return None
+    else:
+      return self.optQs[frozenset(locked), frozenset(free)]
+  
+  def setQueryAndValue(self, locked, free, qAndV):
+    self.optQs[frozenset(locked), frozenset(free)] = qAndV
+
   def computeOptQueries(self):
     """
     f(\phi_l, \phi_f) = 
@@ -710,70 +730,69 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
     Boundaries condition:
       \phi_l is not a superset of any iis, \phi_f is not a superset of rel feats of any dom pi, otherwise 0 for sure
     """
-    self.optQs = {}
+    consPowerset = list(powerset(self.relFeats))
 
-    consPowerset = powerset(self.relFeats)
-    
-    # if hit the boundary, our function should return 0 since safe policies found / no safe policies exist
-    lockedPhiBound = lambda lockedCons: any(set(lockedCons).issuperset(iis) for iis in self.iiss)
-    freePhiBound = lambda freeCons: any(set(freeCons).issuperset(relFeats) for relFeats in self.piRelFeats)
-    
-    # need froze the sets to use them as indices
-    indexize = lambda lockedCons, freeCons: (frozenset(lockedCons), frozenset(freeCons))
+    # free/locked cons that are not supersets of elements on their boundaries
+    admissibleFreeCons = []
+    admissibleLockedCons = []
+    # the set of (lockedCons, freeCons) to evaluate the optimal queries
+    # it's the cross product of the two sets above, excluding free and locked cons that share elements
+    admissibleCons = []
 
-    # set free, locked partitions at and beyond the boundary with 0
-    # admissibleIndices are the ones within the boundary, which need querying to decide existence of safe policies
-    admissibleIndices = []
+    for lockedCons in consPowerset:
+      if self.safePolicyNotExist(lockedCons=lockedCons):
+        if not any(set(lockedCons).issuperset(lockedB) for lockedB in self.lockedBoundary): 
+          self.lockedBoundary.append(lockedCons)
+      else: admissibleLockedCons.append(lockedCons)
+
     for freeCons in consPowerset:
-      lockedPowerset = powerset(set(self.relFeats) - set(freeCons))
-      for lockedCons in lockedPowerset:
-        if lockedPhiBound(lockedCons):
-          self.optQs[indexize(lockedCons, freeCons)] = ('notExist', 0) 
-          if config.VERBOSE: print (lockedCons, freeCons), 'beyond locked boundary'
-        elif freePhiBound(freeCons):
-          self.optQs[indexize(lockedCons, freeCons)] = ('exist', 0) 
-          if config.VERBOSE: print (lockedCons, freeCons), 'beyond free boundary'
-        else:
-          admissibleIndices.append((set(lockedCons), set(freeCons)))
+      if self.safePolicyExist(freeCons=freeCons):
+        if not any(set(freeCons).issuperset(freeB) for freeB in self.freeBoundary):
+          self.freeBoundary.append(freeCons)
+      else: admissibleFreeCons.append(freeCons)
+    
+    if config.VERBOSE:
+      print 'locked', self.lockedBoundary
+      print 'free', self.freeBoundary
+
+    for lockedCons in admissibleLockedCons:
+      for freeCons in admissibleFreeCons:
+        # any cons should not be known to be both free and locked
+        if set(lockedCons).isdisjoint(set(freeCons)):
+          admissibleCons.append((lockedCons, freeCons))
+
+    readyToEvaluate = lambda l, f, u: all(self.getQueryAndValue(l, set(f).union({con})) != None \
+                                          and self.getQueryAndValue(set(l).union({con}), f) != None \
+                                          for con in u)
 
     # keep fill out the values of optQs within boundary
     # whenever filled out 
-    updateOccured = True
-    while updateOccured:
-      updateOccured = False
-      if config.VERBOSE: print len(admissibleIndices), 'left to evaluate'
-      for (lockedCons, freeCons) in admissibleIndices:
-        # only compute the value if all its necessary neighbors are already computed
-        unknownCons = set(self.relFeats) - lockedCons - freeCons
-        
-        allNeighborValuesExist = all((lockedCons, freeCons.union({con})) in self.optQs.keys()
-                                     and (lockedCons.union({con}), freeCons) in self.optQs.keys()\
-                                     for con in unknownCons)
-        
-        if allNeighborValuesExist:
-          updateOccured = True
-          # tuples, (feature to query, obj value after querying)
+    while len(admissibleCons) > 0:
+      if config.VERBOSE: print len(admissibleCons), 'left to evaluate'
+      for (lockedCons, freeCons) in admissibleCons:
+        unknownCons = set(self.relFeats) - set(lockedCons) - set(freeCons)
+        if readyToEvaluate(lockedCons, freeCons, unknownCons):
           minNums = [(con,\
-                    self.consProbs[con] * self.optQs[indexize(lockedCons, freeCons.union({con}))][1] +\
-                    (1 - self.consProbs[con]) * self.optQs[indexize(lockedCons.union({con}), freeCons)][1] +\
-                    1) # count con in
+                    self.consProbs[con] * self.getQueryAndValue(lockedCons, set(freeCons).union({con}))[1]\
+                    + (1 - self.consProbs[con]) * self.getQueryAndValue(set(lockedCons).union({con}), freeCons)[1]\
+                    + 1) # count con in
                    for con in unknownCons]
           # pick the tuple that has the minimum obj value after querying
-          self.optQs[indexize(lockedCons, freeCons)] = min(minNums, key=lambda _: _[1])
+          self.setQueryAndValue(lockedCons, freeCons, min(minNums, key=lambda _: _[1]))
           
           # no need to consider this elem in the future
           if config.VERBOSE: print (lockedCons, freeCons), 'evaluated'
-          admissibleIndices.remove((lockedCons, freeCons))
-    
-    # shouldn't be any unevaluated entries in self.optQs
-    assert len(admissibleIndices) == 0
+
+          admissibleCons.remove((lockedCons, freeCons))
     
   def findQuery(self):
     # we only care about the categories of rel feats
     relLockedCons = set(self.knownLockedCons).intersection(self.relFeats)
     relFreeCons = set(self.knownFreeCons).intersection(self.relFeats)
 
-    return self.optQs[frozenset(relLockedCons), frozenset(relFreeCons)][0]
+    qAndV = self.getQueryAndValue(relLockedCons, relFreeCons)
+    assert qAndV != None
+    return qAndV[0]
  
 
 def printOccSA(x):
