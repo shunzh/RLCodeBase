@@ -19,11 +19,10 @@ times = {}
 carpetNums = [8, 9, 10, 11, 12]
 
 # will check what methods are run from data
-#methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
-methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu']
+methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
 
-markers = {'iisAndRelpi': 'bo-', 'iisOnly': 'bs--', 'relpiOnly': 'bd-.', 'maxProb': 'g^-', 'piHeu': 'm+-', 'random': 'c*-'}
-names = {'iisAndRelpi': 'SetCover', 'iisOnly': 'SetCover (IIS)', 'relpiOnly': 'SetCover (rel. feat.)', 'maxProb': 'Greed. Prob.',\
+markers = {'opt': 'r*-', 'iisAndRelpi': 'bo-', 'iisOnly': 'bs--', 'relpiOnly': 'bd-.', 'maxProb': 'g^-', 'piHeu': 'm+-', 'random': 'c.-'}
+names = {'opt': 'Optimal', 'iisAndRelpi': 'SetCover', 'iisOnly': 'SetCover (IIS)', 'relpiOnly': 'SetCover (rel. feat.)', 'maxProb': 'Greed. Prob.',\
          'piHeu': 'Most-Likely', 'random': 'Descending'}
 
 def addFreq(elem, counter): counter[elem] += 1
@@ -111,8 +110,8 @@ def plotNumVsProprotion(pfRange, pfStep):
 
   # plot figure
   x = pfRange
-  y = lambda method: [mean(vectorDiff(lensOfQ[method, pf], lensOfQ['iisAndRelpi', pf])) for pf in pfRange]
-  yci = lambda method: [standardErr(vectorDiff(lensOfQ[method, pf], lensOfQ['iisAndRelpi', pf])) for pf in pfRange]
+  y = lambda method: [mean(vectorDiff(lensOfQ[method, pf], lensOfQ[methods[0], pf])) for pf in pfRange]
+  yci = lambda method: [standardErr(vectorDiff(lensOfQ[method, pf], lensOfQ[methods[0], pf])) for pf in pfRange]
 
   plot(x, y, yci, methods, '$p_f$', '# of Queried Features (SetCover as baseline)', 'lensOfQPf' + str(int(pfStep * 10)))
 
@@ -177,9 +176,10 @@ def plotNumVsCarpets():
 
   print '# of queries'
   x = carpetNums
-  y = lambda method: [mean(vectorDiff(lensOfQ[method, carpetNum], lensOfQ['iisAndRelpi', carpetNum])) for carpetNum in carpetNums]
-  yci = lambda method: [standardErr(vectorDiff(lensOfQ[method, carpetNum], lensOfQ['iisAndRelpi', carpetNum])) for carpetNum in carpetNums]
-  plot(x, y, yci, methods, '# of Carpets', '# of Queried Features (SetCover as baseline)', 'lensOfQCarpets')
+  # use the first method as baseline, a bit hacky here.
+  y = lambda method: [mean(vectorDiff(lensOfQ[method, carpetNum], lensOfQ[methods[0], carpetNum])) for carpetNum in carpetNums]
+  yci = lambda method: [standardErr(vectorDiff(lensOfQ[method, carpetNum], lensOfQ[methods[0], carpetNum])) for carpetNum in carpetNums]
+  plot(x, y, yci, methods, '# of Carpets', '# of Queried Features (' + names[methods[0]] + ' as baseline)', 'lensOfQCarpets')
 
   print 'compute time'
   x = carpetNums
@@ -194,7 +194,9 @@ pfCandidates = [(0.2, [0, 0.2, 0.4, 0.6, 0.8]),\
 #                (0.3, [0, 0.35, 0.7]),\
                 (0.5, [0, 0.25, 0.5])]
 
+"""
 for (pfStep, pfRange) in pfCandidates:
   plotNumVsProprotion(pfRange, pfStep)
+"""
 
 plotNumVsCarpets()

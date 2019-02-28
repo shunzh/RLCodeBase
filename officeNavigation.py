@@ -172,8 +172,6 @@ def sokobanWorld():
   return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
 def parameterizedSokobanWorld(size, numOfBoxes):
-  """
-  """
   width = height = size
   
   robot = (0, 0)
@@ -507,10 +505,6 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None, pfStep=0.2
         
       times[method].append(end - start)
 
-    # if opt is used, the query it finds must have the minimum length
-    if 'opt' in queries.keys():
-      assert all(len(queries['opt']) <= len(queries[method]) for method in methods), 'The optimal query is not optimal!'
-
     print 'queries', queries
     print 'times', times
     print 'safe policy', answer
@@ -691,9 +685,6 @@ if __name__ == '__main__':
 
   #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
 
-  # add changeability probability
-  #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
-  
   # good for testing irreversible features
   #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
   #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
