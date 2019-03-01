@@ -68,3 +68,6 @@ eval_*
 
 # pycharm
 .idea/
+
+# vscode
+.vscode/

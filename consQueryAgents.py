@@ -780,9 +780,6 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
           # pick the tuple that has the minimum obj value after querying
           self.setQueryAndValue(lockedCons, freeCons, min(minNums, key=lambda _: _[1]))
           
-          # no need to consider this elem in the future
-          if config.VERBOSE: print (lockedCons, freeCons), 'evaluated'
-
           admissibleCons.remove((lockedCons, freeCons))
     
   def findQuery(self):

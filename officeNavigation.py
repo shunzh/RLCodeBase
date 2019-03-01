@@ -187,14 +187,14 @@ def parameterizedSokobanWorld(size, numOfBoxes):
   
   return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
-def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None, pfStep=0.2):
+def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   """
   spec: specification of the factored mdp
   k: number of queries (in batch querying setting
   constrainHuman: a flag controls MR vs MR_k
   dry: no output to file if True
   rnd: random seed
-  consProb: only for Bayesian setting. ["prob that ith unknown feature is free" for i in range(self.numOfCons)]
+  pf: only for Bayesian setting. ["prob that ith unknown feature is free" for i in range(self.numOfCons)]
     If None (by default), set randomly
   """
   # need to flatten the state representation to a vector.
@@ -411,20 +411,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, consProb=None, pfStep=0.2
   consStates = carpetCons + boxCons
   numOfCons = len(consStates)
   
-  if consProb == None:
-    # pf is generated uniformly randomly
-    lb = 0; ub = 1
-  elif type(consProb) is float or type(consProb) is int:
-    # within .1 of consProb, but within 0 and 1 of course
-    lb = consProb; ub = min(1, consProb + pfStep)
-  elif type(consProb) is list and len(consProb) == 2:
-    # pf is randomly generated within a range (consProb[0] to consProb[1])
-    lb = consProb[0]; ub = consProb[1]
-  else:
-    raise Exception('fail to process consProb')
-
-  assert lb >= 0 and ub <= 1, (lb, ub)
-  consProbs = [lb + (ub - lb) * random.random() for _ in range(numOfCons)]
+  consProbs = [pf + pfStep * random.random() for _ in range(numOfCons)]
 
   print 'consProbs', zip(range(numOfCons), consProbs)
 
@@ -633,10 +620,13 @@ if __name__ == '__main__':
 
   rnd = 0 # set a dummy random seed if no -r argument
 
-  pf = None # the prob. that a feature is free
+  pf = 0 # the prob. that a feature is free
+  pfStep = 1
+
+  batch = False # run batch experiments
 
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:dp:')
+    opts, args = getopt.getopt(sys.argv[1:], 's:k:n:cr:dp:b')
   except getopt.GetoptError:
     raise Exception('Unknown flag')
   for opt, arg in opts:
@@ -654,38 +644,36 @@ if __name__ == '__main__':
     elif opt == '-p':
       # proportion of free features
       pf = float(arg)
+    elif opt == '-b':
+      batch = True
     elif opt == '-r':
       rnd = int(arg)
       setRandomSeed(rnd)
     else:
       raise Exception('unknown argument')
 
-  # batch experiments
-  #pfRange = ; pfStep = 0.2
-  #pfRange = [0, 0.35, 0.7]; pfStep = 0.3
-  #pfRange = [0, 0.25, 0.5]; pfStep = 0.5
-  pfRange = [0]; pfStep = 1
+  if batch:
+    # batch experiments
+    #carpets = [10]
+    #pfRange = [0, 0.2, 0.4, 0.6, 0.8]; pfStep = 0.2
+    #pfRange = [0, 0.35, 0.7]; pfStep = 0.3
+    #pfRange = [0, 0.25, 0.5]; pfStep = 0.5
+    
+    carpetNums = [8, 9, 10, 11, 12]; pfRange = [0]; pfStep = 1
 
-  #carpets = [10]
-  carpetNums = [8, 9, 10, 11, 12]
+    for rnd in range(1000):
+      for numOfCarpets in carpetNums:
+        for pf in pfRange:
+          # reset random seed in each iteration
+          setRandomSeed(rnd)
 
-  for rnd in range(1000):
-    for numOfCarpets in carpetNums:
-      for pf in pfRange:
-        # reset random seed in each iteration
-        setRandomSeed(rnd)
+          print 'pf =', pf
+          classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
+  else:
+    # single experiments
+    classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
 
-        print 'pf =', pf
-        classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, consProb=pf, pfStep=pfStep)
-
-  # single experiments
-
-  # test a hand-designed domain
-  #classicOfficNav(toyWrold(), k, constrainHuman, dry, rnd, consProbs=[.9, .9, .9])
-
-  #classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd)
-
-  # good for testing irreversible features
-  #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
-  #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
-  #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)
+    # good for testing irreversible features
+    #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
+    #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
+    #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)
