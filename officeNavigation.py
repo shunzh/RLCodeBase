@@ -435,14 +435,17 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
     # these are assigned when ouralg is run
     iiss = None
     relFeats = None
+
     # keep track of agents' answers on whether problems are solvable
     answer = None
+    thisAnswer = None
 
     for method in methods:
       print method
       queries[method] = []
       times[method] = []
-      
+
+      # ======== timed session ========
       start = time.time()
       
       if method == 'opt':
@@ -482,21 +485,33 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
           
         queries[method].append(query)
 
+      # ======== timed session ends ========
+      end = time.time()
+
+      # the alg must return an answer
+      assert thisAnswer != None
+
+      # make sure all the agents give the same answer. otherwise imp error
       if answer == None:
         answer = thisAnswer
       else:
-        # make sure all the agents give the same answer. otherwise imp error
         assert answer == thisAnswer, {'other methods say': answer, method + ' says': thisAnswer}
 
-      end = time.time()
-        
+      # make sure that, if safe policy exists, safe policy found
+      if thisAnswer == EXIST:
+        # may use other ways? most algorithms check this before returning anyway
+        assert agent.safePolicyExist()
+
       times[method].append(end - start)
 
     print 'queries', queries
     print 'times', times
     print 'safe policy', answer
 
-    if not dry:
+    if dry:
+      print 'dry run. no output'
+    else:
+      lb = pf; ub = pf + pfStep
       # write to file
       pickle.dump({'q': queries, 't': times, 'iiss': iiss, 'relFeats': relFeats, 'solvable': answer == 'exist'},\
                   open(str(spec.width) + '_' + str(spec.height) + '_' + str(len(spec.carpets)) + '_' +\

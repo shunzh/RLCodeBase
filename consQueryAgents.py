@@ -10,6 +10,7 @@ from setcover import coverFeat, removeFeat, leastNumElemSets, elementExists,\
   oshimai, killSupersets
 from operator import mul
 
+# the querying return these consts that represent safe policies exist / not exist
 EXIST = 'exist'
 NOTEXIST = 'notexist'
 
@@ -761,27 +762,37 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
         if set(lockedCons).isdisjoint(set(freeCons)):
           admissibleCons.append((lockedCons, freeCons))
 
-    readyToEvaluate = lambda l, f, u: all(self.getQueryAndValue(l, set(f).union({con})) != None \
-                                          and self.getQueryAndValue(set(l).union({con}), f) != None \
-                                          for con in u)
+    readyToEvaluate = lambda l, f: all(self.getQueryAndValue(l, set(f).union({con})) != None \
+                                       and self.getQueryAndValue(set(l).union({con}), f) != None \
+                                       for con in set(self.relFeats) - set(l) - set(f))
+
+    # keep the sets of cons that are ready to evaluate in the next iteration
+    readyToEvalSet = []
+    for (lockedCons, freeCons) in admissibleCons:
+      if readyToEvaluate(lockedCons, freeCons): readyToEvalSet.append((lockedCons, freeCons))
 
     # keep fill out the values of optQs within boundary
     # whenever filled out 
-    while len(admissibleCons) > 0:
-      if config.VERBOSE: print len(admissibleCons), 'left to evaluate'
-      for (lockedCons, freeCons) in admissibleCons:
-        unknownCons = set(self.relFeats) - set(lockedCons) - set(freeCons)
-        if readyToEvaluate(lockedCons, freeCons, unknownCons):
-          minNums = [(con,\
-                    self.consProbs[con] * self.getQueryAndValue(lockedCons, set(freeCons).union({con}))[1]\
-                    + (1 - self.consProbs[con]) * self.getQueryAndValue(set(lockedCons).union({con}), freeCons)[1]\
-                    + 1) # count con in
-                   for con in unknownCons]
-          # pick the tuple that has the minimum obj value after querying
-          self.setQueryAndValue(lockedCons, freeCons, min(minNums, key=lambda _: _[1]))
-          
-          admissibleCons.remove((lockedCons, freeCons))
-    
+    while len(readyToEvalSet) > 0:
+      if config.VERBOSE: print len(readyToEvalSet), 'need to be evaluated'
+
+      (lockedCons, freeCons) = readyToEvalSet.pop()
+
+      unknownCons = set(self.relFeats) - set(lockedCons) - set(freeCons)
+
+      minNums = [(con,\
+                  self.consProbs[con] * self.getQueryAndValue(lockedCons, set(freeCons).union({con}))[1]\
+                  + (1 - self.consProbs[con]) * self.getQueryAndValue(set(lockedCons).union({con}), freeCons)[1]\
+                  + 1) # count con in
+                 for con in unknownCons]
+      # pick the tuple that has the minimum obj value after querying
+      self.setQueryAndValue(lockedCons, freeCons, min(minNums, key=lambda _: _[1]))
+
+      # add neighbors that ready to evaluate to readToEvalSet
+      readyToEvalSet += filter(lambda (l, f): self.getQueryAndValue(l, f) == None and readyToEvaluate(l, f),\
+                               [(set(lockedCons) - {cons}, freeCons) for cons in lockedCons] +\
+                               [(lockedCons, set(freeCons) - {cons}) for cons in freeCons])
+
   def findQuery(self):
     # we only care about the categories of rel feats
     relLockedCons = set(self.knownLockedCons).intersection(self.relFeats)

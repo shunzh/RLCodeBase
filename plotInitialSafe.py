@@ -19,7 +19,8 @@ times = {}
 carpetNums = [8, 9, 10, 11, 12]
 
 # will check what methods are run from data
-methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+#methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu']
 
 markers = {'opt': 'r*-', 'iisAndRelpi': 'bo-', 'iisOnly': 'bs--', 'relpiOnly': 'bd-.', 'maxProb': 'g^-', 'piHeu': 'm+-', 'random': 'c.-'}
 names = {'opt': 'Optimal', 'iisAndRelpi': 'SetCover', 'iisOnly': 'SetCover (IIS)', 'relpiOnly': 'SetCover (rel. feat.)', 'maxProb': 'Greed. Prob.',\
@@ -47,7 +48,6 @@ def plot(x, y, yci, methods, xlabel, ylabel, filename):
   pylab.xlabel(xlabel)
   pylab.ylabel(ylabel)
   pylab.legend()
-
   ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 
   fig.savefig(filename + ".pdf", dpi=300, format="pdf")
