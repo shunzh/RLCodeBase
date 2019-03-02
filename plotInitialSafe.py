@@ -55,7 +55,7 @@ def plot(x, y, yci, methods, xlabel, ylabel, filename):
   pylab.close()
 
 
-def plotNumVsProprotion(pfRange, pfStep):
+def plotNumVsProportion(pfRange, pfStep):
   """
   Plot the the number of queried features vs the proportion of free features
   """
@@ -160,6 +160,10 @@ def plotNumVsCarpets():
 
       validInstances[carpetNum].append(rnd)
 
+      # print the case where ouralg is suboptimal
+      if 'opt' in methods and len(data['q']['opt']) < len(data['q']['iisAndRelpi']):
+        print rnd, carpetNum, 'opt', data['q']['opt'], data['q']['iisAndRelpi']
+
       addFreq(len(data['iiss']), iisSizes[carpetNum])
       iisSizesVec[carpetNum].append(len(data['iiss']))
 
@@ -167,6 +171,7 @@ def plotNumVsCarpets():
       domPiSizesVec[carpetNum].append(len(data['relFeats']))
 
       addFreq(data['solvable'], solveableIns[carpetNum])
+
 
   print 'iiss', [round(mean(iisSizesVec[carpetNum]), 2) for carpetNum in carpetNums]
   print 'relFeats', [round(mean(domPiSizesVec[carpetNum]), 2) for carpetNum in carpetNums]
@@ -196,7 +201,7 @@ pfCandidates = [(0.2, [0, 0.2, 0.4, 0.6, 0.8]),\
 
 """
 for (pfStep, pfRange) in pfCandidates:
-  plotNumVsProprotion(pfRange, pfStep)
+  plotNumVsProportion(pfRange, pfStep)
 """
 
 plotNumVsCarpets()
