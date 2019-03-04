@@ -19,8 +19,7 @@ times = {}
 carpetNums = [8, 9, 10, 11, 12]
 
 # will check what methods are run from data
-#methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
-methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu']
+methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
 
 markers = {'opt': 'r*-', 'iisAndRelpi': 'bo-', 'iisOnly': 'bs--', 'relpiOnly': 'bd-.', 'maxProb': 'g^-', 'piHeu': 'm+-', 'random': 'c.-'}
 names = {'opt': 'Optimal', 'iisAndRelpi': 'SetCover', 'iisOnly': 'SetCover (IIS)', 'relpiOnly': 'SetCover (rel. feat.)', 'maxProb': 'Greed. Prob.',\
@@ -162,7 +161,7 @@ def plotNumVsCarpets():
 
       # print the case where ouralg is suboptimal
       if 'opt' in methods and len(data['q']['opt']) < len(data['q']['iisAndRelpi']):
-        print rnd, carpetNum, 'opt', data['q']['opt'], data['q']['iisAndRelpi']
+        print 'rnd', rnd, 'carpetNum', carpetNum, 'opt', data['q']['opt'], 'iisAndRelpi', data['q']['iisAndRelpi']
 
       addFreq(len(data['iiss']), iisSizes[carpetNum])
       iisSizesVec[carpetNum].append(len(data['iiss']))
@@ -199,9 +198,8 @@ pfCandidates = [(0.2, [0, 0.2, 0.4, 0.6, 0.8]),\
 #                (0.3, [0, 0.35, 0.7]),\
                 (0.5, [0, 0.25, 0.5])]
 
-"""
-for (pfStep, pfRange) in pfCandidates:
-  plotNumVsProportion(pfRange, pfStep)
-"""
+# exp 1: varying num of carpets
+#plotNumVsCarpets()
 
-plotNumVsCarpets()
+# exp 2: varying pfs
+for (pfStep, pfRange) in pfCandidates: plotNumVsProportion(pfRange, pfStep)

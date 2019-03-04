@@ -668,22 +668,20 @@ if __name__ == '__main__':
       raise Exception('unknown argument')
 
   if batch:
-    # batch experiments
-    #carpets = [10]
-    #pfRange = [0, 0.2, 0.4, 0.6, 0.8]; pfStep = 0.2
-    #pfRange = [0, 0.35, 0.7]; pfStep = 0.3
-    #pfRange = [0, 0.25, 0.5]; pfStep = 0.5
-    
-    carpetNums = [8, 9, 10, 11, 12]; pfRange = [0]; pfStep = 1
+    # elements are (num of carpets, pf, pfStep)
+    settingCandidates = [#([8, 9, 10, 11, 12], [0], 1),
+                         ([10], [0, 0.2, 0.4, 0.6, 0.8], 0.2),
+                         ([10], [0, 0.25, 0.5], 0.5),
+                        ]
 
     for rnd in range(1000):
-      for numOfCarpets in carpetNums:
-        for pf in pfRange:
-          # reset random seed in each iteration
-          setRandomSeed(rnd)
+      for (carpetNums, pfRange, pfStep) in settingCandidates:
+        for numOfCarpets in carpetNums:
+          for pf in pfRange:
+            # reset random seed in each iteration
+            setRandomSeed(rnd)
 
-          print 'pf =', pf
-          classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
+            classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
   else:
     # single experiments
     classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
