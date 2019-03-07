@@ -381,7 +381,7 @@ class ConsQueryAgent():
   def findViolatedConstraints(self, x):
     # set of changed features
     var = set()
-    
+
     for idx in self.consIndices:
       # states violated by idx
       for s, a in x.keys():

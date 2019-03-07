@@ -19,7 +19,12 @@ times = {}
 carpetNums = [8, 9, 10, 11, 12]
 
 # will check what methods are run from data
-methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
+includeOpt = True
+includeRandom = False
+
+methods = (['opt'] if includeOpt else []) \
+          + ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu'] \
+          + (['random'] if includeRandom else [])
 
 markers = {'opt': 'r*-', 'iisAndRelpi': 'bo-', 'iisOnly': 'bs--', 'relpiOnly': 'bd-.', 'maxProb': 'g^-', 'piHeu': 'm+-', 'random': 'c.-'}
 names = {'opt': 'Optimal', 'iisAndRelpi': 'SetCover', 'iisOnly': 'SetCover (IIS)', 'relpiOnly': 'SetCover (rel. feat.)', 'maxProb': 'Greed. Prob.',\
@@ -75,8 +80,6 @@ def plotNumVsProportion(pfRange, pfStep):
     for pf in pfRange:
       try:
         pfUb = pf + pfStep
-        # kill decimal for ints
-        if pfUb % 1 == 0: pfUb = int(pfUb)
 
         filename = str(width) + '_' + str(height) + '_' + str(carpets) + '_' + str(pf) + '_' + str(pfUb) + '_' + str(rnd) + '.pkl'
         data = pickle.load(open(filename, 'rb'))
@@ -102,17 +105,17 @@ def plotNumVsProportion(pfRange, pfStep):
                   (pf, method1, method2,\
                   filter(lambda _: _[1] != _[2], zip(validInstances, lensOfQ[method1, pf], lensOfQ[method2, pf])))
 
+  """
   for pf in pfRange: 
     print diffInstances(pf, 'iisAndRelpi', 'iisOnly')
-    print diffInstances(pf, 'iisAndRelpi', 'relpiOnly')
-    print diffInstances(pf, 'iisAndRelpi', 'maxProb')
+  """
 
   # plot figure
   x = pfRange
   y = lambda method: [mean(vectorDiff(lensOfQ[method, pf], lensOfQ[methods[0], pf])) for pf in pfRange]
   yci = lambda method: [standardErr(vectorDiff(lensOfQ[method, pf], lensOfQ[methods[0], pf])) for pf in pfRange]
 
-  plot(x, y, yci, methods, '$p_f$', '# of Queried Features (SetCover as baseline)', 'lensOfQPf' + str(int(pfStep * 10)))
+  plot(x, y, yci, methods, '$p_f$', '# of Queried Features (' + names[methods[0]] + ' as baseline)', 'lensOfQPf' + str(int(pfStep * 10)))
 
 
 def plotNumVsCarpets():

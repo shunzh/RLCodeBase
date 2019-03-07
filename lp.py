@@ -46,7 +46,7 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1, iissMethod=None):
+def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1):
   """
   Solve the dual problem of lp, maybe with some constraints
   Same arguments
@@ -80,9 +80,9 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
   if len(zeroConstraints) > 0:
     m.addConstr(sum(x[S.index(s), A.index(a)] for s, a in zeroConstraints) == 0)
 
-  # >= constraints
+  # >= constraints. the occupancy should be at least positiveConstraintsOcc
   if len(positiveConstraints) > 0:
-    m.addConstr(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= positiveConstraints)
+    m.addConstr(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= positiveConstraintsOcc)
     
   # obj
   m.setObjective(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]), GRB.MAXIMIZE)

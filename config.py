@@ -1,6 +1,6 @@
-DEBUG = False
+DEBUG = True
 
-VERBOSE = False
+VERBOSE = True
 
 SAVE_TO_FILE = True
 

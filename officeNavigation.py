@@ -11,6 +11,14 @@ import getopt
 import sys
 import os.path
 
+R = 'R'
+_ = '_'
+W = 'W'
+C = 'C'
+S = 'S'
+D = 'D'
+B = 'B'
+
 # some consts
 OPEN = 1
 CLOSED = 0
@@ -36,7 +44,7 @@ class Spec():
   """
   A object that describes the specifications of an MDP
   """
-  def __init__(self, width, height, robot, switch, walls, doors, boxes, carpets, horizon):
+  def __init__(self, width, height, robot, switch, walls, doors, boxes, carpets, horizon=None):
     self.width = width
     self.height = height
     
@@ -50,24 +58,14 @@ class Spec():
     
     self.horizon = horizon
 
-def toyWrold():
+# hard-coded small worlds for sanity checks
+def toyWorldConstructor(map, horizon=None):
   # just make plotting easier
-  R = 'R'
-  _ = '_'
-  W = 'W'
-  C = 'C'
-  S = 'S'
-  D = 'D'
-  B = 'B'
-
-  # layout of the domain
-  map = [[R, C, _, C, _],
-         [_, W, _, W, _],
-         [_, W, _, C, S]]
-
   width = len(map[0])
   height = len(map)
-  
+
+  robot = None
+  switch = None
   walls = []
   doors = []
   carpets = []
@@ -87,11 +85,29 @@ def toyWrold():
         carpets.append((j, i))
       elif map[i][j] == B:
         boxes.append((j, i))
- 
-  horizon = width + height
- 
+
+  if robot == None: raise Exception('Robot location not specified!')
+
   return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
+def carpetsAndWallsDomain():
+  map = [[R, C, _, C, _],
+         [_, W, _, W, _],
+         [_, W, _, C, S]]
+  return toyWorldConstructor(map)
+
+# some toy domains for need-to-be-reverted features (boxes)
+def toySokobanWorld():
+  map = [[_, W, _, _, _],
+         [R, B, _, _, S]]
+  return toyWorldConstructor(map, horizon=11)
+
+def sokobanWorld():
+  map = [[_, W, _, _, _, W, W, _, _, _],
+         [R, B, _, _, _, B, _, _, _, S]]
+  return toyWorldConstructor(map, horizon=25)
+
+# parameterized worlds
 def squareWorld(size, numOfCarpets, avoidBorder=True):
   """
   Squared world with width = height = size.
@@ -118,58 +134,7 @@ def squareWorld(size, numOfCarpets, avoidBorder=True):
 
   boxes = []
   
-  horizon = width + height
- 
-  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
-
-def toySokobanWorld():
-  """
-  A very small domain that can be solved quickly. For sanity check.
-     _________
-  1 |  X      |
-  0 |R_B_____S|
-     0 1 2 3 4
-  """
-  width = 5
-  height = 2
-  
-  robot = (0, 0)
-  switch = (width - 1, 0)
-  
-  walls = [(1, 1)]
-  doors = []
-  
-  boxes = [(1, 0)]
-  carpets = [] # no non-reversible features
-  
-  horizon = 10
-  
-  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
-
-def sokobanWorld():
-  """
-  A domain as a motivating example in the reports.
-     ___________________
-  2 |  X       X X      |
-  1 |  X       X X      |
-  0 |R_B_______B_______S|
-     0 1 2 3 4 5 6 7 8 9
-  """
-  width = 10
-  height = 3
-  
-  robot = (0, 0)
-  switch = (width - 1, 0)
-  
-  walls = [(x, y) for x in [1, 5, 6] for y in [1, 2]]
-  doors = []
-  
-  boxes = [(1, 0), (5, 0)]
-  carpets = [] # no non-reversible features
-  
-  horizon = 20
-  
-  return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
+  return Spec(width, height, robot, switch, walls, doors, boxes, carpets)
 
 def parameterizedSokobanWorld(size, numOfBoxes):
   width = height = size
@@ -187,7 +152,7 @@ def parameterizedSokobanWorld(size, numOfBoxes):
   
   return Spec(width, height, robot, switch, walls, doors, boxes, carpets, horizon)
 
-def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
+def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   """
   spec: specification of the factored mdp
   k: number of queries (in batch querying setting
@@ -221,14 +186,14 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   dIndices = range(dIndexStart, dIndexStart + dSize)
   bIndices = range(bIndexStart, bIndexStart + bSize)
   
-  #directionalActs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
-  directionalActs = [(1, 0), (0, 1)]
+  directionalActs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+  #directionalActs = [(1, 0), (0, 1)]
   aSets = directionalActs + [TURNOFFSWITCH]
  
-  # check what the world is like
+  # check whether the world looks as expected
   for y in range(spec.height):
     for x in range(spec.width):
-      if (x, y) in spec.walls: print '[ X]',
+      if (x, y) in spec.walls: print '[ W]',
       elif spec.carpets.count((x, y)) == 1: print '[%2d]' % spec.carpets.index((x, y)),
       elif spec.carpets.count((x, y)) > 1: print '[%2d*' % spec.carpets.index((x, y)),
       elif (x, y) in spec.boxes: print '[ B]',
@@ -236,12 +201,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
       elif (x, y) == spec.robot: print '[ R]',
       else: print '[  ]',
     print
-  
-  print 'carpets'
-  for _ in range(len(spec.carpets)): print _, spec.carpets[_]
 
   def boxMovable(idx, s, a):
     """
+    A helper function to decide whether the robot can move a box in a location
     return True if the box represented by s[idx] can be moved with a applied in state s
     False otherwise
     """
@@ -306,52 +269,50 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   def timeElapse(s, a):
     return s[tIndex] + 1
   
-  
   # all physically possible locations
   allLocations = [(x, y) for x in range(spec.width) for y in range(spec.height) if (x, y) not in spec.walls]
   # cross product of possible values of all features
-  # location, door1, door2, carpets, switch, time
+  # location, door1, door2, carpets, switch
+	# time is added if horizon is not None (the task is time dependent)
   sSets = [allLocations] +\
           [[CLOSED, OPEN] for _ in spec.doors] +\
           [allLocations for _ in spec.boxes] +\
-          [[OFF, ON]]
- 
+          [[OFF, ON]] +\
+          ([range(spec.horizon + 1)] if spec.horizon != None else [])
+
   # the transition function is also factored, each item is a function defined on S x A -> S_i
   tFunc = [navigate] +\
           [doorOpGen(i, spec.doors[i - dIndexStart]) for i in dIndices] +\
           [boxOpGen(i) for i in bIndices] +\
-          [switchOp]
+          [switchOp] +\
+          ([timeElapse] if spec.horizon != None else [])
 
   s0List = [spec.robot] +\
            [CLOSED for _ in spec.doors] +\
            spec.boxes +\
-           [ON]
+           [ON] +\
+           ([0] if spec.horizon != None else [])
   s0 = tuple(s0List)
-  
-  terminal = lambda s: s[lIndex] == spec.switch
-  #terminal = lambda s: s[tIndex] == spec.horizon
+  print 'init state', s0
+
+  # use time feature in this case
+  terminal = lambda s: s[tIndex] == spec.horizon
+  # or use domain-specific features
+  #terminal = lambda s: s[lIndex] == spec.switch
 
   # a list of possible reward functions
-  # using locationReward in the IJCAI paper, where the difference between our algorithm and baselines are maximized
-  # because there are different costs of locations where carpets are not covered, so it is crucial to decide which states should avoid blah blah
+
+  # an intuitive one, give reward when and only when the switch is turned off
+  # note that the robot does not have the action to turn the switch on
   def oldReward(s, a):
     if s[lIndex] == spec.switch and s[sIndex] == ON and a == TURNOFFSWITCH:
       return 1
     else:
       # create some random rewards in the domain to break ties
       return 0
- 
-  carpetRewardDict = [-random.random() for _ in range(numOfCarpets)]
-  def reward(s, a):
-    if s[sIndex] == ON:
-      if s[lIndex] in spec.carpets:
-        carpetId = spec.carpets.index(s[lIndex])
-        return carpetRewardDict[carpetId]
-      else:
-        return -1
-    else:
-      return 0
-  
+
+  # the absolute value of the negative reward is smaller near the initial loc of robot and larger around the switch
+  # just to create a difference between rewards over the whole space, not effective as locationReward below empirically
   def gradientReward(s, a):
     if s[sIndex] == ON:
       if s[lIndex] in spec.carpets:
@@ -361,7 +322,9 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
         return -(x + y)
     else:
       return 0
-    
+
+  # using this reward in the IJCAI paper, where the difference between our algorithm and baselines are maximized
+  # because there are different costs of locations where carpets are not covered, so it is crucial to decide which states should avoid blah blah
   # the reward is 0 when the robot is on a carpet, and a pre-specified random reward otherwise.
   locationRewardDict = {(x, y): -random.random() for x in range(spec.width) for y in range(spec.height)}
   def locationReward(s, a):
@@ -391,21 +354,17 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
 
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma, terminal)
 
+  print 'state space', len(mdp.S)
+
   """
   consStates is [[states that violate the i-th constraint] for i in all constraints]
   Note that implementation here does not distinguish free and need-to-be-reverted features
   since we implement them both as constraints in linear programming anyway.
-
-  Free features:
-    require changing such features (e.g. making a carpet from clean to dirty) to be forbidden to visit
-  Need-to-be-reverted features:
-    first require time horizon to be added to the state representation
-    then states where the features are not inverted are forbidden.
   """
-  # carpet constraints:
+  # carpets are locked features by default
   carpetCons = [[s for s in mdp.S if s[lIndex] == _] for _ in spec.carpets]
   
-  # box constraints: by default, regard them as need-to-be-reverted features
+  # boxes are need-to-be-reverted features by default
   boxCons = [[s for s in mdp.S if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndices]
   
   consStates = carpetCons + boxCons
@@ -426,7 +385,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   print 'true free features', trueFreeFeatures
 
   if not agent.initialSafePolicyExists():
-    print 'initial policy does not exist'
+    # when the initial safe policy does not exist, we sequentially pose queries to find one safe policy
+    print 'initial safe policy does not exist'
     
     methods = ['opt', 'iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
     #methods = ['iisAndRelpi', 'iisOnly', 'relpiOnly', 'maxProb', 'piHeu', 'random']
@@ -517,10 +477,8 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
                   open(str(spec.width) + '_' + str(spec.height) + '_' + str(len(spec.carpets)) + '_' +\
                        str(lb) + '_' + str(ub) + '_' + str(rnd) + '.pkl', 'wb'))
   else:
+    # when initial safe policies exist, we want to improve such a safe policy using batch queries
     print 'initial policy exists'
-
-    #HACK not caring about improving safe policies for now
-    return 
 
     # we bookkeep the dominating policies for all domains. check whether if we have already computed them.
     # if so we do not need to compute them again.
@@ -545,7 +503,7 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
       domPiTime = end - start
 
       print "num of rel feats", len(relFeats)
-      
+
       if not dry:
         pickle.dump((relFeats, domPis, domPiTime), open(domainFileName, 'wb'))
 
@@ -600,8 +558,10 @@ def classicOfficNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
       regret = agent.findRegret(q, violableCons)
 
       print mrk, regret, runTime
-      
-      if not dry:
+
+      if dry:
+        print 'dry run. no output'
+      else:
         saveToFileForSafePiImprove(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret)
 
 def saveToFileForSafePiImprove(method, k, numOfCarpets, constrainHuman, q, mrk, runTime, regret):
@@ -681,12 +641,13 @@ if __name__ == '__main__':
             # reset random seed in each iteration
             setRandomSeed(rnd)
 
-            classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
+            classicOfficeNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
   else:
     # single experiments
-    classicOfficNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
 
-    # good for testing irreversible features
-    #classicOfficNav(sokobanWorld(), k, constrainHuman, dry, rnd)
-    #classicOfficNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
-    #classicOfficNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)
+    #classicOfficeNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
+
+    # good for testing need-to-be-reverted features
+    #classicOfficeNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
+    classicOfficeNav(sokobanWorld(), k, constrainHuman, dry, rnd)
+    #classicOfficeNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)
