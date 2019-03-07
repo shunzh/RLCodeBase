@@ -102,6 +102,12 @@ def toySokobanWorld():
          [R, B, _, _, S]]
   return toyWorldConstructor(map, horizon=11)
 
+def circularSokobanWorld():
+  map = [[R, B, S, _, _],
+         [W, _, W, W, _],
+         [W, _, _, _, _]]
+  return toyWorldConstructor(map, horizon=13)
+
 def sokobanWorld():
   map = [[_, W, _, _, _, W, W, _, _, _],
          [R, B, _, _, _, B, _, _, _, S]]
@@ -186,7 +192,7 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   dIndices = range(dIndexStart, dIndexStart + dSize)
   bIndices = range(bIndexStart, bIndexStart + bSize)
   
-  directionalActs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+  directionalActs = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)]
   #directionalActs = [(1, 0), (0, 1)]
   aSets = directionalActs + [TURNOFFSWITCH]
  
@@ -350,7 +356,7 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   rFunc = oldReward
   # only give reward of 1 if the switch is turned off and the boxes are in their initial locations
   #rFunc = goalConstrainedReward(lambda s: s[sIndex] == OFF and all(s[bIdx] == s0[bIdx] for bIdx in bIndices))
-  gamma = 1
+  gamma = 0.9
 
   mdp = easyDomains.getFactoredMDP(sSets, aSets, rFunc, tFunc, s0, gamma, terminal)
 
@@ -649,5 +655,6 @@ if __name__ == '__main__':
 
     # good for testing need-to-be-reverted features
     #classicOfficeNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
-    classicOfficeNav(sokobanWorld(), k, constrainHuman, dry, rnd)
+    classicOfficeNav(circularSokobanWorld(), k, constrainHuman, dry, rnd)
+    #classicOfficeNav(sokobanWorld(), k, constrainHuman, dry, rnd)
     #classicOfficeNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)

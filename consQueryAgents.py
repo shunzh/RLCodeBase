@@ -1,3 +1,5 @@
+import pprint
+
 from lp import lpDual, computeValue
 from util import powerset
 import copy
@@ -53,7 +55,7 @@ class ConsQueryAgent():
     mdp = self.mdp
 
     zeroConstraints = self.constructConstraints(activeCons, mdp)
-                           
+
     if config.METHOD == 'lp':
       return lpDual(mdp, zeroConstraints=zeroConstraints)
     elif config.METHOD == 'mcts':
@@ -804,5 +806,5 @@ class OptQueryForSafetyAgent(ConsQueryAgent):
  
 
 def printOccSA(x):
-  for sa, occ in x.items():
-    if occ > 0: print sa, occ
+  nonZeroSAOcc = filter(lambda _: _[1] > 0, x.items())
+  pprint.pprint(sorted(nonZeroSAOcc, key=lambda _: _[0][0][-1]))
