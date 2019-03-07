@@ -52,7 +52,7 @@ class ConsQueryAgent():
     return self.findConstrainedOptPi(self.allCons)['feasible']
 
   def findConstrainedOptPi(self, activeCons):
-    mdp = self.mdp
+    mdp = copy.copy(self.mdp)
 
     zeroConstraints = self.constructConstraints(activeCons, mdp)
 
@@ -100,7 +100,7 @@ class ConsQueryAgent():
 
       # find the subset with the smallest size
       activeCons = min(subsetsToConsider, key=lambda _: len(_))
-      if config.DEBUG: print 'activeCons', activeCons
+      #if config.DEBUG: print 'activeCons', activeCons
       subsetsConsidered.append(activeCons)
 
       skipThisCons = False
@@ -156,7 +156,7 @@ class ConsQueryAgent():
         mr, advPi = self.findMRAdvPi(q, relFeats, domPis, k)
         mrs[q] = mr
         
-        print q, mr
+        print q, 'mr', mr
 
       if mrs == {}:
         mmq = () # no need to ask anything

@@ -1,3 +1,5 @@
+import pprint
+
 import easyDomains
 from consQueryAgents import ConsQueryAgent, GreedyForSafetyAgent,\
   DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, DescendProbQueryForSafetyAgent,\
@@ -98,15 +100,9 @@ def carpetsAndWallsDomain():
 
 # some toy domains for need-to-be-reverted features (boxes)
 def toySokobanWorld():
-  map = [[_, W, _, _, _],
-         [R, B, _, _, S]]
-  return toyWorldConstructor(map, horizon=11)
-
-def circularSokobanWorld():
-  map = [[R, B, S, _, _],
-         [W, _, W, W, _],
-         [W, _, _, _, _]]
-  return toyWorldConstructor(map, horizon=13)
+  map = [[_, _, _, _, _],
+         [R, B, S, _, _]]
+  return toyWorldConstructor(map, horizon=10)
 
 def sokobanWorld():
   map = [[_, W, _, _, _, W, W, _, _, _],
@@ -177,10 +173,12 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   # door indices
   dIndexStart = lIndex + 1
   dSize = len(spec.doors)
+  dIndices = range(dIndexStart, dIndexStart + dSize)
 
   # box indices
   bIndexStart = dIndexStart + dSize
   bSize = len(spec.boxes)
+  bIndices = range(bIndexStart, bIndexStart + bSize)
 
   # switch index
   sIndex = bIndexStart + bSize
@@ -188,11 +186,8 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   # time index
   # time is needed when there are horizon-dependent constraints
   tIndex = sIndex + 1
-  
-  dIndices = range(dIndexStart, dIndexStart + dSize)
-  bIndices = range(bIndexStart, bIndexStart + bSize)
-  
-  directionalActs = [(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)]
+
+  directionalActs = [(1, 0), (0, 1), (-1, 0), (0, -1)]
   #directionalActs = [(1, 0), (0, 1)]
   aSets = directionalActs + [TURNOFFSWITCH]
  
@@ -226,7 +221,7 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
     else:
       return False
  
-  # factored transition function
+  # factored transition functions
   def navigate(s, a):
     loc = s[lIndex]
     if a in directionalActs:
@@ -269,9 +264,9 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   def switchOp(s, a):
     loc = s[lIndex]
     switchState = s[sIndex]
-    if loc == spec.switch and a == 'turnOffSwitch': switchState = OFF 
+    if loc == spec.switch and a == TURNOFFSWITCH: switchState = OFF
     return switchState
-  
+
   def timeElapse(s, a):
     return s[tIndex] + 1
   
@@ -301,9 +296,7 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   s0 = tuple(s0List)
   print 'init state', s0
 
-  # use time feature in this case
-  terminal = lambda s: s[tIndex] == spec.horizon
-  # or use domain-specific features
+  assert spec.horizon != None; terminal = lambda s: s[tIndex] == spec.horizon
   #terminal = lambda s: s[lIndex] == spec.switch
 
   # a list of possible reward functions
@@ -372,7 +365,7 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   
   # boxes are need-to-be-reverted features by default
   boxCons = [[s for s in mdp.S if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndices]
-  
+
   consStates = carpetCons + boxCons
   numOfCons = len(consStates)
   
@@ -654,7 +647,6 @@ if __name__ == '__main__':
     #classicOfficeNav(squareWorld(size, numOfCarpets, avoidBorder=False), k, constrainHuman, dry, rnd, pf=pf, pfStep=pfStep)
 
     # good for testing need-to-be-reverted features
-    #classicOfficeNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
-    classicOfficeNav(circularSokobanWorld(), k, constrainHuman, dry, rnd)
+    classicOfficeNav(toySokobanWorld(), k, constrainHuman, dry, rnd)
     #classicOfficeNav(sokobanWorld(), k, constrainHuman, dry, rnd)
     #classicOfficeNav(parameterizedSokobanWorld(size, numOfBoxes), k, constrainHuman, dry, rnd)
