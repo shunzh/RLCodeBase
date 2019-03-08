@@ -3,11 +3,10 @@ try:
 except ImportError:
   print "can't import gurobipy"
 
-# FIXME rewrite in gurobi
-# don't want to import two optimization modules. some functions may have the same names
-"""
-
-"""
+try:
+  from pycpx import CPlexModel, CPlexException, CPlexNoSolution
+except ImportError:
+  print "can't import pycpx"
 
 import easyDomains
 import config
@@ -105,7 +104,6 @@ def lpDualCPLEX(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstra
   Note that this is a lower level function that does not consider feature extraction.
   r should be a reward function, not a reward parameter.
   """
-  from pycpx import CPlexModel, CPlexException, CPlexNoSolution
 
   S = mdp.S
   A = mdp.A

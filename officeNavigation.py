@@ -1,17 +1,21 @@
+import getopt
+import os.path
+import pickle
 import pprint
-
-import easyDomains
-from consQueryAgents import ConsQueryAgent, GreedyForSafetyAgent,\
-  DomPiHeuForSafetyAgent, MaxProbSafePolicyExistAgent, DescendProbQueryForSafetyAgent,\
-  OptQueryForSafetyAgent
-import time
 import random
+import sys
+import time
+
 import numpy
 import scipy
-import pickle
-import getopt
-import sys
-import os.path
+
+import easyDomains
+import lp
+from consQueryAgents import (EXIST, NOTEXIST, ConsQueryAgent,
+                             DescendProbQueryForSafetyAgent,
+                             DomPiHeuForSafetyAgent, GreedyForSafetyAgent,
+                             MaxProbSafePolicyExistAgent,
+                             OptQueryForSafetyAgent, printOccSA)
 
 R = 'R'
 _ = '_'
@@ -40,7 +44,6 @@ TURNOFFSWITCH = 'turnOffSwitch'
 
 TERMINATE = 'terminate'
 
-from consQueryAgents import EXIST, NOTEXIST
 
 class Spec():
   """
@@ -216,7 +219,7 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
     # box is not moved across the border and not into walls or other boxes
     if boxP[0] >= 0 and boxP[0] < spec.width and boxP[1] >= 0 and boxP[1] < spec.height\
        and not boxP in spec.walls\
-       and not boxP in spec.boxes:
+       and not boxP in [s[bIndex] for bIndex in bIndices]:
       return True
     else:
       return False
@@ -365,6 +368,15 @@ def classicOfficeNav(spec, k, constrainHuman, dry, rnd, pf=0, pfStep=1):
   
   # boxes are need-to-be-reverted features by default
   boxCons = [[s for s in mdp.S if terminal(s) and s[bIdx] != s0[bIdx]] for bIdx in bIndices]
+
+  # FIXME a way to specify a hard coded policy. put in a better place
+  """
+  hardCodedPi = [(1, 0), (1, 0), TURNOFFSWITCH, (0, -1), (1, 0), (1, 0), (0, 1), (-1, 0), (-1, 0)]
+  hardCodedConstraints = [(s, a) for timeStep in range(len(hardCodedPi)) for s in mdp.S for a in mdp.A if s[tIndex] == timeStep and a != hardCodedPi[timeStep]]
+  sol = lp.lpDualGurobi(mdp, zeroConstraints=hardCodedConstraints)
+  if sol['feasible']:
+    printOccSA(sol['pi'])
+  """
 
   consStates = carpetCons + boxCons
   numOfCons = len(consStates)
