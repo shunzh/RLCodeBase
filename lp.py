@@ -6,10 +6,7 @@ except ImportError:
 # FIXME rewrite in gurobi
 # don't want to import two optimization modules. some functions may have the same names
 """
-try:
-  from pycpx import CPlexModel, CPlexException, CPlexNoSolution
-except ImportError:
-  print "can't import CPlexModel"
+
 """
 
 import easyDomains
@@ -46,7 +43,7 @@ def lp(S, A, r, T, s0):
     ret[S[s]] = m[v][s]
   return ret
 
-def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1):
+def lpDualGurobi(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1):
   """
   Solve the dual problem of lp, maybe with some constraints
   Same arguments
@@ -98,6 +95,57 @@ def lpDual(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsO
     return {'feasible': False}
   else:
     raise Exception('error status: %d' % m.status)
+
+
+def lpDualCPLEX(mdp, zeroConstraints=[], positiveConstraints=[], positiveConstraintsOcc=1):
+  """
+  Solve the dual problem of lp, maybe with some constraints
+  Same arguments
+
+  Note that this is a lower level function that does not consider feature extraction.
+  r should be a reward function, not a reward parameter.
+  """
+  from pycpx import CPlexModel, CPlexException, CPlexNoSolution
+
+  S = mdp.S
+  A = mdp.A
+  T = mdp.T
+  r = mdp.r
+  gamma = mdp.gamma
+  alpha = mdp.alpha
+
+  m = CPlexModel()
+  if not config.VERBOSE: m.setVerbosity(0)
+
+  # useful constants
+  Sr = range(len(S))
+  Ar = range(len(A))
+
+  x = m.new((len(S), len(A)), lb=0, name='x')
+
+  # make sure x is a valid occupancy
+  for sp in Sr:
+    # x (x(s) - \gamma * T) = \sigma
+    m.constrain(sum(x[s, a] * ((s == sp) - gamma * T(S[s], A[a], S[sp])) for s in Sr for a in Ar) == alpha(S[sp]))
+
+  # == constraints
+  if len(zeroConstraints) > 0:
+    m.constrain(sum(x[S.index(s), A.index(a)] for s, a in zeroConstraints) == 0)
+
+  # >= constraints
+  if len(positiveConstraints) > 0:
+    m.constrain(sum(x[S.index(s), A.index(a)] for s, a in positiveConstraints) >= positiveConstraintsOcc)
+
+  # obj
+  try:
+    obj = m.maximize(sum([x[s, a] * r(S[s], A[a]) for s in Sr for a in Ar]))
+  except CPlexException as err:
+    print 'Exception', err
+    # we return obj value as None and occ measure as {}. this should be handled correctly
+    return {'feasible': False}
+
+  return {'feasible': True, 'obj': obj, 'pi': {(S[s], A[a]): m[x][s, a] for s in Sr for a in Ar}}
+
 
 def decomposePiLP(S, A, T, s0, terminal, rawX, x, gamma=1):
   """

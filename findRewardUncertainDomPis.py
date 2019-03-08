@@ -81,7 +81,7 @@ def findDomPis(mdpH, mdpR, delta):
   mdpLocal = copy.deepcopy(mdpH)
   for s in S:
     mdpLocal.resetInitialState(s)
-    objValue, pi = lp.lpDual(mdpLocal)
+    objValue, pi = lp.lpDualGurobi(mdpLocal)
     
     for (deltaS, deltaA) in delta:
       # the human is unable to take this action, make sure here
@@ -133,7 +133,7 @@ def findDomPis(mdpH, mdpR, delta):
       
         # find the corresponding optimal policy and add to the set of dominating policies
         mdpR.r = r
-        _, newDompi = lp.lpDual(mdpR)
+        _, newDompi = lp.lpDualGurobi(mdpR)
 
         domPis.append(newDompi)
         print 'dompi added'

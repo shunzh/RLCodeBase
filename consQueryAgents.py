@@ -1,6 +1,6 @@
 import pprint
 
-from lp import lpDual, computeValue
+from lp import lpDualGurobi, computeValue, lpDualCPLEX
 from util import powerset
 import copy
 import numpy
@@ -56,8 +56,10 @@ class ConsQueryAgent():
 
     zeroConstraints = self.constructConstraints(activeCons, mdp)
 
-    if config.METHOD == 'lp':
-      return lpDual(mdp, zeroConstraints=zeroConstraints)
+    if config.METHOD == 'gurobi':
+      return lpDualGurobi(mdp, zeroConstraints=zeroConstraints)
+    elif config.METHOD == 'cplex':
+      return lpDualCPLEX(mdp, zeroConstraints=zeroConstraints)
     elif config.METHOD == 'mcts':
       return MCTS(**mdp)
     else:

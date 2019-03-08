@@ -10,7 +10,7 @@ import scipy.stats
 import easyDomains
 from valueIterationAgents import ValueIterationAgent
 try:
-  from lp import computeValue, computeObj, milp, lp, lpDual
+  from lp import computeValue, computeObj, milp, lp, lpDualGurobi
 except ImportError: print "lp import error"
 
 class LPAgent(ValueIterationAgent):
@@ -44,7 +44,7 @@ class LPDualAgent(ValueIterationAgent):
     args['T'] = transition
     args['r'] = self.mdp.getReward
     args['s0'] = self.mdp.state
-    self.opt, self.x = lpDual(**args)
+    self.opt, self.x = lpDualGurobi(**args)
   
   def getValue(self, state, t=0):
     if state == self.mdp.state:
@@ -265,7 +265,7 @@ class QTPAgent:
       def consistCond(res, idx):
         piValues = {}
         for piIdx in range(len(query)):
-          obj, _ = lpDual(self.args['S'], self.args['A'], self.args['R'][idx], self.args['T'], self.args['s0'], query[piIdx])
+          obj, _ = lpDualGurobi(self.args['S'], self.args['A'], self.args['R'][idx], self.args['T'], self.args['s0'], query[piIdx])
           piValues[piIdx] = obj
         maxValue = max(piValues.values())
         optPiIdxs = filter(lambda piIdx: piValues[piIdx] == maxValue, range(len(query)))
@@ -299,7 +299,7 @@ class QTPAgent:
         optCommit = None
         for commit in query:
           # compute the operator's value by following this commitment
-          value, _ = lpDual(self.args['S'], self.args['A'], self.args['R'][idx], self.args['T'], self.args['s0'], commit)
+          value, _ = lpDualGurobi(self.args['S'], self.args['A'], self.args['R'][idx], self.args['T'], self.args['s0'], commit)
           if value > maxV:
             maxV = value
             optCommit = commit
