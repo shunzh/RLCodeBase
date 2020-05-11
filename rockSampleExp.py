@@ -26,13 +26,7 @@ if __name__ == '__main__':
     if opt == '-t':
       config.TRAJECTORY_LENGTH = int(arg)
     elif opt == '-n':
-      if int(arg) == 5:
-        pass
-      elif int(arg) == 10:
-        rockNum = 40
-        rewardCandNum = 10
-      else:
-        raise Exception('undefined number of rocks')
+      rewardCandNum = int(arg)
     elif opt == '-k':
       config.NUMBER_OF_RESPONSES = int(arg)
     elif opt == '-y':
